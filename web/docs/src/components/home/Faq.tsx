@@ -8,8 +8,16 @@ export interface FaqItem {
 /** What people ask about Marmot itself, for the homepage. */
 export const productFaq: FaqItem[] = [
   {
-    q: 'What can an agent see and query?',
-    a: 'Only what you grant it. An agent connects with its own service account, and Marmot checks every query against that account’s roles before it reaches your database. Anything it may not read is refused, and every attempt is recorded.',
+    q: 'Why not give the agent a read-only database user?',
+    a: 'A read-only user can read every table it has been granted, personal data included, and nothing ties its queries back to the question the agent was asked. It also tells the agent nothing about which orders table finance reports from. Through Marmot the agent picks from the catalog, each query is checked against what that agent may read, and every query is logged with who ran it and whether it was allowed.',
+  },
+  {
+    q: 'We already have a data catalog. Why add Marmot?',
+    a: 'A catalog tells people what exists. Marmot also serves that context to agents over MCP and runs their queries, so the system that knows a table holds personal data is the same one that decides who may query it. That is why we think of Marmot as a context layer for humans and agents, with the catalog as one part of it.',
+  },
+  {
+    q: 'What can a person or an agent see and query?',
+    a: 'Only what you grant them. People sign in as themselves and agents connect with their own service accounts, and Marmot checks every query against that identity’s roles before it reaches your database. Anything they may not read is refused, and every attempt is recorded.',
   },
   {
     q: 'Do I have to move my data?',
@@ -60,8 +68,12 @@ export const pricingFaq: FaqItem[] = [
     a: 'Yes. Add units when the catalog grows or your agents get busier, and remove them when things quieten down. Changes are prorated on the next invoice, and the console shows how much of each unit your instance is using.',
   },
   {
-    q: 'What does Enterprise add?',
-    a: 'Several instances, a per-agent audit trail with SIEM export, VPC peering and data residency, custom backup retention, plugin development on request and a named support contact. Pricing is agreed with you.',
+    q: 'What does an Enterprise licence add to open source Marmot?',
+    a: 'Open source Marmot has the catalog, lineage, glossary, data products, queries and the MCP server, and grants roles across the whole instance. An Enterprise licence adds what Marmot Cloud has on top: access control per table, data product and glossary term, federated secret stores and workload identity, and a per-agent audit trail with SIEM export. It also comes with help deploying it on your infrastructure, and support with an SLA from a named contact in a shared Slack channel. Pricing is agreed with you.',
+  },
+  {
+    q: 'What does Cloud Enterprise add?',
+    a: 'Several instances, a per-agent audit trail with SIEM export, VPC peering and data residency, custom backup retention, plugin development on request and a named support contact with a shared Slack channel. Pricing is agreed with you.',
   },
   {
     q: 'What happens if I cancel?',

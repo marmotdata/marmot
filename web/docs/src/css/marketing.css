@@ -316,6 +316,9 @@
 		font: var(--text-caption);
 		color: var(--mm-text-2);
 	}
+	.mkt-tiers--two {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 	.mkt-tiers__foot {
 		margin: var(--space-4) 0 0;
 		font: var(--text-caption);
@@ -1594,30 +1597,62 @@
 		padding-block: var(--space-12);
 		border-block-start: 1px solid var(--mm-rule);
 	}
+	/* Two facts beside the quote, each drawn the same way and kept quiet so the quote leads: a
+	   label, the value in dense text and one link to go further. A hairline separates them. */
 	.mkt-proof__sources {
 		display: grid;
-		gap: var(--space-4);
+		align-content: center;
+		gap: var(--space-5);
 		padding-inline-start: var(--space-8);
 		border-inline-start: 1px solid var(--mm-rule);
 	}
-	.mkt-proof__sources p {
+	.mkt-proof__group {
+		display: grid;
+		justify-items: start;
+		gap: var(--space-2);
+	}
+	.mkt-proof__group + .mkt-proof__group {
+		padding-block-start: var(--space-5);
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	.mkt-proof__group p {
 		margin: 0;
 	}
-	.mkt-proof__sources-head {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: var(--space-2) var(--space-4);
+	.mkt-proof__group .mm-link {
+		font: var(--text-dense);
+	}
+	.mkt-proof__label {
 		font: var(--text-label);
 		color: var(--mm-text);
 	}
-	/* The plugins as words in the quote's own size: a list to read, not a wall of logos. */
-	.mkt-proof__sources-list {
-		font: var(--text-heading);
-		font-weight: 400;
-		color: var(--mm-text);
+	.mkt-proof__value {
+		font: var(--text-dense);
+		color: var(--mm-text-2);
 		text-wrap: pretty;
+	}
+	/* The plugins as names with their marks at list-row size: a list to read, not a wall of logos. */
+	.mkt-proof__providers {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1) var(--space-3);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font: var(--text-dense);
+		color: var(--mm-text-2);
+	}
+	.mkt-proof__providers li {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.mkt-proof__providers mm-provider-logo {
+		inline-size: 16px;
+		block-size: 16px;
+		flex: none;
+	}
+	.mkt-proof__more {
+		color: var(--mm-text-3);
 	}
 	@media (max-width: 960px) {
 		.mkt-proof__inner {
@@ -1786,11 +1821,13 @@
 		inset-inline-end: 10px;
 	}
 
-	/* A phone's map has no room for every name side by side, so it labels only what the story is
-	   pointing at: the table it found and the one it refused. The rest stay as points. */
+	/* A phone's map has no room for every name side by side, so it names only what the story is
+	   pointing at: the table it found and the one it refused. The rest keep their source's logo. */
 	@media (max-width: 720px) {
 		.mkt-maphero__asset:not(.is-found, .is-refused) .mkt-maphero__label {
-			display: none;
+			gap: 0;
+			padding: 1px;
+			font-size: 0;
 		}
 	}
 
@@ -2018,7 +2055,9 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: var(--space-6) var(--space-8);
 	}
-	.mkt-survey__halves {
+	/* Scoped to the survey so it outranks .mkt-chapter__points: the minifier merges this rule with
+	   Tailwind's .contents and moves it above that one, where source order alone would lose. */
+	.mkt-survey > .mkt-survey__halves {
 		display: contents;
 	}
 	.mkt-survey__map {
@@ -2207,7 +2246,9 @@
 	   whatever the agent has reached. */
 	@media (max-width: 720px) {
 		.mkt-survey .mkt-maphero__asset.is-traced .mkt-maphero__label {
-			display: inline-flex;
+			gap: 6px;
+			padding: 1px 6px;
+			font: var(--text-caption);
 		}
 		.mkt-survey .mkt-maphero__note {
 			display: inline-flex;

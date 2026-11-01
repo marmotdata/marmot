@@ -83,7 +83,7 @@ export const PLAN_LIST: Plan[] = [
 			'Everything in Team',
 			'Four or more compute units',
 			'Bring your own domain',
-			'Priority support & shared Slack, 99.9% uptime SLA'
+			'Priority email support, 99.9% uptime SLA'
 		],
 		sso: true,
 		custom_domains: true,
@@ -104,7 +104,7 @@ export const PLAN_LIST: Plan[] = [
 			'Plugin development on request',
 			'VPC peering & data residency',
 			'Custom backup retention',
-			'Named support contact, 99.95% uptime SLA'
+			'Named support contact & shared Slack, 99.95% uptime SLA'
 		],
 		sso: true,
 		custom_domains: true,

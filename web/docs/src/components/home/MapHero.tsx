@@ -81,13 +81,13 @@ function groundPoints(): [number, number, number][] {
 const QUESTION = "What was revenue last week, and can I trust the number?";
 type Step = { text: string; detail: string; refused?: boolean };
 const STEPS: Step[] = [
-  { text: "Searched the catalog", detail: "orders_daily, certified, owned by Analytics Engineering" },
+  { text: "Searched the catalog", detail: "orders_daily in Snowflake, owned by Analytics Engineering" },
   { text: "Read its lineage", detail: "Built by dbt from shop.public.orders" },
   { text: "Checked its access", detail: "svc-finance may read orders_daily" },
   { text: "Ran a query on orders_daily", detail: "7 rows in 412 ms, on record" },
   { text: "Asked for customer emails", detail: "Refused: no grant on customers.email", refused: true },
 ];
-const ANSWER = "Revenue last week was £413,180 across 8,615 orders, from the certified orders_daily.";
+const ANSWER = "Revenue last week was £413,180 across 8,615 orders, from orders_daily, the table finance reports from.";
 
 interface State {
   question: string;
@@ -127,10 +127,10 @@ export default function MapHero(): JSX.Element {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     setStill(reduced);
     setDrawn(true);
+    void import("@marmotdata/icons/define.js");
     if (reduced || !root.current) return;
     let p: Player | undefined;
     let cancelled = false;
-    void import("@marmotdata/icons/define.js");
     void import("@site/src/marketing/demo").then(({ play, type }) => {
       if (cancelled || !root.current) return;
       let cur = { ...START };

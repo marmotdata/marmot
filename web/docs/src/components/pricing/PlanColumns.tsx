@@ -1,5 +1,5 @@
 import React from "react";
-import { PLAN_SUMMARIES } from "./plans";
+import { PLAN_SUMMARIES, SELF_HOSTED } from "./plans";
 
 /**
  * The four plans side by side as open columns divided by hairlines: the name and who it is for,
@@ -13,7 +13,7 @@ export default function PlanColumns(): JSX.Element {
       <ul className="mkt-tiers" aria-label="Plans">
         {PLAN_SUMMARIES.map((p) => (
           <li key={p.plan.id} className="mkt-tier">
-            <h2 className="mkt-tier__name">{p.plan.name}</h2>
+            <h3 className="mkt-tier__name">{p.plan.name}</h3>
             <p className="mkt-tier__for">{p.plan.tagline}</p>
             <p className="mkt-tier__price">
               {p.from && <span className="mkt-tier__from">From </span>}
@@ -35,5 +35,32 @@ export default function PlanColumns(): JSX.Element {
       </ul>
       <p className="mkt-tiers__foot">Prices are in USD, excluding tax. Units are billed monthly and prorated when you add or remove them.</p>
     </>
+  );
+}
+
+/** The two ways to run Marmot yourself, in the same columns as the Cloud plans so they read as one set of choices. */
+export function SelfHostedColumns(): JSX.Element {
+  return (
+    <ul className="mkt-tiers mkt-tiers--two" aria-label="Self-hosted options">
+      {SELF_HOSTED.map((o) => (
+        <li key={o.id} className="mkt-tier">
+          <h3 className="mkt-tier__name">{o.name}</h3>
+          <p className="mkt-tier__for">{o.tagline}</p>
+          <p className="mkt-tier__price">
+            <span className="mkt-tier__amount">{o.price}</span>
+          </p>
+          <p className="mkt-tier__basis">{o.basis}</p>
+          <a className={`mm-btn ${o.action.primary ? "mm-btn--primary" : "mm-btn--secondary"} mkt-tier__action`} href={o.action.href}>
+            {o.action.label}
+          </a>
+          <p className="mkt-tier__lead">{o.lead}</p>
+          <ul className="mkt-tier__adds">
+            {o.adds.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
   );
 }

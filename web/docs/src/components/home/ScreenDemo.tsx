@@ -54,7 +54,7 @@ const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-
  * A product screen at work: the real design-system components drawn by Lit at app size, scaled
  * to the column, with a camera that moves to what the script points at. The screen is inert, a
  * picture rather than a second app to tab through, and `label` tells assistive technology what
- * it shows. It plays only on screen and can be paused.
+ * it shows. It plays only while it is on screen.
  */
 export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
   props: DemoConfig<S> & {
@@ -67,7 +67,6 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
   const root = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const [player, setPlayer] = useState<Player>();
   const [boxWidth, setBoxWidth] = useState(0);
   const [focus, setFocus] = useState<string | undefined>(initial.focus);
   const [camera, setCamera] = useState({ k: 1, x: 0, y: 0 });
@@ -115,7 +114,6 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
             }),
           rest,
         });
-        setPlayer(p);
         const player = p;
         if (onPlayer) void beatBounds(steps).then((bounds) => !cancelled && onPlayer(player, bounds));
       },
@@ -189,9 +187,6 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
       className="mkt-showcase mkt-showcase--bare"
       aria-label={label}
       ref={root}
-      // No visible controls, so resting a pointer on a demo holds it still.
-      onPointerEnter={() => player && !player.paused && player.toggle()}
-      onPointerLeave={() => player?.paused && player.toggle()}
     >
       <div className="mkt-screen" ref={box}>
         <div

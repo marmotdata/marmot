@@ -183,7 +183,7 @@ function Plugins() {
         ))}
       </div>
       <p className="mkt-dia__eco-more">
-        and more than 60 plugins
+        and 70+ plugins
       </p>
     </div>
   );

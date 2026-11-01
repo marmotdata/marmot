@@ -64,7 +64,7 @@ People and agents can also run SQL through Marmot against the sources you connec
   />
   <DocCard
     title="Keep it current"
-    description="More than 60 plugins read your sources on a schedule, and asset rules enrich what arrives."
+    description="70+ plugins read your sources on a schedule, and asset rules enrich what arrives."
     docId="Plugins/index"
     icon="mdi:puzzle-outline"
   />

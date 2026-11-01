@@ -102,6 +102,18 @@ export const orderResults: Asset[] = [
 		certified: true
 	},
 	{
+		mrn: 'mrn://model/dbt/analytics.intermediate.int_orders_with_refunds',
+		name: 'int_orders_with_refunds',
+		type: 'Model',
+		provider: 'dbt',
+		description: 'dbt model that joins each order to its refunds, so the marts can report net revenue.',
+		owners: ['ae', 'jane'],
+		tags: ['commerce', 'finance'],
+		columns: 16,
+		updated: ago(326),
+		views7d: 290
+	},
+	{
 		mrn: 'mrn://table/postgresql/shop.public.order_items',
 		name: 'order_items',
 		type: 'Table',
@@ -219,37 +231,6 @@ export const popularity = (a: Asset): 1 | 2 | 3 | 4 => {
 	return views >= 600 ? 4 : views >= 200 ? 3 : views >= 50 ? 2 : 1;
 };
 
-export const facetTypes = [
-	{ value: 'table', label: 'Table', icon: 'table', count: 23 },
-	{ value: 'view', label: 'View', icon: 'table-view', count: 6 },
-	{ value: 'pipeline', label: 'Pipeline', icon: 'conversion-path', count: 3 },
-	{ value: 'topic', label: 'Topic', icon: 'stream', count: 2 },
-	{ value: 'dashboard', label: 'Dashboard', icon: 'dashboard', count: 2 },
-	{ value: 'agent', label: 'Agent', icon: 'smart-toy', count: 1 }
-];
-export const facetProviders = [
-	{ value: 'snowflake', label: 'Snowflake', provider: 'snowflake', count: 12 },
-	{ value: 'postgresql', label: 'PostgreSQL', provider: 'postgresql', count: 11 },
-	{ value: 'dbt', label: 'dbt', provider: 'dbt', count: 8 },
-	{ value: 'kafka', label: 'Kafka', provider: 'kafka', count: 2 },
-	{ value: 'airflow', label: 'Airflow', provider: 'airflow', count: 3 },
-	{ value: 'looker', label: 'Looker', provider: 'looker', count: 2 }
-];
-export const facetTags = [
-	{ value: 'commerce', label: 'commerce', count: 18 },
-	{ value: 'finance', label: 'finance', count: 9 },
-	{ value: 'pii', label: 'pii', count: 7 },
-	{ value: 'events', label: 'events', count: 4 },
-	{ value: 'customer', label: 'customer', count: 3 },
-	{ value: 'archive', label: 'archive', count: 1 }
-];
-export const facetOwners = [
-	{ value: 'ae', label: 'Analytics Engineering', icon: 'groups', count: 14 },
-	{ value: 'dp', label: 'Data Platform', icon: 'groups', count: 5 },
-	{ value: 'fin', label: 'Finance Analytics', icon: 'groups', count: 3 },
-	{ value: 'ci', label: 'Customer Insights', icon: 'groups', count: 1 }
-];
-
 /* ------------------------------------------------------------------ orders_daily */
 
 export const ordersDailySchema: SchemaColumn[] = [
@@ -295,7 +276,6 @@ export const ordersDailySchema: SchemaColumn[] = [
 		description: 'Order totals including VAT before refunds and discounts.',
 		descriptionSource: 'user',
 		glossaryTerms: ['Gross merchandise value'],
-		certified: true,
 		stats: { distinct: 1_284, nullPercent: 0, min: '4,118.20', max: '612,904.55' }
 	},
 	{
@@ -324,6 +304,7 @@ export const ordersDailySchema: SchemaColumn[] = [
 		nullable: true,
 		description: 'Gross less discounts, refunds and VAT. The figure finance reports.',
 		descriptionSource: 'user',
+		glossaryTerms: ['Net revenue'],
 		certified: true,
 		stats: { distinct: 1_252, nullPercent: 2.3, min: '3,020.11', max: '470,118.06' }
 	},

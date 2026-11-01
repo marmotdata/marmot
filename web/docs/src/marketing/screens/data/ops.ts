@@ -31,111 +31,86 @@ export const clock = (iso: string) => new Date(iso).toISOString().slice(11, 19);
 
 /* ------------------------------------------------------------------ Query workspace */
 
-/** The source explorer tree. The mockup opens postgres-shop; the demo queries orders_daily, which lives in Snowflake. */
-const col = (id: string, name: string, type: string, pii = false) => ({
-	id: `${id}.${name}`,
+/**
+ * The source explorer tree, built the way the app builds it: each source shows its table count, a
+ * source with more than one schema gets a level per schema, tables show the row count the catalog
+ * last saw (with a PII badge when the table is tagged PII) and columns show their type in mono.
+ * The demo queries orders_daily, which lives in snowflake-finance.
+ */
+const ORDERS_DAILY = 'mrn://table/dbt/analytics.marts.orders_daily';
+const col = (table: string, name: string, type: string) => ({
+	id: `c:snowflake-finance:${table}:${name}`,
 	label: name,
 	icon: 'view-column',
 	secondary: type,
-	badges: pii ? [{ label: 'PII', variant: 'pii' as const }] : undefined
+	secondaryMono: true
 });
-const MARTS = 'snowflake-finance.analytics.marts';
+const table = (mrn: string, name: string, rows: string, pii = false, children?: unknown[]) => ({
+	id: `t:snowflake-finance:${mrn}`,
+	label: name,
+	icon: 'table',
+	secondary: rows,
+	secondaryMono: false,
+	hasChildren: true,
+	badges: pii ? [{ label: 'PII', variant: 'pii' as const }] : undefined,
+	...(children ? { children } : {})
+});
 export const sourceTree = [
+	{ id: 's:postgres-shop', label: 'postgres-shop', provider: 'postgresql', secondary: '12', hasChildren: true },
 	{
-		id: 'postgres-shop',
-		label: 'postgres-shop',
-		provider: 'postgresql',
-		secondary: 'Read only',
-		secondaryMono: false,
-		hasChildren: true
-	},
-	{
-		id: 'snowflake-finance',
+		id: 's:snowflake-finance',
 		label: 'snowflake-finance',
 		provider: 'snowflake',
-		secondary: 'Read only',
-		secondaryMono: false,
+		secondary: '5',
 		children: [
 			{
-				id: 'snowflake-finance.analytics',
-				label: 'analytics',
-				icon: 'database',
+				id: 'sc:snowflake-finance:analytics.marts',
+				label: 'analytics.marts',
+				icon: 'schema',
+				secondary: '4',
 				children: [
-					{
-						id: MARTS,
-						label: 'marts',
-						icon: 'schema',
-						secondary: '4 tables',
-						secondaryMono: false,
-						children: [
-							{
-								id: `${MARTS}.orders_daily`,
-								label: 'orders_daily',
-								icon: 'table',
-								secondary: '1,284',
-								secondaryMono: false,
-								children: ordersDailySchema.map((c) => col(`${MARTS}.orders_daily`, c.name, c.type))
-							},
-							{
-								id: `${MARTS}.customers_dim`,
-								label: 'customers_dim',
-								icon: 'table',
-								secondary: '418K',
-								secondaryMono: false,
-								children: [
-									col(`${MARTS}.customers_dim`, 'customer_id', 'number'),
-									col(`${MARTS}.customers_dim`, 'email', 'varchar', true),
-									col(`${MARTS}.customers_dim`, 'phone', 'varchar', true),
-									col(`${MARTS}.customers_dim`, 'segment', 'varchar'),
-									col(`${MARTS}.customers_dim`, 'country_code', 'char(2)'),
-									col(`${MARTS}.customers_dim`, 'last_order_at', 'timestamp_ntz'),
-									col(`${MARTS}.customers_dim`, 'lifetime_value_gbp', 'number(14,2)')
-								]
-							},
-							{
-								id: `${MARTS}.refund_rates`,
-								label: 'refund_rates',
-								icon: 'table',
-								secondary: '6,240',
-								secondaryMono: false,
-								hasChildren: true
-							},
-							{
-								id: `${MARTS}.order_payments`,
-								label: 'order_payments',
-								icon: 'table',
-								secondary: '1.3M',
-								secondaryMono: false,
-								hasChildren: true
-							}
-						]
-					}
+					table(
+						ORDERS_DAILY,
+						'orders_daily',
+						'1,284',
+						false,
+						ordersDailySchema.map((c) => col(ORDERS_DAILY, c.name, c.type))
+					),
+					table('mrn://table/snowflake/analytics.marts.customers_dim', 'customers_dim', '418K', true),
+					table('mrn://table/dbt/analytics.marts.refund_rates', 'refund_rates', '6,240'),
+					table('mrn://table/snowflake/analytics.marts.order_payments', 'order_payments', '1.28M')
 				]
 			},
 			{
-				id: 'snowflake-finance.finance',
-				label: 'finance',
-				icon: 'database',
-				hasChildren: true
+				id: 'sc:snowflake-finance:finance.payments',
+				label: 'finance.payments',
+				icon: 'schema',
+				secondary: '1',
+				children: [table('mrn://table/snowflake/finance.payments.charges', 'charges', '2.41M')]
 			}
 		]
 	},
-	{
-		id: 'bigquery-web',
-		label: 'bigquery-web',
-		provider: 'bigquery',
-		secondary: 'Read only',
-		secondaryMono: false,
-		hasChildren: true
-	}
+	{ id: 's:bigquery-web', label: 'bigquery-web', provider: 'bigquery', secondary: '8', hasChildren: true }
 ];
 export const treeExpanded = [
-	'snowflake-finance',
-	'snowflake-finance.analytics',
-	MARTS,
-	`${MARTS}.orders_daily`
+	's:snowflake-finance',
+	'sc:snowflake-finance:analytics.marts',
+	`t:snowflake-finance:${ORDERS_DAILY}`
 ];
-export const treeSelected = `${MARTS}.orders_daily`;
+/** The app selects the source queries run against, not a table. */
+export const treeSelected = 's:snowflake-finance';
+
+/** Tables offered under the empty results, each with the sample query the app would open. */
+export const starters = [
+	{ name: 'orders_daily', description: 'Daily order totals, deduplicated and joined to customers_dim.' },
+	{
+		name: 'customers_dim',
+		description:
+			'One row per customer with their current address, segment and lifetime value. Slowly changing, type 2.'
+	},
+	{ name: 'refund_rates', description: '' },
+	{ name: 'order_payments', description: '' }
+];
 
 /** Completion schema for the SQL editor. */
 export const editorSchema = {
@@ -160,7 +135,7 @@ export const editorSchema = {
 	]
 };
 
-/** Last week's revenue from the certified daily table: Monday 19 to Sunday 25 October, 7 rows. */
+/** Last week's revenue from the daily table: Monday 19 to Sunday 25 October, 7 rows. */
 export const QUERY_SQL = `-- Revenue last week, by day
 select
   order_date,
@@ -173,7 +148,7 @@ where order_date >= dateadd(week, -1, date_trunc('week', current_date))
   and order_date <  date_trunc('week', current_date)
 order by order_date;`;
 
-/** Reaches for the email column of customers_dim, which is tagged PII, so Marmot refuses it. */
+/** Reads customers_dim, a PII table the caller holds no asset:query grant on, so Marmot refuses it before it reaches Snowflake. */
 export const DENIED_SQL = `-- Last week's best customers, to thank them by email
 select
   c.customer_id,
@@ -218,20 +193,6 @@ export const tablesRead = [
 		certified: true
 	}
 ];
-export const deniedTablesRead = [
-	{
-		id: 'customers_dim',
-		name: 'analytics.marts.customers_dim',
-		mrn: 'mrn://table/snowflake/analytics.marts.customers_dim',
-		owner: 'Customer Insights',
-		rows: 418_230,
-		columnsRead: 4,
-		updated: ago(1_440),
-		pii: 'email',
-		certified: true
-	}
-];
-
 /** Query history for the workspace's History tab. */
 export const history = [
 	{
@@ -249,7 +210,7 @@ export const history = [
 		status: 'denied' as const,
 		source: { name: 'snowflake-finance', provider: 'snowflake' },
 		startedAt: ago(6),
-		reason: 'Your role analyst has no grant on PII columns of analytics.marts.customers_dim.'
+		reason: 'you do not have asset:query on mrn://table/snowflake/analytics.marts.customers_dim'
 	},
 	{
 		id: 'h3',
@@ -302,10 +263,10 @@ export interface AuditEvent {
 	decision: string;
 }
 
-/** What revenue-agent runs during the demo, oldest first: the revenue query, then a reach for PII. */
+/** What revenue-agent runs during the demo, oldest first: the revenue query, then a reach for customers_dim. */
 export const agentAudit: AuditEvent[] = [
 	{
-		id: 'q_01JBK83F6N2W7D',
+		id: '9ec02ef9-9693-47fa-9464-3a5ee1c19f47',
 		at: '2026-10-27T09:29:12Z',
 		actor: 'revenue-agent',
 		kind: 'agent',
@@ -321,7 +282,7 @@ export const agentAudit: AuditEvent[] = [
 		decision: 'Allowed by role asset.dataViewer on orders_daily'
 	},
 	{
-		id: 'q_01JBK84R1C9ZPA',
+		id: '62bacc3c-3b2d-4f55-ae98-4603ca18016a',
 		at: '2026-10-27T09:29:48Z',
 		actor: 'revenue-agent',
 		kind: 'agent',
@@ -331,17 +292,16 @@ export const agentAudit: AuditEvent[] = [
 		provider: 'snowflake',
 		sql: DENIED_SQL,
 		outcome: 'denied',
-		reason:
-			'Denied because svc-finance-agent has no grant on the PII column email of analytics.marts.customers_dim. The PII policy requires the pii-read grant for agents.',
+		reason: 'you do not have asset:query on mrn://table/snowflake/analytics.marts.customers_dim',
 		ms: 3,
 		tables: ['mrn://table/snowflake/analytics.marts.customers_dim'],
-		decision: 'Denied by PII policy'
+		decision: 'Denied by permission'
 	}
 ];
 
 export const audit: AuditEvent[] = [
 	{
-		id: 'q_01JBK7Z3D9W4R6',
+		id: '45071117-bc32-49cf-b1ee-32061d98db84',
 		at: ago(3),
 		actor: 'support-triage-agent',
 		kind: 'agent',
@@ -357,7 +317,7 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by grant support-orders-read'
 	},
 	{
-		id: 'q_01JBK7XQ2M8C1T',
+		id: 'b233335b-18e1-4801-9546-871831b60fe9',
 		at: ago(4),
 		actor: 'support-triage-agent',
 		kind: 'agent',
@@ -367,19 +327,18 @@ export const audit: AuditEvent[] = [
 		provider: 'postgresql',
 		sql: 'select c.email, c.phone, o.total_gbp\nfrom shop.public.orders o\njoin shop.analytics.customers_dim c using (customer_id)\nwhere o.order_id = 5521907',
 		outcome: 'denied',
-		reason:
-			'Denied because svc-support has no grant on the PII columns email and phone of shop.analytics.customers_dim. The PII policy requires the pii-read grant for agents.',
+		reason: 'you do not have asset:query on mrn://table/postgresql/shop.analytics.customers_dim',
 		ms: 4,
 		tables: [
 			'mrn://table/postgresql/shop.public.orders',
 			'mrn://table/postgresql/shop.analytics.customers_dim'
 		],
-		decision: 'Denied by PII policy'
+		decision: 'Denied by permission'
 	},
 	{
-		id: 'q_01JBK7S0H6V3NA',
+		id: '227e79c7-fdff-4ec9-8533-4809bc1b93e8',
 		at: ago(12),
-		actor: 'Jane Doe',
+		actor: 'jane.doe',
 		kind: 'person',
 		client: 'editor',
 		source: 'snowflake-finance',
@@ -392,7 +351,7 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by role analyst'
 	},
 	{
-		id: 'q_01JBK7NB0T4XWE',
+		id: '73dd7bad-a271-47bf-bdc4-0bbc6b9224b5',
 		at: ago(26),
 		actor: 'revenue-agent',
 		kind: 'agent',
@@ -408,25 +367,24 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by grant finance-aggregates'
 	},
 	{
-		id: 'q_01JBK7J7RZ2KQ5',
+		id: '38160a09-7aa4-4304-be52-c3fcec4f02fb',
 		at: ago(41),
-		actor: 'Sam Jones',
+		actor: 'sam.jones',
 		kind: 'person',
 		client: 'cli',
 		source: 'bigquery-web',
 		provider: 'bigquery',
 		sql: 'select count(*)\nfrom analytics.sessions\nwhere session_start >= timestamp_sub(current_timestamp(), interval 1 day)',
 		outcome: 'failed',
-		reason:
-			'The query exceeded the 30 s timeout for bigquery-web. Filter on the partition column session_date so BigQuery can prune partitions.',
+		reason: 'context deadline exceeded',
 		ms: 30_000,
 		tables: ['mrn://table/bigquery/marmot-prod.analytics.sessions'],
 		decision: 'Allowed by role analyst'
 	},
 	{
-		id: 'q_01JBK7F3C0PRM9',
+		id: '213354c9-dc68-4395-a0c2-77f29a6a3a27',
 		at: ago(58),
-		actor: 'cli-agent (Jane Doe)',
+		actor: 'claude-code',
 		kind: 'agent',
 		sa: 'jane.doe',
 		client: 'mcp',
@@ -440,7 +398,7 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by role analyst (on behalf of Jane Doe)'
 	},
 	{
-		id: 'q_01JBK79V4HDN0S',
+		id: '54851cf1-5d75-4827-941e-7fa10fc84a16',
 		at: ago(74),
 		actor: 'catalog-steward',
 		kind: 'agent',
@@ -456,9 +414,9 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by grant metadata-read'
 	},
 	{
-		id: 'q_01JBK72AQ7G5LB',
+		id: '8c44b6b8-9eb9-45cf-9e73-2d7b9e9d875e',
 		at: ago(96),
-		actor: 'Alex Taylor',
+		actor: 'alex.taylor',
 		kind: 'person',
 		client: 'editor',
 		source: 'snowflake-finance',
@@ -471,7 +429,7 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by role governance'
 	},
 	{
-		id: 'q_01JBK6WZ8EYFJ3',
+		id: '19009545-f970-4c48-8fd5-505de4d741a1',
 		at: ago(131),
 		actor: 'support-triage-agent',
 		kind: 'agent',
@@ -487,7 +445,7 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by grant support-orders-read'
 	},
 	{
-		id: 'q_01JBK6P1KS3MTV',
+		id: 'e3cac74e-5faa-4327-a810-9ee506675cb2',
 		at: ago(188),
 		actor: 'revenue-agent',
 		kind: 'agent',
@@ -497,16 +455,15 @@ export const audit: AuditEvent[] = [
 		provider: 'snowflake',
 		sql: 'select * from analytics.marts.customers_dim limit 500',
 		outcome: 'denied',
-		reason:
-			'Denied because select * on shop customers_dim reads 3 PII columns, and svc-finance-agent is limited to aggregates on PII tables.',
+		reason: 'you do not have asset:query on mrn://table/snowflake/analytics.marts.customers_dim',
 		ms: 3,
 		tables: ['mrn://table/snowflake/analytics.marts.customers_dim'],
-		decision: 'Denied by aggregates-only grant'
+		decision: 'Denied by permission'
 	},
 	{
-		id: 'q_01JBK6GH5W0ZDC',
+		id: '3f0fd2c8-cbb1-417d-9bb6-82c4f0a803c9',
 		at: ago(240),
-		actor: 'Pat Wilson',
+		actor: 'pat.wilson',
 		kind: 'person',
 		client: 'cli',
 		source: 'bigquery-web',
@@ -519,9 +476,9 @@ export const audit: AuditEvent[] = [
 		decision: 'Allowed by role analyst'
 	},
 	{
-		id: 'q_01JBK69MT2RA8F',
+		id: '0787b90e-0892-44f0-bd8d-aa755058076e',
 		at: ago(302),
-		actor: 'John Smith',
+		actor: 'john.smith',
 		kind: 'person',
 		client: 'editor',
 		source: 'postgres-shop',

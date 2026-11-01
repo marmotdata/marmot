@@ -5,6 +5,7 @@ import { ASSETS_PER_UNIT, UNIT_PLANS, UNIT_PRICE, isUnitPlan } from "@site/src/m
 
 const SIGNUP = "https://cloud.marmotdata.io/signup";
 export const ENTERPRISE_MAIL = "mailto:support@marmotdata.io?subject=Marmot%20Cloud%20Enterprise";
+export const LICENCE_MAIL = "mailto:support@marmotdata.io?subject=Marmot%20Enterprise%20licence";
 
 export interface PlanSummary {
   plan: Plan;
@@ -105,8 +106,56 @@ export const COMPARE: CompareGroup[] = [
   {
     title: "Support",
     rows: [
-      { label: "Support", cells: { free: "Community", team: "Email", scale: "Priority and shared Slack", enterprise: "Named contact" } },
+      { label: "Support", cells: { free: "Community", team: "Email", scale: "Priority email", enterprise: "Named contact and shared Slack" } },
       { label: "Uptime SLA", cells: { free: false, team: "99.5%", scale: "99.9%", enterprise: "99.95%" } },
+    ],
+  },
+];
+
+/** A way to run Marmot on your own infrastructure, drawn in the same columns as the Cloud plans. */
+export interface SelfHostedOption {
+  id: string;
+  name: string;
+  tagline: string;
+  price: string;
+  basis: string;
+  action: { label: string; href: string; primary: boolean };
+  lead: string;
+  adds: string[];
+}
+
+export const SELF_HOSTED: SelfHostedOption[] = [
+  {
+    id: "oss",
+    name: "Open source",
+    tagline: "The catalog, queries and MCP server on your own infrastructure.",
+    price: formatMoney(0),
+    basis: "MIT licence, no limits on assets or users",
+    action: { label: "Deploy it yourself", href: "/docs/Deploy", primary: false },
+    lead: "Includes:",
+    adds: [
+      "Catalog, lineage, glossary and data products",
+      "Queries through Marmot, with a query log for admins",
+      "MCP server, CLI and SDKs",
+      "Single sign-on with your OIDC provider",
+      "One binary, or Kubernetes with the Helm chart",
+      "Community support on Discord and GitHub",
+    ],
+  },
+  {
+    id: "licence",
+    name: "Enterprise licence",
+    tagline: "Everything in Marmot Cloud, run on your own infrastructure.",
+    price: "Custom",
+    basis: "Priced with you",
+    action: { label: "Talk to us", href: LICENCE_MAIL, primary: false },
+    lead: "Everything in open source, plus:",
+    adds: [
+      "Access control per table, data product and glossary term",
+      "Federated secret stores and workload identity",
+      "Per-agent audit trail and SIEM export",
+      "Help with deploying it on your infrastructure",
+      "Named support contact and shared Slack, with an SLA",
     ],
   },
 ];

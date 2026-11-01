@@ -36,29 +36,18 @@ type ChapterData = {
 // Each chapter's demo drives a different screen; the list only has to hand them on.
 const any = <S extends { focus?: string; beat?: number }>(d: DemoConfig<S>) => d as unknown as DemoConfig<{ focus?: string; beat?: number }>;
 
-// Each chapter opens with the problem it solves, then shows the product solving it, and each
-// calls back to the headline: real data, reached safely.
+// Each chapter opens with the problem it solves, then shows the product solving it. They run in
+// the order an agent's question does: find the table, learn what it means, query it, and then
+// what a change to it would break.
 const chapters: ChapterData[] = [
-  {
-    id: "query",
-    title: "Let agents query your data without handing out passwords",
-    lede: "People and agents run SQL through Marmot. It checks every query against your rules before it reaches the database, and keeps a record of all of them.",
-    points: [
-      { Icon: Terminal, text: "SQL against the sources you connect" },
-      { Icon: Block, text: "Refused before it reaches the database" },
-      { Icon: History, text: "Who ran what, when, and what came back" },
-    ],
-    more: { to: "/docs/Cloud/access-control", label: "How access control works" },
-    demo: any(queryDemo),
-  },
   {
     id: "find",
     title: "Find the right table without asking in Slack",
-    lede: "Search every source in plain words, then narrow it with conditions anyone can read.",
+    lede: "Search every connected source in plain words, from the browser, the CLI or an agent over MCP.",
     points: [
       { Icon: Search, text: "Tables, topics, dashboards and models in one list" },
       { Icon: FilterList, text: "Filter by type, owner, tag or any metadata" },
-      { Icon: Extension, text: "Kept current by more than 60 plugins" },
+      { Icon: Extension, text: "Kept current by 70+ plugins" },
     ],
     more: { to: "/docs/Plugins", label: "See the plugins" },
     demo: any(findDemo),
@@ -66,14 +55,26 @@ const chapters: ChapterData[] = [
   {
     id: "understand",
     title: "Know what a column means before anyone trusts it",
-    lede: "Owners, descriptions, glossary terms and certification travel with every asset, so agents answer from the same facts your team uses.",
+    lede: "Owners, descriptions and glossary terms sit with every asset, so humans and agents answer from the same facts.",
     points: [
       { Icon: Group, text: "Owners and teams on every asset" },
       { Icon: MenuBook, text: "Glossary terms that explain each field" },
-      { Icon: Verified, text: "Certified data marked as the one to use" },
+      { Icon: Verified, text: "Certified fields marked as the ones to use" },
     ],
     more: { to: "/docs/glossary", label: "How the glossary works" },
     demo: any(understandDemo),
+  },
+  {
+    id: "query",
+    title: "Let humans and agents query your data without sharing passwords",
+    lede: "Humans and agents run queries through Marmot under the same rules. Each query is checked against the caller’s permissions before it reaches the database, and logged with who ran it and whether it was allowed. Access rules per table, data product and glossary term come with Marmot Cloud.",
+    points: [
+      { Icon: Terminal, text: "Read-only queries against the sources you connect" },
+      { Icon: Block, text: "Refused before it reaches the database" },
+      { Icon: History, text: "Who ran what, when and whether it was allowed" },
+    ],
+    more: { to: "/docs/Cloud/access-control", label: "How access control works" },
+    demo: any(queryDemo),
   },
   {
     id: "trace",
@@ -82,7 +83,7 @@ const chapters: ChapterData[] = [
     points: [
       { Icon: AccountTree, text: "Upstream and downstream, across tools" },
       { Icon: Sync, text: "From plugins and OpenLineage runs" },
-      { Icon: Dashboard, text: "Dashboards that break, before they do" },
+      { Icon: Dashboard, text: "The dashboards a change would break" },
     ],
     more: { to: "/docs/open-lineage", label: "How lineage is collected" },
     demo: any(traceDemo),
@@ -90,11 +91,21 @@ const chapters: ChapterData[] = [
 ];
 
 // Some of the sources Marmot has a plugin for, named beside the quote.
-const sources = ["PostgreSQL", "BigQuery", "Kafka", "dbt", "Airflow", "S3", "ClickHouse", "Trino", "MongoDB"];
+const sources = [
+  { provider: "postgresql", name: "PostgreSQL" },
+  { provider: "bigquery", name: "BigQuery" },
+  { provider: "kafka", name: "Kafka" },
+  { provider: "dbt", name: "dbt" },
+  { provider: "airflow", name: "Airflow" },
+  { provider: "s3", name: "S3" },
+  { provider: "clickhouse", name: "ClickHouse" },
+  { provider: "trino", name: "Trino" },
+  { provider: "mongodb", name: "MongoDB" },
+];
 
 const deploy = {
   oss: ["The catalog, lineage, glossary and MCP server", "One binary, or on Kubernetes with the Helm chart", "Help from the community on Discord and GitHub"],
-  cloud: ["Access control per table, product and term", "Governed SQL with an audit log of every query", "Upgrades, nightly backups and support from the team"],
+  cloud: ["Access control per table, product and term", "Governed queries, with an audit log of every one", "Upgrades, nightly backups and support from the team"],
 };
 
 // One chapter of the tour: the problem, then its points as captions that follow the demo beside it.
@@ -155,20 +166,21 @@ function SignUp({ label = "Start for free" }: { label?: string }): JSX.Element {
 export default function Home(): JSX.Element {
   useEffect(() => {
     void import("@marmotdata/elements/topography.js");
+    void import("@marmotdata/icons/define.js");
   }, []);
   return (
     <Layout
-      title="Your agents need your data, not your database passwords"
-      description="Marmot gives people and agents one governed way in to your data. It knows what every table means and who owns it, checks each query against your rules, and records every answer. Open source, or hosted on Marmot Cloud."
+      title="Data catalog, query gateway and MCP server for humans and agents"
+      description="Marmot is a data catalog, query gateway and MCP server in one. Your team and your agents look up what a table means and who owns it, then query it through Marmot, which checks each query against your access rules and keeps a record of every query. Open source, or hosted on Marmot Cloud."
     >
       <div className="mkt-site">
         <section className="mkt-hero mkt-hero--map">
           <div className="mm-container mkt-hero__grid">
             <div>
-              <h1 className="mkt-hero__title">Your agents need your data, not your database passwords.</h1>
+              <h1 className="mkt-hero__title">Give humans and agents safe access to the right data.</h1>
               <p className="mkt-hero__lede">
-                Marmot gives people and agents one governed way in to your data. It knows what every table means and who owns it, checks each
-                query against your rules, and records every answer. Run it yourself or on Marmot Cloud.
+                Marmot is a data catalog, query gateway and MCP server in one. Your team and your agents read the same definitions and owners, and
+                every query they run is checked and recorded.
               </p>
               <div className="mkt-hero__actions">
                 <SignUp />
@@ -199,20 +211,31 @@ export default function Home(): JSX.Element {
               </figcaption>
             </figure>
             <div className="mkt-proof__sources">
-              <p className="mkt-proof__sources-head">
-                <span>Catalogs what you already run, with more than 60 plugins</span>
+              <div className="mkt-proof__group">
+                <p className="mkt-proof__label">Reads metadata from the tools you already run, with 70+ plugins</p>
+                <ul className="mkt-proof__providers">
+                  {sources.map((s) => (
+                    <li key={s.provider}>
+                      <mm-provider-logo provider={s.provider} size={16} decorative></mm-provider-logo>
+                      {s.name}
+                    </li>
+                  ))}
+                  <li className="mkt-proof__more">and dozens more</li>
+                </ul>
                 <a className="mm-link" href="https://plugins.marmotdata.io">
                   Browse plugins
                 </a>
-              </p>
-              <p className="mkt-proof__sources-list">{sources.join(", ")} and dozens more.</p>
+              </div>
+              <div className="mkt-proof__group">
+                <p className="mkt-proof__label">Built in the open by engineers from</p>
+                <p className="mkt-proof__value">HashiCorp, Adidas, Just Eat Takeaway.com and Traefik</p>
+                <a className="mm-link" href="https://github.com/marmotdata/marmot">
+                  More than 600 stars on GitHub
+                </a>
+              </div>
             </div>
           </div>
         </section>
-
-        <div className="mm-container mkt-tour">
-          <Chapter c={chapters[0]!} />
-        </div>
 
         <section className="mkt-block mkt-block--rule" aria-labelledby="change">
           <div className="mm-container">
@@ -220,7 +243,7 @@ export default function Home(): JSX.Element {
               <h2 className="mkt-block__title" id="change">
                 Why a database password isn’t enough
               </h2>
-              <p className="mkt-block__lede">We asked finance-agent for last week’s revenue, once with a password and once through Marmot.</p>
+              <p className="mkt-block__lede">Both maps show a finance agent looking for last week’s revenue in the same six tables.</p>
             </div>
             <BeforeAfter />
             <div className="mkt-hero__actions mkt-block__actions">
@@ -233,10 +256,10 @@ export default function Home(): JSX.Element {
         </section>
 
         <div className="mm-container mkt-tour">
-          {chapters.slice(1).map((c, i) => (
+          {chapters.map((c, i) => (
             <React.Fragment key={c.id}>
               <Chapter c={c} flip={i % 2 === 1} />
-              {c.id === "understand" && <TourAction />}
+              {c.id === "query" && <TourAction />}
             </React.Fragment>
           ))}
         </div>
@@ -263,13 +286,13 @@ export default function Home(): JSX.Element {
           <mm-topography seed="11" fade="start"></mm-topography>
           <div className="mm-container">
             <h2 className="mkt-band__title" id="deploy">
-              Give your first agent a safe way in to your data
+              Give your team and your agents one safe way in to your data
             </h2>
             <p className="mkt-band__lede">Run it yourself or let us run it. It’s the same catalog and the same MCP server either way, so you can move between them.</p>
             <div className="mkt-deploy">
               <section className="mkt-deploy__option" aria-labelledby="deploy-cloud">
                 <h3 id="deploy-cloud">Marmot Cloud</h3>
-                <p>We run it for you, with governance built in.</p>
+                <p>We run it for you and add access control on top.</p>
                 <ul>
                   {deploy.cloud.map((t) => (
                     <li key={t}>

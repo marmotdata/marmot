@@ -6,7 +6,10 @@ import {
 	AGENT_QUESTION,
 	AGENT_STEP_COUNT,
 	DENIED_SQL,
+	LINEAGE_DASHBOARDS,
+	LINEAGE_OPENLINEAGE_JOB,
 	LINEAGE_PATH,
+	LINEAGE_PLUGIN_EDGE,
 	QUERY_SQL,
 	accessScreen,
 	agentScreen,
@@ -61,50 +64,78 @@ export const agentDemo: DemoConfig<AgentState & Focus> = {
 
 export const findDemo: DemoConfig<DiscoverState & Focus> = {
 	label:
-		'Someone types “revenue” into Discover, narrows it to tables, and opens orders_daily in the preview.',
+		'Discover lists tables, topics, dashboards and models together, is narrowed to finance tables with the Type and Tags filters, and previews ORDERS_DAILY from Snowflake, showing when it last synced.',
 	screen: discoverScreen,
-	initial: { query: '', focus: 'mm-search-bar' },
+	initial: { query: '', beat: 0 },
 	async steps(demo, set) {
+		await demo.wait(1400);
+		set({ focus: 'ul[aria-label="Search results"]' });
+		await demo.wait(2800);
+		set({ beat: 1, focus: '.mm-split' });
 		await demo.wait(900);
-		await type(demo, 'revenue', (query) => set({ query }), 110);
-		await demo.wait(700);
-		set({ focus: '[aria-label="Search results"]' });
-		await demo.wait(1800);
-		set({ query: 'revenue AND @type = table', focus: 'mm-search-bar' });
+		set({ query: '@kind = asset AND @type = table' });
+		await demo.wait(1300);
+		set({ query: '@kind = asset AND @type = table AND @tag = finance' });
+		await demo.wait(1500);
+		set({ focus: 'mm-search-bar' });
 		await demo.wait(1600);
-		set({ selected: 'orders_daily', focus: 'mm-details-blade' });
-		await demo.wait(3500);
+		set({
+			beat: 2,
+			selected: 'ORDERS_DAILY',
+			focus: 'mm-blade-section[heading="At a glance"]'
+		});
+		await demo.wait(4500);
 	}
 };
 
 export const understandDemo: DemoConfig<AssetState & Focus> = {
 	label:
-		'The page for orders_daily shows its owners and description, then its schema, where the net_revenue_gbp field opens with its type and glossary term.',
+		'The page for orders_daily shows Analytics Engineering and Jane Doe as its owners. In the schema, net_revenue_gbp opens with the glossary term Net revenue, and is then marked as certified.',
 	screen: assetScreen,
-	initial: { tab: 'documentation', focus: 'mm-page-header' },
+	initial: { tab: 'documentation', certified: false, focus: 'mm-page-header', beat: 0 },
 	async steps(demo, set) {
+		await demo.wait(1200);
+		set({ focus: 'mm-owner-chip[kind="team"]' });
+		await demo.wait(3000);
+		set({ tab: 'schema', field: '', focus: 'mm-schema-table', beat: 1 });
+		await demo.wait(1500);
+		set({ field: 'net_revenue_gbp', focus: '[data-demo="field-terms"]' });
+		await demo.wait(3200);
+		set({ focus: '[data-demo="field-actions"]', beat: 2 });
+		await demo.wait(1100);
+		set({ certified: true });
+		await demo.wait(1500);
+		set({ focus: 'mm-schema-table' });
 		await demo.wait(2600);
-		set({ tab: 'schema', focus: 'mm-schema-table' });
-		await demo.wait(1800);
-		set({ field: 'net_revenue_gbp' });
-		await demo.wait(4200);
 	}
 };
 
+// The blade's "How it connects to orders_daily" section, where the direction and the declarer show.
+const CONNECTS = 'mm-blade-section[heading^="How it connects"]';
+
 export const traceDemo: DemoConfig<LineageState & Focus> = {
 	label:
-		'Lineage follows orders from the PostgreSQL table through the hourly load and the dbt models to the Revenue overview dashboard.',
+		'The full-screen lineage of orders_daily follows orders from the PostgreSQL table through the Airflow load and the dbt models to the Revenue overview dashboard. An edge declared by the dbt-analytics pipeline and a Spark job reported through OpenLineage open in the blade, then the two dashboards downstream of orders_daily and who to ask about them.',
 	screen: lineageScreen,
-	initial: { focus: 'mm-lineage-canvas' },
+	initial: { focus: 'mm-lineage-canvas', beat: 0 },
 	async steps(demo, set) {
+		await demo.wait(1000);
 		for (const id of LINEAGE_PATH) {
-			await demo.wait(1300);
 			set({ selected: id });
+			await demo.wait(1150);
 		}
-		await demo.wait(900);
-		set({ focus: 'mm-details-blade' });
-		await demo.wait(3200);
-	}
+		set({ selected: LINEAGE_PLUGIN_EDGE, focus: CONNECTS, beat: 1 });
+		await demo.wait(2400);
+		set({ selected: LINEAGE_OPENLINEAGE_JOB, focus: 'mm-blade-section[heading="At a glance"]' });
+		await demo.wait(1700);
+		set({ details: true, focus: 'mm-blade-section[heading="More details"]' });
+		await demo.wait(2500);
+		set({ selected: LINEAGE_DASHBOARDS[0], details: false, focus: 'mm-details-blade', beat: 2 });
+		await demo.wait(2800);
+		set({ selected: LINEAGE_DASHBOARDS[1], focus: CONNECTS });
+		await demo.wait(3400);
+	},
+	rest: 3000
 };
 
 export const accessDemo: DemoConfig<AccessState & Focus> = {
@@ -125,7 +156,7 @@ type QueryDemoState = QueryState & Focus & { view: 'query' | 'audit'; newest: nu
 
 export const queryDemo: DemoConfig<QueryDemoState> = {
 	label:
-		'revenue-agent’s query on orders_daily runs and returns 7 rows. Its next query reads a personal data column and is refused. Both land in the query audit.',
+		'A query on orders_daily runs and returns 7 rows. The next query reads customers_dim, a table the caller has no access to, and is refused. Both land in the query audit.',
 	screen: (s) => (s.view === 'audit' ? auditScreen({ newest: s.newest }) : queryScreen(s)),
 	initial: { view: 'query', sql: '', state: 'idle', newest: 0, focus: 'mm-sql-editor', beat: 0 },
 	async steps(demo, set) {
@@ -136,7 +167,7 @@ export const queryDemo: DemoConfig<QueryDemoState> = {
 		await demo.wait(1100);
 		set({ state: 'results', focus: 'mm-results-grid' });
 		await demo.wait(2800);
-		set({ sql: '', state: 'idle', focus: 'mm-sql-editor', beat: 1 });
+		set({ sql: '', focus: 'mm-sql-editor', beat: 1 });
 		await type(demo, DENIED_SQL, (sql) => set({ sql }), 18);
 		await demo.wait(600);
 		set({ state: 'denied', focus: 'mm-callout' });

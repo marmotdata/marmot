@@ -1,11 +1,12 @@
 /**
- * The one app shell every screen uses, so navigation is identical across the tour.
- * IA: Catalog / Work / Operate groups in a sidebar, Settings at the foot,
- * global search and notifications in the top bar.
+ * The one app shell every screen uses, so navigation is identical across the tour. It follows the
+ * OSS app's layout (web/marmot/src/routes/+layout.svelte): Catalog, Work and Operate groups in the
+ * sidebar with Settings at its foot, and breadcrumbs, the catalog search, notifications, help and
+ * the avatar menu in the top bar. The org switcher is a Cloud element, so it is not here.
  *
  * Embedded in the landing page rather than filling a window: the host sets `--screen-h`, and no
- * keyboard shortcut is registered on the window (`no-shortcut` turns off the shell's ⌘B), so the
- * screen never takes keys from the page around it.
+ * keyboard shortcut is registered on the window (`no-shortcut` turns off the shell's ⌘B, and the
+ * palette has no `global-shortcut`), so the screen never takes keys from the page around it.
  */
 import { html, nothing, type TemplateResult } from 'lit';
 import type {
@@ -27,6 +28,8 @@ export type NavId =
 	| 'audit'
 	| 'rules'
 	| 'settings'
+	| 'account'
+	| 'notifications'
 	| 'none';
 
 export interface ShellOptions {
@@ -45,17 +48,27 @@ const item = (
 	current: NavId,
 	icon: string,
 	label: string,
-	extra: { count?: number; attention?: number; attentionLabel?: string } = {}
+	extra: { attention?: number; attentionLabel?: string } = {}
 ) =>
 	html`<mm-nav-item
 		href="#${id}"
 		icon=${icon}
 		?current=${id === current}
-		.count=${extra.count}
 		.attention=${extra.attention}
 		attention-label=${extra.attentionLabel ?? ''}
 		>${label}</mm-nav-item
 	>`;
+
+// The same pages, in the same order, as the app's palette offers an administrator: the sidebar, then
+// each Settings section, then the caller's own Account pages.
+const settingsSections: [string, string, string, string[]][] = [
+	['members', 'Members', 'person', ['users', 'people', 'invite']],
+	['teams', 'Teams', 'groups', ['groups', 'owners', 'webhooks']],
+	['service-accounts', 'Service accounts', 'smart-toy', ['agents', 'bots', 'tokens']],
+	['roles', 'Roles', 'admin-panel-settings', ['permissions', 'rbac']],
+	['authentication', 'Authentication', 'shield', ['sso', 'oidc', 'saml']],
+	['system', 'System', 'dns', ['search', 'index', 'health']]
+];
 
 const paletteCommands: PaletteCommand[] = [
 	{ id: 'home', label: 'Home', icon: 'home', href: '#home' },
@@ -85,13 +98,31 @@ const paletteCommands: PaletteCommand[] = [
 	},
 	{ id: 'audit', label: 'Query audit', icon: 'policy', href: '#audit' },
 	{ id: 'rules', label: 'Asset rules', icon: 'rule', href: '#rules' },
+	{ id: 'settings', label: 'Settings', icon: 'settings', href: '#settings', group: 'Settings' },
+	...settingsSections.map(
+		([id, label, icon, keywords]): PaletteCommand => ({
+			id: `settings-${id}`,
+			label: `Settings › ${label}`,
+			icon,
+			href: '#settings',
+			group: 'Settings',
+			keywords
+		})
+	),
 	{
-		id: 'settings',
-		label: 'Settings',
-		icon: 'settings',
-		href: '#settings',
-		group: 'Settings',
-		keywords: ['members', 'teams', 'sso']
+		id: 'account',
+		label: 'Account',
+		icon: 'account-circle',
+		href: '#account',
+		group: 'Account',
+		keywords: ['profile', 'name', 'theme', 'language']
+	},
+	{
+		id: 'account-notifications',
+		label: 'Account › Notifications',
+		icon: 'notifications',
+		href: '#account',
+		group: 'Account'
 	},
 	{
 		id: 'api-keys',
@@ -99,14 +130,7 @@ const paletteCommands: PaletteCommand[] = [
 		icon: 'key',
 		href: '#account',
 		group: 'Account',
-		keywords: ['tokens', 'credentials']
-	},
-	{
-		id: 'notifications',
-		label: 'Account › Notifications',
-		icon: 'notifications',
-		href: '#account',
-		group: 'Account'
+		keywords: ['personal', 'api', 'keys', 'tokens', 'cli']
 	}
 ];
 
@@ -138,7 +162,7 @@ const catalogResults: PaletteResult[] = [
 
 const paletteRecents: PaletteItem[] = catalogResults.filter((r) =>
 	[
-		'mrn://table/dbt/analytics.marts.orders_daily',
+		'mrn://model/dbt/analytics.marts.orders_daily',
 		'gmv',
 		'mrn://table/snowflake/analytics.marts.customers_dim'
 	].includes(r.id)
@@ -169,11 +193,14 @@ const paletteSearch: PaletteSearch = (query, signal) =>
 const paletteIn = (el: Element | null) =>
 	el?.closest('mm-app-shell')?.querySelector('mm-command-palette');
 
+// Settings counts what an administrator should look at, such as an expiring key or a failing pipeline.
+const SETTINGS_ATTENTION = 2;
+
 export function shell(o: ShellOptions): TemplateResult {
 	const c = o.current;
 	return html`<mm-app-shell style="height:var(--screen-h, 100vh)" no-shortcut ?bleed=${o.bleed}>
 		<mm-sidebar-nav slot="sidebar" label="Main">
-			<mm-logo slot="header" size="24"></mm-logo>
+			<a slot="header" href="#home" aria-label="Marmot"><mm-logo size="24"></mm-logo></a>
 			<mm-nav-group label="Catalog">
 				${item('home', c, 'home', 'Home')} ${item('discover', c, 'travel-explore', 'Discover')}
 				${item('glossary', c, 'menu-book', 'Glossary')}
@@ -183,24 +210,28 @@ export function shell(o: ShellOptions): TemplateResult {
 				${item('query', c, 'terminal', 'Query')} ${item('insights', c, 'insights', 'Insights')}
 			</mm-nav-group>
 			<mm-nav-group label="Operate">
-				${item('plugins', c, 'extension', 'Plugins', { attention: 1, attentionLabel: '1 pipeline failed' })}
-				${item('audit', c, 'policy', 'Query audit')} ${item('rules', c, 'rule', 'Asset rules')}
+				${item('plugins', c, 'extension', 'Plugins')} ${item('audit', c, 'policy', 'Query audit')}
+				${item('rules', c, 'rule', 'Asset rules')}
 			</mm-nav-group>
 			<div slot="footer">
-				${item('settings', c, 'settings', 'Settings', { attention: 2, attentionLabel: '2 settings need attention' })}
+				${item('settings', c, 'settings', 'Settings', {
+					attention: SETTINGS_ATTENTION,
+					attentionLabel: `Settings, needs attention: ${SETTINGS_ATTENTION}`
+				})}
 			</div>
 		</mm-sidebar-nav>
 		<mm-top-bar
 			slot="topbar"
+			placeholder="Search the catalog"
 			notifications
 			.unread=${o.unread ?? 3}
-			help-href="#docs"
+			help-href="https://marmotdata.io/docs"
 			@mm-open-search=${(e: Event) => paletteIn(e.currentTarget as Element)?.show()}
 		>
 			${
 				o.crumbs?.length
 					? html`<mm-breadcrumbs slot="start">
-							${o.crumbs.map((b, i) => html`<mm-breadcrumb href=${i < o.crumbs!.length - 1 ? (b.href ?? '#') : ''}>${b.label}</mm-breadcrumb>`)}
+							${o.crumbs.map((b, i) => html`<mm-breadcrumb href=${i < o.crumbs!.length - 1 ? (b.href ?? '') : ''}>${b.label}</mm-breadcrumb>`)}
 						</mm-breadcrumbs>`
 					: nothing
 			}

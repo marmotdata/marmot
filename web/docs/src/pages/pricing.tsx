@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
 import { CONSOLE_URL, useCloudSignedIn } from "@site/src/hooks/useCloudSignedIn";
-import PlanColumns from "@site/src/components/pricing/PlanColumns";
+import PlanColumns, { SelfHostedColumns } from "@site/src/components/pricing/PlanColumns";
 import PlanCompare from "@site/src/components/pricing/PlanCompare";
 import UnitEstimator from "@site/src/components/home/UnitEstimator";
 import Faq, { pricingFaq } from "@site/src/components/home/Faq";
@@ -28,22 +28,46 @@ export default function Pricing(): JSX.Element {
   return (
     <Layout
       title="Pricing"
-      description="Marmot Cloud is free to start with no card. Paid plans are sized in compute units for your catalog and your agents, with unlimited users on every plan."
+      description="Run Marmot on Marmot Cloud, free to start and priced per compute unit with unlimited users, or on your own infrastructure under the MIT licence or an Enterprise licence."
     >
       <div className="mkt-site">
         <section className="mkt-page-head">
           <div className="mm-container">
             <h1 className="mkt-page-head__title">Pricing</h1>
             <p className="mkt-page-head__lede">
-              Start free with no card. Paid plans are priced per compute unit, so you pay for the size of your catalog and how busy your
-              agents are, never for seats.
+              Let us run Marmot for you on Marmot Cloud, or run it on your own infrastructure. Either way, users are unlimited and you never
+              pay for seats.
             </p>
           </div>
         </section>
 
-        <section className="mkt-block mkt-block--tight">
+        <section className="mkt-block mkt-block--tight" aria-labelledby="cloud">
           <div className="mm-container">
+            <div className="mkt-block__head">
+              <h2 className="mkt-block__title" id="cloud">
+                Marmot Cloud
+              </h2>
+              <p className="mkt-block__lede">
+                We run it for you. Start free with no card, then pay per compute unit for the size of your catalog and how busy your agents
+                are.
+              </p>
+            </div>
             <PlanColumns />
+          </div>
+        </section>
+
+        <section className="mkt-block mkt-block--rule" aria-labelledby="self-hosted">
+          <div className="mm-container">
+            <div className="mkt-block__head">
+              <h2 className="mkt-block__title" id="self-hosted">
+                Run it yourself
+              </h2>
+              <p className="mkt-block__lede">
+                Open source Marmot is free under the MIT licence. An Enterprise licence adds everything Marmot Cloud has, with our help to
+                deploy it and support with an SLA.
+              </p>
+            </div>
+            <SelfHostedColumns />
           </div>
         </section>
 
@@ -51,7 +75,7 @@ export default function Pricing(): JSX.Element {
           <div className="mm-container">
             <div className="mkt-block__head">
               <h2 className="mkt-block__title" id="estimate-title">
-                Work out your price
+                Work out your Cloud price
               </h2>
               <p className="mkt-block__lede">
                 You need enough units for your catalog or for your agents’ traffic, whichever is bigger. Set both and see the plan that
@@ -66,9 +90,9 @@ export default function Pricing(): JSX.Element {
           <div className="mm-container">
             <div className="mkt-block__head">
               <h2 className="mkt-block__title" id="compare">
-                Compare plans
+                Compare Cloud plans
               </h2>
-              <p className="mkt-block__lede">Every difference between the plans, in one place.</p>
+              <p className="mkt-block__lede">Every difference between the Marmot Cloud plans, in one place.</p>
             </div>
             <PlanCompare />
           </div>

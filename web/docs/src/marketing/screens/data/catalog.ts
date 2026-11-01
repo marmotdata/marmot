@@ -123,9 +123,9 @@ export const assets: Asset[] = [
 		pii: true
 	},
 	{
-		mrn: 'mrn://table/dbt/analytics.marts.orders_daily',
+		mrn: 'mrn://model/dbt/analytics.marts.orders_daily',
 		name: 'orders_daily',
-		type: 'Table',
+		type: 'Model',
 		provider: 'dbt',
 		description: 'Daily order totals, deduplicated and joined to customers_dim.',
 		generated: true,
@@ -162,7 +162,7 @@ export const assets: Asset[] = [
 		owners: ['dp', 'tomas'],
 		tags: ['commerce', 'events'],
 		updated: ago(4),
-		views7d: 133
+		views7d: 280
 	},
 	{
 		mrn: 'mrn://table/bigquery/marmot-prod.analytics.sessions',
@@ -259,7 +259,7 @@ export const assets: Asset[] = [
 		type: 'Agent',
 		provider: 'agent',
 		description:
-			'Answers revenue questions from the finance team in Slack, using certified finance tables.',
+			'Answers revenue questions from the finance team in Slack, using the finance tables.',
 		owners: ['fin', 'dev'],
 		tags: ['finance'],
 		updated: ago(0),
@@ -346,7 +346,7 @@ export const products = [
 	{
 		id: 'dp-finance',
 		name: 'Finance reporting',
-		description: 'Certified finance tables and the revenue dashboards built on them.',
+		description: 'Finance tables and the revenue dashboards built on them.',
 		owners: ['fin'],
 		assets: 9,
 		rules: 1,
@@ -404,9 +404,9 @@ export const ordersLineage = {
 		},
 		{
 			id: 'orders_daily',
-			mrn: 'mrn://table/dbt/analytics.marts.orders_daily',
+			mrn: 'mrn://model/dbt/analytics.marts.orders_daily',
 			name: 'orders_daily',
-			type: 'Table',
+			type: 'Model',
 			provider: 'dbt'
 		},
 		{

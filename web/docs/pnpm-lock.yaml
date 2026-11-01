@@ -78,20 +78,20 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2(react@19.3.1)
       '@marmotdata/css':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.1.4
+        version: 0.1.4
       '@marmotdata/elements':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.1.4
+        version: 0.1.4
       '@marmotdata/icons':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.1.4
+        version: 0.1.4
       '@marmotdata/react':
-        specifier: ^0.1.3
-        version: 0.1.3(@types/react@19.2.14)(react@19.3.1)
+        specifier: ^0.1.4
+        version: 0.1.4(@types/react@19.2.14)(react@19.3.1)
       '@marmotdata/tokens':
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.1.4
+        version: 0.1.4
       '@mdx-js/react':
         specifier: ^3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.3.1)
@@ -1596,22 +1596,22 @@ packages:
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
-  '@marmotdata/css@0.1.3':
-    resolution: {integrity: sha512-5thW/D7Evaohd1+AkWeRd+nb9AE3H8DB5vHh7CBpDayzTXFRAzxwU5H1r6W841I3Qxk/w3XuaZTfHL0/iPI5OA==}
+  '@marmotdata/css@0.1.4':
+    resolution: {integrity: sha512-mTf9b70Z3W/z6g4taMNQ3OkojljQ1isltHV7DDygTeu9QkKuxrfKXjWN1JBYwiVN4CCiASVH+K9bai0cjuhYkw==}
 
-  '@marmotdata/elements@0.1.3':
-    resolution: {integrity: sha512-nKSstk468nQDxIhqCXQdBaZhnx/iCudU7AE5y8oh2yyMknPAafkpgwpUNAOoFPFyVXpWnqQY5Bqtj9gjK3AQqg==}
+  '@marmotdata/elements@0.1.4':
+    resolution: {integrity: sha512-jjQDdLjuAVb7f3Sbs+yrdUwFq/IWhyb5IkSDmlWMA3h7QX7+lWLoUm0fMXUgSfQ/pridJeN4U/4b06/ClFEiEQ==}
 
-  '@marmotdata/icons@0.1.3':
-    resolution: {integrity: sha512-huC1o4HCLnieuUIDgh5h1DbSJlrm7qlAelnWH41+ZExJovPgxjnj1pPBqSO7q7athwKnUcqmOF+00orO4cj5sg==}
+  '@marmotdata/icons@0.1.4':
+    resolution: {integrity: sha512-9xu/R0g1jdk1EVMOlBUl4Q6QIKA2+lSzmGo9buDbNKg2zMD7y7XjRQXlLGZmIVgrZKfl6FCyKFLMp4tFfR/Wkw==}
 
-  '@marmotdata/react@0.1.3':
-    resolution: {integrity: sha512-5oN31XkzMhqZ7dESnias4kVGckizucq+/BbrB02kAsOMKTq6Ta/P7c5lxP+LiTNTI1kax/R7SKWUSCCdJH25DA==}
+  '@marmotdata/react@0.1.4':
+    resolution: {integrity: sha512-BRHL33P/Z8TxKMzhPf1mFEeRyhl6Vqc7vACMjLTDE30vSO7MNl0ivVKmF2/QtCjHJB9KVEyaXs/++ibC76x/qQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  '@marmotdata/tokens@0.1.3':
-    resolution: {integrity: sha512-Zp8EnbVFnwSKYuxvQ7QtyrDUSKY6Yjo/Dr60MeLqaCGK8A7FfVNOymqTkACMAgwF0TbcLL/NHYpsje3cLtI0SA==}
+  '@marmotdata/tokens@0.1.4':
+    resolution: {integrity: sha512-TPiDwJziS8rGGkYOivR1ZJ9EcKOsm/V+thTyajPWHb9WbPqONam8pAurI/G6pd+aBt/mJDCUEYDr4waDUUDxsw==}
 
   '@mdx-js/mdx@3.1.1':
     resolution: {integrity: sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ==}
@@ -8240,11 +8240,11 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.4': {}
 
-  '@marmotdata/css@0.1.3':
+  '@marmotdata/css@0.1.4':
     dependencies:
-      '@marmotdata/tokens': 0.1.3
+      '@marmotdata/tokens': 0.1.4
 
-  '@marmotdata/elements@0.1.3':
+  '@marmotdata/elements@0.1.4':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
@@ -8259,8 +8259,8 @@ snapshots:
       '@floating-ui/dom': 1.8.0
       '@lezer/highlight': 1.2.5
       '@lit-labs/virtualizer': 2.1.1
-      '@marmotdata/icons': 0.1.3
-      '@marmotdata/tokens': 0.1.3
+      '@marmotdata/icons': 0.1.4
+      '@marmotdata/tokens': 0.1.4
       '@tanstack/virtual-core': 3.19.8
       codemirror: 6.0.2
       d3-array: 3.2.4
@@ -8272,20 +8272,20 @@ snapshots:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/icons@0.1.3':
+  '@marmotdata/icons@0.1.4':
     dependencies:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/react@0.1.3(@types/react@19.2.14)(react@19.3.1)':
+  '@marmotdata/react@0.1.4(@types/react@19.2.14)(react@19.3.1)':
     dependencies:
       '@lit/react': 1.0.8(@types/react@19.2.14)
-      '@marmotdata/elements': 0.1.3
+      '@marmotdata/elements': 0.1.4
       react: 19.3.1
     transitivePeerDependencies:
       - '@types/react'
 
-  '@marmotdata/tokens@0.1.3': {}
+  '@marmotdata/tokens@0.1.4': {}
 
   '@mdx-js/mdx@3.1.1':
     dependencies:

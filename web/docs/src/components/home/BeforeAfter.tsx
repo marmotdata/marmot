@@ -13,7 +13,7 @@ import { terrain } from "@site/src/marketing/terrain";
 /*
  * What changes, as two map sheets of the same ground side by side. Without Marmot the ground is
  * unmapped: the agent wanders from one look-alike table to the next and walks straight into the
- * customer table. With Marmot the ground is surveyed: one logged route to the certified table, and
+ * customer table. With Marmot the ground is surveyed: one logged route to the right table, and
  * the personal data fenced off as a restricted zone that a query is refused at. Both sheets are
  * on screen throughout, so the difference shows before anything plays; the story then plays one
  * sheet and then the other, captioned above them like the chapters' points.
@@ -106,8 +106,8 @@ const T = { start: 700, wander: 4500, lost: 1200, pause: 600, route: 2400, arriv
 const WITHOUT_ENDS = T.start + T.wander + T.lost;
 const BOUNDS = [0, WITHOUT_ENDS, WITHOUT_ENDS + T.pause + T.route + T.arrived + T.spur + T.end];
 const HALVES = [
-  { Icon: Key, text: "Without Marmot", detail: "It has a database password and guesses which table holds revenue." },
-  { Icon: Route, text: "With Marmot", detail: "It finds the certified table, and its query on customer emails is refused." },
+  { Icon: Key, text: "Without Marmot", detail: "With only a read-only password, it guesses its way through four look-alike tables and reads customer emails on the way." },
+  { Icon: Route, text: "With Marmot", detail: "The catalog points it to orders_daily, the table finance reports from, and its query for customer emails is refused." },
 ];
 
 type Leg = "wander" | "route" | "spur" | null;
@@ -192,7 +192,7 @@ export default function BeforeAfter(): JSX.Element {
           set({ leg: "wander" });
           await demo.animate(T.wander, (t) => set({ dot: along(wanderRef.current, t), visited: Math.min(WANDER.length, Math.floor(t * WANDER.length + 0.05)) }));
           await demo.wait(T.lost);
-          // Surveyed: one route to the certified table, then a query refused at the zone.
+          // Surveyed: one route to the right table, then a query refused at the zone.
           set({ leg: null, dot: null });
           await demo.wait(T.pause);
           set({ leg: "route" });
@@ -307,7 +307,7 @@ export default function BeforeAfter(): JSX.Element {
               {a.id === "daily" && s.arrived && (
                 <span className="mkt-maphero__note">
                   <Check aria-hidden="true" />
-                  Certified · 7 rows
+                  7 rows
                 </span>
               )}
               {a.id === "customers" && s.refused && (
@@ -327,7 +327,7 @@ export default function BeforeAfter(): JSX.Element {
       {/* The sheets are drawn for the eye; this says what they show, for a screen reader. */}
       <p className="mm-visually-hidden">
         Two maps of the same tables. Without Marmot, the agent guesses between look-alike order tables with a database password, and ends up reading
-        customer emails. With Marmot, it takes one logged route to the certified orders_daily table, and its query on the customer table is refused.
+        customer emails. With Marmot, it takes one logged route to the orders_daily table finance reports from, and its query on the customer table is refused.
       </p>
     </div>
   );

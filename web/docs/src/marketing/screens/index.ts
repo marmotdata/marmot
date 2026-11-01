@@ -6,7 +6,14 @@
 export { agentScreen, AGENT_QUESTION, AGENT_STEP_COUNT, type AgentState } from './agent';
 export { discoverScreen, type DiscoverState } from './discover';
 export { assetScreen, type AssetState } from './asset';
-export { lineageScreen, LINEAGE_PATH, type LineageState } from './lineage';
+export {
+	lineageScreen,
+	LINEAGE_PATH,
+	LINEAGE_PLUGIN_EDGE,
+	LINEAGE_OPENLINEAGE_JOB,
+	LINEAGE_DASHBOARDS,
+	type LineageState
+} from './lineage';
 export { accessScreen, type AccessState } from './access';
 export { queryScreen, QUERY_SQL, DENIED_SQL, type QueryState, type QueryRunState } from './query';
 export { auditScreen, type AuditState } from './audit';
