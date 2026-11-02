@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
 	github.com/rs/zerolog v1.35.1
-	github.com/shopspring/decimal v1.5.0
+	github.com/shopspring/decimal v1.6.0
 	github.com/stretchr/testify v1.12.1
 )
 
