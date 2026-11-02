@@ -155,6 +155,19 @@
 		});
 	});
 
+	// The glossary opens on its first term rather than an empty "choose a term" pane; a search in progress is left alone so typing never jumps to another term
+	$effect(() => {
+		const first = nodes[0]?.id;
+		if (!loaded || error || creating || termId || query || !first) return;
+		untrack(() =>
+			goto(resolve(`/glossary/[[id]]?${termQuery()}`, { id: first }), {
+				replaceState: true,
+				noScroll: true,
+				keepFocus: true
+			})
+		);
+	});
+
 	// Keeps the search when moving between terms, and drops the create-only parameters
 	function termQuery(): string {
 		const params = new SvelteURLSearchParams(page.url.searchParams);

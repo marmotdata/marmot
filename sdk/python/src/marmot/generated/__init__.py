@@ -240,6 +240,7 @@ __all__ = [
     "QueryStatsPoint",
     "QueryStatsTotals",
     "QueryStatusResponse",
+    "QueryUnavailableResponse",
     "RecentItem",
     "RecordRecentViewRequest",
     "RecordRunRequest",
@@ -755,6 +756,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_status_response import (
         QueryStatusResponse as QueryStatusResponse,
     )
+    from marmot.generated.models.query_unavailable_response import (
+        QueryUnavailableResponse as QueryUnavailableResponse,
+    )
     from marmot.generated.models.recent_item import RecentItem as RecentItem
     from marmot.generated.models.record_recent_view_request import (
         RecordRecentViewRequest as RecordRecentViewRequest,
@@ -1160,6 +1164,7 @@ from marmot.generated.models.query_stats_group import QueryStatsGroup as QuerySt
 from marmot.generated.models.query_stats_point import QueryStatsPoint as QueryStatsPoint
 from marmot.generated.models.query_stats_totals import QueryStatsTotals as QueryStatsTotals
 from marmot.generated.models.query_status_response import QueryStatusResponse as QueryStatusResponse
+from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse as QueryUnavailableResponse
 from marmot.generated.models.recent_item import RecentItem as RecentItem
 from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest as RecordRecentViewRequest
 from marmot.generated.models.record_run_request import RecordRunRequest as RecordRunRequest

@@ -1,7 +1,11 @@
+/* Tailwind's preflight reset sits in the lowest cascade layer: emitted unlayered it outranked every @marmotdata/css layer and flattened .mm-prose headings, lists and spacing back to plain text */
+@layer tw-preflight, mm-base, mm-components, mm-layouts, mm-docs, mm-marketing;
 @import '@marmotdata/tokens/index.css';
 @import '@marmotdata/css';
 
-@tailwind base;
+@layer tw-preflight {
+	@tailwind base;
+}
 @tailwind components;
 @tailwind utilities;
 

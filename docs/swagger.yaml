@@ -2947,6 +2947,13 @@ definitions:
           $ref: '#/definitions/PluginInstanceStatus'
         type: array
     type: object
+  QueryUnavailableResponse:
+    properties:
+      code:
+        type: string
+      error:
+        type: string
+    type: object
   RawPluginConfig:
     additionalProperties: true
     type: object
@@ -9420,6 +9427,11 @@ paths:
           description: The query was cancelled
           schema:
             $ref: '#/definitions/ErrorResponse'
+        "503":
+          description: Marmot is still loading plugins after starting; retry after
+            Retry-After
+          schema:
+            $ref: '#/definitions/QueryUnavailableResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []

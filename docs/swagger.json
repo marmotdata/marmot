@@ -7631,6 +7631,12 @@
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
+                    },
+                    "503": {
+                        "description": "Marmot is still loading plugins after starting; retry after Retry-After",
+                        "schema": {
+                            "$ref": "#/definitions/QueryUnavailableResponse"
+                        }
                     }
                 }
             }
@@ -16262,6 +16268,17 @@
                     "items": {
                         "$ref": "#/definitions/PluginInstanceStatus"
                     }
+                }
+            }
+        },
+        "QueryUnavailableResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
                 }
             }
         },

@@ -7639,6 +7639,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
+                    },
+                    "503": {
+                        "description": "Marmot is still loading plugins after starting; retry after Retry-After",
+                        "schema": {
+                            "$ref": "#/definitions/QueryUnavailableResponse"
+                        }
                     }
                 }
             }
@@ -16270,6 +16276,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/PluginInstanceStatus"
                     }
+                }
+            }
+        },
+        "QueryUnavailableResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
                 }
             }
         },

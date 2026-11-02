@@ -3201,6 +3201,7 @@ class QueryApi:
             "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
             "409": "ErrorResponse",
+            "503": "QueryUnavailableResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -3272,6 +3273,7 @@ class QueryApi:
             "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
             "409": "ErrorResponse",
+            "503": "QueryUnavailableResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -3343,6 +3345,7 @@ class QueryApi:
             "403": "QueryRefusedResponse",
             "404": "ErrorResponse",
             "409": "ErrorResponse",
+            "503": "QueryUnavailableResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response

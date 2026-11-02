@@ -188,6 +188,7 @@ export type QueryStatsGroup = S["QueryStatsGroup"];
 export type QueryStatsPoint = S["QueryStatsPoint"];
 export type QueryStatsTotals = S["QueryStatsTotals"];
 export type QueryStatusResponse = S["QueryStatusResponse"];
+export type QueryUnavailableResponse = S["QueryUnavailableResponse"];
 export type RawPluginConfig = S["RawPluginConfig"];
 export type RecentItem = S["RecentItem"];
 export type RecordRecentViewRequest = S["RecordRecentViewRequest"];

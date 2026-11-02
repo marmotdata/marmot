@@ -184,14 +184,24 @@ func apiPaths(next http.Handler) http.Handler {
 	})
 }
 
+// contentSecurityPolicy builds the console's policy. Scripts may only come from Marmot itself or be one of the console's own inline scripts, allowed by hash, so injected markup can never run script and nothing may compile code from strings. Styles keep 'unsafe-inline' because components set style attributes; rendered user content has its styles stripped by the sanitiser. Workers may also start from blob: URLs, which only the console's own scripts can create, so large lineage graphs lay out off the main thread.
+func contentSecurityPolicy(scriptHashes []string) string {
+	scriptSrc := "'self'"
+	for _, h := range scriptHashes {
+		scriptSrc += " " + h
+	}
+	return "default-src 'self'; script-src " + scriptSrc + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ws: wss:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+}
+
 func securityHeaders(next http.Handler, custom map[string]string) http.Handler {
+	csp := contentSecurityPolicy(staticfiles.InlineScriptHashes())
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// API bodies are account data. Set here rather than in RespondJSON so it also covers the 404 fallback and handlers that write a bare 204, and so no browser or shared cache keeps a response after sign-out. Case-insensitive so the case-shifted 404 from apiPaths is covered too.
 		if strings.HasPrefix(strings.ToLower(r.URL.Path), "/api/") {
 			w.Header().Set("Cache-Control", "no-store")
 			w.Header().Set("Vary", "Authorization")
 		}
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws: wss:; frame-ancestors 'self'")
+		w.Header().Set("Content-Security-Policy", csp)
 		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")

@@ -628,7 +628,12 @@
 		</mm-page-header>
 
 		<div class="mm-stack" style="--mm-gap: var(--space-6)">
-			<mm-tabs label={m.asset_page_tabs_label({ name: asset.name })} value={activeTab}>
+			<!-- An asset has up to eleven tabs, so the count cap is lifted and tabs move into More only when the width runs out -->
+			<mm-tabs
+				label={m.asset_page_tabs_label({ name: asset.name })}
+				value={activeTab}
+				max-visible="12"
+			>
 				{#each tabs as t (t.id)}
 					<mm-tab value={t.id} href={tabHref(t.id)} icon={t.icon} count={t.count}>{t.label}</mm-tab>
 				{/each}

@@ -208,6 +208,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_stats_point import QueryStatsPoint
     from marmot.generated.models.query_stats_totals import QueryStatsTotals
     from marmot.generated.models.query_status_response import QueryStatusResponse
+    from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse
     from marmot.generated.models.recent_item import RecentItem
     from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest
     from marmot.generated.models.record_run_request import RecordRunRequest
@@ -498,6 +499,7 @@ from marmot.generated.models.query_stats_group import QueryStatsGroup
 from marmot.generated.models.query_stats_point import QueryStatsPoint
 from marmot.generated.models.query_stats_totals import QueryStatsTotals
 from marmot.generated.models.query_status_response import QueryStatusResponse
+from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse
 from marmot.generated.models.recent_item import RecentItem
 from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest
 from marmot.generated.models.record_run_request import RecordRunRequest

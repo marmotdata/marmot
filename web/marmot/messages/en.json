@@ -854,6 +854,8 @@
 	"dataquery_workspace_denied_next": "Change the query to leave out what you cannot read, or ask an administrator for access.",
 	"dataquery_workspace_error_heading": "Marmot could not reach {source}, so the query did not run.",
 	"dataquery_workspace_error_next": "Try again in a minute. If it keeps happening, check the source's pipeline.",
+	"dataquery_workspace_starting_heading": "Marmot is still starting up, so the query did not run.",
+	"dataquery_workspace_starting_next": "Try again in a moment.",
 	"dataquery_workspace_failed_heading": "{source} rejected the query.",
 	"dataquery_workspace_failed_next": "Fix the statement and run it again.",
 	"dataquery_workspace_format": "Format SQL",

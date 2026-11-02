@@ -88,6 +88,8 @@
 	let progressTimer: ReturnType<typeof setInterval> | undefined;
 	let failure = $state('');
 	let unreachable = $state('');
+	// Marmot answered 503 because it is still loading plugins after a restart, which clears on its own
+	let starting = $state(false);
 	let sqlError = $state<SqlError | null>(null);
 	let elapsedMs = $state(0);
 	// The audit record of the last run, found from history when the run itself returned an error
@@ -311,6 +313,7 @@
 		cancelled = false;
 		failure = '';
 		unreachable = '';
+		starting = false;
 		sqlError = null;
 		recordId = '';
 	}
@@ -380,7 +383,8 @@
 			else if (e instanceof ApiError && e.status === 400) {
 				failure = stripKind(message);
 				sqlError = errorPosition(failure, text);
-			} else unreachable = message;
+			} else if (e instanceof ApiError && e.status === 503) starting = true;
+			else unreachable = message;
 		} finally {
 			stopProgress();
 			runController = null;
@@ -623,6 +627,14 @@
 			failure,
 			m.dataquery_workspace_failed_next(),
 			false,
+			false
+		)}
+	{:else if starting}
+		{@render callout(
+			m.dataquery_workspace_starting_heading(),
+			'',
+			m.dataquery_workspace_starting_next(),
+			true,
 			false
 		)}
 	{:else if unreachable}
