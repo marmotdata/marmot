@@ -2413,20 +2413,6 @@ definitions:
       rule_type:
         type: string
     type: object
-  PreviewResponse:
-    properties:
-      column_names:
-        items:
-          type: string
-        type: array
-      rows:
-        items:
-          items: {}
-          type: array
-        type: array
-      total_rows:
-        type: integer
-    type: object
   ProductImageMeta:
     properties:
       content_type:
@@ -4004,8 +3990,6 @@ definitions:
       default_language:
         type: string
       encryption_configured:
-        type: boolean
-      table_preview_enabled:
         type: boolean
     type: object
   UpdateAssetRequest:
@@ -5772,50 +5756,6 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Get user's assets
-      tags:
-      - assets
-  /api/v1/assets/preview/{id}:
-    get:
-      description: Fetches sample data from the asset's data source. Requires assets:preview
-        permission.
-      operationId: getAssetsPreviewID
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/PreviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "403":
-          description: Missing assets:preview permission
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "501":
-          description: Data preview not supported for this asset
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get preview data for an asset
       tags:
       - assets
   /api/v1/assets/qualified-name/{name}:

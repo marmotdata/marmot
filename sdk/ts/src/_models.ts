@@ -160,7 +160,6 @@ export type PluginRun = S["PluginRun"];
 export type PluginUpdatesStatus = S["PluginUpdatesStatus"];
 export type PluginVersionStatus = S["PluginVersionStatus"];
 export type PreviewRequest = S["PreviewRequest"];
-export type PreviewResponse = S["PreviewResponse"];
 export type ProductImageMeta = S["ProductImageMeta"];
 export type ProfileRoleSource = S["ProfileRoleSource"];
 export type ProfileTeam = S["ProfileTeam"];

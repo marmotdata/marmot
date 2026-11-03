@@ -7,7 +7,7 @@
 	import { listRoles } from '$lib/roles/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { providerName, roleLabel } from '$lib/users/format';
+	import { providerName } from '$lib/users/format';
 	import type { User } from '$lib/users/types';
 	import type { Role } from '$lib/roles/types';
 
@@ -92,8 +92,7 @@
 			}}
 		>
 			{#each roles as role (role.id)}
-				<mm-option value={role.id} label={roleLabel(role.name)} description={role.description}
-				></mm-option>
+				<mm-option value={role.id} label={role.name} description={role.description}></mm-option>
 			{/each}
 		</mm-multiselect>
 		<mm-switch

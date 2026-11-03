@@ -180,7 +180,6 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
     from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
     from marmot.generated.models.preview_request import PreviewRequest
-    from marmot.generated.models.preview_response import PreviewResponse
     from marmot.generated.models.product_image_meta import ProductImageMeta
     from marmot.generated.models.profile_role_source import ProfileRoleSource
     from marmot.generated.models.profile_team import ProfileTeam
@@ -472,7 +471,6 @@ from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInpu
 from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
 from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
 from marmot.generated.models.preview_request import PreviewRequest
-from marmot.generated.models.preview_response import PreviewResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta
 from marmot.generated.models.profile_role_source import ProfileRoleSource
 from marmot.generated.models.profile_team import ProfileTeam

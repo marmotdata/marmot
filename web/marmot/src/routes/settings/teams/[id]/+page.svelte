@@ -16,7 +16,7 @@
 	import { formatDate } from '$lib/utils';
 	import { assetHref } from '$lib/assetrules/assets';
 	import { providerLabel } from '$lib/assetrules/plain';
-	import { providerName, roleLabel } from '$lib/users/format';
+	import { providerName } from '$lib/users/format';
 	import { notificationTypeLabels, providerLabels, type TeamWebhook } from '$lib/teams/webhooks';
 	import type { OwnerResult, TeamMemberRow, TeamRow } from '$lib/teams/types';
 	import type { Asset } from '$lib/assets/types';
@@ -552,7 +552,7 @@
 											? m.teams_sso_mapping_with_role({
 													group: g.sso_group_name,
 													provider: providerName(g.provider),
-													role: roleLabel(g.role_name)
+													role: g.role_name
 												})
 											: m.teams_sso_mapping({
 													group: g.sso_group_name,

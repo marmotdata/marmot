@@ -54,24 +54,3 @@ export async function throwApiError(response: Response): Promise<never> {
 	}
 	error(response.status, { message, requestId });
 }
-
-export interface AssetPreviewResponse {
-	column_names: string[];
-	rows: unknown[][];
-	total_rows?: number;
-}
-
-interface ApiError extends Error {
-	status?: number;
-}
-
-export async function fetchAssetPreview(assetId: string): Promise<AssetPreviewResponse> {
-	const response = await fetchApi(`/assets/preview/${assetId}`);
-	if (!response.ok) {
-		const errorData = await response.json();
-		const error: ApiError = new Error(errorData.error || m.ui_preview_fetch_error());
-		error.status = response.status;
-		throw error;
-	}
-	return await response.json();
-}

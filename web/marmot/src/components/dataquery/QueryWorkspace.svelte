@@ -100,6 +100,16 @@
 
 	let explorerOpen = $state(true);
 	let wide = $state(true);
+	// The toolbar's own width in rem, so it adapts to a narrow pane (such as beside a blade) and not only a narrow viewport
+	let toolbarRem = $state(Infinity);
+	// Below these widths the toolbar drops the shortcut hint and the Format SQL text, then the Run query text, so the row limit and Run query keep one line
+	let toolbarCompact = $derived(toolbarRem < 36);
+	let toolbarTight = $derived(toolbarRem < 23);
+	// Set once the row limit and run controls drop below the source select, which hides the separator that would otherwise trail the first line
+	let toolbarWrapped = $state(false);
+	let toolbarEl = $state<HTMLElement>();
+	let sourceSelectEl = $state<HTMLElement>();
+	let runGroupEl = $state<HTMLElement>();
 	let tab = $state<Tab>('results');
 	let outputHeight = $state(0);
 
@@ -107,7 +117,7 @@
 	let recentTotal = $state(0);
 	let starters = $state<QuerySourceTable[]>([]);
 	let startersRequest = 0;
-	// A statement the workspace filled in itself, which it may replace when the source changes; anything typed is left alone
+	// A sample statement the workspace filled in itself, which it may replace when the source changes; anything typed, opened or passed in the URL is left alone
 	let autoFilled = '';
 
 	// Completion metadata per source, filled as the explorer loads tables and columns
@@ -274,7 +284,8 @@
 			addTables(name, tables);
 			starters = tables.filter((t) => t.sample_statement);
 			const preview = starters[0]?.sample_statement ?? '';
-			if (preview && (statement.trim() === '' || statement === autoFilled)) setStatement(preview);
+			if (preview && (statement.trim() === '' || statement === autoFilled))
+				setStatement(preview, true);
 		} catch {
 			// Starters are a convenience; the workspace works without them
 		}
@@ -299,9 +310,9 @@
 		loadStarters(name);
 	}
 
-	function setStatement(text: string) {
+	function setStatement(text: string, sample = false) {
 		statement = text;
-		autoFilled = text;
+		autoFilled = sample ? text : '';
 		sqlError = null;
 	}
 
@@ -464,6 +475,23 @@
 		explorerOpen = !explorerOpen;
 		store(EXPLORER_KEY, explorerOpen ? '1' : '0');
 	}
+
+	$effect(() => {
+		const bar = toolbarEl;
+		const first = sourceSelectEl;
+		const group = runGroupEl;
+		if (!bar || !first || !group) return;
+		const check = () => {
+			const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+			toolbarRem = bar.getBoundingClientRect().width / rem;
+			toolbarWrapped = group.getBoundingClientRect().top >= first.getBoundingClientRect().bottom;
+		};
+		const ro = new ResizeObserver(check);
+		ro.observe(bar);
+		ro.observe(group);
+		check();
+		return () => ro.disconnect();
+	});
 
 	onMount(() => {
 		explorerOpen = readStored(EXPLORER_KEY) !== '0';
@@ -702,7 +730,12 @@
 {#snippet workspace()}
 	<div class="main">
 		<mm-visually-hidden><mm-heading level={1}>{m.nav_query()}</mm-heading></mm-visually-hidden>
-		<mm-toolbar label={m.dataquery_workspace_toolbar_label()} class="toolbar">
+		<mm-toolbar
+			label={m.dataquery_workspace_toolbar_label()}
+			class="toolbar"
+			class:compact={toolbarCompact}
+			bind:this={toolbarEl}
+		>
 			{#if wide}
 				<mm-button
 					variant="ghost"
@@ -718,6 +751,7 @@
 				value={source}
 				onmm-change={(e: CustomEvent<{ value: string }>) => selectSource(e.detail.value)}
 				class="source-select"
+				bind:this={sourceSelectEl}
 			>
 				{#if source && !current}
 					<mm-option value={source}>{source}</mm-option>
@@ -729,38 +763,60 @@
 			<mm-status-pill status="neutral" icon="lock" title={m.dataquery_workspace_read_only_hint()}
 				>{m.dataquery_console_read_only()}</mm-status-pill
 			>
-			<mm-toolbar-separator></mm-toolbar-separator>
-			<mm-select
-				label={m.dataquery_console_row_limit()}
-				hide-label
-				value={String(maxRows)}
-				onmm-change={(e: CustomEvent<{ value: string }>) => (maxRows = Number(e.detail.value))}
-				class="limit-select"
-			>
-				{#each ROW_LIMITS as limit (limit)}
-					<mm-option value={String(limit)}
-						>{m.dataquery_console_rows({ count: formatNumber(limit) })}</mm-option
-					>
-				{/each}
-			</mm-select>
-			<span slot="end" class="mm-cluster">
-				{#if running}
-					<mm-button variant="secondary" icon="stop" onclick={cancel}
-						>{m.dataquery_workspace_cancel()}</mm-button
-					>
-					<mm-button variant="primary" loading>{m.dataquery_workspace_running()}</mm-button>
-				{:else}
-					<mm-button variant="ghost" icon="data-object" onclick={() => editor?.format()}
-						>{m.dataquery_workspace_format()}</mm-button
-					>
-					<mm-kbd keys="mod+enter" label={m.dataquery_workspace_run_shortcut()}></mm-kbd>
-					<mm-button
-						variant="primary"
-						icon="play-arrow"
-						disabled={!canRun}
-						onclick={() => editor?.run()}>{m.dataquery_workspace_run()}</mm-button
-					>
-				{/if}
+			<mm-toolbar-separator class:hidden={toolbarWrapped}></mm-toolbar-separator>
+			<!-- The row limit and run controls share the end slot so they wrap as one line, and the slot grows so Run query stays right-aligned -->
+			<span slot="end" class="run-group" bind:this={runGroupEl}>
+				<mm-select
+					label={m.dataquery_console_row_limit()}
+					hide-label
+					value={String(maxRows)}
+					onmm-change={(e: CustomEvent<{ value: string }>) => (maxRows = Number(e.detail.value))}
+					class="limit-select"
+				>
+					{#each ROW_LIMITS as limit (limit)}
+						<mm-option value={String(limit)}
+							>{m.dataquery_console_rows({ count: formatNumber(limit) })}</mm-option
+						>
+					{/each}
+				</mm-select>
+				<span class="run-actions">
+					{#if running}
+						<mm-button variant="secondary" icon="stop" onclick={cancel}
+							>{m.dataquery_workspace_cancel()}</mm-button
+						>
+						<mm-button variant="primary" loading>{m.dataquery_workspace_running()}</mm-button>
+					{:else}
+						{#if toolbarCompact}
+							<mm-button
+								variant="ghost"
+								icon="data-object"
+								label={m.dataquery_workspace_format()}
+								onclick={() => editor?.format()}
+							></mm-button>
+						{:else}
+							<mm-button variant="ghost" icon="data-object" onclick={() => editor?.format()}
+								>{m.dataquery_workspace_format()}</mm-button
+							>
+							<mm-kbd keys="mod+enter" label={m.dataquery_workspace_run_shortcut()}></mm-kbd>
+						{/if}
+						{#if toolbarTight}
+							<mm-button
+								variant="primary"
+								icon="play-arrow"
+								label={m.dataquery_workspace_run()}
+								disabled={!canRun}
+								onclick={() => editor?.run()}
+							></mm-button>
+						{:else}
+							<mm-button
+								variant="primary"
+								icon="play-arrow"
+								disabled={!canRun}
+								onclick={() => editor?.run()}>{m.dataquery_workspace_run()}</mm-button
+							>
+						{/if}
+					{/if}
+				</span>
 			</span>
 		</mm-toolbar>
 		<mm-sql-editor
@@ -898,12 +954,54 @@
 		padding: var(--space-3) var(--space-5);
 	}
 
+	/* The start group keeps its content width and the end group takes the rest of its line, so the row limit sits after the source controls on one line and leads its own line once wrapped */
+	.toolbar::part(start) {
+		flex: 0 1 auto;
+	}
+
+	.toolbar::part(end) {
+		flex: 1 1 auto;
+		margin-inline-start: 0;
+	}
+
+	/* The source select gives up width before anything wraps, down to a width that still shows a source name */
 	.source-select {
-		inline-size: 14rem;
+		flex: 1 1 14rem;
+		min-inline-size: 10rem;
+		max-inline-size: 14rem;
+	}
+
+	/* In a narrow toolbar the source select gives up width before the explorer toggle wraps away from it */
+	.toolbar.compact {
+		padding-inline: var(--space-4);
+	}
+
+	.compact .source-select {
+		flex-basis: 10rem;
+	}
+
+	.hidden {
+		visibility: hidden;
+	}
+
+	.run-group {
+		display: flex;
+		flex: 1 1 auto;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+		min-inline-size: 0;
 	}
 
 	.limit-select {
 		inline-size: 8.5rem;
+	}
+
+	.run-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-inline-start: auto;
 	}
 
 	.output {
@@ -934,10 +1032,6 @@
 	@media (max-width: 767px) {
 		.toolbar {
 			padding: var(--space-3) var(--space-4);
-		}
-
-		.source-select {
-			inline-size: 10rem;
 		}
 	}
 </style>

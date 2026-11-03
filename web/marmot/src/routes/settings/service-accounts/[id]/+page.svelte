@@ -10,7 +10,6 @@
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { formatDate, formatRelativeTime } from '$lib/utils';
-	import { roleLabel } from '$lib/users/format';
 	import {
 		getServiceAccount,
 		deleteServiceAccount,
@@ -318,9 +317,7 @@
 
 		<mm-description-list layout="inline-grid" columns={4}>
 			<mm-description term={m.users_header_roles()}>
-				{sa.roles.length
-					? sa.roles.map((r) => roleLabel(r.name)).join(', ')
-					: m.serviceaccounts_no_roles()}
+				{sa.roles.length ? sa.roles.map((r) => r.name).join(', ') : m.serviceaccounts_no_roles()}
 			</mm-description>
 			{#if !sa.active}
 				<mm-description term={m.common_status()}>

@@ -8,7 +8,7 @@
 	import { createGroupMapping, deleteGroupMapping, listGroupMappings } from '$lib/sso/api';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { providerName, roleLabel } from '$lib/users/format';
+	import { providerName } from '$lib/users/format';
 	import type { GroupMapping, SSOProviderStatus } from '$lib/sso/types';
 	import type { Role } from '$lib/roles/types';
 	import type { Team } from '$lib/teams/types';
@@ -118,7 +118,7 @@
 			key: 'role_name',
 			header: m.sso_mapping_col_role(),
 			width: 160,
-			value: (g) => (g.role_name ? roleLabel(g.role_name) : m.sso_mapping_default_role())
+			value: (g) => (g.role_name ? g.role_name : m.sso_mapping_default_role())
 		},
 		{
 			key: 'team_name',
@@ -200,7 +200,7 @@
 		>
 			<mm-option value="" label={m.sso_mapping_default_role()}></mm-option>
 			{#each roles as role (role.id)}
-				<mm-option value={role.id} label={roleLabel(role.name)}></mm-option>
+				<mm-option value={role.id} label={role.name}></mm-option>
 			{/each}
 		</mm-select>
 		<mm-select

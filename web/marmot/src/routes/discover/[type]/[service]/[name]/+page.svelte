@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { fetchApi, fetchAssetPreview, type AssetPreviewResponse } from '$lib/api';
+	import { fetchApi } from '$lib/api';
 	import { getAssetQueryPreview } from '$lib/dataquery/api';
 	import type { Asset, AssetTabCounts, EnrichedExternalLink } from '$lib/assets/types';
 	import { setCrumbs, BladeSlot } from '$lib/mm';
@@ -15,14 +15,12 @@
 	import AssetRunHistory from '$components/asset/AssetRunHistory.svelte';
 	import AgentRunsView from '$components/asset/AgentRunsView.svelte';
 	import AssetQueryPanel from '$components/dataquery/AssetQueryPanel.svelte';
-	import DataPreviewTable from '$components/asset/DataPreviewTable.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import AssetPageBlade from '$components/asset/AssetPageBlade.svelte';
 	import AssetOwnerPicker, { type AssetOwner } from '$components/asset/AssetOwnerPicker.svelte';
 	import AssetLinksEditor from '$components/asset/AssetLinksEditor.svelte';
 	import { linkIcon, providerKey } from '$components/asset/assetFormat';
 	import { auth } from '$lib/stores/auth';
-	import { tablePreviewEnabled } from '$lib/stores/features';
 	import { toasts } from '$lib/stores/toast';
 	import { formatRelativeTime } from '$lib/utils';
 	import { formatNumber } from '$lib/utils/format';
@@ -40,7 +38,6 @@
 		| 'run-history'
 		| 'queries'
 		| 'query'
-		| 'preview'
 		| 'environments'
 		| 'contents';
 
@@ -74,10 +71,6 @@
 
 	// The blade starts folded on tabs that need the width; a fold or unfold by hand holds until the tab changes.
 	let bladeOverride = $state<boolean | null>(null);
-
-	let previewData: AssetPreviewResponse | null = $state(null);
-	let previewLoading = $state(false);
-	let previewError: string | null = $state(null);
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	const canQueryData = auth.hasPermission('assets', 'query');
@@ -145,12 +138,6 @@
 			},
 			{ id: 'query', label: m.discover_tab_query(), icon: 'code', show: !!a.query },
 			{
-				id: 'preview',
-				label: m.discover_tab_preview(),
-				icon: 'table-view',
-				show: isTable && $tablePreviewEnabled
-			},
-			{
 				id: 'environments',
 				label: m.discover_tab_environments(),
 				icon: 'layers',
@@ -183,8 +170,7 @@
 		'lineage',
 		'runs',
 		'run-history',
-		'queries',
-		'preview'
+		'queries'
 	]);
 	let bladeCollapsed = $derived(bladeOverride ?? wideTabs.has(activeTab));
 
@@ -400,30 +386,6 @@
 		}
 	}
 
-	async function fetchPreviewData() {
-		if (!asset?.id) return;
-		previewLoading = true;
-		previewError = null;
-		previewData = null;
-		try {
-			previewData = await fetchAssetPreview(asset.id);
-		} catch (err) {
-			let errorMsg: string = m.discover_preview_fetch_error();
-			const status =
-				typeof err === 'object' && err !== null && 'status' in err
-					? (err as { status?: number }).status
-					: undefined;
-			if (status === 403) {
-				errorMsg = m.discover_preview_permission_error();
-			} else if (err instanceof Error) {
-				errorMsg = err.message;
-			}
-			previewError = errorMsg;
-		} finally {
-			previewLoading = false;
-		}
-	}
-
 	// Size first, then freshness, as in "1,284 rows · Updated 5 hours ago".
 	let caption = $derived.by(() => {
 		if (!asset) return '';
@@ -474,13 +436,6 @@
 			fetchChildren();
 			fetchCounts();
 			editingNotes = false;
-		}
-	});
-
-	// Preview is fetched only when its tab is opened, since it runs a query against the source.
-	$effect(() => {
-		if (activeTab === 'preview' && asset?.id && !previewData && !previewLoading && !previewError) {
-			fetchPreviewData();
 		}
 	});
 </script>
@@ -669,14 +624,6 @@
 					label={m.discover_tab_query()}
 					wrap
 				></mm-code-sample>
-			{:else if activeTab === 'preview'}
-				<DataPreviewTable
-					columnNames={previewData?.column_names ?? []}
-					rows={previewData?.rows ?? []}
-					loading={previewLoading}
-					error={previewError}
-					onretry={fetchPreviewData}
-				/>
 			{:else if activeTab === 'queries' && asset.mrn}
 				<AssetQueryPanel mrn={asset.mrn} name={asset.name ?? ''} provider={providerKey(asset)} />
 			{:else if activeTab === 'environments'}

@@ -33,7 +33,6 @@ type UIConfigResponse struct {
 	Banner               BannerResponse `json:"banner"`
 	EncryptionConfigured bool           `json:"encryption_configured"`
 	AllowUnencrypted     bool           `json:"allow_unencrypted"`
-	TablePreviewEnabled  bool           `json:"table_preview_enabled"`
 	DefaultLanguage      string         `json:"default_language"`
 } // @name UIConfigResponse
 
@@ -62,9 +61,9 @@ func (h *Handler) getUIConfig(w http.ResponseWriter, r *http.Request) {
 			ID:          h.config.UI.Banner.ID,
 		},
 		EncryptionConfigured: h.encryptionConfigured,
-		AllowUnencrypted:     h.config.Server.AllowUnencrypted,
-		TablePreviewEnabled:  h.config.Experimental.TablePreview,
-		DefaultLanguage:      h.config.UI.DefaultLanguage,
+		// allow_unencrypted only means plaintext storage when no key is set, since a configured key always encrypts
+		AllowUnencrypted: h.config.Server.AllowUnencrypted && h.config.Server.EncryptionKey == "",
+		DefaultLanguage:  h.config.UI.DefaultLanguage,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

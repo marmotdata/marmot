@@ -17,7 +17,6 @@
 	import { theme } from '$lib/stores/theme';
 	import { notifications, unreadCount } from '$lib/stores/notifications';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
-	import { tablePreviewEnabled } from '$lib/stores/features';
 	import { fetchApi } from '$lib/api';
 	import { recordView, viewedItem } from '$lib/home/api';
 	import { chrome, mmIcon, type Crumb } from '$lib/mm';
@@ -73,7 +72,6 @@
 				bannerConfig = data.banner;
 				encryptionConfigured.set(data.encryption_configured ?? true);
 				allowUnencrypted.set(data.allow_unencrypted ?? false);
-				tablePreviewEnabled.set(data.table_preview_enabled ?? false);
 			}
 		} catch (error) {
 			console.error('Failed to fetch UI config:', error);
@@ -483,7 +481,8 @@
 			>
 				{#if crumbs.length}
 					<mm-breadcrumbs slot="start">
-						{#each crumbs as crumb, i (i)}
+						<!-- Keyed by label so a crumb whose name arrives later is a new child, which makes mm-breadcrumbs re-fit instead of keeping the "…" it collapsed to for the placeholder -->
+						{#each crumbs as crumb, i (`${i}:${crumb.label}`)}
 							<mm-breadcrumb href={i < crumbs.length - 1 ? (crumb.href ?? '') : ''}
 								>{crumb.label}</mm-breadcrumb
 							>

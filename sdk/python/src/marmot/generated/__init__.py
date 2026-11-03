@@ -212,7 +212,6 @@ __all__ = [
     "PluginserveEnrolResult",
     "PluginserveEnrolSource",
     "PreviewRequest",
-    "PreviewResponse",
     "ProductImageMeta",
     "ProfileRoleSource",
     "ProfileTeam",
@@ -713,7 +712,6 @@ if __import__("typing").TYPE_CHECKING:
         PluginserveEnrolSource as PluginserveEnrolSource,
     )
     from marmot.generated.models.preview_request import PreviewRequest as PreviewRequest
-    from marmot.generated.models.preview_response import PreviewResponse as PreviewResponse
     from marmot.generated.models.product_image_meta import ProductImageMeta as ProductImageMeta
     from marmot.generated.models.profile_role_source import ProfileRoleSource as ProfileRoleSource
     from marmot.generated.models.profile_team import ProfileTeam as ProfileTeam
@@ -1138,7 +1136,6 @@ from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInpu
 from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult as PluginserveEnrolResult
 from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource as PluginserveEnrolSource
 from marmot.generated.models.preview_request import PreviewRequest as PreviewRequest
-from marmot.generated.models.preview_response import PreviewResponse as PreviewResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta as ProductImageMeta
 from marmot.generated.models.profile_role_source import ProfileRoleSource as ProfileRoleSource
 from marmot.generated.models.profile_team import ProfileTeam as ProfileTeam
