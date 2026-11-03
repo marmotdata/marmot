@@ -165,13 +165,7 @@
 		return isAgent ? 'runs' : 'metadata';
 	});
 
-	const wideTabs = new Set<TabId>([
-		'schema',
-		'lineage',
-		'runs',
-		'run-history',
-		'queries'
-	]);
+	const wideTabs = new Set<TabId>(['schema', 'lineage', 'runs', 'run-history', 'queries']);
 	let bladeCollapsed = $derived(bladeOverride ?? wideTabs.has(activeTab));
 
 	$effect(() => {
