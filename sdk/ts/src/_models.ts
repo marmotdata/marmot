@@ -169,6 +169,7 @@ export type QueryAccessRequestInput = S["QueryAccessRequestInput"];
 export type QueryAgentSummariesResponse = S["QueryAgentSummariesResponse"];
 export type QueryAgentSummary = S["QueryAgentSummary"];
 export type QueryAssetContext = S["QueryAssetContext"];
+export type QueryAssetPreview = S["QueryAssetPreview"];
 export type QueryAssetStats = S["QueryAssetStats"];
 export type QueryColumn = S["QueryColumn"];
 export type QueryCount = S["QueryCount"];

@@ -173,6 +173,7 @@ type Repository interface {
 	ListSourceTables(ctx context.Context, filter SourceTablesFilter) ([]SourceTable, map[string]map[string]any, error)
 	SourceActivity(ctx context.Context, sources []*Source) error
 	SourcesWithTables(ctx context.Context, ids []string, assets func(idExpr string, next int) (string, []any)) ([]string, error)
+	QueryableSourcesForAsset(ctx context.Context, assetID string) ([]string, error)
 }
 
 // PostgresRepository implements Repository on pgx.

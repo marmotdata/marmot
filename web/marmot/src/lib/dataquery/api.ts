@@ -43,6 +43,16 @@ export async function listQuerySourceTables(
 	return (await res.json()) ?? [];
 }
 
+/** Where and how to preview one catalogued table, or null when no source you may query reaches it. */
+export async function getAssetQueryPreview(
+	assetId: string
+): Promise<{ source: string; statement: string } | null> {
+	const res = await fetchApi(`/query/preview?asset_id=${encodeURIComponent(assetId)}`);
+	if (res.status === 404) return null;
+	if (!res.ok) await throwApiError(res);
+	return res.json();
+}
+
 export async function getQueryStatus(): Promise<QueryInstanceStatus[]> {
 	const res = await fetchApi('/query/status');
 	if (!res.ok) await throwApiError(res);

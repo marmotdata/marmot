@@ -77,6 +77,9 @@ type Schedule struct {
 	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
 	ServedByType string `json:"served_by_type,omitempty"`
 
+	// ServingConnected reports, for a served source, whether its plugin holds a live connection to Marmot now; it is only filled in when schedules are read one at a time or listed.
+	ServingConnected bool `json:"serving_connected,omitempty"`
+
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
 }

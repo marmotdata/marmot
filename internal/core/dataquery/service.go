@@ -160,6 +160,8 @@ type Service interface {
 	Admits(ctx context.Context, principal auth.Principal) bool
 	ListSources(ctx context.Context, filter SourceFilter) ([]*Source, int, error)
 	ListSourceTables(ctx context.Context, principal auth.Principal, sourceName, search string, limit int) ([]SourceTable, error)
+	// PreviewAsset returns where and how to preview one catalogued table, or ErrSourceNotFound when no source the principal may query reaches it.
+	PreviewAsset(ctx context.Context, principal auth.Principal, assetID string) (*AssetPreview, error)
 	InstanceStatus() []plugin.InstanceStatus
 
 	Query(ctx context.Context, principal auth.Principal, input QueryInput, client string) (*QueryResult, error)

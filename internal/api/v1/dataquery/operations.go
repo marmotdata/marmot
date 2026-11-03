@@ -119,6 +119,31 @@ func (h *Handler) listSourceTables(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, tables)
 }
 
+// @Summary  Preview a table
+// @Description Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect.
+// @Tags     query
+// @Produce  json
+// @Param    asset_id query string true "Asset ID of the table"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success  200 {object} dataquery.AssetPreview
+// @Failure  404 {object} common.ErrorResponse
+// @Router   /api/v1/query/preview [get]
+func (h *Handler) previewAsset(w http.ResponseWriter, r *http.Request) {
+	assetID := r.URL.Query().Get("asset_id")
+	if assetID == "" {
+		common.RespondError(w, http.StatusBadRequest, "asset_id is required")
+		return
+	}
+	principal, _ := common.PrincipalFromContext(r.Context())
+	preview, err := h.queryService.PreviewAsset(r.Context(), principal, assetID)
+	if err != nil {
+		respondServiceError(w, err)
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, preview)
+}
+
 // @Summary  Query plugin instance status
 // @Description Reports the long-running plugin processes that serve data queries.
 // @Tags     query

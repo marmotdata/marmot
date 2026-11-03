@@ -119,10 +119,8 @@
 
 	function actionsFor(node: TreeNode): TreeAction[] {
 		const entry = node.data as Entry;
-		const insert = { id: 'insert', label: m.dataquery_explorer_insert_action(), icon: 'input' };
-		if (entry.kind === 'column') return [insert];
 		if (entry.kind !== 'table') return [];
-		const actions = [insert];
+		const actions: TreeAction[] = [];
 		if (entry.table.sample_statement)
 			actions.push({ id: 'sample', label: m.dataquery_explorer_preview(), icon: 'code' });
 		if (entry.table.asset_id && assetRouteParams(entry.table.mrn))
@@ -136,13 +134,8 @@
 
 	function act(action: string, node: TreeNode) {
 		const entry = node.data as Entry;
-		if (entry.kind === 'column') {
-			if (action === 'insert') onInsert(entry.name);
-			return;
-		}
 		if (entry.kind !== 'table') return;
-		if (action === 'insert') onInsert(qualifiedName(entry.table));
-		else if (action === 'sample' && entry.table.sample_statement)
+		if (action === 'sample' && entry.table.sample_statement)
 			onSample(entry.source, entry.table.sample_statement);
 		else if (action === 'catalog') {
 			const route = assetRouteParams(entry.table.mrn);

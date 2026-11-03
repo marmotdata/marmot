@@ -223,3 +223,48 @@ func TestClaimServedSources_LinksTheLastRunsAssets(t *testing.T) {
 	require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{again}), "re-enrolment claims and links again without error")
 	assert.ElementsMatch(t, []string{orders, customers}, linked())
 }
+
+// A served source shows whether its plugin is connected now and when it last ingested, which happens through the CLI rather than as a job Marmot runs.
+func TestServedSourceReportsConnectionAndLastRun(t *testing.T) {
+	repo, ctx := newPostgresRepo(t)
+	owner := uuid.NewString()
+	s := servedBy("service_account", owner)
+	s.PluginID = "duckdb"
+	require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{s}))
+
+	got, err := repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "nothing has connected yet")
+	assert.Nil(t, got.LastRunAt)
+
+	_, err = repo.db.Exec(ctx, `INSERT INTO runs (pipeline_name, source_name, run_id, status, completed_at) VALUES ($1, 'duckdb', $2, 'completed', NOW())`, s.Name, uuid.NewString())
+	require.NoError(t, err)
+	session := func(principalID string, heartbeat string) {
+		var enrolment string
+		require.NoError(t, repo.db.QueryRow(ctx, `
+			INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, expires_at)
+			VALUES ('service_account', $1, 'sa', $2, '\x00'::bytea, 'api_key', NOW() + INTERVAL '10 minutes') RETURNING id`,
+			principalID, []string{s.Name}).Scan(&enrolment))
+		_, err := repo.db.Exec(ctx, `INSERT INTO plugin_serve_sessions (enrolment_id, replica_id, replica_address, heartbeat_at) VALUES ($1, $2, '10.0.0.1:8443', NOW() - $3::interval)`,
+			enrolment, uuid.NewString(), heartbeat)
+		require.NoError(t, err)
+	}
+
+	session(uuid.NewString(), "0 seconds")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "another principal's session does not count")
+	require.NotNil(t, got.LastRunAt)
+	require.NotNil(t, got.LastRunStatus)
+	assert.Equal(t, JobStatusSucceeded, *got.LastRunStatus)
+
+	session(owner, "5 minutes")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "a session gone quiet does not count")
+
+	session(owner, "5 seconds")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.True(t, got.ServingConnected)
+}

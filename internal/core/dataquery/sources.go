@@ -2,10 +2,13 @@ package dataquery
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
 )
@@ -30,6 +33,8 @@ type SourceTable struct {
 // asset metadata keys to values, so a source only lists tables it can reach.
 type SourceTablesFilter struct {
 	SourceID string
+	// AssetID, when set, narrows the list to that one asset.
+	AssetID string
 	// SourceLabel names the plugin's entry in an asset's sources, whose
 	// properties win over the merged metadata when several plugins describe
 	// the same table.
@@ -53,26 +58,26 @@ type sourceTableLocator struct {
 
 var sourceTableLocators = map[string]sourceTableLocator{
 	"postgresql": {
-		label:    "PostgreSQL",
-		required: []string{"schema"},
-		metadata: func(config map[string]any) map[string]string {
-			database, _ := config["query_database"].(string)
-			if database == "" {
-				database = "postgres"
-			}
-			return map[string]string{"database": database}
-		},
-		statement: func(meta map[string]any, name string) string {
-			schema := metaString(meta, "schema")
-			table := metaString(meta, "table_name")
-			if table == "" {
-				table = name
-			}
-			if schema == "" || schema == "public" {
-				return previewStatement(quoteIdent(table))
-			}
-			return previewStatement(quoteIdent(schema) + "." + quoteIdent(table))
-		},
+		label:     "PostgreSQL",
+		required:  []string{"schema"},
+		metadata:  queryDatabase("postgres", false),
+		statement: postgresPreview,
+	},
+	// TimescaleDB discovers under the PostgreSQL label, but falls back to the
+	// discovered database rather than "postgres" when no query database is set.
+	"timescale": {
+		label:     "PostgreSQL",
+		required:  []string{"schema"},
+		metadata:  queryDatabase("postgres", true),
+		statement: postgresPreview,
+	},
+	// CockroachDB names assets db.schema.table, so the statement is built
+	// from the metadata, never the name.
+	"cockroachdb": {
+		label:     "CockroachDB",
+		required:  []string{"schema", "table_name"},
+		metadata:  queryDatabase("defaultdb", true),
+		statement: postgresPreview,
 	},
 	"trino": {
 		label:    "Trino",
@@ -82,11 +87,122 @@ var sourceTableLocators = map[string]sourceTableLocator{
 				quoteIdent(metaString(meta, "schema")) + "." + quoteIdent(metaString(meta, "table_name")))
 		},
 	},
+	// MySQL and MariaDB connect to one database, and queries reach that
+	// database alone. Double quotes are string literals there, so names take
+	// backticks.
+	"mysql": {
+		label:    "MySQL",
+		required: []string{"database", "table_name"},
+		metadata: func(config map[string]any) map[string]string {
+			return map[string]string{"database": configString(config, "database")}
+		},
+		statement: mysqlPreview,
+	},
+	"mariadb": {
+		label:    "MariaDB",
+		required: []string{"database", "table_name"},
+		metadata: func(config map[string]any) map[string]string {
+			database := configString(config, "query_database")
+			if database == "" {
+				database = configString(config, "database")
+			}
+			return map[string]string{"database": database}
+		},
+		statement: mysqlPreview,
+	},
+	// ClickHouse reads across databases, so names are always database-qualified.
+	"clickhouse": {
+		label:    "ClickHouse",
+		required: []string{"database", "table_name"},
+		statement: func(meta map[string]any, _ string) string {
+			return previewStatement(quoteIdent(metaString(meta, "database")) + "." + quoteIdent(metaString(meta, "table_name")))
+		},
+	},
+	// Oracle folds unquoted names to upper case and stores them that way, so
+	// names are always quoted exactly as catalogued, and it has no LIMIT.
+	"oracle": {
+		label:    "Oracle",
+		required: []string{"schema", "table_name"},
+		statement: func(meta map[string]any, _ string) string {
+			return "SELECT *\nFROM " + alwaysQuoteIdent(metaString(meta, "schema")) + "." +
+				alwaysQuoteIdent(metaString(meta, "table_name")) + "\nFETCH FIRST 10 ROWS ONLY"
+		},
+	},
+	// A SQLite or DuckDB source is a single file, so its schedule link is all
+	// the scoping it needs.
+	"sqlite": {
+		label:    "SQLite",
+		required: []string{"table_name"},
+		statement: func(meta map[string]any, _ string) string {
+			return previewStatement(quoteIdent(metaString(meta, "table_name")))
+		},
+	},
+	"duckdb": {
+		label:    "DuckDB",
+		required: []string{"schema", "table_name"},
+		statement: func(meta map[string]any, _ string) string {
+			schema, table := metaString(meta, "schema"), metaString(meta, "table_name")
+			if schema == "main" {
+				return previewStatement(quoteIdent(table))
+			}
+			return previewStatement(quoteIdent(schema) + "." + quoteIdent(table))
+		},
+	},
+	// BigQuery sets no default dataset on a query, so names are fully
+	// qualified, and project ids with hyphens must be quoted.
+	"bigquery": {
+		label:    "BigQuery",
+		required: []string{"project_id", "dataset_id", "table_id"},
+		metadata: func(config map[string]any) map[string]string {
+			return map[string]string{"project_id": configString(config, "project_id")}
+		},
+		statement: func(meta map[string]any, _ string) string {
+			return previewStatement("`" + bigqueryIdent(metaString(meta, "project_id")) + "." +
+				bigqueryIdent(metaString(meta, "dataset_id")) + "." + bigqueryIdent(metaString(meta, "table_id")) + "`")
+		},
+	},
+}
+
+// queryDatabase pins a Postgres-wire source's tables to the database its
+// queries connect to: query_database, else the discovered database when the
+// plugin falls back to it, else the plugin's default.
+func queryDatabase(fallback string, discovered bool) func(map[string]any) map[string]string {
+	return func(config map[string]any) map[string]string {
+		database := configString(config, "query_database")
+		if database == "" && discovered {
+			database = configString(config, "database")
+		}
+		if database == "" {
+			database = fallback
+		}
+		return map[string]string{"database": database}
+	}
+}
+
+func postgresPreview(meta map[string]any, name string) string {
+	schema := metaString(meta, "schema")
+	table := metaString(meta, "table_name")
+	if table == "" {
+		table = name
+	}
+	if schema == "" || schema == "public" {
+		return previewStatement(quoteIdent(table))
+	}
+	return previewStatement(quoteIdent(schema) + "." + quoteIdent(table))
+}
+
+func mysqlPreview(meta map[string]any, _ string) string {
+	return previewStatement(backtickIdent(metaString(meta, "database")) + "." + backtickIdent(metaString(meta, "table_name")))
 }
 
 // systemSchemas are left out of source table lists: nobody wants to preview
 // the engine's own catalog.
-var systemSchemas = []string{"pg_catalog", "information_schema", "pg_toast"}
+var systemSchemas = []string{
+	"pg_catalog", "information_schema", "pg_toast",
+	"crdb_internal", "pg_extension",
+	"timescaledb_information", "timescaledb_experimental",
+	"_timescaledb_catalog", "_timescaledb_internal", "_timescaledb_config", "_timescaledb_cache", "_timescaledb_functions",
+}
 
 func previewStatement(table string) string {
 	return "SELECT *\nFROM " + table + "\nLIMIT 10"
@@ -106,6 +222,26 @@ func quoteIdent(id string) string {
 	return `"` + strings.ReplaceAll(id, `"`, `""`) + `"`
 }
 
+// alwaysQuoteIdent double-quotes a name whatever it looks like, for engines that fold unquoted names.
+func alwaysQuoteIdent(id string) string {
+	return `"` + strings.ReplaceAll(id, `"`, `""`) + `"`
+}
+
+// backtickIdent quotes a MySQL or MariaDB name, doubling any backtick in it.
+func backtickIdent(id string) string {
+	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
+}
+
+// bigqueryIdent escapes one part of a backtick-quoted BigQuery path.
+func bigqueryIdent(id string) string {
+	return strings.NewReplacer(`\`, `\\`, "`", "\\`").Replace(id)
+}
+
+func configString(config map[string]any, key string) string {
+	v, _ := config[key].(string)
+	return v
+}
+
 func metaString(meta map[string]any, key string) string {
 	v, _ := meta[key].(string)
 	return v
@@ -120,6 +256,10 @@ func (r *PostgresRepository) ListSourceTables(ctx context.Context, f SourceTable
 	for key, value := range f.Metadata {
 		args = append(args, key, value)
 		where += fmt.Sprintf(" AND %s = $%d", prop(len(args)-1), len(args))
+	}
+	if f.AssetID != "" {
+		args = append(args, f.AssetID)
+		where += fmt.Sprintf(" AND a.id = $%d", len(args))
 	}
 	for _, key := range f.Required {
 		args = append(args, key)
@@ -171,6 +311,20 @@ func (r *PostgresRepository) ListSourceTables(ctx context.Context, f SourceTable
 		meta[t.MRN] = m
 	}
 	return tables, meta, rows.Err()
+}
+
+// QueryableSourcesForAsset names the queryable sources whose pipelines catalogued the asset, most recently linked first.
+func (r *PostgresRepository) QueryableSourcesForAsset(ctx context.Context, assetID string) ([]string, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT s.name
+		FROM asset_schedules link
+		JOIN ingestion_schedules s ON s.id = link.schedule_id
+		WHERE link.asset_id = $1 AND s.queryable
+		ORDER BY link.updated_at DESC, s.name`, assetID)
+	if err != nil {
+		return nil, fmt.Errorf("finding sources for asset: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[string])
 }
 
 // SourcesWithTables returns the sources among ids that catalog at least one table the condition admits.
@@ -272,15 +426,46 @@ func (r *PostgresRepository) SourceActivity(ctx context.Context, sources []*Sour
 // ListSourceTables lists the catalogued tables a source can reach, busiest
 // first, each with a statement that previews it.
 func (s *service) ListSourceTables(ctx context.Context, principal auth.Principal, sourceName, search string, limit int) ([]SourceTable, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 25
+	}
+	return s.sourceTables(ctx, principal, sourceName, SourceTablesFilter{Search: strings.TrimSpace(search), Limit: limit})
+}
+
+// AssetPreview is how to preview one catalogued table: the source to run it against and the statement in that source's dialect.
+type AssetPreview struct {
+	Source    string `json:"source"`
+	Statement string `json:"statement"`
+} // @name QueryAssetPreview
+
+// PreviewAsset finds a queryable source the principal may use that reaches the asset, and the statement that previews it there, so a table is never previewed with a name its engine cannot resolve.
+func (s *service) PreviewAsset(ctx context.Context, principal auth.Principal, assetID string) (*AssetPreview, error) {
+	names, err := s.repo.QueryableSourcesForAsset(ctx, assetID)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range names {
+		tables, err := s.sourceTables(ctx, principal, name, SourceTablesFilter{AssetID: assetID, Limit: 1})
+		if errors.Is(err, ErrSourceNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(tables) > 0 && tables[0].SampleStatement != "" {
+			return &AssetPreview{Source: name, Statement: tables[0].SampleStatement}, nil
+		}
+	}
+	return nil, ErrSourceNotFound
+}
+
+// sourceTables lists a source's tables as the principal may see them, each with its preview statement; filter.SourceID and the dialect fields are filled in here.
+func (s *service) sourceTables(ctx context.Context, principal auth.Principal, sourceName string, filter SourceTablesFilter) ([]SourceTable, error) {
 	source, err := s.sources.GetQueryableSource(ctx, sourceName)
 	if err != nil {
 		return nil, err
 	}
-	if limit <= 0 || limit > 100 {
-		limit = 25
-	}
-
-	filter := SourceTablesFilter{SourceID: source.ID, Search: strings.TrimSpace(search), Limit: limit}
+	filter.SourceID = source.ID
 	if principal != nil {
 		visibility, err := s.authorizer.Visible(ctx, principal)
 		if err != nil {
@@ -305,7 +490,8 @@ func (s *service) ListSourceTables(ctx context.Context, principal auth.Principal
 	if known {
 		filter.SourceLabel = locator.label
 		filter.Required = locator.required
-		if locator.metadata != nil {
+		// A served source keeps no config, since its plugin runs elsewhere, and its schedule link is the only scoping there is.
+		if locator.metadata != nil && len(source.Config) > 0 {
 			filter.Metadata = locator.metadata(source.Config)
 		}
 	}

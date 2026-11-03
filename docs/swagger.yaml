@@ -2582,6 +2582,13 @@ definitions:
       type:
         type: string
     type: object
+  QueryAssetPreview:
+    properties:
+      source:
+        type: string
+      statement:
+        type: string
+    type: object
   QueryAssetStats:
     properties:
       agents:
@@ -3537,6 +3544,11 @@ definitions:
           running outside Marmot, serves this source's queries; nil when Marmot runs
           the plugin itself.
         type: string
+      serving_connected:
+        description: ServingConnected reports, for a served source, whether its plugin
+          holds a live connection to Marmot now; it is only filled in when schedules
+          are read one at a time or listed.
+        type: boolean
       updated_at:
         type: string
     type: object
@@ -9383,6 +9395,33 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Export queries
+      tags:
+      - query
+  /api/v1/query/preview:
+    get:
+      description: Finds a queryable source you may use that reaches the catalogued
+        table, and the statement that previews it in that source's dialect.
+      parameters:
+      - description: Asset ID of the table
+        in: query
+        name: asset_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QueryAssetPreview'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Preview a table
       tags:
       - query
   /api/v1/query/run:

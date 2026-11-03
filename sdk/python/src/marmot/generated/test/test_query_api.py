@@ -107,6 +107,18 @@ class TestQueryApi(unittest.IsolatedAsyncioTestCase):
         Get a query
         """
 
+    async def test_api_v1_query_preview_get(self) -> None:
+        """Test case for api_v1_query_preview_get
+
+        Preview a table
+        """
+
+    def test_api_v1_query_preview_get_sync(self) -> None:
+        """Test case for api_v1_query_preview_get (synchronous)
+
+        Preview a table
+        """
+
     async def test_api_v1_query_run_post(self) -> None:
         """Test case for api_v1_query_run_post
 

@@ -116,6 +116,12 @@ type ClientService interface {
 	// GetAPIV1QueryHistoryIDContext get a query.
 	GetAPIV1QueryHistoryIDContext(ctx context.Context, params *GetAPIV1QueryHistoryIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryHistoryIDOK, error)
 
+	// GetAPIV1QueryPreview preview a table.
+	GetAPIV1QueryPreview(params *GetAPIV1QueryPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryPreviewOK, error)
+
+	// GetAPIV1QueryPreviewContext preview a table.
+	GetAPIV1QueryPreviewContext(ctx context.Context, params *GetAPIV1QueryPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryPreviewOK, error)
+
 	// GetAPIV1QuerySaved list saved queries.
 	GetAPIV1QuerySaved(params *GetAPIV1QuerySavedParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QuerySavedOK, error)
 
@@ -614,6 +620,73 @@ func (a *Client) GetAPIV1QueryHistoryIDContext(ctx context.Context, params *GetA
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryHistoryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAPIV1QueryPreview previews a table.
+//
+// Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1QueryPreviewContext] instead.
+func (a *Client) GetAPIV1QueryPreview(params *GetAPIV1QueryPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryPreviewOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1QueryPreviewContext(ctx, params, authInfo, opts...)
+}
+
+// GetAPIV1QueryPreviewContext previews a table.
+//
+// Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect..
+//
+// Do not use the deprecated [GetAPIV1QueryPreviewParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1QueryPreviewContext(ctx context.Context, params *GetAPIV1QueryPreviewParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAPIV1QueryPreviewOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAPIV1QueryPreviewParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIV1QueryPreview",
+		Method:             "GET",
+		PathPattern:        "/api/v1/query/preview",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIV1QueryPreviewReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAPIV1QueryPreviewOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAPIV1QueryPreview: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

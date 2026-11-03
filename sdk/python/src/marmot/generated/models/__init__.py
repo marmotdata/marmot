@@ -189,6 +189,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse
     from marmot.generated.models.query_agent_summary import QueryAgentSummary
     from marmot.generated.models.query_asset_context import QueryAssetContext
+    from marmot.generated.models.query_asset_preview import QueryAssetPreview
     from marmot.generated.models.query_asset_stats import QueryAssetStats
     from marmot.generated.models.query_column import QueryColumn
     from marmot.generated.models.query_count import QueryCount
@@ -480,6 +481,7 @@ from marmot.generated.models.query_access_request_input import QueryAccessReques
 from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse
 from marmot.generated.models.query_agent_summary import QueryAgentSummary
 from marmot.generated.models.query_asset_context import QueryAssetContext
+from marmot.generated.models.query_asset_preview import QueryAssetPreview
 from marmot.generated.models.query_asset_stats import QueryAssetStats
 from marmot.generated.models.query_column import QueryColumn
 from marmot.generated.models.query_count import QueryCount

@@ -195,6 +195,10 @@ func (m *memRepo) RecentAccessRequest(_ context.Context, principalType, principa
 	}
 	return nil, nil
 }
+func (m *memRepo) QueryableSourcesForAsset(context.Context, string) ([]string, error) {
+	return nil, nil
+}
+
 func (m *memRepo) SourcesWithTables(_ context.Context, ids []string, _ func(string, int) (string, []any)) ([]string, error) {
 	return m.withTables, nil
 }

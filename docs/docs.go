@@ -7571,6 +7571,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/query/preview": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Preview a table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the table",
+                        "name": "asset_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAssetPreview"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/query/run": {
             "post": {
                 "security": [
@@ -15747,6 +15790,17 @@ const docTemplate = `{
                 }
             }
         },
+        "QueryAssetPreview": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "statement": {
+                    "type": "string"
+                }
+            }
+        },
         "QueryAssetStats": {
             "type": "object",
             "properties": {
@@ -17128,6 +17182,10 @@ const docTemplate = `{
                 "served_by_type": {
                     "description": "ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
                     "type": "string"
+                },
+                "serving_connected": {
+                    "description": "ServingConnected reports, for a served source, whether its plugin holds a live connection to Marmot now; it is only filled in when schedules are read one at a time or listed.",
+                    "type": "boolean"
                 },
                 "updated_at": {
                     "type": "string"

@@ -221,6 +221,7 @@ __all__ = [
     "QueryAgentSummariesResponse",
     "QueryAgentSummary",
     "QueryAssetContext",
+    "QueryAssetPreview",
     "QueryAssetStats",
     "QueryColumn",
     "QueryCount",
@@ -727,6 +728,7 @@ if __import__("typing").TYPE_CHECKING:
     )
     from marmot.generated.models.query_agent_summary import QueryAgentSummary as QueryAgentSummary
     from marmot.generated.models.query_asset_context import QueryAssetContext as QueryAssetContext
+    from marmot.generated.models.query_asset_preview import QueryAssetPreview as QueryAssetPreview
     from marmot.generated.models.query_asset_stats import QueryAssetStats as QueryAssetStats
     from marmot.generated.models.query_column import QueryColumn as QueryColumn
     from marmot.generated.models.query_count import QueryCount as QueryCount
@@ -1145,6 +1147,7 @@ from marmot.generated.models.query_access_request_input import QueryAccessReques
 from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse as QueryAgentSummariesResponse
 from marmot.generated.models.query_agent_summary import QueryAgentSummary as QueryAgentSummary
 from marmot.generated.models.query_asset_context import QueryAssetContext as QueryAssetContext
+from marmot.generated.models.query_asset_preview import QueryAssetPreview as QueryAssetPreview
 from marmot.generated.models.query_asset_stats import QueryAssetStats as QueryAssetStats
 from marmot.generated.models.query_column import QueryColumn as QueryColumn
 from marmot.generated.models.query_count import QueryCount as QueryCount

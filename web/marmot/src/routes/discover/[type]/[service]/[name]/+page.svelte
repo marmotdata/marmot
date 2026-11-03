@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi, fetchAssetPreview, type AssetPreviewResponse } from '$lib/api';
+	import { getAssetQueryPreview } from '$lib/dataquery/api';
 	import type { Asset, AssetTabCounts, EnrichedExternalLink } from '$lib/assets/types';
 	import { setCrumbs, BladeSlot } from '$lib/mm';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
@@ -438,9 +439,25 @@
 		return parts.join(' · ');
 	});
 
+	// The server picks a source that reaches the table and writes the preview in its dialect, so the name is never guessed here
+	let queryPreview = $state<{ source: string; statement: string } | null>(null);
+	$effect(() => {
+		const id = asset?.id;
+		queryPreview = null;
+		if (!id || !canQueryData || !isTable) return;
+		let current = true;
+		getAssetQueryPreview(id)
+			.then((p) => {
+				if (current) queryPreview = p;
+			})
+			.catch(() => {});
+		return () => {
+			current = false;
+		};
+	});
 	let queryHref = $derived(
-		asset
-			? `${resolve('/query')}?${new URLSearchParams({ q: `SELECT *\nFROM ${asset.name}\nLIMIT 10` }).toString()}`
+		queryPreview
+			? `${resolve('/query')}?${new URLSearchParams({ source: queryPreview.source, q: queryPreview.statement }).toString()}`
 			: ''
 	);
 
@@ -620,7 +637,7 @@
 					</mm-menu>
 				</mm-menu-button>
 			{/if}
-			{#if canQueryData && isTable}
+			{#if queryPreview}
 				<mm-button slot="actions" variant="primary" icon="terminal" href={queryHref}
 					>{m.asset_page_query_table()}</mm-button
 				>

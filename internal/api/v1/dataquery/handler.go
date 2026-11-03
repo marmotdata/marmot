@@ -37,6 +37,7 @@ func (h *Handler) Routes() []common.Route {
 	return []common.Route{
 		{Path: "/api/v1/query/sources", Method: http.MethodGet, Handler: h.listSources, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, query}},
 		{Path: "/api/v1/query/sources/{name}/tables", Method: http.MethodGet, Handler: h.listSourceTables, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, query}},
+		{Path: "/api/v1/query/preview", Method: http.MethodGet, Handler: h.previewAsset, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, query}},
 		{Path: "/api/v1/query/status", Method: http.MethodGet, Handler: h.status, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, view}},
 		{Path: "/api/v1/query/stats", Method: http.MethodGet, Handler: h.stats, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, queryOrLog}},
 		{Path: "/api/v1/query/sources/{name}/stats", Method: http.MethodGet, Handler: h.sourceStats, Middleware: []func(http.HandlerFunc) http.HandlerFunc{withAuth, queryOrLog}},

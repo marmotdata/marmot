@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { getAssetQueryPreview } from '$lib/dataquery/api';
 	import { page } from '$app/state';
 	import type { Asset, AssetTerm } from '$lib/assets/types';
 	import type { LineageNode, LineageResponse } from '$lib/lineage/types';
@@ -80,12 +81,27 @@
 	);
 	let upstream = $derived(neighbours.filter((n) => n.depth < 0));
 	let downstream = $derived(neighbours.filter((n) => n.depth > 0));
-	let queryable = $derived(
-		canQuery && !!asset && ['table', 'view'].includes(asset.type.toLowerCase())
-	);
+	// The server picks a source that reaches the table and writes the preview in its dialect, so the name is never guessed here
+	let preview = $state<{ source: string; statement: string } | null>(null);
+	$effect(() => {
+		const id = asset?.id;
+		const isTable = !!asset && ['table', 'view'].includes(asset.type.toLowerCase());
+		preview = null;
+		if (!id || !canQuery || !isTable) return;
+		let current = true;
+		getAssetQueryPreview(id)
+			.then((p) => {
+				if (current) preview = p;
+			})
+			.catch(() => {});
+		return () => {
+			current = false;
+		};
+	});
+	let queryable = $derived(!!preview);
 	let queryHref = $derived(
-		asset
-			? `${resolve('/query')}?${new URLSearchParams({ q: `SELECT *\nFROM ${asset.name}\nLIMIT 10` })}`
+		preview
+			? `${resolve('/query')}?${new URLSearchParams({ source: preview.source, q: preview.statement })}`
 			: ''
 	);
 	let about = $derived(asset?.user_description || asset?.description || '');
