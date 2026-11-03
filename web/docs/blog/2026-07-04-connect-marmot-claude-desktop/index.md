@@ -145,7 +145,7 @@ This is what a context layer like Marmot buys you. All of that knowledge already
 
 - Descriptions, owners and [glossary](/docs/glossary) terms are what Claude actually answers with, so fill those in for the assets people ask about most.
 - Everyone on the team connects with their own API key. Permissions follow the user, so nobody sees more through Claude than they would in Marmot itself.
-- The same endpoint works from [Claude Code](/docs/MCP/claude-code), [Cursor](/docs/MCP/cursor) and any other MCP client; the [MCP docs](/docs/MCP/) have the config for each.
+- The same endpoint works from [Claude Code](/docs/MCP/?client=claude-code), [Cursor](/docs/MCP/?client=cursor) and any other MCP client; the [MCP docs](/docs/MCP/) have the config for each.
 
 <CalloutCard
   title="Join the Community"

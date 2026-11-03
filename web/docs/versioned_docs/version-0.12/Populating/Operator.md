@@ -1,0 +1,142 @@
+---
+sidebar_position: 7
+title: Kubernetes operator
+---
+
+# Kubernetes operator
+
+The Marmot operator runs pipelines as Kubernetes resources instead of from the CLI or the UI. Each pipeline discovers assets from a data source and syncs them into Marmot, while the cluster handles scheduling, retries and lifecycle for you. Pipeline config lives alongside your other manifests, so changes go through the same review and GitOps workflow as everything else.
+
+The operator watches `Run` resources and reconciles them into Kubernetes Jobs or CronJobs. Each ingestion job runs as its own pod, so you can scope credentials per data source rather than giving a single Marmot instance access to all your assets. Separate pods also keep large or frequent ingestion runs from competing with each other.
+
+The operator is deployed with Marmot by the Helm chart, so [install Marmot with Helm](/docs/Deploy/Helm) first.
+
+## Enabling the operator
+
+Enable the operator in your Helm values:
+
+```yaml
+operator:
+  enabled: true
+```
+
+```bash
+helm upgrade marmot marmotdata/marmot -f values.yaml
+```
+
+## Creating a Run
+
+A `Run` resource defines an ingestion pipeline. The `spec.runs` array uses the same format as the [CLI configuration file](/docs/Populating/CLI#configuration-file).
+
+```yaml
+apiVersion: runs.marmotdata.io/v1alpha1
+kind: Run
+metadata:
+  name: my-pipeline
+spec:
+  schedule: "0 */6 * * *"
+  runs:
+    - postgresql:
+        host: "db.example.com"
+        port: 5432
+        database: "production"
+        user: "readonly"
+```
+
+The resource's `metadata.name` is used as the pipeline name for tracking ingestion state. If a pipeline with that name already exists in Marmot and was not created by the operator, the operator leaves it untouched and logs a warning; rename the Run, or delete the existing pipeline if the operator should own it.
+
+```bash
+kubectl apply -f my-pipeline.yaml
+```
+
+## Credentials
+
+Keep credentials in a Kubernetes Secret rather than in the Run. Map each key into the ingestion container with `env`, then refer to it in `runs` as `${NAME}`. The Job pod reads the Secret directly, so the value never appears in the Run, the rendered pipeline config or Marmot's database, and the operator itself needs no access to Secrets.
+
+```yaml
+spec:
+  env:
+    - name: PG_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-readonly
+          key: password
+  runs:
+    - postgresql:
+        host: "db.example.com"
+        user: "readonly"
+        password: "${PG_PASSWORD}"
+```
+
+Variables starting with `MARMOT_` are reserved for the operator and are rejected. Marmot stores operator-managed pipelines with their sensitive fields masked, because the server never runs them.
+
+Ingestion pods authenticate to Marmot with their ServiceAccount token. That identity can only start and complete runs and write assets, lineage and documentation, so a token taken from an ingestion pod cannot administer Marmot.
+
+## Pod labels and annotations
+
+Use `podLabels` and `podAnnotations` to integrate ingestion pods with service meshes, observability tools or policy engines.
+
+On AWS, this is particularly useful for providing credentials to plugins via [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html). Instead of storing AWS credentials in your pipeline config, annotate the pod so it automatically receives IAM permissions:
+
+```yaml
+spec:
+  podAnnotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/marmot-s3-reader"
+  podLabels:
+    team: data-engineering
+  runs:
+    - s3:
+        bucket: "my-data-lake"
+        region: "eu-west-1"
+```
+
+## Manual triggers
+
+Trigger a scheduled pipeline outside its cron window by annotating the Run:
+
+```bash
+kubectl annotate run my-pipeline runs.marmotdata.io/trigger=true
+```
+
+This creates a temporary Job that runs immediately and cleans up after 60 seconds.
+
+## Teardown on delete
+
+By default, deleting a Run resource runs `marmot ingest --destroy` to remove all assets that pipeline previously discovered from Marmot. Set `teardownOnDelete: false` if you want to keep existing assets after removing the Run.
+
+## Reference
+
+### Run spec
+
+| Field                        | Type                                                                                                                      | Default  | Description                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| `runs`                       | array                                                                                                                     | required | Source configurations, same format as CLI YAML                  |
+| `serve`                      | boolean                                                                                                                   | `false`  | Run as a Deployment that ingests on start, then serves queries for the run marked `queryable: true`. See [Serving Queries from Your Network](../Configure/serving-plugins.md). Cannot be combined with `schedule` |
+| `schedule`                   | string                                                                                                                    |          | Cron expression. When set, creates a CronJob instead of a Job   |
+| `suspend`                    | boolean                                                                                                                   | `false`  | Pause scheduled executions. Only applies when `schedule` is set |
+| `concurrencyPolicy`          | `Allow` / `Forbid` / `Replace`                                                                                            | `Forbid` | How to handle concurrent Job executions                         |
+| `backoffLimit`               | int                                                                                                                       | `3`      | Retries before marking a Job as failed                          |
+| `activeDeadlineSeconds`      | int                                                                                                                       |          | Maximum duration (seconds) a Job may run                        |
+| `successfulJobsHistoryLimit` | int                                                                                                                       | `3`      | Successful CronJob runs to retain                               |
+| `failedJobsHistoryLimit`     | int                                                                                                                       | `1`      | Failed CronJob runs to retain                                   |
+| `resources`                  | [ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#resourcerequirements-v1-core) |          | CPU/memory requests and limits for the ingestion container      |
+| `env`                        | [EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#envvar-v1-core) array                       |          | Environment variables for the ingestion container, referenced in `runs` as `${NAME}`. `MARMOT_` names are reserved |
+| `podLabels`                  | map                                                                                                                       |          | Additional labels applied to the pod template                   |
+| `podAnnotations`             | map                                                                                                                       |          | Additional annotations applied to the pod template              |
+| `teardownOnDelete`           | boolean                                                                                                                   | `true`   | Run `marmot ingest --destroy` when the Run is deleted           |
+
+### Operator Helm values
+
+| Key                       | Default                | Description                               |
+| ------------------------- | ---------------------- | ----------------------------------------- |
+| `operator.enabled`        | `false`                | Enable the operator Deployment and CRD    |
+| `operator.replicas`       | `1`                    | Number of operator replicas               |
+| `operator.leaderElect`    | `true`                 | Enable leader election for HA             |
+| `operator.watchNamespace` | `""` (all)             | Restrict to a single namespace            |
+| `operator.marmot.url`     | auto-detected          | Marmot API URL passed to Job pods         |
+| `operator.resources`      | 100m/128Mi, 500m/256Mi | Operator pod resource requests and limits |
+
+## Next steps
+
+- [Plugins](../Plugins/index.md): every plugin and its configuration.
+- [Run plugins from the CLI](CLI.md): the pipeline config format `Run` resources use.

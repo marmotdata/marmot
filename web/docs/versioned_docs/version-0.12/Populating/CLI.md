@@ -1,0 +1,116 @@
+---
+sidebar_position: 3
+title: Run plugins from the CLI
+---
+
+import { CliInstall } from '@site/src/components/CliInstall';
+
+# Run plugins from the CLI
+
+`marmot ingest` runs plugins on the machine where you invoke it and pushes what they discover to Marmot, including lineage and documentation. Use it when the server can't reach a source, or to run ingestion in CI.
+
+## Installation
+
+<CliInstall />
+
+See the [CLI reference](/docs/cli) for configuring the host, API key and other global options.
+
+## Configuration file
+
+The ingest command requires a YAML configuration file that defines the data sources to ingest. The configuration follows this structure:
+
+```yaml
+name: my_pipeline_name
+runs:
+  - source_type1:
+      # source-specific configuration
+  - source_type2:
+      # source-specific configuration
+```
+
+`source_type` is a plugin ID from the [plugin registry](https://plugins.marmotdata.io), which lists each plugin's configuration. Give every pipeline a unique `name`: Marmot tracks what each pipeline has cataloged by its name.
+
+## Example: ingesting Kafka topics
+
+```yaml
+runs:
+  - kafka:
+      bootstrap_servers: "kafka-broker:9092"
+      client_id: "marmot-kafka-plugin"
+      client_timeout_seconds: 60
+      authentication:
+        type: "sasl_plaintext"
+        username: "username"
+        password: "password"
+        mechanism: "PLAIN"
+      schema_registry:
+        url: "http://schema-registry:8081"
+        enabled: true
+        config:
+          basic.auth.user.info: "username:password"
+```
+
+This configuration connects to a Kafka broker at `kafka-broker:9092` with SASL PLAIN authentication and integrates with a Schema Registry at `http://schema-registry:8081`.
+
+```bash
+marmot ingest -c config.yaml
+```
+
+### Credentials from the environment
+
+Any string value can refer to an environment variable as `${NAME}`, which keeps credentials out of the file:
+
+```yaml
+runs:
+  - kafka:
+      bootstrap_servers: "kafka-broker:9092"
+      authentication:
+        type: "sasl_plaintext"
+        username: "${KAFKA_USERNAME}"
+        password: "${KAFKA_PASSWORD}"
+        mechanism: "PLAIN"
+```
+
+The CLI stops with an error if a referenced variable is not set, rather than connecting with an empty credential. Only the `${NAME}` form is expanded, so a plain `$` in a value is left as it is.
+
+## Where plugins run
+
+Discovery runs wherever the CLI runs, not on the Marmot server. The CLI connects to your data sources directly and pushes the discovered assets to the Marmot API. This means the machine running `marmot ingest` needs network access to the data sources, while the Marmot server does not: it only receives the results.
+
+On the first ingest, the CLI downloads the core plugins from `ghcr.io/marmotdata/plugins` and caches them under `~/.marmot/plugins/cache`. Later runs load them straight from the cache. Two environment variables control this:
+
+- `MARMOT_PLUGINS_AUTOINSTALL=false` disables the download, for example on air-gapped runners with pre-installed plugins
+- `MARMOT_PLUGINS_REGISTRY` installs from a registry mirror instead of GHCR
+
+## Serving queries
+
+Add `--serve` and mark a run `queryable: true` to keep the CLI running after ingestion, answering Marmot's data queries from where it runs. The database credentials stay with the CLI and Marmot never connects to your network; see [Serving Queries from Your Network](../Configure/serving-plugins.md).
+
+## Running in CI
+
+Because plugins run local to the CLI, ingestion works anywhere the CLI can run, such as a GitHub Actions workflow on a schedule:
+
+```yaml
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Marmot CLI
+        run: curl -fsSL get.marmotdata.io | sh
+
+      - name: Cache Marmot plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.marmot/plugins/cache
+          key: marmot-plugins-${{ runner.os }}
+
+      - name: Ingest
+        run: marmot ingest -c config.yaml
+        env:
+          MARMOT_HOST: https://marmot.example.com
+          MARMOT_API_KEY: ${{ secrets.MARMOT_API_KEY }}
+```
+
+Caching `~/.marmot/plugins/cache` is optional; without it the CLI re-downloads the plugins on each run.
