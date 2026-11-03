@@ -68,20 +68,20 @@ importers:
         specifier: 1.2.5
         version: 1.2.5
       '@marmotdata/css':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
       '@marmotdata/elements':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
       '@marmotdata/icons':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
       '@marmotdata/svelte':
-        specifier: ^0.1.6
-        version: 0.1.6(@marmotdata/elements@0.1.6)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
+        specifier: ^0.1.7
+        version: 0.1.7(@marmotdata/elements@0.1.7)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
       '@marmotdata/tokens':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
       '@tiptap/core':
         specifier: ^3.32.0
         version: 3.32.0(@tiptap/pm@3.32.0)
@@ -707,23 +707,23 @@ packages:
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
-  '@marmotdata/css@0.1.6':
-    resolution: {integrity: sha512-ERqE/ZV56lWCM5ORKGQV02VJnPj8R0uE7CI4LISb5pCOTCg+z2tZGIzQvsL+5IbD44Ssr8ROPYqbQWCgpVbFFQ==}
+  '@marmotdata/css@0.1.7':
+    resolution: {integrity: sha512-sEtsInFjdznIsudHcVnxglLXMAHr/idihkveGulBIoIkLl1uLSu+mkIuFFRqUvfKXDmNGeVPiG8wAYeHT6jK8A==}
 
-  '@marmotdata/elements@0.1.6':
-    resolution: {integrity: sha512-ZBxz9UkTRUnpo/xp/NAzignwcOTLAdfHh3jBcM8v4G+jM6NP04TY582q+D8K/uwvZGxCZkfz1aP3Jxy5pS6Bgw==}
+  '@marmotdata/elements@0.1.7':
+    resolution: {integrity: sha512-orsdxQpsgdXUmOidInXeL6xiB9821LNyujA7MI9OtYKEj8baMLEnjxaO5n3P2YXqq1PBopbiOJI955iuf0TC2w==}
 
-  '@marmotdata/icons@0.1.6':
-    resolution: {integrity: sha512-dp67e0Sa/zBkQlabehmFnlTZ+CBQ7WR+jC5OUR0hHUJ1TzLaNfPquMOw/RWNlmpIfYITjETFX/FWQnM1LGyM6Q==}
+  '@marmotdata/icons@0.1.7':
+    resolution: {integrity: sha512-mjQwObeg8kkGKy1rF9CHFqB9UN9K1sni5NGpi48ZzxU4Zh9bbLZCp3GL09o/b6run2rTusva6L/yc5tRu7+5bg==}
 
-  '@marmotdata/svelte@0.1.6':
-    resolution: {integrity: sha512-S/HxgrFSl5AisdqvXnTrLZXiOp6+cda1gZDIgYzDdfL6GrUFc4xEDQp9/17RWAMOTxqEx/xAce/0yKzGbFjwSg==}
+  '@marmotdata/svelte@0.1.7':
+    resolution: {integrity: sha512-kPFdJA3ul/3nVFNqGWRZG0La+1O48IGNARDbtOS3itVBXRw0AtiLt1NB8+wE7yRuHWs9iEnvlBHmq5lUOOjLUQ==}
     peerDependencies:
-      '@marmotdata/elements': ^0.1.6
+      '@marmotdata/elements': ^0.1.7
       svelte: ^5.0.0
 
-  '@marmotdata/tokens@0.1.6':
-    resolution: {integrity: sha512-oCs77Efgk/VTt5/kz/cBhc0wxntX+uOzuORoQCzxnsg1CuGsYvhqqza1lgbtrLDBIr+ib6eHG9+kpZx+9IS02A==}
+  '@marmotdata/tokens@0.1.7':
+    resolution: {integrity: sha512-uRR+W/f14ClpEBPr/suDbu58jWiW9i66MLc1uMmjapRmei++5littvU/6bzZFa0dqI7uUh2y9iks+rYn9dh/Gg==}
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -3484,11 +3484,11 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.4': {}
 
-  '@marmotdata/css@0.1.6':
+  '@marmotdata/css@0.1.7':
     dependencies:
-      '@marmotdata/tokens': 0.1.6
+      '@marmotdata/tokens': 0.1.7
 
-  '@marmotdata/elements@0.1.6':
+  '@marmotdata/elements@0.1.7':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
@@ -3503,8 +3503,8 @@ snapshots:
       '@floating-ui/dom': 1.8.0
       '@lezer/highlight': 1.2.5
       '@lit-labs/virtualizer': 2.1.1
-      '@marmotdata/icons': 0.1.6
-      '@marmotdata/tokens': 0.1.6
+      '@marmotdata/icons': 0.1.7
+      '@marmotdata/tokens': 0.1.7
       '@tanstack/virtual-core': 3.19.8
       codemirror: 6.0.2
       d3-array: 3.2.4
@@ -3516,17 +3516,17 @@ snapshots:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/icons@0.1.6':
+  '@marmotdata/icons@0.1.7':
     dependencies:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/svelte@0.1.6(@marmotdata/elements@0.1.6)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
+  '@marmotdata/svelte@0.1.7(@marmotdata/elements@0.1.7)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
     dependencies:
-      '@marmotdata/elements': 0.1.6
+      '@marmotdata/elements': 0.1.7
       svelte: 5.57.2(@typescript-eslint/types@8.71.2)
 
-  '@marmotdata/tokens@0.1.6': {}
+  '@marmotdata/tokens@0.1.7': {}
 
   '@mixmark-io/domino@2.2.0': {}
 

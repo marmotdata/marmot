@@ -206,10 +206,10 @@
 		const label = navLabel[current]();
 		return label ? [{ label }] : [];
 	});
+	// A section and its sub-pages, but not a sibling that shares the prefix: /query is full-bleed, /query-audit is not
+	const within = (section: string) => path === section || path.startsWith(`${section}/`);
 	const bleed = $derived(
-		($chrome.path === path && $chrome.bleed) ||
-			path.startsWith('/query') ||
-			path.startsWith('/glossary')
+		($chrome.path === path && $chrome.bleed) || within('/query') || within('/glossary')
 	);
 
 	const title = $derived.by(() => {

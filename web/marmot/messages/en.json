@@ -2896,6 +2896,7 @@
 	"runs_no_pipelines_hint_readonly": "No pipelines have been configured yet",
 	"runs_no_runs_filtered_hint": "No runs match this status",
 	"runs_operator_managed_title": "Managed by Kubernetes operator",
+	"runs_operator_managed_short": "Operator-managed",
 	"runs_period_30d": "Last 30 days",
 	"runs_pipelines_fetch_error": "Failed to fetch pipelines",
 	"runs_pipelines_load_error": "Failed to load pipelines",

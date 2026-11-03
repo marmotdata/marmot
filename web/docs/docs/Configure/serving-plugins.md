@@ -121,7 +121,7 @@ config:
       public_address: "serve.marmot.example.com:8443"
 ```
 
-When the serve port has a different host name to the API, set `public_address` so plugins know where to dial. With more than one Marmot replica, a plugin connects to one of them and the others forward its queries there, so replicas must reach each other on the serve port; the chart sets this up.
+When the serve port has a different host name to the API, set `public_address` so plugins know where to dial. The plugin sends that host name as the TLS server name (SNI), so one TLS passthrough proxy can route connections for several Marmot instances by name. It still checks Marmot's certificate against Marmot's own CA and instance name rather than the host name, so a connection routed to the wrong instance fails its handshake instead of reaching it. With more than one Marmot replica, a plugin connects to one of them and the others forward its queries there, so replicas must reach each other on the serve port; the chart sets this up.
 
 To keep a serving pod to exactly the traffic it needs, a NetworkPolicy like this allows egress to Marmot, DNS and the database and nothing inbound:
 

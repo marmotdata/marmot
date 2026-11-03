@@ -570,6 +570,31 @@ func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error
 		return fmt.Errorf("claiming served source: %w", err)
 	}
 	schedule.Queryable = true
+	return linkServedSourceAssets(ctx, tx, schedule)
+}
+
+// linkServedSourceAssets links a served source to the assets its pipeline's last completed run catalogued, as the scheduler does after each run of a pipeline Marmot runs itself. A serving plugin ingests through the CLI before it claims the source, and that run cannot link anything because the source does not exist yet, so without this the source would list no tables. Claims repeat at every re-enrolment, which keeps the links current with the latest run.
+func linkServedSourceAssets(ctx context.Context, tx pgx.Tx, schedule *Schedule) error {
+	_, err := tx.Exec(ctx, `
+		WITH last_run AS (
+			SELECT r.id
+			FROM runs r
+			WHERE r.pipeline_name = $2 AND r.source_name = $3 AND r.status = 'completed'
+			  AND EXISTS (SELECT 1 FROM run_checkpoints c WHERE c.run_id = r.id)
+			ORDER BY r.completed_at DESC
+			LIMIT 1
+		)
+		INSERT INTO asset_schedules (asset_id, schedule_id)
+		SELECT DISTINCT a.id, $1::uuid
+		FROM run_checkpoints c
+		JOIN last_run lr ON c.run_id = lr.id
+		JOIN assets a ON a.mrn = c.entity_mrn
+		WHERE c.entity_type = 'asset' AND c.operation <> $4
+		ON CONFLICT (asset_id, schedule_id) DO UPDATE SET updated_at = NOW()`,
+		schedule.ID, schedule.Name, schedule.PluginID, StatusDeleted)
+	if err != nil {
+		return fmt.Errorf("linking served source assets: %w", err)
+	}
 	return nil
 }
 
@@ -1313,25 +1338,16 @@ func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedul
 	return nil
 }
 
-// maskJobRunConfig masks sensitive fields in a job run's config
+// maskJobRunConfig masks sensitive fields in a job run's config, dropping the config entirely when the plugin's spec is unknown, as MaskScheduleConfig does, since without the spec there is no telling which fields are secret
 func (r *SchedulePostgresRepository) maskJobRunConfig(run *JobRun) {
-	if run.Config == nil || len(run.Config) == 0 {
+	if len(run.Config) == 0 {
 		return
 	}
 
-	// Get the plugin registry
-	registry := plugin.GetRegistry()
-
-	// We need the plugin ID to get the ConfigSpec
-	// The SourceName field actually contains the plugin_id
-	if run.SourceName == "" {
-		return
-	}
-
-	// Get the plugin entry from registry
-	entry, err := registry.Get(run.SourceName)
+	// SourceName holds the plugin id for job runs.
+	entry, err := plugin.GetRegistry().Get(run.SourceName)
 	if err != nil {
-		// Plugin not found, skip masking
+		run.Config = nil
 		return
 	}
 

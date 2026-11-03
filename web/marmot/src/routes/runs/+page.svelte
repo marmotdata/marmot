@@ -98,8 +98,12 @@
 
 	const actionsCell = (r: Row) => {
 		if (r.managed_by)
-			return html`<mm-text variant="caption" tone="secondary"
-				>${m.runs_operator_managed_title()}</mm-text
+			return html`<mm-text
+				variant="caption"
+				tone="secondary"
+				title=${m.runs_operator_managed_title()}
+				style="white-space:nowrap"
+				>${m.runs_operator_managed_short()}</mm-text
 			>`;
 		if (!canManage) return nothing;
 		return html`<span

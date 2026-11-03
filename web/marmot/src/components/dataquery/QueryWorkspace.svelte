@@ -119,7 +119,7 @@
 	let canViewAudit = $derived(holdsAtRoot($myAccess, 'access:view'));
 	let canRun = $derived(!!source && statement.trim().length > 0 && !running);
 	let context = $derived(result?.context ?? []);
-	let gridHeight = $derived(Math.max(200, outputHeight - 128));
+	let gridHeight = $derived(Math.max(200, outputHeight - 130));
 	let providers = $derived(new Map(sources.map((s) => [s.name, s.plugin_id])));
 	let history = $derived<QueryHistoryItem[]>(
 		recent.map((q) => ({
@@ -888,7 +888,8 @@
 	.main {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto auto auto minmax(0, 1fr);
+		/* The hidden heading is out of flow, so the output is the third row; it must be the 1fr one or the results grid, sized from it, grows it a frame at a time */
+		grid-template-rows: auto auto minmax(0, 1fr);
 		block-size: 100%;
 		min-inline-size: 0;
 	}

@@ -163,11 +163,8 @@ type RunEntitiesResponse struct {
 // @Success 200 {object} plugin.Run
 // @ID postRunsStart
 // @Router /api/v1/runs/start [post]
+// startRun does not wait for Marmot's own plugins to load: a run started here belongs to a client running the plugin itself, such as the CLI, so nothing in it needs a plugin on the server.
 func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
-	if !common.RequirePluginsReady(w) {
-		return
-	}
-
 	var req StartRunRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
