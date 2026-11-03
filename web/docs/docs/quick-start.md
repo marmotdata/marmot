@@ -1,41 +1,25 @@
 ---
 sidebar_position: 2
-title: Quick Start
+title: Quick start
+description: Run Marmot on your machine with Docker Compose and catalog your first source.
 ---
 
-# Quick Start
-
-Get Marmot running in seconds with Docker Compose.
-
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Steps, Step } from '@site/src/components/Steps';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
-<CalloutCard
-  title="Would rather not run it?"
-  description="Marmot Cloud launches a hosted instance with TLS, upgrades and daily backups in about a minute. Free account, billed only once you launch."
-  href="https://cloud.marmotdata.io/signup"
-  buttonText="Start free"
-  icon="mdi:cloud-outline"
-/>
+# Quick start
 
-<CalloutCard
-  title="Prefer Kubernetes or a Single Binary?"
-  description="Docker Compose is the fastest route, but Helm and the binary are equally supported."
-  docId="Deploy/index"
-  buttonText="Deployment Options"
-  variant="secondary"
-  icon="mdi:server"
-/>
+By the end of this page you'll have Marmot running on your machine with your first source cataloged and searchable in **Discover**. To skip running it yourself, [Marmot Cloud](Cloud/getting-started.md) launches a managed instance instead.
+
+## Before you start
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) are installed.
+- Port 8080 is free.
 
 <Steps>
-  <Step title="Install the prerequisites">
+  <Step title="Create the Compose file">
 
-[Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed.
-
-  </Step>
-  <Step title="Create your Docker Compose file">
-
-Create a `docker-compose.yaml`:
+Save this as `docker-compose.yaml`. It runs Marmot and PostgreSQL for trying things out, with credentials stored unencrypted:
 
 ```yaml
 services:
@@ -80,45 +64,45 @@ volumes:
 docker compose up -d
 ```
 
-Open [http://localhost:8080](http://localhost:8080) and log in with `admin` / `admin`.
+  </Step>
+  <Step title="Sign in">
+
+Open [http://localhost:8080](http://localhost:8080) and sign in as `admin` with the password `admin`. Marmot asks you to choose a new password straight away.
+
+  </Step>
+  <Step title="Catalog your first source">
+
+In Marmot, open **Plugins** and pick your system under **Add a source**:
+
+<ThemedImg
+  lightSrc="/img/quickstart-add-source-light.png"
+  darkSrc="/img/quickstart-add-source-dark.png"
+  alt="The Add a source section of the Plugins page, with plugins grouped into databases, transformation, data integration and catalogs"
+/>
+
+1. Enter a **Pipeline name**, such as `warehouse`, and select **Continue**.
+2. Fill in the connection details and select **Check and continue**.
+3. Select **Create pipeline**.
+4. On the pipeline's page, select **Run now**.
+
+  </Step>
+  <Step title="Find it in Discover">
+
+When the run finishes, open **Discover**. Your source's tables, topics or files are listed there, and you can search them alongside glossary terms, data products and teams:
+
+<ThemedImg
+  lightSrc="/img/quickstart-discover-light.png"
+  darkSrc="/img/quickstart-discover-dark.png"
+  alt="Discover listing cataloged assets with filters for kind, type and provider"
+  size="window"
+/>
 
   </Step>
 </Steps>
 
-## Next Steps
+## Next steps
 
-<DocCardGrid>
-  <DocCard
-    title="Add Data with Plugins"
-    description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
-    docId="Plugins/index"
-    icon="mdi:puzzle"
-  />
-  <DocCard
-    title="Configure Marmot"
-    description="Set up authentication, customise settings and more"
-    docId="Configure/index"
-    icon="mdi:cog"
-  />
-  <DocCard
-    title="Learn the Query Language"
-    description="Find any asset with powerful search queries"
-    docId="queries"
-    icon="mdi:magnify"
-  />
-  <DocCard
-    title="Production Deployment"
-    description="Deploy with Docker Compose, Kubernetes or the CLI"
-    docId="Deploy/index"
-    icon="mdi:cloud-upload"
-  />
-</DocCardGrid>
-
-<CalloutCard
-  title="Need Help?"
-  description="Join the Discord community to get support and connect with other Marmot users."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+- [Self-host](Deploy/index.md): run Marmot for your team, with an encryption key for stored credentials.
+- [Plugins](Plugins/index.md): every system Marmot can catalog.
+- [Search and the query language](queries.md): find assets precisely.
+- Ask for help in the [Marmot Discord](https://discord.gg/TWCk7hVFN4).

@@ -1,86 +1,58 @@
 ---
 sidebar_position: 6
 title: Notifications
-description: Stay informed about changes to your data assets with configurable notifications.
+description: Get told when assets you own or follow change, when pipelines finish and when someone mentions you.
 ---
+
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Notifications
 
-Marmot keeps you informed about changes across your data catalog. Receive notifications when assets are modified, schemas change, pipelines complete, or someone mentions you in documentation.
-
-import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
-import { ThemedImg } from '@site/src/components/ThemedImg';
-import { TipBox } from '@site/src/components/Steps';
-
-## Viewing Notifications
-
-Click the bell icon in the header to open the notifications panel. Unread notifications appear with a badge showing the count.
+Marmot tells you when assets you own or follow change, when a pipeline finishes and when someone mentions you. The bell in the top bar shows how many are unread and opens **Notifications**, where you can mark them read or delete them:
 
 <ThemedImg
-lightSrc="/img/notifications-unread.png"
-darkSrc="/img/notifications-unread-dark.png"
-alt="Notifications panel showing unread notifications"
-
+  lightSrc="/img/notifications-page.png"
+  darkSrc="/img/notifications-page-dark.png"
+  alt="The Notifications inbox with three unread notifications about schema and asset changes and two read ones"
+  size="panel"
 />
 
-You can click on the bell icon in the header to read your notifications, mark them as read, or, delete them.
+Read notifications are kept for 14 days.
+
+## Owned and followed assets
+
+You hear about assets your teams own without doing anything. To hear about an asset you don't own, follow it: on the asset's page, select the bell beside its name and choose which changes to hear about:
 
 <ThemedImg
-lightSrc="/img/notifications-page.png"
-darkSrc="/img/notifications-page-dark.png"
-alt="Full notifications page with filters"
-
+  lightSrc="/img/asset-subscription.png"
+  darkSrc="/img/asset-subscription-dark.png"
+  alt="The subscription menu on fct_gmv_daily, with Asset Changes and Schema Changes chosen"
+  size="panel"
 />
 
-## Subscriptions
+**Manage subscriptions** on **Notifications**, or **Account → Subscriptions**, lists every asset you follow.
 
-Beyond ownership-based notifications, you can subscribe to specific assets to receive notifications regardless of whether you own them. When subscribing, choose which notification types you want for that asset.
+## Choose what you hear about
+
+Under **Account → Notifications**, turn each kind of notification on or off for everything you own or follow:
 
 <ThemedImg
-lightSrc="/img/asset-subscription.png"
-darkSrc="/img/asset-subscription-dark.png"
-alt="Subscribe button on an asset page"
-
+  lightSrc="/img/notification-settings.png"
+  darkSrc="/img/notification-settings-dark.png"
+  alt="Account Notifications, with a switch for each kind of notification from System to Access expiry"
+  size="panel"
 />
 
-<TipBox variant="info" title="Subscriptions vs Ownership">
-Ownership notifications are automatic - if your team owns an asset, all members receive notifications. Subscriptions let individual users opt in to assets they don't own but want to watch.
-</TipBox>
-
-## Preferences
-
-You can control which notification types you receive globally. Navigate to your profile and find the **Notification Preferences** section.
-
-<ThemedImg
-lightSrc="/img/notification-settings.png"
-darkSrc="/img/notification-settings-dark.png"
-alt="Notification preferences panel"
-
-/>
-
-## Expiring Access
+## Expiring access
 
 Marmot tells you when an API key is about to expire, seven days ahead, and again once it has expired. Notices for your personal keys come to you. Notices for a service account's keys go to whoever created the account, or to everyone who manages service accounts if that person has left. A key created to last seven days or less only gets the second notice, since its short life was chosen on purpose.
 
-Each notice is sent once. Reading or deleting it does not bring it back, and an expired service account key stays listed on the **Settings** overview until it is replaced or removed. Turn them off with the **Access Expiry** preference.
+Each notice is sent once, and an expired service account key stays listed on the **Settings** overview until it's replaced or removed. Turn these off with **Access expiry**.
 
-## Aggregation
+## Grouped changes
 
-Marmot batches rapid changes to prevent notification spam. If multiple updates happen to assets you own within a short window, they are grouped into a single notification rather than one per change.
+Marmot groups changes so a bulk update doesn't flood your inbox. Changes to the same assets within 2 minutes arrive as one notification, which is never held back more than 5 minutes.
 
-<TipBox variant="info" title="Aggregation Window">
-Changes are batched within a 2-minute window, with a maximum 5-minute wait before delivery. This keeps your feed manageable during bulk operations and updates.
-</TipBox>
+## Next steps
 
-## External Notifications
-
-Send notifications to Slack, Discord, or any HTTP endpoint via team webhooks.
-
-<DocCardGrid>
-  <DocCard
-    title="Webhooks"
-    description="Configure external notifications for your team via Slack, Discord, or generic HTTP webhooks"
-    docId="Notifications/webhooks"
-    icon="mdi:webhook"
-  />
-</DocCardGrid>
+- [Webhooks](webhooks.md): send a team's notifications to Slack, Discord or any web address.

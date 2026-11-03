@@ -6,11 +6,10 @@ sidebar_position: 3
 
 The Claude Agent SDK integration ships in the Python and TypeScript SDKs. It has two halves:
 
-import { CalloutCard } from '@site/src/components/DocCard';
 import { Tabs, TabPanel } from '@site/src/components/Steps';
 
-1. The **Marmot MCP server** (built into your Marmot instance at `/api/v1/mcp`) gives the agent catalog-aware tools: `discover_data`, `find_ownership`, `lookup_term`. Point the SDK at it via `mcpServers` and it just shows up as a tool source.
-2. **`MarmotAgentTracker`** plugs into the SDK's hook system. The first time any hook fires it registers the agent as an asset of type `Agent`, captures every tool output for `mrn://` references, and writes one batched lineage call when the session ends.
+1. The **Marmot MCP server** (built into your Marmot instance at `/api/v1/mcp`) gives the agent catalog tools such as `discover_data`, `find_ownership`, `lookup_term` and `trace_lineage`. Point the SDK at it with `mcpServers` and those tools appear alongside the agent's own.
+2. **`MarmotAgentTracker`** plugs into the SDK's hook system. The first time any hook fires it registers the agent as an asset of type `Agent`, captures every tool output for `mrn://` references and writes one batched lineage call when the session ends.
 
 ## Install
 
@@ -168,7 +167,7 @@ The Marmot MCP server exposes the catalog as tools, namespaced `mcp__marmot__*`:
 
 | Tool             | Purpose                                                       |
 | ---------------- | ------------------------------------------------------------- |
-| `discover_data`  | Find or browse assets by name, type, provider, tags, or MRN |
+| `discover_data`  | Find or browse assets by name, type, provider, tags or MRN |
 | `find_ownership` | Resolve who owns an asset, or what a team/user owns           |
 | `lookup_term`    | Search the business glossary for term definitions             |
 
@@ -248,3 +247,8 @@ function queryTable(table: string, sql: string) {
 </TabPanel>
 
 </Tabs>
+
+## Next steps
+
+- [MCP server](../MCP/index.md): the tools and permissions behind `mcpServers`.
+- [LangChain](langchain.md): the same lineage capture for LangChain agents.

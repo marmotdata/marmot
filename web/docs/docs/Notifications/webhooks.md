@@ -1,110 +1,73 @@
 ---
 title: Webhooks
-description: Send team notifications to Slack, Discord, or any HTTP endpoint.
+description: Send a team's notifications to Slack, Discord or any web address.
 ---
+
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Webhooks
 
-Send your team's asset notifications to external services. Each webhook is scoped to a team and can be configured to forward specific notification types.
+A webhook sends a team's notifications to Slack, Discord or any web address, so the team hears about schema changes where it already talks. Each webhook belongs to one team and sends the kinds of notification you choose.
 
-import { FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
-import { ThemedImg } from '@site/src/components/ThemedImg';
-import { Steps, Step, TipBox } from '@site/src/components/Steps';
+## Add a webhook
 
-## Supported Providers
+1. Open **Settings → Teams**, select the team and open its **Integrations** tab.
+2. Select **Add webhook**.
+3. Enter a **Name**, choose where to **Send to** (**Slack**, **Discord** or **Web address**) and paste the **Webhook URL**.
+4. Under **Notifications to send**, tick the kinds of notification to forward, then select **Add webhook**.
 
-<FeatureGrid>
-  <FeatureCard
-    title="Slack"
-    description="Rich formatted messages to any Slack channel via incoming webhooks"
-    icon="mdi:slack"
-  />
-  <FeatureCard
-    title="Discord"
-    description="Embedded notifications to Discord channels via webhook URLs"
-    icon="simple-icons:discord"
-  />
-  <FeatureCard
-    title="Generic HTTP"
-    description="JSON payloads to any HTTP endpoint for custom integrations"
-    icon="mdi:webhook"
-  />
-</FeatureGrid>
-
-## Setup
-
-<Steps>
-<Step title="Navigate to Team Settings">
-
-Open your team page and find the **Webhooks** section.
+A webhook that sends schema changes to a Discord channel:
 
 <ThemedImg
-lightSrc="/img/team-webhooks.png"
-darkSrc="/img/team-webhooks-dark.png"
-alt="Team webhooks section"
-
+  lightSrc="/img/new-webhook.png"
+  darkSrc="/img/new-webhook-dark.png"
+  alt="Add webhook with the name Schema changes to Discord, Discord chosen, a Discord webhook URL and Schema changes and Upstream schema changes ticked"
+  size="dialog"
 />
 
-</Step>
-<Step title="Create a Webhook">
+## Check that it worked
 
-Click **Add Webhook** and fill in the details:
-
-- **Name**: a descriptive label (e.g. "Schema alerts to #data-eng")
-- **Provider**: choose Slack, Discord, or Generic
-- **Webhook URL**: the incoming webhook URL from your provider
-- **Notification Types**: select which types to forward
+Select **Send test** on the webhook. A sample notification arrives in the channel or at the address straight away:
 
 <ThemedImg
-lightSrc="/img/new-webhook.png"
-darkSrc="/img/new-webhook-dark.png"
-alt="Create webhook form"
-
+  lightSrc="/img/team-webhooks.png"
+  darkSrc="/img/team-webhooks-dark.png"
+  alt="The Integrations tab of the Data Platform team, listing a Slack webhook with Send test"
+  size="panel"
 />
 
-</Step>
-<Step title="Test the Webhook">
+If the endpoint stops accepting notifications, the webhook shows as **Failing**. Fix the endpoint, then send a test.
 
-Click **Send Test** to verify the webhook is configured correctly. A sample notification will be delivered to your endpoint.
-
-<!-- TODO: Add screenshot of test notification in Slack/Discord -->
-
-</Step>
-</Steps>
-
-## Provider Details
+## Get a webhook URL
 
 ### Slack
 
-Create an incoming webhook in your Slack workspace:
-
-1. Go to [Slack Apps](https://api.slack.com/apps) and create or select an app
-2. Enable **Incoming Webhooks** and add a new webhook to your channel
-3. Copy the webhook URL (starts with `https://hooks.slack.com/`)
-
-Messages are formatted with rich blocks showing the notification type, affected asset, and a link back to Marmot.
+1. In [Slack apps](https://api.slack.com/apps), create or choose an app.
+2. Turn on **Incoming Webhooks** and add a webhook for your channel.
+3. Copy the URL, which starts with `https://hooks.slack.com/`.
 
 ### Discord
 
-Create a webhook in your Discord server:
+1. Open **Server Settings → Integrations → Webhooks**.
+2. Select **New Webhook** and choose the channel.
+3. Copy the URL, which starts with `https://discord.com/api/webhooks/`.
 
-1. Open **Server Settings** > **Integrations** > **Webhooks**
-2. Click **New Webhook** and select the target channel
-3. Copy the webhook URL (starts with `https://discord.com/api/webhooks/`)
+### Web address
 
-Notifications are delivered as embedded messages with colour-coded types.
-
-### Generic HTTP
-
-For custom integrations, the generic provider sends a JSON POST to any HTTPS endpoint:
+For your own integrations, Marmot sends a JSON `POST` to any HTTPS address:
 
 ```json
 {
   "type": "schema_change",
-  "title": "Schema changed on users_table",
-  "message": "Column 'email' type changed from VARCHAR to TEXT",
-  "asset_mrn": "postgres://prod/public/users_table",
-  "team_id": "d4e5f6...",
-  "timestamp": "2025-01-23T10:30:00Z"
+  "title": "Schema Updated",
+  "message": "Schema for \"dim_buyer\" has been modified.",
+  "data": {
+    "link": "/discover/model/dbt/dim_buyer"
+  },
+  "timestamp": "2026-11-03T10:30:00Z"
 }
 ```
+
+## Next steps
+
+- [Notifications](index.md): what each kind of notification covers.

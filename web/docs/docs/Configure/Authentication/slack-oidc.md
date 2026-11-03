@@ -7,7 +7,7 @@ description: Configure Slack as an authentication provider
 
 Marmot supports Slack as an OIDC provider for Single Sign-On authentication, allowing users to sign in with their Slack workspace credentials.
 
-## Create a Slack App
+## Create a Slack app
 
 1. Go to [https://api.slack.com/apps](https://api.slack.com/apps)
 2. Click **Create New App**
@@ -17,14 +17,14 @@ Marmot supports Slack as an OIDC provider for Single Sign-On authentication, all
    - **Pick a workspace to develop your app in**: Select your workspace
 5. Click **Create App**
 
-## Configure OAuth & Permissions
+## Configure OAuth and permissions
 
 1. In your app's settings, navigate to **OAuth & Permissions**
 2. Under **Redirect URLs**, click **Add New Redirect URL**
 3. Add: `https://your-marmot-domain.com/auth/slack/callback`
 4. Click **Save URLs**
 
-## Add OAuth Scopes
+## Add OAuth scopes
 
 1. Scroll down to **Scopes** section
 2. Under **User Token Scopes**, add the following scopes:
@@ -32,7 +32,7 @@ Marmot supports Slack as an OIDC provider for Single Sign-On authentication, all
    - `profile`
    - `email`
 
-## Get Client Credentials
+## Get the client credentials
 
 1. Navigate to **Basic Information** in the sidebar
 2. Under **App Credentials**, you'll find:
@@ -65,7 +65,7 @@ auth:
     client_secret: "your-client-secret"
 ```
 
-Restart Marmot and the Slack login button will appear on the login page.
+Restart Marmot and the Slack sign-in button appears on the sign-in page.
 
 ## Notes
 

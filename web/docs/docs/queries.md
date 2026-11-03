@@ -1,54 +1,26 @@
 ---
 sidebar_position: 5
+title: Search and the query language
 ---
 
 import { ThemedImg } from '@site/src/components/ThemedImg';
-import { CalloutCard, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
-# Query Language
+# Search and the query language
 
-Marmot provides a query language for searching and filtering assets in your catalog. The language supports free-text search, field-specific filters, comparison operators and boolean logic.
+Free text finds most things on **Discover**. The query language narrows a search precisely, such as every Kafka topic a team owns or every table with more than a million rows, and the same queries define [data product rules](data-products.md) and [asset rules](asset-rules.md).
 
-:::tip Optional but Powerful
-The query language is entirely optional. Simple free-text searches work well for everyday discovery. When you need precision, such as finding all Kafka topics owned by a specific team or tables with more than a million rows, the query language gives you that control. Queries are also repeatable and shareable, making it easy to bookmark common searches or share them with your team.
-:::
+## Build a query
 
-## Where It's Used
-
-The query language powers several features across Marmot:
-
-<FeatureGrid>
-  <FeatureCard
-    title="Search"
-    description="Find assets quickly using free-text or precise field filters in the global search bar."
-    icon="mdi:magnify"
-  />
-  <FeatureCard
-    title="Data Products"
-    description="Define dynamic rules that automatically include matching assets in your Data Products."
-    icon="mdi:package-variant-closed"
-  />
-</FeatureGrid>
-
-<CalloutCard
-  title="Build Dynamic Data Products"
-  description="Use the query language to create rules that automatically group related assets. As your catalog grows, matching assets are included automatically."
-  docId="data-products"
-  buttonText="Learn About Data Products"
-  icon="mdi:package-variant-closed"
-/>
-
-## Query Builder
-
-The search bar includes a visual query builder that helps you construct queries without memorising the syntax. Click the filter icon to open it, select your field and operator, then enter your value. The builder generates the query syntax automatically.
+On **Discover**, select **Build query** to pick a field, an operator and values without writing the syntax. **All**, **Any** and **None** set how conditions combine, and the builder counts the matches before you select **Apply**. The query then appears in the search bar as tokens, and **Show as text** shows it as text you can copy or bookmark:
 
 <ThemedImg
   lightSrc="/img/query-builder-light.png"
   darkSrc="/img/query-builder-dark.png"
-  alt="The advanced search builder on Discover, with a field filter and the query it generates in the search bar"
+  alt="Build query on Discover with the condition Provider is Kafka, matching 6 results, and the Apply button"
+  size="panel"
 />
 
-## Syntax Reference
+## Syntax reference
 
 ### Fields
 
@@ -60,6 +32,8 @@ Filter assets using field prefixes:
 | `@provider` | Provider or platform | `@provider: "kafka"` |
 | `@name` | Asset name | `@name: "users"` |
 | `@kind` | Resource kind in Marmot | `@kind: "asset"` |
+| `@tag` | A tag on the asset | `@tag: "pii"` |
+| `@term` | A glossary term linked to the asset | `@term: "GMV"` |
 | `@metadata.*` | Custom metadata fields | `@metadata.team: "platform"` |
 
 Metadata supports dot notation for nested fields: `@metadata.config.retention: "7d"`
@@ -75,7 +49,7 @@ Metadata supports dot notation for nested fields: `@metadata.config.retention: "
 | `range` | Numeric range | `@metadata.size range [100 TO 500]` |
 | `*` | Wildcard | `@name: "customer*"` |
 
-### Boolean Logic
+### Boolean logic
 
 Combine filters with `AND`, `OR` and `NOT`. Use parentheses to control precedence:
 
@@ -156,12 +130,3 @@ Use parentheses to control how conditions are combined.
 ```
 
 </Collapsible>
-
-<CalloutCard
-  title="Need Help with Queries?"
-  description="Join our Discord community to ask questions and share tips with other Marmot users."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>

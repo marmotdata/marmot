@@ -84,7 +84,7 @@ export const financeGrants: Grant[] = [
 	{ id: 'g1', role: 'catalog.viewer', on: 'Whole catalog', by: 'Chris Brown', at: ago(90_000) },
 	{
 		id: 'g2',
-		role: 'asset.dataViewer',
+		role: 'asset.dataQuerier',
 		on: 'charges',
 		provider: 'snowflake',
 		by: 'Sam Jones',
@@ -103,7 +103,7 @@ export const financeGrants: Grant[] = [
 /** The grant the access demo adds. */
 export const newGrant: Grant = {
 	id: 'g-orders-daily',
-	role: 'asset.dataViewer',
+	role: 'asset.dataQuerier',
 	on: 'orders_daily',
 	provider: 'dbt',
 	by: 'Jane Doe',

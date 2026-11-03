@@ -1,10 +1,14 @@
-# Elasticsearch
+---
+title: Search backend
+sidebar_label: Search backend
+description: Use Elasticsearch for fuzzy search across every field of the catalog.
+---
 
-Marmot can optionally use Elasticsearch to enhance search with deep fuzzy matching across all record fields including metadata, descriptions, documentation and schemas.
+# Search backend
 
-## Configuration
+Marmot searches with PostgreSQL out of the box. Add Elasticsearch for fuzzy matching across every field of a record, including metadata, descriptions, documentation and schemas.
 
-### YAML
+## Connect Elasticsearch
 
 ```yaml
 search:
@@ -15,9 +19,9 @@ search:
     index: "marmot"
 ```
 
-### Environment Variables
+Or with environment variables:
 
-```
+```bash
 MARMOT_SEARCH_ELASTICSEARCH_ENABLED=true
 MARMOT_SEARCH_ELASTICSEARCH_ADDRESSES=http://localhost:9200
 MARMOT_SEARCH_ELASTICSEARCH_INDEX=marmot
@@ -25,22 +29,24 @@ MARMOT_SEARCH_ELASTICSEARCH_INDEX=marmot
 
 ## Options
 
-| Option                                  | Description                                                    | Default         | Environment Variable                           |
-| --------------------------------------- | -------------------------------------------------------------- | --------------- | ---------------------------------------------- |
-| `search.elasticsearch.enabled`          | Enable Elasticsearch for text search                           | `false`         | `MARMOT_SEARCH_ELASTICSEARCH_ENABLED`          |
-| `search.elasticsearch.addresses`        | List of Elasticsearch node URLs                                | -               | `MARMOT_SEARCH_ELASTICSEARCH_ADDRESSES`        |
-| `search.elasticsearch.username`         | HTTP Basic Auth username                                       | -               | `MARMOT_SEARCH_ELASTICSEARCH_USERNAME`         |
-| `search.elasticsearch.password`         | HTTP Basic Auth password                                       | -               | `MARMOT_SEARCH_ELASTICSEARCH_PASSWORD`         |
-| `search.elasticsearch.index`            | Name of the Elasticsearch index                                | `marmot`        | `MARMOT_SEARCH_ELASTICSEARCH_INDEX`            |
-| `search.elasticsearch.bulk_size`        | Number of documents per bulk indexing batch                    | `500`           | `MARMOT_SEARCH_ELASTICSEARCH_BULK_SIZE`        |
-| `search.elasticsearch.flush_interval`   | Interval between bulk flushes in milliseconds                  | `1000`          | `MARMOT_SEARCH_ELASTICSEARCH_FLUSH_INTERVAL`   |
-| `search.elasticsearch.reindex_on_start` | Run a full reindex from PostgreSQL to Elasticsearch on startup | `false`         | `MARMOT_SEARCH_ELASTICSEARCH_REINDEX_ON_START` |
-| `search.elasticsearch.shards`           | Number of primary shards for the index                         | cluster default | `MARMOT_SEARCH_ELASTICSEARCH_SHARDS`           |
-| `search.elasticsearch.replicas`         | Number of replicas for the index                               | cluster default | `MARMOT_SEARCH_ELASTICSEARCH_REPLICAS`         |
+Each key has an environment variable: `MARMOT_` followed by the key in capitals with dots as underscores, such as `MARMOT_SEARCH_ELASTICSEARCH_ADDRESSES`.
+
+| Key                                     | Description                                                    | Default         |
+| --------------------------------------- | -------------------------------------------------------------- | --------------- |
+| `search.elasticsearch.enabled`          | Enable Elasticsearch for text search                           | `false`         |
+| `search.elasticsearch.addresses`        | List of Elasticsearch node URLs                                | -               |
+| `search.elasticsearch.username`         | HTTP Basic Auth username                                       | -               |
+| `search.elasticsearch.password`         | HTTP Basic Auth password                                       | -               |
+| `search.elasticsearch.index`            | Name of the Elasticsearch index                                | `marmot`        |
+| `search.elasticsearch.bulk_size`        | Number of documents per bulk indexing batch                    | `500`           |
+| `search.elasticsearch.flush_interval`   | Interval between bulk flushes in milliseconds                  | `1000`          |
+| `search.elasticsearch.reindex_on_start` | Run a full reindex from PostgreSQL to Elasticsearch on startup | `false`         |
+| `search.elasticsearch.shards`           | Number of primary shards for the index                         | cluster default |
+| `search.elasticsearch.replicas`         | Number of replicas for the index                               | cluster default |
 
 ## TLS
 
-To connect to an Elasticsearch cluster over TLS:
+Connect to a cluster over TLS with a CA certificate, and optionally a client certificate:
 
 ```yaml
 search:
@@ -54,20 +60,20 @@ search:
       key_path: "/etc/ssl/private/es-client-key.pem"
 ```
 
-| Option                                          | Description                                            | Default | Environment Variable                                   |
-| ----------------------------------------------- | ------------------------------------------------------ | ------- | ------------------------------------------------------ |
-| `search.elasticsearch.tls.ca_cert_path`         | Path to CA certificate for verifying the ES server     | -       | `MARMOT_SEARCH_ELASTICSEARCH_TLS_CA_CERT_PATH`         |
-| `search.elasticsearch.tls.cert_path`            | Path to client certificate for mutual TLS              | -       | `MARMOT_SEARCH_ELASTICSEARCH_TLS_CERT_PATH`            |
-| `search.elasticsearch.tls.key_path`             | Path to client private key for mutual TLS              | -       | `MARMOT_SEARCH_ELASTICSEARCH_TLS_KEY_PATH`             |
-| `search.elasticsearch.tls.insecure_skip_verify` | Skip server certificate verification (not recommended) | `false` | `MARMOT_SEARCH_ELASTICSEARCH_TLS_INSECURE_SKIP_VERIFY` |
+| Key                                             | Description                                            | Default |
+| ----------------------------------------------- | ------------------------------------------------------ | ------- |
+| `search.elasticsearch.tls.ca_cert_path`         | Path to CA certificate for verifying the ES server     | -       |
+| `search.elasticsearch.tls.cert_path`            | Path to client certificate for mutual TLS              | -       |
+| `search.elasticsearch.tls.key_path`             | Path to client private key for mutual TLS              | -       |
+| `search.elasticsearch.tls.insecure_skip_verify` | Skip server certificate verification; development only | `false` |
 
-## Startup Behaviour
+## If Elasticsearch is down at startup
 
-At startup, Marmot checks whether Elasticsearch is reachable. If the cluster is not available, Marmot falls back to PostgreSQL-only search and logs an error. It will not retry connecting to Elasticsearch after startup.
+Marmot checks Elasticsearch once, when it starts. If the cluster isn't reachable, it logs an error and searches with PostgreSQL only until you restart it.
 
-## Shards and Replicas
+## Shards and replicas
 
-By default Marmot defers to the Elasticsearch cluster settings for shard and replica counts. You can override these per-index if needed:
+Marmot uses the cluster's shard and replica counts unless you set them for its index:
 
 ```yaml
 search:
@@ -79,11 +85,11 @@ search:
     replicas: 1
 ```
 
-These values are only applied when Marmot creates the index for the first time. Changing them after the index already exists has no effect. To apply new shard counts to an existing cluster you must delete the index and let Marmot recreate it, or use the Elasticsearch split/shrink APIs directly.
+They only apply when Marmot creates the index. To change them later, delete the index and let Marmot recreate it, or use the Elasticsearch split and shrink APIs.
 
-## Indexing Existing Data
+## Index existing data
 
-If you enable Elasticsearch on an instance that already has data, set `reindex_on_start: true` to populate the index from the existing `search_index` table:
+When you add Elasticsearch to an instance that already has data, set `reindex_on_start` to fill the index when Marmot starts:
 
 ```yaml
 search:
@@ -94,4 +100,9 @@ search:
     reindex_on_start: true
 ```
 
-You can also manually trigger a reindex from the admin UI under **Admin > System > Start Reindex**.
+Or open **Settings → System** and, under **Search index**, select **Reindex search**.
+
+## Next steps
+
+- [Search and the query language](../queries.md): what people can search for.
+- [Configuration reference](index.md): every other setting.

@@ -1,7 +1,7 @@
 /**
  * Settings › Access › Service accounts › svc-finance-agent: what the account behind revenue-agent
  * may do. The mockup's service account page lists roles and API keys; here its roles are grants on
- * the catalog or on one asset, so the demo can grant asset.dataViewer on orders_daily and show it
+ * the catalog or on one asset, so the demo can grant asset.dataQuerier on orders_daily and show it
  * arrive.
  */
 import { html, nothing, type TemplateResult } from 'lit';
@@ -142,7 +142,7 @@ const keyColumns: DataTableColumn<ApiKey>[] = [
 /* ------------------------------------------------------------ Screen */
 
 export interface AccessState {
-	/** Whether asset.dataViewer on orders_daily has been granted to svc-finance-agent. */
+	/** Whether asset.dataQuerier on orders_daily has been granted to svc-finance-agent. */
 	granted: boolean;
 }
 
@@ -221,7 +221,7 @@ export const accessScreen = (s: AccessState): TemplateResult => {
 						><mm-toast
 							tone="success"
 							duration="0"
-							message="Granted asset.dataViewer on orders_daily to ${account.name}."
+							message="Granted asset.dataQuerier on orders_daily to ${account.name}."
 						></mm-toast
 					></mm-toaster>`
 				: undefined

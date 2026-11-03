@@ -7,7 +7,7 @@ description: Configure Keycloak as an authentication provider
 
 Marmot supports Keycloak as an OIDC provider for Single Sign-On authentication.
 
-## Create a Keycloak Client
+## Create a Keycloak client
 
 1. Log in to your Keycloak Admin Console
 2. Select the realm you want to use (or create a new one)
@@ -61,9 +61,9 @@ auth:
 
 Marmot constructs the OIDC issuer URL automatically as `{url}/realms/{realm}` and uses OIDC discovery to configure endpoints.
 
-Restart Marmot and the Keycloak login button will appear on the login page.
+Restart Marmot and the Keycloak sign-in button appears on the sign-in page.
 
-## Team Synchronisation
+## Team sync
 
 Marmot can automatically sync users to teams based on Keycloak group memberships.
 
@@ -78,13 +78,11 @@ auth:
       group:
         claim: "groups"
         filter:
-          mode: "include"
+          mode: "regex"
           pattern: ".*"
 ```
 
-:::tip
-Keycloak prefixes group names with `/` by default (e.g., `/engineering`). Use `strip_prefix: "/"` to remove this prefix so teams are created as `engineering` instead of `/engineering`.
-:::
+Keycloak starts group names with `/`, such as `/engineering`. Set `strip_prefix: "/"` so the team is called `engineering`.
 
 To include groups in the ID token:
 
@@ -102,7 +100,7 @@ To include groups in the ID token:
    - **Add to userinfo**: On
 7. Click **Save**
 
-## Custom TLS Configuration
+## Custom TLS configuration
 
 If your Keycloak instance uses a self-signed certificate or a certificate signed by an internal CA, you can configure Marmot to trust it:
 

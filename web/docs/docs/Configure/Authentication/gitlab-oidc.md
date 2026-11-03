@@ -7,7 +7,7 @@ description: Configure GitLab as an authentication provider
 
 Marmot supports GitLab (both gitlab.com and self-hosted) as an OIDC provider for Single Sign-On authentication.
 
-## Create a GitLab Application
+## Create a GitLab application
 
 1. Log in to your GitLab instance
 2. Navigate to **User Settings** → **Applications** (or for groups: **Settings** → **Applications**)
@@ -18,7 +18,7 @@ Marmot supports GitLab (both gitlab.com and self-hosted) as an OIDC provider for
    - **Name**: `Marmot`
    - **Redirect URI**: `https://your-marmot-domain.com/auth/gitlab/callback`
    - **Confidential**: Check this option
-   - **Scopes**: Select `openid`, `profile`, and `email`
+   - **Scopes**: Select `openid`, `profile` and `email`
 5. Click **Save application**
 
 After creating the application, note:
@@ -54,7 +54,7 @@ auth:
     client_secret: "your-secret"
 ```
 
-### For Self-Hosted GitLab
+### For self-managed GitLab
 
 If you're using a self-hosted GitLab instance, you need to specify the URL:
 
@@ -76,9 +76,9 @@ auth:
     url: "https://gitlab.your-company.com"
 ```
 
-Restart Marmot and the GitLab login button will appear on the login page.
+Restart Marmot and the GitLab sign-in button appears on the sign-in page.
 
-## Custom TLS Configuration
+## Custom TLS configuration
 
 If your self-hosted GitLab instance uses a self-signed certificate or a certificate signed by an internal CA, you can configure Marmot to trust it:
 

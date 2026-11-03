@@ -1,12 +1,11 @@
-# Creating a Marmot Plugin
+# Build a plugin
 
 This guide walks you through creating a simple HelloWorld plugin for Marmot that demonstrates the core concepts of plugin development.
 
-import { CalloutCard } from '@site/src/components/DocCard';
 
 Marmot plugins are standalone binaries built on the [Marmot plugin SDK](https://github.com/marmotdata/plugin-sdk). Marmot launches them on demand via [go-plugin](https://github.com/hashicorp/go-plugin) and talks to them over gRPC: once at startup to read their metadata, then once per run to validate configuration and discover assets. Your plugin lives in its own repository, with its own dependencies and release cycle. [marmot-plugin-gcs](https://github.com/marmotdata/marmot-plugin-gcs) is a complete real-world example.
 
-## 1. Create the Plugin Module
+## 1. Create the plugin module
 
 Create a new Go module and add the SDK:
 
@@ -16,7 +15,7 @@ go mod init github.com/you/marmot-plugin-helloworld
 go get github.com/marmotdata/plugin-sdk
 ```
 
-## 2. Implement the Source Interface
+## 2. Implement the Source interface
 
 Create `source.go`:
 
@@ -138,7 +137,7 @@ func createWorldAsset(config *Config) pluginsdk.Asset {
 }
 ```
 
-## 3. Serve the Plugin
+## 3. Serve the plugin
 
 Create `main.go`. `Serve` hands your source to go-plugin and blocks until Marmot disconnects:
 
@@ -165,11 +164,11 @@ func main() {
 }
 ```
 
-The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category, and the configuration form rendered in the UI.
+The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category and the configuration form rendered in the UI.
 
 `MarmotVersion` is the lowest Marmot release the plugin works with, as a semver constraint such as `">=0.12.0"`. Raise it when the plugin starts relying on something only a newer release provides. Marmot refuses to load a plugin that excludes it, and the plugin index only offers each version to the releases it supports. Plugins in the Marmot repository must set it, and CI fails without it; for your own plugins it's optional, and leaving it empty means every release. See [Plugin Updates](../Configure/plugin-updates.md).
 
-## 4. Install the Plugin
+## 4. Install the plugin
 
 Build the binary and copy it into the directory Marmot scans for local plugins. The binary name must start with `marmot-plugin-`:
 
@@ -179,7 +178,7 @@ go build -o ~/.marmot/plugins/marmot-plugin-helloworld .
 
 Marmot discovers it at startup, both the server and the CLI. Set `MARMOT_PLUGINS_DIR` if your Marmot uses a different plugins directory.
 
-## 5. Test the Plugin
+## 5. Test the plugin
 
 Create a test configuration file `hello.yaml`:
 
@@ -205,7 +204,7 @@ After running, you should see two new assets in your catalog:
 2. An asset named "world"
 3. A lineage relationship showing "hello" produces "world"
 
-## 6. Publish the Plugin
+## 6. Publish the plugin
 
 Publish your plugin to any OCI registry with [oras](https://oras.land). Build one binary per platform first (GoReleaser works well), then:
 
@@ -242,7 +241,7 @@ chmod +x ~/.marmot/plugins/marmot-plugin-helloworld
 
 Marmot loads every `marmot-plugin-*` binary in `~/.marmot/plugins` (or `MARMOT_PLUGINS_DIR`) at startup, so the plugin is available after a restart.
 
-## Configuration Spec Generation
+## Configuration spec generation
 
 The `pluginsdk.GenerateConfigSpec()` function automatically generates a UI-ready configuration schema from your Config struct using struct tags:
 
@@ -283,7 +282,7 @@ The `default` tag pre-fills the UI form, but configs written by hand (a CLI inge
 
 `BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
 
-## Column Schema
+## Column schema
 
 Table-shaped assets can attach a column list that Marmot renders as a tabular "Formatted" view on the asset's Schema tab, with a "Raw" JSON view alongside it. `pluginsdk.SetColumns` marshals a slice of columns into the JSON shape Marmot expects and stores it under the `columns` key of `Asset.Schema`:
 
@@ -363,7 +362,7 @@ Only `column_name` and `data_type` are required. Any other keys you emit are pre
 
 Pick one spelling per key and stay consistent. The accepted aliases (`primary_key` for `is_primary_key`, `comment` for `description`, the string form of `is_nullable`) exist because the core plugins predate a single convention; the Formatted view reads all of them so every plugin renders correctly. New plugins should prefer the keys in the table above.
 
-## Plugin Interface
+## Plugin interface
 
 All plugins implement the `pluginsdk.Source` interface:
 
@@ -375,23 +374,24 @@ type Source interface {
 ```
 
 **Validate**: Unmarshals and validates configuration before discovery runs
-**Discover**: Performs the actual asset discovery and returns assets, lineage, and documentation
+**Discover**: Performs the actual asset discovery and returns assets, lineage and documentation
 
 Marmot spawns a fresh plugin process for every call, so `Validate` and `Discover` never share an instance across calls. The SDK runs `Validate` before `Discover` in each process, which means state your `Validate` sets on the `Source` (the parsed config, computed limits) is always there when `Discover` runs.
 
-A `Source` can optionally implement `DataFetcher` to power row previews on asset pages:
+A `Source` can also implement `Querier`, which lets Marmot run read-only data queries against the source:
 
 ```go
-type DataFetcher interface {
-    FetchSampleData(ctx context.Context, config RawConfig, a *Asset) (columnNames []string, rows [][]interface{}, err error)
+type Querier interface {
+    PlanQuery(ctx context.Context, config RawConfig, req QueryRequest) (*QueryPlan, error)
+    ExecuteQuery(ctx context.Context, config RawConfig, req QueryRequest, emit func(chunk QueryResultChunk) error) error
 }
 ```
 
-It gets the asset and the plugin config, queries the source system, and returns column names and sample rows. `Serve` detects the interface automatically, there is nothing to register.
+`PlanQuery` reports which assets a statement would read, as MRNs, without running it. Marmot checks those against what the caller may query before it calls `ExecuteQuery`, so `PlanQuery` must have no side effects and should refuse anything that isn't a read. `ExecuteQuery` runs the statement and sends the rows back in chunks through `emit`, with the column names in the first one. `Serve` detects the interface, so there's nothing to register.
 
-## Write End-to-End Tests
+## Write end-to-end tests
 
-The `plugintest` package tests your built binary over the same wire protocol Marmot uses, spawning a fresh process per call just like the host does. That catches problems unit tests miss, like state that does not survive the process model:
+The `plugintest` package tests your built binary over the same wire protocol Marmot uses, spawning a fresh process per call as the host does. That catches problems unit tests miss, like state that does not survive the process model:
 
 ```go
 package main_test
@@ -421,26 +421,22 @@ func TestDiscover(t *testing.T) {
 
 `Binary` also exposes `Meta`, `Validate`, and `FetchSampleData`. Pair it with a containerized instance of your source system and the test exercises the exact path Marmot takes in production.
 
-## How Plugins Are Loaded
+## How plugins are loaded
 
 Marmot looks for `marmot-plugin-*` binaries in two places at startup:
 
 - `~/.marmot/plugins` (`MARMOT_PLUGINS_DIR`): plugins you installed by hand, like the one in this guide
 - `~/.marmot/plugins/cache` (`MARMOT_PLUGIN_CACHE_DIR`): core plugins Marmot downloads from `ghcr.io/marmotdata/plugins`
 
-Local plugins load first, so a local binary shadows a downloaded core plugin with the same ID. That makes iterating on a core plugin easy: build it into `~/.marmot/plugins` and Marmot runs your build instead of the released one.
+Local plugins load first, so a local binary shadows a downloaded core plugin with the same ID. To work on a core plugin, build it into `~/.marmot/plugins` and Marmot runs your build instead of the released one.
 
-### What Marmot Checks Before Running a Plugin
+### What Marmot checks before running a plugin
 
 A plugin runs with the same rights as Marmot, so Marmot refuses any binary another user could have written. The binary and every directory above it, up to the plugins directory, must be owned by you or by root and must not be writable by other users. Group write is accepted only for your own group. `go build` and `mkdir` produce these permissions by default; if Marmot refuses a plugin, the log names the file or directory to fix, usually with `chmod go-w`.
 
 Marmot records each binary's SHA-256 when it loads it and checks it again on every launch, so a binary replaced while Marmot is running is refused until the next restart. Each plugin process talks to Marmot over a Unix socket using mutual TLS with certificates generated for that process alone, and it inherits Marmot's environment without the `MARMOT_` variables, which hold Marmot's own secrets such as its encryption key.
 
-<CalloutCard
-  title="Need Help Building a Plugin?"
-  description="Join our Discord community to get help, share your plugins, and connect with other contributors."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+## Next steps
+
+- [Plugin updates](../Configure/plugin-updates.md): how released plugins reach existing installs.
+- [Discord](https://discord.gg/TWCk7hVFN4): get help and share your plugin with other contributors.

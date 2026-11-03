@@ -3,11 +3,11 @@ sidebar_position: 4
 toc_max_heading_level: 4
 ---
 
-Using Terraform, you can manage Marmot as code, declaring your Marmot resources and automating them alongside the rest of your infrastructure.
+The Marmot Terraform provider manages Marmot as code: assets, lineage, glossary terms, data products and pipelines, declared next to the infrastructure they describe.
 
-## Getting Started
+## Getting started
 
-### Provider Configuration
+### Provider configuration
 
 To use the Marmot Terraform provider, add it to your Terraform configuration:
 
@@ -57,7 +57,7 @@ The Marmot provider offers these primary resources:
 
 ### Assets
 
-Register the datasets, services, and other resources in your platform as assets:
+Register the datasets, services and other resources in your platform as assets:
 
 ```hcl
 resource "marmot_asset" "customer_orders" {
@@ -181,7 +181,7 @@ resource "marmot_lineage" "orders_to_processor" {
 
 See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/lineage) for all available configuration options.
 
-### Glossary Terms
+### Glossary terms
 
 Define shared business terminology and organize it hierarchically:
 
@@ -232,7 +232,7 @@ Change `password_wo_version` to push a new password on a later apply.
 
 See the [`marmot_user` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/user) for all available configuration options.
 
-### Data Products
+### Data products
 
 Group related assets into a data product. Teams and users own it through `owner_team_ids` and `owner_user_ids`:
 
@@ -279,10 +279,9 @@ resource "marmot_pipeline" "orders" {
   plugin_id = "postgresql"
 
   config = jsonencode({
-    host     = "orders-db.acme.internal"
-    database = "orders"
-    user     = "marmot"
-    password = var.orders_db_password
+    host     = "db.internal"
+    user     = "marmot_reader"
+    password = var.marketplace_db_password
   })
 
   cron_expression = "0 * * * *"
@@ -308,9 +307,9 @@ resource "marmot_asset_iam_member" "copilot_reads_orders" {
 }
 ```
 
-The `*_iam_member`, `*_iam_binding` and `*_iam_policy` resources exist on Marmot Cloud and Marmot Enterprise. [Access control](../Cloud/access-control.md) explains the model and when to use each.
+The `*_iam_member`, `*_iam_binding` and `*_iam_policy` resources only work on Marmot Cloud. [Access control](../Cloud/access-control.md) explains the model, and [Grant and check access](../Cloud/grant-access.md) shows the Terraform resources for each scope.
 
-## Learn More
+## Learn more
 
 Every resource is documented on the Terraform Registry, along with guides for the paths worth following:
 

@@ -276,7 +276,7 @@ export const agentAudit: AuditEvent[] = [
 		outcome: 'allowed',
 		ms: 412,
 		tables: ['mrn://table/snowflake/analytics.marts.orders_daily'],
-		decision: 'Allowed by role asset.dataViewer on orders_daily'
+		decision: 'Allowed by role asset.dataQuerier on orders_daily'
 	},
 	{
 		id: '62bacc3c-3b2d-4f55-ae98-4603ca18016a',

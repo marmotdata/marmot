@@ -1,21 +1,19 @@
 ---
 sidebar_position: 2
 title: Docker
+description: Run the Marmot container against your own PostgreSQL database.
 ---
 
 # Docker
 
-Deploy Marmot using Docker containers with your own PostgreSQL database.
+Run the Marmot container against a PostgreSQL database you already have.
 
-import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
-
-## Quick Start
 
 <Steps>
 <Step title="Generate an encryption key">
 
-Install the Marmot CLI and generate a key:
+Install the Marmot CLI and generate a key. Keep it somewhere safe, because losing it means re-entering every stored credential:
 
 ```bash
 curl -fsSL get.marmotdata.io | sh
@@ -29,49 +27,43 @@ marmot generate-encryption-key
 docker run -d \
   --name marmot \
   -p 8080:8080 \
-  -e MARMOT_SERVER_ENCRYPTION_KEY=<your-generated-key> \
-  -e MARMOT_DATABASE_HOST=<your-postgres-host> \
+  -e MARMOT_SERVER_ENCRYPTION_KEY=<encryption-key> \
+  -e MARMOT_DATABASE_HOST=<database-host> \
   -e MARMOT_DATABASE_PORT=5432 \
-  -e MARMOT_DATABASE_USER=<your-postgres-user> \
-  -e MARMOT_DATABASE_PASSWORD=<your-postgres-password> \
-  -e MARMOT_DATABASE_NAME=<your-postgres-database> \
+  -e MARMOT_DATABASE_USER=<database-user> \
+  -e MARMOT_DATABASE_PASSWORD=<database-password> \
+  -e MARMOT_DATABASE_NAME=marmot \
   -e MARMOT_DATABASE_SSLMODE=disable \
   ghcr.io/marmotdata/marmot:latest
 ```
 
 </Step>
-<Step title="Access the UI">
+<Step title="Sign in">
 
-Open [http://localhost:8080](http://localhost:8080) in your browser.
+Open [http://localhost:8080](http://localhost:8080) and sign in as `admin` with the password `admin`. Marmot asks you to choose a new password straight away.
 
 </Step>
 </Steps>
 
-<TipBox variant="info" title="Default Credentials">
-The default username and password is **admin:admin**. Change this after your first login.
-</TipBox>
-
----
-
 ## Configuration
 
 <Tabs items={[
-{ label: "Environment Variables", value: "env", icon: "mdi:application-variable" },
-{ label: "Config File", value: "file", icon: "mdi:file-cog" }
+{ label: "Environment variables", value: "env" },
+{ label: "Config file", value: "file" }
 ]}>
 <TabPanel>
 
-Pass configuration as environment variables:
+Pass every setting as an environment variable:
 
 ```bash
 docker run -d \
   --name marmot \
   -p 8080:8080 \
-  -e MARMOT_SERVER_ENCRYPTION_KEY=your-key \
-  -e MARMOT_DATABASE_HOST=postgres.example.com \
+  -e MARMOT_SERVER_ENCRYPTION_KEY=<encryption-key> \
+  -e MARMOT_DATABASE_HOST=db.internal \
   -e MARMOT_DATABASE_PORT=5432 \
   -e MARMOT_DATABASE_USER=marmot \
-  -e MARMOT_DATABASE_PASSWORD=secret \
+  -e MARMOT_DATABASE_PASSWORD=<database-password> \
   -e MARMOT_DATABASE_NAME=marmot \
   -e MARMOT_DATABASE_SSLMODE=require \
   ghcr.io/marmotdata/marmot:latest
@@ -80,27 +72,27 @@ docker run -d \
 </TabPanel>
 <TabPanel>
 
-Mount a config file for more complex configurations:
+Or mount a config file:
 
 ```bash
 docker run -d \
   --name marmot \
   -p 8080:8080 \
   -v /path/to/config.yaml:/app/config.yaml \
-  ghcr.io/marmotdata/marmot:latest server --config /app/config.yaml
+  ghcr.io/marmotdata/marmot:latest run --config /app/config.yaml
 ```
 
-Example `config.yaml`:
+With a `config.yaml` like this:
 
 ```yaml
 server:
-  encryption_key: "your-generated-key"
+  encryption_key: "<encryption-key>"
 
 database:
-  host: postgres.example.com
+  host: db.internal
   port: 5432
   user: marmot
-  password: secret
+  password: "<database-password>"
   name: marmot
   sslmode: require
 ```
@@ -108,11 +100,9 @@ database:
 </TabPanel>
 </Tabs>
 
----
+## Without an encryption key
 
-## Development Mode
-
-For local development, you can skip encryption (credentials stored in plaintext):
+For local development only, Marmot can run without a key and store credentials unencrypted:
 
 ```bash
 docker run -d \
@@ -122,34 +112,17 @@ docker run -d \
   -e MARMOT_DATABASE_HOST=host.docker.internal \
   -e MARMOT_DATABASE_PORT=5432 \
   -e MARMOT_DATABASE_USER=postgres \
-  -e MARMOT_DATABASE_PASSWORD=password \
+  -e MARMOT_DATABASE_PASSWORD=<database-password> \
   -e MARMOT_DATABASE_NAME=marmot \
   ghcr.io/marmotdata/marmot:latest
 ```
 
-<TipBox variant="warning" title="Not for Production">
-Never use `MARMOT_SERVER_ALLOW_UNENCRYPTED=true` in production environments.
+<TipBox variant="warning" title="Development only">
+Never set `MARMOT_SERVER_ALLOW_UNENCRYPTED=true` in production. Every stored credential would be readable by anyone with access to the database.
 </TipBox>
 
----
+## Next steps
 
-## Reference
-
-For all configuration options, see the [configuration guide](/docs/Configure).
-
-## Next Steps
-
-<DocCardGrid>
-<DocCard
-  title="Add Data with Plugins"
-  description="Automatically discover assets from your data sources"
-  docId="Plugins/index"
-  icon="mdi:puzzle"
-/>
-<DocCard
-  title="Configure Authentication"
-  description="Set up SSO with GitHub, Google, Okta and more"
-  docId="Configure/Authentication/index"
-  icon="mdi:shield-account"
-/>
-</DocCardGrid>
+- [Configuration reference](../Configure/index.md): every setting and its environment variable.
+- [Plugins](../Plugins/index.md): catalog your first source.
+- [Single sign-on](../Configure/Authentication/index.md): let your team sign in with your identity provider.

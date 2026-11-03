@@ -1,28 +1,33 @@
+---
+title: Monitoring and metrics
+description: See how your catalog is used on the Insights page and scrape Marmot's Prometheus metrics.
+---
+
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# Metrics
+# Monitoring and metrics
 
-## Overview
+Marmot shows how your catalog is used on the **Insights** page, and can expose Prometheus metrics for your own monitoring.
 
-Marmot collects various application metrics for both Prometheus monitoring and built-in dashboards in the UI.
+## Catalog insights
 
-## In the UI
+Open **Insights** and choose **Catalog**. It shows asset views, searches, stale assets and how many assets have an owner, then the most viewed assets, top searches, searches that found nothing, top owners, asset types and top data providers. The time range applies to the whole page.
 
-**Metrics** in the header shows the state of the catalog itself: how many assets there are, how many carry a schema, which providers and owners account for most of them, and what people are actually looking at. The time range in the corner applies to everything on the page.
+The catalog view of Insights:
 
 <ThemedImg
   lightSrc="/img/metrics-ui-light.png"
   darkSrc="/img/metrics-ui-dark.png"
-  alt="The Metrics page with asset counts, schema coverage, a breakdown by asset type and the most viewed assets"
+  alt="The Insights page on its Catalog view, with asset views, searches, stale assets and owned assets, then the most viewed assets, top searches, top owners, asset types and top data providers"
 />
 
-Schema coverage is the number worth watching. An asset with no schema is a name in a list; the gap between the two counts is how much of the catalog is still only a name. Seeing `metrics:view` requires the permission of the same name. See [users, roles and access](Configure/access-control.md).
+**Searches that found nothing** is the list worth watching: each entry is something people looked for and the catalog couldn't answer. Seeing the catalog view needs the `metrics:view` permission. See [users, roles and access](Configure/access-control.md).
 
-## Prometheus/OpenMetrics Endpoints
+The **Data queries** view sits beside it for people who can query data or read the query log.
 
-You can enable metrics in the configuration to expose a Prometheus/OpenMetrics endpoint on `/metrics`. This endpoint does not have auth enabled, you should configure Prometheus to scrape the endpoints for each Marmot instance you have deployed.
+## Prometheus
 
-**values.yaml:**
+Turn on the metrics listener in `config.yaml`. It serves `/metrics` on its own port, without authentication, so keep that port off the public internet and let Prometheus scrape each Marmot instance:
 
 ```yaml
 metrics:
@@ -30,20 +35,16 @@ metrics:
   port: 9090
 ```
 
-**Environment variables:**
+Or with environment variables:
 
 ```bash
 MARMOT_METRICS_ENABLED=true
 MARMOT_METRICS_PORT=9090
 ```
 
-## Helm Chart
+### With the Helm chart
 
-The Helm chart creates a ServiceMonitor for Prometheus Operator:
-
-```bash
-helm install marmot ./chart --set config.metrics.enabled=true --set monitoring.serviceMonitor.enabled=true
-```
+The chart can create a `ServiceMonitor` for the Prometheus Operator:
 
 ```yaml
 config:
@@ -57,7 +58,7 @@ monitoring:
     interval: 30s
 ```
 
-## Endpoints
+## Next steps
 
-- `/metrics` - Prometheus endpoint (no auth)
-- `/api/v1/metrics` - UI dashboard API (requires auth)
+- [Configuration reference](Configure/index.md): every metrics setting, including which providers and asset types count towards schema coverage.
+- [Helm and Kubernetes](Deploy/Helm.md): deploy Marmot with the chart.

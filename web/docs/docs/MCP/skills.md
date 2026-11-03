@@ -1,17 +1,6 @@
 # Skills
 
-Give any AI coding agent knowledge of the Marmot CLI, REST API and MCP server.
-
-import { CalloutCard } from '@site/src/components/DocCard';
-
-<CalloutCard
-  title="What are Skills?"
-  description="Skills are reusable packages of knowledge for AI agents. Browse the full directory at skills.sh."
-  href="https://skills.sh"
-  buttonText="Browse Skills"
-  icon="mdi:brain"
-  variant="external"
-/>
+The Marmot skill teaches an AI coding agent the Marmot CLI, REST API and MCP server, so it can search assets, explore lineage, look up glossary terms and owners and call the CLI or API for you. Skills are reusable packages of instructions for agents; [skills.sh](https://skills.sh) lists others.
 
 ## Install
 
@@ -19,8 +8,8 @@ import { CalloutCard } from '@site/src/components/DocCard';
 npx skills add marmotdata/marmot
 ```
 
-Or, with the Marmot CLI installed, `marmot skills install`. Run it again after upgrading to keep the skill in step with the CLI.
+With the Marmot CLI installed, `marmot skills install` does the same. Run it again after you upgrade the CLI, so the skill matches the commands your version has.
 
-Once installed, your agent knows how to search assets, explore lineage, look up glossary terms, check ownership and call the Marmot CLI or REST API on your behalf.
+## Next steps
 
-For the best experience, pair this with [MCP](/docs/MCP) to give the agent a live connection to your Catalog.
+- [MCP server](index.md): give the agent a live connection to your catalog as well.

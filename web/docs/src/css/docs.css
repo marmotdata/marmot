@@ -745,9 +745,54 @@ html .markdown .doc-steps__title {
 .doc-tabs__list {
   margin-bottom: var(--space-4);
   overflow-x: auto;
+  /* overflow-x: auto makes the y axis auto too, and the active tab's underline overhangs the list by 1px, which drew a vertical scrollbar. */
+  overflow-y: hidden;
 }
 .doc-tabs__list .mm-tab {
   white-space: nowrap;
+}
+
+/* Docusaurus Tabs, used for the UI / CLI / Terraform switchers because they remember the choice across pages and in the URL, drawn like mm-tabs above. */
+html .markdown .tabs-container {
+  margin: var(--space-4) 0 var(--space-6);
+}
+html .markdown .tabs {
+  display: flex;
+  gap: var(--space-5);
+  padding: 0;
+  margin: 0 0 var(--space-4);
+  border-bottom: 1px solid var(--mm-rule);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+html .markdown .tabs__item {
+  position: relative;
+  padding: 10px 2px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  font: var(--text-button);
+  color: var(--mm-text-2);
+  background: none;
+  white-space: nowrap;
+}
+html .markdown .tabs__item:hover {
+  color: var(--mm-text);
+  background: none;
+}
+html .markdown .tabs__item--active {
+  color: var(--mm-text);
+}
+html .markdown .tabs__item--active::after {
+  content: "";
+  position: absolute;
+  inset-inline: 2px;
+  bottom: 0;
+  height: 2px;
+  background: var(--mm-primary);
+}
+html .markdown .tabs-container > .margin-top--md {
+  margin-top: 0 !important;
 }
 .doc-tabs__panel > :last-child {
   margin-bottom: 0;
@@ -1363,4 +1408,87 @@ html .markdown .intro-map__reader {
 /* Blog banners come in different shapes (some are tall stickers), so they fit whole, never cropped. */
 html .blog-list__thumb img {
   object-fit: contain;
+}
+
+/* Screenshots (ThemedImg): framed so a capture never blends into the page, and capped by what they show. */
+html .markdown .doc-shot {
+  margin: var(--space-4) 0 var(--space-6);
+  border: 1px solid var(--mm-rule);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--mm-paper);
+}
+html .markdown .doc-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+/* One image per theme, keyed on Docusaurus's data-theme rather than a Tailwind variant. */
+html .markdown .doc-shot .doc-shot__dark,
+html[data-theme="dark"] .markdown .doc-shot .doc-shot__light {
+  display: none;
+}
+html[data-theme="dark"] .markdown .doc-shot .doc-shot__dark {
+  display: block;
+}
+/* Cropped captures are 2x, so these caps keep their text close to the page's: a panel fills the text column, a dialog stops at a drawer's own width. */
+html .markdown .doc-shot--panel {
+  max-width: var(--doc-measure);
+}
+html .markdown .doc-shot--dialog {
+  max-width: 520px;
+}
+
+/* Lists inside a step or a tab are the step's own sequence: plain numbers, not the theme's nested roman numerals. */
+html .markdown .doc-steps__body ol,
+html .markdown .tabs-container ol {
+  list-style-type: decimal;
+}
+
+
+/* Inline SVG diagrams in docs pages: drawn with tokens so both themes follow, text alternative on the figure. */
+html .markdown .doc-diagram {
+  max-width: 640px;
+  margin: var(--space-4) 0 var(--space-6);
+}
+html .markdown .doc-diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.doc-diagram__box {
+  fill: var(--mm-surface);
+  stroke: var(--mm-rule);
+  stroke-width: 1.5;
+}
+.doc-diagram__box--root {
+  fill: var(--mm-sunken);
+  stroke: var(--mm-control-border);
+}
+.doc-diagram__box--child {
+  fill: var(--mm-paper);
+  stroke-dasharray: 4 3;
+}
+.doc-diagram__line {
+  fill: none;
+  stroke: var(--mm-text-3);
+  stroke-width: 1.5;
+}
+.doc-diagram__label {
+  font: 500 13px var(--font-text);
+  fill: var(--mm-text);
+}
+.doc-diagram__label--child {
+  fill: var(--mm-text-2);
+  font-weight: 400;
+}
+
+/* Bare ThemedImg (artwork, not screenshots): only the image for the current theme shows, with no frame. */
+.themed-img__dark,
+html[data-theme="dark"] .themed-img__light {
+  display: none;
+}
+html[data-theme="dark"] .themed-img__dark {
+  display: inline;
 }

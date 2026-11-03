@@ -6,7 +6,6 @@ sidebar_position: 2
 
 The LangChain integration ships in the Python and TypeScript SDKs. It has two halves:
 
-import { CalloutCard } from '@site/src/components/DocCard';
 import { Tabs, TabPanel } from '@site/src/components/Steps';
 
 1. **`catalog_tools(client)`** returns a list of LangChain tools (`search_catalog`, `get_asset`, `lookup_asset`, `get_upstream_lineage`, `count_assets`) bound to your Marmot client. Drop them into any agent.
@@ -243,10 +242,7 @@ function queryTable(table: string, sql: string) {
 
 If your tool returns objects shaped like `{ mrn, ... }` or `{ results: [{ mrn, ... }] }`, the handler walks the output looking for them. This is how `catalog_tools` produces lineage automatically.
 
-<CalloutCard
-  title="Other frameworks"
-  description="LlamaIndex, AutoGen and CrewAI work today against the Marmot SDK. First-class integrations follow demand."
-  docId="Agents/index"
-  buttonText="See all integrations"
-  icon="mdi:robot"
-/>
+## Next steps
+
+- [Claude Agent SDK](claude-agent.md): the same lineage capture for agents built on the Claude Agent SDK.
+- [SDK](../SDK/index.md): the full Python and TypeScript client the tools are built on.

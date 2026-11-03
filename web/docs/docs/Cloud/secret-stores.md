@@ -1,111 +1,134 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 title: Secret stores
 description: Point Marmot at Secret Manager, Secrets Manager, Key Vault or Vault through a federated identity. Marmot stores the address of a secret, never its value.
 ---
 
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
-import { Tabs, TabPanel } from '@site/src/components/Steps';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
 # Secret stores
 
-A pipeline against a database needs a password. Marmot never stores it. It stores where the password lives in your secret manager and reads the value just before each run. Marmot authenticates to your secret manager with a short-lived token it mints itself, so there is no credential for reading credentials either.
+A secret store lets a pipeline use a password that stays in your own secret manager. Marmot stores where the password lives and reads the value shortly before each run. A federated store signs in to your secret manager with a 5-minute token your instance issues itself, so there's no stored credential for reading credentials either.
+
+For sources in Google Cloud, AWS or Azure you often don't need a secret at all: a [keyless pipeline](pipelines.md#how-keyless-pipelines-work) authenticates as itself.
+
+
+## Before you start
+
+- You hold `secretStore.admin` across the whole catalog.
+- Your secret manager is Google Secret Manager, AWS Secrets Manager, Azure Key Vault or HashiCorp Vault, reachable at a public address.
 
 ## Stores and secrets
 
-A store is a connection to one secret manager. Keep one per account or environment, so production and staging are two stores.
+A store is a connection to one secret manager. Keep one per account or environment, so production and staging are two stores. A secret is the address of one value inside a store. It holds no value, so it's safe in configuration files and in git.
 
-A secret is the address of one value inside a store. It holds no value, so it is safe in Terraform, in git and in plan output.
+Each backend federates through its own fields, and every store should set them. Without them a store reads with the Marmot server's own credentials and has no identity of its own for you to grant.
 
-| Backend | Store | Secret |
-| --- | --- | --- |
-| Google Secret Manager | `marmot_secret_store_google` | `marmot_secret_store_google_secret` |
-| AWS Secrets Manager | `marmot_secret_store_aws` | `marmot_secret_store_aws_secret` |
-| Azure Key Vault | `marmot_secret_store_azure` | `marmot_secret_store_azure_secret` |
-| HashiCorp Vault | `marmot_secret_store_vault` | `marmot_secret_store_vault_secret` |
+- **Google Secret Manager**: **Workload Identity Provider**.
+- **AWS Secrets Manager**: **Role ARN**.
+- **Azure Key Vault**: **Tenant ID** and **Client ID**.
+- **HashiCorp Vault**: **Role**.
 
 ## Register a store
 
-Each store authenticates to its backend as an identity named after the store. Grant that identity on the secrets it should read and nothing else. The guide for your cloud builds the trust relationship end to end.
+A federated store can't be renamed, because the name is its identity. Name it after the account it reaches, not the first thing you use it for.
 
-<Tabs items={[
-{ label: "Google Cloud", value: "google", icon: "mdi:google-cloud" },
-{ label: "AWS", value: "aws", icon: "mdi:aws" },
-{ label: "Azure", value: "azure", icon: "mdi:microsoft-azure" },
-{ label: "Vault", value: "vault", icon: "simple-icons:vault" }
-]} groupId="cloud">
-<TabPanel>
+Create the store:
+
+<Tabs groupId="method" queryString>
+  <TabItem value="ui" label="UI" default>
+
+1. Open **Settings → Secret stores** and select **New secret store**.
+2. Enter a **Name**, such as `gcp-prod`, and choose the backend under **Where do the secrets live?**.
+3. Fill in the **Configuration**, including the fields that federate the store.
+4. Select **Create secret store**.
+
+<ThemedImg
+  lightSrc="/img/cloud-new-secret-store-light.png"
+  darkSrc="/img/cloud-new-secret-store-dark.png"
+  alt="The New secret store form named gcp-prod, with Google Secret Manager chosen, the Workload Identity Provider filled in and the subject secretStore:gcp-prod"
+/>
+
+  </TabItem>
+  <TabItem value="terraform" label="Terraform">
+
+`<provider>` is your Workload Identity provider's resource name, `projects/<project-number>/locations/global/workloadIdentityPools/marmot/providers/marmot`:
 
 ```hcl
 resource "marmot_secret_store_google" "prod" {
   name                       = "gcp-prod"
-  workload_identity_provider = google_iam_workload_identity_pool_provider.marmot.name
-}
-
-resource "google_secret_manager_secret_iam_member" "marmot_reads_orders_password" {
-  secret_id = google_secret_manager_secret.orders_db_password.id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.marmot.name}/subject/${marmot_secret_store_google.prod.subject}"
-}
-```
-
-</TabPanel>
-<TabPanel>
-
-The full trust policy is in the [AWS guide](Guides/aws.md#when-a-source-needs-a-password).
-
-```hcl
-locals {
-  secret_store_name = "aws-prod"
-}
-
-resource "aws_iam_role" "marmot_store" {
-  name               = "marmot-secret-store"
-  assume_role_policy = data.aws_iam_policy_document.marmot_store_trust.json
+  workload_identity_provider = "<provider>"
 }
 
 resource "marmot_secret_store_aws" "prod" {
-  name     = local.secret_store_name
-  role_arn = aws_iam_role.marmot_store.arn
+  name     = "aws-prod"
+  role_arn = "arn:aws:iam::<account-id>:role/marmot-secret-store"
 }
-```
 
-</TabPanel>
-<TabPanel>
-
-```hcl
 resource "marmot_secret_store_azure" "prod" {
   name      = "azure-prod"
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  client_id = azuread_application.marmot_secrets.client_id
+  tenant_id = "<tenant-id>"
+  client_id = "<client-id>"
 }
 
-resource "azuread_application_federated_identity_credential" "marmot_secrets" {
-  application_id = azuread_application.marmot_secrets.id
-  display_name   = "marmot-secret-store"
-  issuer         = marmot_secret_store_azure.prod.issuer
-  subject        = marmot_secret_store_azure.prod.subject
-  audiences      = [marmot_secret_store_azure.prod.audience]
+resource "marmot_secret_store_vault" "prod" {
+  name    = "vault-prod"
+  address = "https://vault.example.com"
+  role    = "marmot"
 }
 ```
 
-</TabPanel>
-<TabPanel>
+Each store resource exposes `issuer`, `subject` and `audience` to reference from the trust on your cloud's side.
+
+  </TabItem>
+</Tabs>
+
+The store's page shows the **Issuer**, **Subject** and **Audience** under **Identity**, with the commands to trust them in your cloud or Vault already filled in.
+
+## Trust the store
+
+A store signs in with a token from `https://<instance>.marmotdata.cloud` whose subject is `secretStore:<store-name>`. The audience is `sts.amazonaws.com` on AWS, `api://AzureADTokenExchange` on Azure, the provider's own on Google Cloud and the Vault address on Vault.
+
+Grant the store's subject the secrets it should read and nothing else. The guide for your cloud does this end to end in the console, the CLI or Terraform: [Google Cloud](Guides/google.md#when-a-source-needs-a-password), [AWS](Guides/aws.md#when-a-source-needs-a-password) or [Azure](Guides/azure.md#when-a-source-needs-a-password).
+
+For Vault, enable the JWT auth method, point it at your instance and add a role bound to the store's subject. The Vault server needs a public HTTPS address, because your instance connects to public addresses only.
+
+<Tabs groupId="cloud-method" queryString="cloud-method">
+  <TabItem value="cli" label="Vault CLI" default>
+
+```bash
+vault auth enable jwt
+
+vault write auth/jwt/config \
+  oidc_discovery_url="https://<instance>.marmotdata.cloud"
+
+vault policy write marmot-vault-prod - <<'EOF'
+path "secret/data/orders/*" {
+  capabilities = ["read"]
+}
+EOF
+
+vault write auth/jwt/role/marmot \
+  role_type="jwt" \
+  user_claim="sub" \
+  bound_subject="secretStore:vault-prod" \
+  bound_audiences="https://vault.example.com" \
+  token_policies="marmot-vault-prod"
+```
+
+  </TabItem>
+  <TabItem value="terraform" label="Terraform">
 
 ```hcl
-resource "marmot_secret_store_vault" "prod" {
-  name    = "vault-prod"
-  address = "https://vault.acme.internal"
-  role    = "marmot"
-}
-
 resource "vault_jwt_auth_backend" "marmot" {
   path               = "jwt"
   oidc_discovery_url = marmot_secret_store_vault.prod.issuer
 }
 
 resource "vault_policy" "marmot" {
-  name = "marmot"
+  name = "marmot-vault-prod"
 
   policy = <<-EOT
     path "secret/data/orders/*" {
@@ -125,104 +148,111 @@ resource "vault_jwt_auth_backend_role" "marmot" {
 }
 ```
 
-Vault Enterprise namespaces and private certificate authorities are supported through the namespace and CA certificate fields.
-
-</TabPanel>
+  </TabItem>
 </Tabs>
 
-The store's name is its identity. Renaming it replaces the store and breaks every grant that named it, so name it after the account it reaches, not the first thing you use it for.
-
-<DocCardGrid>
-  <DocCard
-    title="Google Cloud setup"
-    description="A store reading from Secret Manager, in the Google Cloud guide"
-    docId="Cloud/Guides/google"
-    icon="mdi:google-cloud"
-  />
-  <DocCard
-    title="AWS setup"
-    description="A store reading from Secrets Manager, in the AWS guide"
-    docId="Cloud/Guides/aws"
-    icon="mdi:aws"
-  />
-  <DocCard
-    title="Azure setup"
-    description="A store reading from Key Vault, in the Azure guide"
-    docId="Cloud/Guides/azure"
-    icon="mdi:microsoft-azure"
-  />
-</DocCardGrid>
+A JWT auth method mounted somewhere other than `jwt` goes in the store's **Auth Path**. Vault Enterprise namespaces and private certificate authorities go in **Namespace** and **CA Certificate**.
 
 ## Register a secret
 
-Declare the secret and the Marmot reference to it together, so they cannot drift.
+Register each secret a pipeline may read, by its address in the store:
+
+<Tabs groupId="method" queryString>
+  <TabItem value="ui" label="UI" default>
+
+1. Open the store under **Settings → Secret stores**.
+2. Select **Register secret** and enter the secret's address fields.
+3. Select **Register secret**.
+
+  </TabItem>
+  <TabItem value="terraform" label="Terraform">
 
 ```hcl
-resource "google_secret_manager_secret" "orders_db_password" {
-  secret_id = "orders-db-password"
-
-  replication {
-    auto {}
-  }
-}
-
 resource "marmot_secret_store_google_secret" "orders_db_password" {
   store     = marmot_secret_store_google.prod.id
-  project   = google_secret_manager_secret.orders_db_password.project
-  secret_id = google_secret_manager_secret.orders_db_password.secret_id
+  project   = "analytics-prod"
+  secret_id = "orders-db-password"
 }
 ```
 
-| Backend | Address fields |
-| --- | --- |
-| Google | `project`, `secret_id` |
-| AWS | `secret_id` as an ARN, or `region` and `secret_id` |
-| Azure | `vault_uri`, `name` |
-| Vault | `mount`, `name`, `key` |
+  </TabItem>
+</Tabs>
 
-Leave the version unset. Marmot then reads the current value on every run, and rotation happens entirely in your secret manager.
-
-## Use a secret
-
-A [pipeline](pipelines.md#sources-that-need-a-password) names the secret in its secrets map, and Marmot fills the value in before each run. The value exists in memory for the run and is then discarded.
-
-A principal with the reader role can also read a value directly. This is the only path in Marmot that returns plaintext, and it is how an agent gets a credential without that credential appearing in any configuration file.
-
-## Access control
-
-| Role | May | Binds on |
+| Backend | Address fields | Version read by default |
 | --- | --- | --- |
-| `secretStore.viewer` | See a store and its secrets. No values. | organization, secretStore |
-| `secretStore.user` | Register secrets and attach them to pipelines. No values. | organization, secretStore |
-| `secretStore.reader` | Read values. | organization, secretStore |
-| `secretStore.admin` | Create, edit and delete stores. | organization |
+| Google | `project`, `secret_id`, and `location` for a regional secret | `latest` |
+| AWS | `secret_id` as an ARN, or `region` and `secret_id` | The `AWSCURRENT` stage |
+| Azure | `vault_uri`, `name` | The latest |
+| Vault (KV v2) | `mount` (default `secret`), `name`, and `key` when the secret holds more than one | The latest |
 
-The boundary that matters is between user and reader. Writing a pipeline means saying where its password comes from, not seeing it, so almost nobody who writes pipelines needs the reader role.
+Leave the version unset. Marmot then reads the current value on every run, and you rotate the password entirely in your secret manager.
+
+## Check that it worked
+
+Open the store under **Settings → Secret stores** and select **Test access**. Marmot reads the first registered secret through the store and discards the value. Testing needs a registered secret and `secretStore:read` on the store.
+
+## Use a secret in a pipeline
+
+Point a pipeline's password field at a registered secret. Marmot fills in the value before each run, keeps it in memory for the run and then discards it:
+
+<Tabs groupId="method" queryString>
+  <TabItem value="ui" label="UI" default>
+
+1. In the pipeline's configuration, find the password field and choose **From secret store**.
+2. Pick the secret.
+
+<ThemedImg
+  lightSrc="/img/cloud-postgres-secret-light.png"
+  darkSrc="/img/cloud-postgres-secret-dark.png"
+  alt="A PostgreSQL pipeline's connection settings with the password read from a secret in the gcp-prod store"
+/>
+
+  </TabItem>
+  <TabItem value="terraform" label="Terraform">
+
+The pipeline's `secrets` map names a config key and the secret that fills it. Leave that key out of `config`.
 
 ```hcl
-resource "marmot_secret_store_iam_member" "data_engineering_uses_prod" {
-  secret_store_id = marmot_secret_store_google.prod.id
-  role            = "secretStore.user"
-  member          = "group:${marmot_team.data_engineering.id}"
-}
+resource "marmot_pipeline" "orders" {
+  name            = "orders"
+  plugin_id       = "postgresql"
+  cron_expression = "0 * * * *"
 
-resource "marmot_secret_store_iam_member" "copilot_reads_prod" {
-  secret_store_id = marmot_secret_store_google.prod.id
-  role            = "secretStore.reader"
-  member          = "serviceAccount:${marmot_service_account.copilot.id}"
+  config = jsonencode({
+    host = "orders-db.example.com"
+    user = "marmot_reader"
+  })
+
+  secrets = {
+    password = marmot_secret_store_google_secret.orders_db_password.id
+  }
 }
 ```
 
-## Notes
+  </TabItem>
+</Tabs>
 
-- A store in use cannot be deleted. Remove the pipeline references first.
-- Validate a new store from its page in your instance. It performs a real token exchange and reports the result, which beats finding a mistyped subject at the next scheduled run.
-- Values are never persisted. There is no cache to expire after a rotation.
+A member with `secretStore.reader` can also read a value directly, with **Reveal** on the store's page or through the API. It's how an agent gets a credential without that credential appearing in any configuration file.
 
-<CalloutCard
-  title="Or skip the secret entirely"
-  description="For AWS, Google Cloud and Azure sources, a pipeline can present its own identity and use no credential at all."
-  docId="Cloud/pipelines"
-  buttonText="Keyless pipelines"
-  icon="mdi:key-remove"
-/>
+## Who can do what
+
+| Role | Can | Can be granted on |
+| --- | --- | --- |
+| `secretStore.viewer` | See a store and its secrets, without values. | Whole catalog, secret store |
+| `secretStore.user` | Register secrets and attach them to pipelines, without values. | Whole catalog, secret store |
+| `secretStore.reader` | Read values. | Whole catalog, secret store |
+| `secretStore.admin` | Create, edit and delete stores, and everything the other roles can. | Whole catalog |
+
+The line that matters is between user and reader. Writing a pipeline means saying where its password comes from, not seeing it, so almost nobody who writes pipelines needs the reader role.
+
+Grant roles on a store from its page under **Settings → Secret stores**, as [Grant a role](grant-access.md#grant-a-role) shows.
+
+## Limitations
+
+- A store whose secrets pipelines use can't be deleted. Detach the secrets from those pipelines first.
+- Every run reads from your secret manager, because values are never kept.
+
+## Next steps
+
+- [Connect your cloud](Guides/google.md): trust a store end to end on Google Cloud, AWS or Azure.
+- [Publish private plugins](plugin-registry.md): run your own plugins on your instance.

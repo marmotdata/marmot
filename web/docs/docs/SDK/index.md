@@ -6,23 +6,9 @@ sidebar_position: 1
 
 The Marmot SDK is a typed client for the REST API, available in **Python**, **Go** and **TypeScript**. Authentication resolves automatically from environment variables, cached OAuth tokens or workload identity.
 
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
 
-<DocCardGrid>
-  <DocCard
-    title="Marmot for Agents"
-    description="Plug your LLM agents into the catalog with ready-made tools and automatic lineage."
-    docId="Agents/index"
-    icon="mdi:robot"
-  />
-  <DocCard
-    title="REST API"
-    description="The HTTP API the SDKs wrap. Use it directly when no SDK exists for your language."
-    href="/api"
-    icon="mdi:api"
-  />
-</DocCardGrid>
+To build an agent on the catalog, [Marmot for agents](../Agents/index.md) has ready-made tools and lineage capture on top of the SDK. For a language without an SDK, use the [REST API](/api) directly.
 
 ## Install
 
@@ -819,7 +805,7 @@ await client.glossary.delete(term.id!);
 
 </Tabs>
 
-## Users & Teams
+## Users and teams
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -886,7 +872,7 @@ const members = await client.teams.members(teamId);
 
 </Tabs>
 
-## API Keys
+## API keys
 
 Manage personal API keys for the authenticated user. The full key token is only readable from the `create` response, so store it immediately.
 
@@ -1110,6 +1096,29 @@ const queries = await client.metrics.topQueries({
 
 </Tabs>
 
+## Data queries
+
+The Go client runs read-only SQL against a source as the caller, with the same permission checks as the UI, and lists the sources it may query. In Python and TypeScript, the generated query API covers the same endpoints.
+
+```go
+sources, err := c.Query.Sources(ctx, "", 50, 0)
+
+res, err := c.Query.Run(ctx, marmot.QueryRunInput{
+    Source:    "warehouse",
+    Statement: "select order_id, amount_gbp from orders limit 10",
+    MaxRows:   10,
+})
+for _, row := range res.Rows {
+    fmt.Println(row)
+}
+```
+
+`Run` returns the rows with their columns, the query's ID in **Query audit** and what the catalog says about each table it read. `History` pages through past queries; without `access:view` it only returns your own.
+
+## Plugin versions
+
+`c.Plugins` in the Go client manages the core plugins a self-hosted server runs, as `marmot plugins` does: `Versions` lists them with available updates, `SetVersion` moves one, and `Pin`, `Rollback` and `Reset` control where it stays. See [plugin updates](../Configure/plugin-updates.md).
+
 ## Owners
 
 Search the catalog for asset owners (users and teams).
@@ -1213,25 +1222,7 @@ console.log(status.running, status.es_configured);
 
 </Tabs>
 
-<CalloutCard
-  title="Building an agent?"
-  description="Marmot for Agents builds on the SDK to give LLM agents the catalog as tools and writes their lineage automatically."
-  docId="Agents/index"
-  buttonText="Read the guide"
-  icon="mdi:robot"
-/>
+## Next steps
 
-<DocCardGrid>
-  <DocCard
-    title="REST API"
-    description="Every endpoint the SDKs wrap, with request/response schemas."
-    href="/api"
-    icon="mdi:api"
-  />
-  <DocCard
-    title="Authentication"
-    description="The full credential resolution chain, including OIDC workload identity."
-    docId="Configure/Authentication/index"
-    icon="mdi:lock"
-  />
-</DocCardGrid>
+- [Marmot for agents](../Agents/index.md): give LLM agents the catalog as tools and record their lineage.
+- [REST API](/api): every endpoint the SDKs wrap, with its request and response.

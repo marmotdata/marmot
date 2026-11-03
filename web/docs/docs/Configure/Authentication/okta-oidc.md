@@ -7,7 +7,7 @@ description: Configure Okta as an authentication provider
 
 Marmot supports Okta as an OIDC provider for Single Sign-On authentication.
 
-## Create an Okta Application
+## Create an Okta application
 
 1. Log in to your Okta Admin Console
 2. Navigate to **Applications** → **Applications**
@@ -55,9 +55,9 @@ auth:
     url: "https://dev-12345.okta.com"
 ```
 
-Restart Marmot and the Okta login button will appear on the login page.
+Restart Marmot and the Okta sign-in button appears on the sign-in page.
 
-## Team Synchronisation
+## Team sync
 
 Marmot can automatically sync users to teams based on Okta group memberships.
 
@@ -72,7 +72,7 @@ auth:
       group:
         claim: "groups"
         filter:
-          mode: "include"
+          mode: "regex"
           pattern: "^marmot-.*"
 ```
 
@@ -83,7 +83,7 @@ To include groups in the ID token:
 3. Under **Groups claim type**, select **Filter**
 4. Configure the filter with claim name `groups` and pattern `.*`
 
-## Custom TLS Configuration
+## Custom TLS configuration
 
 If your Okta instance uses a self-signed certificate or a certificate signed by an internal CA (e.g. Okta on-prem or via a proxy), you can configure Marmot to trust it:
 

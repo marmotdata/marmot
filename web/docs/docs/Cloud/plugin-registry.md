@@ -1,21 +1,25 @@
 ---
 sidebar_position: 8
-title: Private plugin registry
-description: Push your own Marmot plugins to your instance and run them like any core plugin.
+title: Publish private plugins
+description: Push your own Marmot plugins to your instance's private registry and run them like any core plugin.
 ---
 
-import { CalloutCard } from '@site/src/components/DocCard';
-import { Steps, Step, TipBox } from '@site/src/components/Steps';
+import { Steps, Step } from '@site/src/components/Steps';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-# Private plugin registry
+# Publish private plugins
 
-Every Marmot Cloud instance from the Team plan up serves an OCI registry of its own. Build a plugin against the same SDK the core plugins use, push it to your instance, and it runs like any built-in plugin, with the same config validation, pipelines and run history. Nobody else can see it.
+Push a plugin you've built to your instance's own registry and run it like any core plugin, with the same config checks, pipelines and run history. Nobody outside your instance can see it. Every plan except Free includes a registry.
 
-Writing the plugin is covered in [creating plugins](/docs/Develop/creating-plugins). One requirement is specific to Cloud: instances run on `linux/arm64`, so build for that platform.
+Writing the plugin is covered in [creating plugins](/docs/Develop/creating-plugins). Instances run on `linux/arm64`, so build for that platform.
 
-<TipBox variant="info" title="Team and above">
-If `curl https://<your-host>/v2/` answers `404`, the registry is not enabled on your instance. [Ask support](mailto:support@marmotdata.io).
-</TipBox>
+## Before you start
+
+- You can sign in to your instance with the Marmot CLI.
+- You have [ORAS](https://oras.land) installed, with `oras manifest index create`.
+- You have `plugin.publisher` across the whole catalog.
+- Your instance has a registry. If `curl https://<instance>.marmotdata.cloud/v2/` answers `404` with `This server does not serve a plugin registry`, it doesn't: the instance is on the Free plan.
 
 ## Push a plugin
 
@@ -23,93 +27,94 @@ If `curl https://<your-host>/v2/` answers `404`, the registry is not enabled on 
 <Step title="Sign in">
 
 ```bash
-marmot login https://acme.marmotdata.cloud
+marmot login https://<instance>.marmotdata.cloud
 ```
 
-Signing in also registers your token with `docker`, `crane` and `oras` for that host, so no separate registry login is needed.
+Signing in also registers your token with the Docker credential store, which `docker`, `crane` and `oras` read, so you don't need a separate registry login.
 
 </Step>
 <Step title="Push">
 
-The repository is `<your-host>/plugins/<name>` and the tag is the version. Build the binary for `linux/arm64`, gzip it, and push it:
+Push the `linux/arm64` build under its own tag, then tie it to a version with an OCI index. The index's tag is the version, and Marmot only records a version when the index arrives:
 
 ```bash
+REPO=<instance>.marmotdata.cloud/plugins/internal-scheduler
 gzip -c dist/marmot-plugin-internal-scheduler > marmot-plugin-internal-scheduler
-oras push acme.marmotdata.cloud/plugins/internal-scheduler:0.1.0 \
+
+oras push "$REPO:0.1.0-linux-arm64" \
   --artifact-type application/vnd.marmot.plugin.v1 \
   --artifact-platform linux/arm64 \
   marmot-plugin-internal-scheduler:application/vnd.marmot.plugin.v1+gzip
+
+oras manifest index create "$REPO:0.1.0" 0.1.0-linux-arm64
 ```
 
-To ship more than one platform, push one manifest per platform and tie them with an index, as [creating plugins](../Develop/creating-plugins.md#6-publish-the-plugin) shows.
-
-Names are lowercase with dashes and cannot shadow a core plugin. Versions are immutable: pushing `0.1.0` twice is rejected, so cut `0.1.1`.
-
-</Step>
-<Step title="Use it">
-
-The plugin is loadable as soon as the push is accepted. Declare a pipeline on it as on any core plugin:
-
-```hcl
-resource "marmot_pipeline" "internal_jobs" {
-  name      = "internal-jobs"
-  plugin_id = "internal-scheduler"
-
-  config = jsonencode({
-    endpoint = "https://scheduler.acme.internal"
-  })
-
-  cron_expression = "0 */4 * * *"
-}
-```
-
-Credentials go through a [secret store](secret-stores.md) and the `secrets` map, exactly as for a core plugin.
+To ship more platforms, push one manifest per platform and list them all in the index, as [creating plugins](../Develop/creating-plugins.md#6-publish-the-plugin) shows.
 
 </Step>
 </Steps>
 
-## Push from CI
+## Names and versions
 
-A version pushed from a laptop is one nobody can reproduce. Give the release workflow a service account with `plugin.publisher`, which grants pushing and nothing else, and hand it the key in the same apply:
+| Rule | Limit |
+| --- | --- |
+| Plugin names | Lowercase letters, digits and dashes, up to 63 characters, not the name of a core plugin |
+| Upload size | 512 MiB each |
+| Versions | Can't change once pushed |
+
+Pushing different contents as `0.1.0` is rejected with `internal-scheduler 0.1.0 is already pushed and versions are immutable; push it as a new version`, so cut `0.1.1`.
+
+## Use it
+
+Marmot loads the plugin as soon as the index push is accepted. Create a pipeline that uses it, as you would for any core plugin:
+
+
+<Tabs groupId="method" queryString>
+  <TabItem value="ui" label="UI" default>
+
+1. Open **Plugins** and select your plugin under **Add a source**.
+2. Enter a **Pipeline name** and select **Continue**.
+3. Fill in the plugin's configuration and select **Check and continue**.
+4. Set a schedule and select **Create pipeline**.
+
+  </TabItem>
+  <TabItem value="terraform" label="Terraform">
 
 ```hcl
-resource "marmot_service_account" "plugin_release" {
-  name        = "plugin-release"
-  description = "Pushes internal plugins from the release workflow. Owned by the platform team."
-}
+resource "marmot_pipeline" "internal_jobs" {
+  name            = "internal-jobs"
+  plugin_id       = "internal-scheduler"
+  cron_expression = "0 */4 * * *"
 
-resource "marmot_organization_iam_member" "plugin_release_publishes" {
-  role   = "plugin.publisher"
-  member = "serviceAccount:${marmot_service_account.plugin_release.id}"
-}
-
-resource "marmot_service_account_api_key" "plugin_release" {
-  service_account_id = marmot_service_account.plugin_release.id
-  name               = "release-workflow"
-  expires_in_days    = 90
-}
-
-resource "github_actions_secret" "marmot_api_key" {
-  repository      = "marmot-plugin-internal-scheduler"
-  secret_name     = "MARMOT_API_KEY"
-  plaintext_value = marmot_service_account_api_key.plugin_release.key
+  config = jsonencode({
+    endpoint = "https://scheduler.example.com"
+  })
 }
 ```
 
-The workflow signs in with the key as the password and any username:
+  </TabItem>
+</Tabs>
+
+Credentials go through a [secret store](secret-stores.md), as they do for a core plugin.
+
+## Push from CI
+
+A version pushed from a laptop is one nobody can reproduce, so push from your release workflow:
+
+1. [Create a service account](service-accounts.md) for the workflow and grant it `plugin.publisher` across the whole catalog. That role can push plugins and see which are installed, and nothing else.
+2. Store its API key as a secret in your CI system, such as `MARMOT_API_KEY`.
+3. In the workflow, sign in with the key as the password and any username:
 
 ```bash
-echo "$MARMOT_API_KEY" | oras login acme.marmotdata.cloud -u ci --password-stdin
+echo "$MARMOT_API_KEY" | \
+  oras login <instance>.marmotdata.cloud -u ci --password-stdin
 ```
 
-## Versions
+## Pin a version
 
-A pipeline can pin a plugin version or track the newest push. The pin is set in the pipeline editor in your instance. Leave pipelines unpinned while you iterate; pin them once people rely on them, so a routine push cannot change the code behind a production pipeline.
+A pipeline either runs the newest version available when it runs or stays on one pushed version, and a source that answers queries uses the same version for them. Set **Version** when you create the pipeline, or under **Edit pipeline** later. Leave pipelines on the latest version while you're iterating, then pin them once people rely on them, so a routine push can't change the code behind a production pipeline.
 
-<CalloutCard
-  title="Write your first plugin"
-  description="The plugin SDK, the config spec, asset schemas and the local development loop."
-  docId="Develop/creating-plugins"
-  buttonText="Creating plugins"
-  icon="mdi:puzzle-plus"
-/>
+## Next steps
+
+- [Creating plugins](/docs/Develop/creating-plugins): the plugin SDK, the config spec, asset schemas and the local development loop.
+- [Security and isolation](security.md): how instances are kept apart and what Marmot stores.

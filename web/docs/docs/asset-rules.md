@@ -1,98 +1,58 @@
 ---
 sidebar_position: 6
+title: Asset rules
 ---
 
-import { CalloutCard } from '@site/src/components/DocCard';
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# Asset Rules
+# Asset rules
 
-Asset Rules automatically apply enrichments to assets matching specific criteria. Define a rule once and Marmot keeps everything in sync as your Catalog changes, including new assets that match.
+An asset rule adds glossary terms and links to every asset that matches a search, and keeps doing it as the catalog changes. Assets that stop matching lose them again, so "every finance table links to the payments runbook" stays true without anyone maintaining it.
 
-<CalloutCard
-  title="Get Started in Five Minutes"
-  description="Follow the Quick Start Guide to try Marmot out locally."
-  docId="quick-start"
-  buttonText="Quick Start"
-  icon="mdi:rocket-launch"
-/>
+## Create a rule
 
-## Creating a Rule
+1. Open **Asset rules** in the sidebar and select **Create asset rule**.
+2. Enter a **Name** and, if it helps, a **Description**.
+3. Under **Which assets**, write the search, or select **Build query** to pick fields. **Assets that match** lists what the rule will reach as you type.
+4. Under **What to add**, add links (a title and a URL) and **Glossary terms**.
+5. Select **Create asset rule**.
 
-Navigate to **Asset Rules** under **Governance** in the header and click **Create Rule**. The creation flow has three steps.
-
-### Basic Information
-
-Give your rule a unique name and an optional description.
-
-<ThemedImg
-  lightSrc="/img/asset-rules-basicinfo-light.png"
-  darkSrc="/img/asset-rules-basicinfo-dark.png"
-  alt="Step one of the asset rule wizard, with a name and description"
-/>
-
-### Enrichments
-
-Choose what to apply to matching assets. A rule must include at least one of:
-
-- **External links**: runbooks, dashboards, wiki pages or monitoring URLs. Each link has a name, URL and optional icon.
-- **Glossary terms**: select one or more terms from your existing glossary to associate with matching assets.
-
-<ThemedImg
-  lightSrc="/img/asset-rules-enrichments-light.png"
-  darkSrc="/img/asset-rules-enrichments-dark.png"
-  alt="Step two of the asset rule wizard, with an external link and a glossary term attached"
-/>
-
-### Query
-
-Define which assets the rule should match using Marmot's query language (the same syntax used in search). For example:
-
-- `@type: "table"` matches every table in the catalog
-- `@provider: "PostgreSQL"` matches everything discovered from PostgreSQL
-- `@metadata.owner: "platform-team"` matches assets whose `owner` metadata field names that team
-
-The fields are the ones the [query language](queries.md) supports: `@type`, `@provider`, `@name`, `@kind` and `@metadata.*`. Values are matched as stored, so use the provider name exactly as it appears in the catalog.
-
-Use the **Preview** button to see which assets currently match before saving.
+A rule that links a runbook to everything tagged `finance`:
 
 <ThemedImg
   lightSrc="/img/asset-rules-query-light.png"
   darkSrc="/img/asset-rules-query-dark.png"
-  alt="Step three of the asset rule wizard, previewing how many assets the query matches"
+  alt="Create asset rule with the name Payments runbook, the search @tag: finance, a runbook link and the 9 assets that match"
+  size="panel"
 />
 
-## How Rules Are Applied
+The search uses the [query language](queries.md), the same as **Discover**. For example:
 
-Once a rule matches, its enrichments show up on the asset itself: external links beside the title, glossary terms in the sidebar.
+- `@type: "table"` matches every table.
+- `@provider: "PostgreSQL"` matches everything discovered from PostgreSQL. Values match as stored, so use the provider name exactly as the catalog shows it.
+- `@tag: "gdpr"` matches every asset tagged `gdpr`.
+- `@metadata.owner: "Payments"` matches assets whose `owner` metadata field names that team.
 
-<ThemedImg
-  lightSrc="/img/glossary-on-asset-light.png"
-  darkSrc="/img/glossary-on-asset-dark.png"
-  alt="An asset page showing the runbook link and the glossary term that an asset rule attached"
-/>
+## How rules are applied
 
-Rules are evaluated every 30 minutes by default and whenever a new asset is added to the Catalog. Only rules whose configuration or matching assets have changed are re-evaluated. When multiple rules match the same asset, all enrichments are applied.
+A rule's terms appear under **What it means** on each matching asset, marked as applied by a rule, and its links appear with the asset's other links. When several rules match the same asset, it gets everything they add.
 
-Rules can be enabled or disabled at any time. Disabled rules retain their configuration so you can re-enable them later.
+Marmot applies rules when assets are added and every 30 minutes. Turning off **Apply this rule** keeps the rule's settings but adds nothing until you turn it on again.
 
-## Managing Rules
+## Manage rules
+
+**Asset rules** lists every rule with what it matches, what it adds and how many assets it reaches, with a switch to turn each one on or off:
 
 <ThemedImg
   lightSrc="/img/asset-rules-list-light.png"
   darkSrc="/img/asset-rules-list-dark.png"
-  alt="The Asset Rules page listing rules with their match counts and status"
+  alt="Asset rules listing Erasure scope, which matches assets tagged gdpr, adds the Erasure request term and an erasure runbook and reaches 4 assets"
+  size="panel"
 />
 
-The Asset Rules page lists all rules with their match count, number of links and terms, enabled status and last updated time. Click any rule to view its configuration or see matched assets.
+Select a rule to edit it, see the assets it matches or delete it.
 
-Rules can be edited, enabled, disabled or deleted from the detail page. Changes take effect on the next reconciliation cycle, or you can trigger an immediate evaluation by updating the rule.
+## Next steps
 
-<CalloutCard
-  title="Need Help?"
-  description="Join the Discord community to ask questions and share how you're using Asset Rules."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+- [Glossary](glossary.md): the terms a rule can add.
+- [Data products](data-products.md): group matching assets instead of enriching them.

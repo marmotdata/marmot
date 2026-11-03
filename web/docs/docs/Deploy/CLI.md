@@ -1,72 +1,66 @@
 ---
 sidebar_position: 4
-title: CLI / Binary
+title: Binary
+description: Run the Marmot server from the single binary against your own PostgreSQL.
 ---
 
-# CLI / Binary
+# Binary
 
-Run Marmot directly on your system using the single binary.
+Run Marmot directly on a server from the single binary, against a PostgreSQL database you already have.
 
-import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Steps, Step, TipBox } from '@site/src/components/Steps';
 import { CliInstall } from '@site/src/components/CliInstall';
 
-## Installation
+## Install
 
 <CliInstall />
 
----
-
-## Quick Start
+## Start the server
 
 <Steps>
 <Step title="Generate an encryption key">
+
+Marmot encrypts the credentials it stores with this key. Keep it somewhere safe, because losing it means re-entering every stored credential:
 
 ```bash
 marmot generate-encryption-key
 ```
 
-Save this key securely. You'll need it to start the server.
-
 </Step>
 <Step title="Create a config file">
 
-Create `config.yaml` with your database settings:
+Save your database settings as `config.yaml`:
 
 ```yaml
 database:
   host: localhost
   port: 5432
-  user: postgres
-  password: your-password
+  user: marmot
+  password: "<database-password>"
   name: marmot
 ```
 
 </Step>
 <Step title="Start the server">
 
+`marmot run` reads `config.yaml` from the current directory, or the file you pass with `--config`:
+
 ```bash
-export MARMOT_SERVER_ENCRYPTION_KEY="your-generated-key"
-marmot server --config config.yaml
+export MARMOT_SERVER_ENCRYPTION_KEY="<encryption-key>"
+marmot run --config config.yaml
 ```
 
 </Step>
-<Step title="Access the UI">
+<Step title="Sign in">
 
-Open [http://localhost:8080](http://localhost:8080) in your browser.
+Open [http://localhost:8080](http://localhost:8080) and sign in as `admin` with the password `admin`. Marmot asks you to choose a new password straight away.
 
 </Step>
 </Steps>
 
-<TipBox variant="info" title="Default Credentials">
-The default username and password is **admin:admin**. Change this after your first login.
-</TipBox>
+## Without an encryption key
 
----
-
-## Development Mode
-
-For local development, you can skip encryption (credentials stored in plaintext):
+For local development only, Marmot can run without a key and store credentials unencrypted:
 
 ```yaml
 server:
@@ -75,38 +69,17 @@ server:
 database:
   host: localhost
   port: 5432
-  user: postgres
-  password: password
+  user: marmot
+  password: "<database-password>"
   name: marmot
 ```
 
-```bash
-marmot server --config config.yaml
-```
-
-<TipBox variant="warning" title="Not for Production">
-Never use `allow_unencrypted: true` in production environments.
+<TipBox variant="warning" title="Development only">
+Never set `allow_unencrypted: true` in production. Every stored credential would be readable by anyone with access to the database.
 </TipBox>
 
----
+## Next steps
 
-## Reference
-
-For all configuration options, see the [configuration guide](/docs/Configure).
-
-## Next Steps
-
-<DocCardGrid>
-<DocCard
-  title="Add Data with Plugins"
-  description="Automatically discover assets from your data sources"
-  docId="Plugins/index"
-  icon="mdi:puzzle"
-/>
-<DocCard
-  title="Configure Authentication"
-  description="Set up SSO with GitHub, Google, Okta and more"
-  docId="Configure/Authentication/index"
-  icon="mdi:shield-account"
-/>
-</DocCardGrid>
+- [Configuration reference](../Configure/index.md): every setting and its environment variable.
+- [Plugins](../Plugins/index.md): catalog your first source.
+- [Single sign-on](../Configure/Authentication/index.md): let your team sign in with your identity provider.

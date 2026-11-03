@@ -7,12 +7,12 @@ description: Configure Google as an authentication provider
 
 Marmot supports Google as an OIDC provider for Single Sign-On authentication.
 
-## Create a Google Cloud Project
+## Create a Google Cloud project
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
 
-## Configure OAuth Consent Screen
+## Configure the OAuth consent screen
 
 1. Navigate to **APIs & Services** → **OAuth consent screen**
 2. Select **External** user type (or **Internal** if using Google Workspace)
@@ -26,7 +26,7 @@ Marmot supports Google as an OIDC provider for Single Sign-On authentication.
    - `.../auth/userinfo.profile`
 5. Add test users if using External user type
 
-## Create OAuth 2.0 Credentials
+## Create OAuth 2.0 credentials
 
 1. Navigate to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth client ID**
@@ -65,4 +65,4 @@ auth:
     client_secret: "your-client-secret"
 ```
 
-Restart Marmot and the Google login button will appear on the login page.
+Restart Marmot and the Google sign-in button appears on the sign-in page.

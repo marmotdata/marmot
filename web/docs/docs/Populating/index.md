@@ -1,4 +1,4 @@
-# Populating your catalog
+# Populate the catalog
 
 There are two ways to fill the catalog. A pipeline points a plugin at a source and discovers what is there on a schedule. Declaring assets as code describes them yourself, next to the infrastructure that creates them. Most catalogs use both: pipelines for the bulk of the catalog, code for the services and APIs no plugin can see.
 
@@ -22,8 +22,8 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
     icon="mdi:pipe"
   />
   <DocCard
-    title="UI"
-    description="Create a pipeline from a form on the Runs page"
+    title="From the UI"
+    description="Create a pipeline from a form on the Plugins page"
     docId="Populating/UI"
     icon="mdi:cursor-default-click"
   />

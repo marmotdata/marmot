@@ -7,7 +7,7 @@ description: Configure Auth0 as an authentication provider
 
 Marmot supports Auth0 as an OIDC provider for Single Sign-On authentication.
 
-## Create an Auth0 Application
+## Create an Auth0 application
 
 1. Log in to your Auth0 Dashboard
 2. Navigate to **Applications** → **Applications**
@@ -55,9 +55,9 @@ auth:
     url: "https://dev-12345.us.auth0.com"
 ```
 
-Restart Marmot and the Auth0 login button will appear on the login page.
+Restart Marmot and the Auth0 sign-in button appears on the sign-in page.
 
-## Team Synchronisation
+## Team sync
 
 Marmot can automatically sync users to teams based on Auth0 group memberships.
 
@@ -72,7 +72,7 @@ auth:
       group:
         claim: "groups"
         filter:
-          mode: "include"
+          mode: "regex"
           pattern: "^marmot-.*"
 ```
 
@@ -96,7 +96,7 @@ exports.onExecutePostLogin = async (event, api) => {
 
 Alternatively, you can add groups via **Auth0 Authorization Extension** or **User Metadata**.
 
-## Custom TLS Configuration
+## Custom TLS configuration
 
 If your Auth0 instance uses a self-signed certificate or a certificate signed by an internal CA (e.g. Auth0 Private Cloud), you can configure Marmot to trust it:
 
