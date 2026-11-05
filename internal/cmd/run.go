@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
@@ -230,8 +232,9 @@ func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool,
 		return nil, fmt.Errorf("creating connection pool: %w", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("pinging database: %w", err)
+	if err := waitForDatabase(ctx, pool); err != nil {
+		pool.Close()
+		return nil, err
 	}
 
 	setup := postgres.NewSetup(pool)
@@ -240,6 +243,46 @@ func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool,
 	}
 
 	return pool, nil
+}
+
+const (
+	// databaseWaitTimeout is how long startup waits for the database to come up.
+	databaseWaitTimeout = 2 * time.Minute
+	// pgCannotConnectNow is the SQLSTATE of a server still starting up.
+	pgCannotConnectNow = "57P03"
+)
+
+// waitForDatabase pings until the database answers. When Marmot and Postgres
+// start together, as in Docker Compose or a Cloud instance waking from sleep,
+// one long ping sits in TCP's connect backoff for seconds after the database
+// is up; attempts a second apart connect within a second of it. An
+// error the server reports, a wrong password or a missing database, will not
+// fix itself and fails at once, except that the server is still starting.
+func waitForDatabase(ctx context.Context, pool *pgxpool.Pool) error {
+	ctx, cancel := context.WithTimeout(ctx, databaseWaitTimeout)
+	defer cancel()
+	for attempt := 1; ; attempt++ {
+		// Short at first, so a database that has just come up is found
+		// at once; longer after, so one that is slow to connect still can.
+		pingCtx, pingCancel := context.WithTimeout(ctx, min(time.Duration(attempt)*2*time.Second, 30*time.Second))
+		err := pool.Ping(pingCtx)
+		pingCancel()
+		if err == nil {
+			return nil
+		}
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code != pgCannotConnectNow {
+			return fmt.Errorf("pinging database: %w", err)
+		}
+		if attempt == 1 {
+			log.Info().Err(err).Msg("Waiting for the database")
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("pinging database: %w", err)
+		case <-time.After(time.Second):
+		}
+	}
 }
 
 func safeInt32(v int) int32 {

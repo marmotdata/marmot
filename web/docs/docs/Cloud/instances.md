@@ -68,10 +68,12 @@ An instance's `marmotdata.cloud` hostname never changes, because it's also the O
 
 A stopped instance keeps its data, but its UI, API and MCP endpoint are unreachable until you select **Start instance**. A **Degraded** instance is having trouble staying up and retries automatically; [contact support](mailto:support@marmotdata.io) if it doesn't recover. A **Failed** instance never finished launching; delete it and launch again.
 
-Marmot Cloud stops instances for you:
+A Free instance sleeps after 30 minutes without a request and wakes on the next one, which takes a minute or two. Scheduled ingestion doesn't run while it sleeps, so a Free catalog refreshes when someone or something uses it.
 
-- On Free, when nobody in the account has used the console for 30 days.
-- On any plan, when the plan no longer covers an instance. **Start instance** is then refused until you upgrade or delete the extra instances.
+Marmot Cloud stops or deletes instances for you:
+
+- On any plan, when the plan no longer covers an instance, it's stopped. **Start instance** is then refused until you upgrade or delete the extra instances.
+- On Free, an instance that hasn't been used for 90 days is deleted with its data. Use means a request to the instance, from the UI, the API or MCP, or anyone in the account signing in to the console. The account's owners are emailed 30 days and 7 days before, and any use before the date in the email cancels the deletion.
 
 ### Deleting an instance
 
