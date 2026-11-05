@@ -12,8 +12,9 @@
 </p>
 
 <p align="center">
-  Marmot is an open-source data catalog with lineage, ownership and a built-in MCP server.<br>
-  It runs as one Go binary backed by PostgreSQL.
+  Marmot catalogs your tables, topics, dashboards and pipelines with 70+ plugins, records their lineage, owners and definitions,
+  and lets people and agents query the data through it, with every query checked and audited.<br>
+  Use it from the web UI, the CLI, the SDKs or its built-in MCP server. It runs as one Go binary backed by PostgreSQL.
 </p>
 
 <p align="center">
@@ -25,8 +26,8 @@
 </p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/readme-discover-dark.png">
-  <img src="./web/docs/static/img/readme-discover-light.png" alt="Marmot's Discover page listing cataloged PostgreSQL tables with their teams, tags and PII labels, and filters for kind and type">
+  <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/readme-tour-dark.webp">
+  <img src="./web/docs/static/img/readme-tour-light.webp" alt="A tour of Marmot: Discover narrowed to finance tables, the orders_daily asset page with its owners and glossary terms, a governed query that returns rows and a refused one in the query audit, then the lineage of orders_daily from source to dashboard">
 </picture>
 
 ## What you can do with it
