@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	google.golang.org/api v0.310.0
-	google.golang.org/grpc v1.84.0
+	google.golang.org/grpc v1.85.0
 )
 
 require (
