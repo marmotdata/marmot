@@ -7,7 +7,7 @@ description: Configure GitHub as an authentication provider
 
 Marmot supports GitHub as an OAuth provider for Single Sign-On authentication.
 
-## Create a GitHub OAuth App
+## Create a GitHub OAuth app
 
 1. Log in to GitHub
 2. Navigate to **Settings** → **Developer settings** → **OAuth Apps**
@@ -20,7 +20,7 @@ Marmot supports GitHub as an OAuth provider for Single Sign-On authentication.
    - **Authorisation callback URL**: `https://your-marmot-domain.com/auth/github/callback`
 5. Click **Register application**
 
-## Generate Client Secret
+## Generate a client secret
 
 1. On the application page, click **Generate a new client secret**
 2. Copy the client secret immediately
@@ -53,4 +53,4 @@ auth:
     client_secret: "your-client-secret"
 ```
 
-Restart Marmot and the GitHub login button will appear on the login page.
+Restart Marmot and the GitHub sign-in button appears on the sign-in page.

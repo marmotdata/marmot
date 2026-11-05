@@ -54,6 +54,8 @@ type Schedule struct {
 	// ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.
 	ServedByType *string `json:"served_by_type,omitempty"`
 	ServedByID   *string `json:"served_by_id,omitempty"`
+	// ServingConnected reports, for a served source, whether its plugin holds a live connection to Marmot now; it is only filled in when schedules are read one at a time or listed.
+	ServingConnected bool `json:"serving_connected"`
 	// Description says what the pipeline catalogs, in the words of whoever set it up.
 	Description *string `json:"description,omitempty"`
 	// OwnerType is "user" or "team" and names, with OwnerID, who is told when a run fails; both are nil for an unowned pipeline.
@@ -269,17 +271,18 @@ func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name
 	return schedule, nil
 }
 
-// scheduleSelect reads a schedule with what the pipeline pages show beside it: its owner's name, its latest run's status and how many assets it currently catalogs. The asset count reads the checkpoints of the same baseline run staleness uses, so it agrees with what a run would remove.
+// scheduleSelect reads a schedule with what the pipeline pages show beside it: its owner's name, its latest run's status, how many assets it currently catalogs and, for a served source, whether its plugin is connected now. The asset count reads the checkpoints of the same baseline run staleness uses, so it agrees with what a run would remove. A served source's plugin ingests through the CLI rather than as a job Marmot schedules, so its last run is read from those runs instead.
 const scheduleSelect = `
 	SELECT
 		s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled, s.queryable, s.ingest_on_query,
-		s.last_run_at, s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
+		COALESCE(s.last_run_at, cli.started_at), s.next_run_at, s.managed_by, s.served_by_type, s.served_by_id, s.created_by, s.created_at, s.updated_at,
 		s.description,
 		CASE WHEN s.owner_user_id IS NOT NULL THEN 'user' WHEN s.owner_team_id IS NOT NULL THEN 'team' END,
 		COALESCE(s.owner_user_id, s.owner_team_id)::text,
 		COALESCE(owner_user.name, owner_team.name),
-		lr.status,
-		COALESCE(ac.n, 0)
+		COALESCE(lr.status, cli.status),
+		COALESCE(ac.n, 0),
+		COALESCE(sv.connected, false)
 	FROM ingestion_schedules s
 	LEFT JOIN users owner_user ON owner_user.id = s.owner_user_id
 	LEFT JOIN teams owner_team ON owner_team.id = s.owner_team_id
@@ -289,6 +292,26 @@ const scheduleSelect = `
 		ORDER BY jr.created_at DESC
 		LIMIT 1
 	) lr ON true
+	LEFT JOIN LATERAL (
+		SELECT r.started_at,
+		       CASE r.status WHEN 'completed' THEN 'succeeded' ELSE r.status END AS status
+		FROM runs r
+		WHERE s.served_by_id IS NOT NULL AND r.pipeline_name = s.name AND r.source_name = s.plugin_id
+		ORDER BY r.started_at DESC
+		LIMIT 1
+	) cli ON true
+	LEFT JOIN LATERAL (
+		-- A session counts while some replica has heard from it within three sweeps, as for forwarding queries.
+		SELECT true AS connected
+		FROM plugin_serve_enrolments e
+		JOIN plugin_serve_sessions ss ON ss.enrolment_id = e.id
+		WHERE s.served_by_id IS NOT NULL
+		  AND s.name = ANY(e.sources)
+		  AND e.principal_type = s.served_by_type AND e.principal_id = s.served_by_id
+		  AND e.expires_at > NOW()
+		  AND ss.heartbeat_at > NOW() - INTERVAL '45 seconds'
+		LIMIT 1
+	) sv ON true
 	LEFT JOIN LATERAL (
 		SELECT count(*) AS n
 		FROM run_checkpoints c
@@ -329,6 +352,7 @@ func scanSchedule(row pgx.Row) (*Schedule, error) {
 		&schedule.OwnerName,
 		&schedule.LastRunStatus,
 		&schedule.AssetCount,
+		&schedule.ServingConnected,
 	); err != nil {
 		return nil, err
 	}
@@ -570,6 +594,31 @@ func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error
 		return fmt.Errorf("claiming served source: %w", err)
 	}
 	schedule.Queryable = true
+	return linkServedSourceAssets(ctx, tx, schedule)
+}
+
+// linkServedSourceAssets links a served source to the assets its pipeline's last completed run catalogued, as the scheduler does after each run of a pipeline Marmot runs itself. A serving plugin ingests through the CLI before it claims the source, and that run cannot link anything because the source does not exist yet, so without this the source would list no tables. Claims repeat at every re-enrolment, which keeps the links current with the latest run.
+func linkServedSourceAssets(ctx context.Context, tx pgx.Tx, schedule *Schedule) error {
+	_, err := tx.Exec(ctx, `
+		WITH last_run AS (
+			SELECT r.id
+			FROM runs r
+			WHERE r.pipeline_name = $2 AND r.source_name = $3 AND r.status = 'completed'
+			  AND EXISTS (SELECT 1 FROM run_checkpoints c WHERE c.run_id = r.id)
+			ORDER BY r.completed_at DESC
+			LIMIT 1
+		)
+		INSERT INTO asset_schedules (asset_id, schedule_id)
+		SELECT DISTINCT a.id, $1::uuid
+		FROM run_checkpoints c
+		JOIN last_run lr ON c.run_id = lr.id
+		JOIN assets a ON a.mrn = c.entity_mrn
+		WHERE c.entity_type = 'asset' AND c.operation <> $4
+		ON CONFLICT (asset_id, schedule_id) DO UPDATE SET updated_at = NOW()`,
+		schedule.ID, schedule.Name, schedule.PluginID, StatusDeleted)
+	if err != nil {
+		return fmt.Errorf("linking served source assets: %w", err)
+	}
 	return nil
 }
 
@@ -1313,25 +1362,16 @@ func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedul
 	return nil
 }
 
-// maskJobRunConfig masks sensitive fields in a job run's config
+// maskJobRunConfig masks sensitive fields in a job run's config, dropping the config entirely when the plugin's spec is unknown, as MaskScheduleConfig does, since without the spec there is no telling which fields are secret
 func (r *SchedulePostgresRepository) maskJobRunConfig(run *JobRun) {
-	if run.Config == nil || len(run.Config) == 0 {
+	if len(run.Config) == 0 {
 		return
 	}
 
-	// Get the plugin registry
-	registry := plugin.GetRegistry()
-
-	// We need the plugin ID to get the ConfigSpec
-	// The SourceName field actually contains the plugin_id
-	if run.SourceName == "" {
-		return
-	}
-
-	// Get the plugin entry from registry
-	entry, err := registry.Get(run.SourceName)
+	// SourceName holds the plugin id for job runs.
+	entry, err := plugin.GetRegistry().Get(run.SourceName)
 	if err != nil {
-		// Plugin not found, skip masking
+		run.Config = nil
 		return
 	}
 

@@ -1,17 +1,16 @@
 ---
 sidebar_position: 6
+title: API
 ---
 
-Marmot provides a comprehensive RESTful API to programmatically interact with your data catalog. This API allows you to create, read, update, and delete assets, establish lineage relationships, and manage metadata through simple HTTP requests.
+# API
 
-## API Documentation
+The REST API creates, updates and deletes assets, lineage and metadata from your own tooling. The [API reference](/api) documents every endpoint, and [lineage](../lineage.md#send-lineage-from-your-own-pipelines) shows how to send edges with column mappings.
 
-[The complete Marmot API documentation can be found here.](/api)
+Send an API key with every request:
 
-## Authentication
-
-Authentication is required for all API requests using an API key. Add your key to all requests in the following header:
-
+```text
+X-API-Key: <api-key>
 ```
-X-API-Key: YOUR_API_KEY
-```
+
+Create a key under **Account → API keys**, or use a [service account](../Configure/access-control.md) for anything that isn't a person.

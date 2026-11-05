@@ -283,16 +283,22 @@
 			>
 				<mm-option value="">{m.queryaudit_outcome_all()}</mm-option>
 				<mm-option-group label={m.dataquery_decision_allowed()}>
-					<mm-option value="allowed">{m.queryaudit_outcome_any_reason()}</mm-option>
+					<mm-option value="allowed" label={m.dataquery_decision_allowed()}
+						>{m.queryaudit_outcome_any_reason()}</mm-option
+					>
 					<mm-option value="allowed:role">{m.queryaudit_outcome_by_role()}</mm-option>
 				</mm-option-group>
 				<mm-option-group label={m.dataquery_decision_denied()}>
-					<mm-option value="denied">{m.queryaudit_outcome_any_reason()}</mm-option>
+					<mm-option value="denied" label={m.queryaudit_outcome_denied_any_reason()}
+						>{m.queryaudit_outcome_any_reason()}</mm-option
+					>
 					<mm-option value="denied:permission">{m.queryaudit_outcome_by_permission()}</mm-option>
 					<mm-option value="denied:policy">{m.queryaudit_outcome_by_policy()}</mm-option>
 				</mm-option-group>
 				<mm-option-group label={m.dataquery_status_failed()}>
-					<mm-option value="failed">{m.queryaudit_outcome_any_reason()}</mm-option>
+					<mm-option value="failed" label={m.queryaudit_outcome_failed_any_reason()}
+						>{m.queryaudit_outcome_any_reason()}</mm-option
+					>
 					<mm-option value="failed:source_error">{m.queryaudit_outcome_source_error()}</mm-option>
 					<mm-option value="failed:timeout">{m.queryaudit_outcome_timeout()}</mm-option>
 					<mm-option value="failed:unreachable">{m.queryaudit_outcome_unreachable()}</mm-option>

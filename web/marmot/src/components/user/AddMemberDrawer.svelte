@@ -7,7 +7,6 @@
 	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { formatList } from '$lib/utils';
-	import { roleLabel } from '$lib/users/format';
 	import type { Role } from '$lib/roles/types';
 	import type { Team } from '$lib/teams/types';
 	import type { Invitation } from '$lib/users/types';
@@ -286,8 +285,7 @@
 			}}
 		>
 			{#each roles as role (role.id)}
-				<mm-option value={role.id} label={roleLabel(role.name)} description={role.description}
-				></mm-option>
+				<mm-option value={role.id} label={role.name} description={role.description}></mm-option>
 			{/each}
 		</mm-multiselect>
 		{#if teams.length}

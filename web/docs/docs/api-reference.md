@@ -1,12 +1,11 @@
 ---
 sidebar_position: 100
-sidebar_label: API Reference
+sidebar_label: API
+title: API reference
 ---
 
-# API Reference
+# API reference
 
-Marmot exposes a REST API for managing assets, lineage, glossary terms, data products, and more.
+Everything in Marmot is available over its REST API at `https://<your-marmot-server>/api/v1`: assets, lineage, glossary terms, data products, pipelines and the rest. Authenticate with an API key in the `X-API-Key` header or a token from `marmot login` in `Authorization: Bearer`.
 
-<a href="/api" className="inline-flex items-center gap-1.5 text-sm font-semibold">
-  View the full API documentation →
-</a>
+The [full API reference](/api) lists every endpoint with its request and response.

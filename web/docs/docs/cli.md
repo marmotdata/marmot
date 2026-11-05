@@ -1,22 +1,13 @@
 ---
 sidebar_position: 3
-title: CLI Reference
+title: CLI reference
 ---
 
-# CLI Reference
+# CLI reference
 
-The Marmot CLI lets you interact with your data catalog directly from the terminal.
+The Marmot CLI works with your catalog from the terminal. It also runs plugins on your own machine and pushes what they find to Marmot, which [populating with the CLI](Populating/CLI.md) covers.
 
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { CliInstall } from '@site/src/components/CliInstall';
-
-<CalloutCard
-  title="Looking for Ingestion?"
-  description="The CLI also supports populating your catalog from data sources via the ingest command."
-  docId="Populating/CLI"
-  buttonText="View Ingestion Docs"
-  icon="mdi:database-plus"
-/>
 
 ## Installation
 
@@ -26,13 +17,13 @@ import { CliInstall } from '@site/src/components/CliInstall';
 
 ## Authentication
 
-Sign in once with `marmot login`. It opens your browser, you sign in the way you always do, and the CLI keeps a token for you.
+Sign in once with `marmot login`. It opens your browser, you sign in the way you always do and the CLI keeps a token for you.
 
 ```bash
 marmot login https://marmot.example.com
 ```
 
-That is all most people need. Every other command uses the token from then on. It lasts 24 hours; run `marmot login` again when it has expired.
+Every other command uses the token from then on. It lasts 24 hours; run `marmot login` again when it has expired.
 
 ### Useful options
 
@@ -53,7 +44,7 @@ marmot logout
 
 ### What happens behind the scenes
 
-The CLI opens the Marmot sign-in page in your browser and waits on a local port for the browser to come back with a code. It swaps that code for a token and saves it in `~/.config/marmot/credentials.json`. The token is a signed JWT with your user id, your roles and their permissions, and an expiry. This is plain OAuth 2.0 with PKCE. There is no client secret and nothing to configure.
+The CLI opens the Marmot sign-in page in your browser and waits on a local port for the browser to come back with a code. It swaps that code for a token and saves it in `~/.config/marmot/credentials.json`. The token is a signed JWT with your user id, your roles, their permissions and an expiry. This is plain OAuth 2.0 with PKCE. There is no client secret and nothing to configure.
 
 ### Pushing to a registry on your Marmot host
 
@@ -67,7 +58,7 @@ ln -s "$(command -v marmot)" "$(dirname "$(command -v marmot)")/docker-credentia
 
 Without it, login writes the token straight into `~/.docker/config.json`. That works until the token expires, and not at all if Docker Desktop manages your credentials. Login tells you when that is the case.
 
-### API Keys
+### API keys
 
 API keys can still be used and always take priority over cached login tokens.
 
@@ -79,7 +70,7 @@ marmot assets list --api-key mrmot_abc123
 export MARMOT_API_KEY=mrmot_abc123
 ```
 
-### Auth Priority
+### Which credential is used
 
 When multiple credentials are available, the CLI uses the first one found:
 
@@ -87,7 +78,7 @@ When multiple credentials are available, the CLI uses the first one found:
 2. Cached OAuth token from `marmot login` (for the active context)
 3. Kubernetes service account token (auto-detected in-cluster)
 
-A Kubernetes service account token is only accepted from the operator's ingestion ServiceAccount, projected for the `marmot` audience at `/var/run/secrets/marmot/token`, and it can only push ingestion results and serve queries: start and complete runs, write assets, lineage and documentation, and enrol a serving plugin.
+A Kubernetes service account token is only accepted from the operator's ingestion ServiceAccount, projected for the `marmot` audience at `/var/run/secrets/marmot/token`, and it can only push ingestion results and serve queries. That covers starting and completing runs, writing assets, lineage and documentation and enrolling a serving plugin.
 
 ---
 
@@ -121,20 +112,21 @@ marmot context delete staging.marmot.dev
 
 You can also configure the CLI with flags, environment variables or a config file. These are checked in order of precedence.
 
-### CLI Flags
+### Flags
 
 ```bash
 marmot assets list --host https://marmot.example.com --api-key my-key
 ```
 
-### Environment Variables
+### Environment variables
 
 ```bash
 export MARMOT_HOST=https://marmot.example.com
 export MARMOT_API_KEY=my-key
+export MARMOT_READ_ONLY=true
 ```
 
-### Config File
+### Config file
 
 ```bash
 marmot config init
@@ -149,16 +141,40 @@ This creates `~/.config/marmot/config.yaml` interactively. You can also use `mar
 | `ca_file` | PEM file of a CA to trust for the Marmot API in addition to the system's, also `--ca-file` or `MARMOT_CA_FILE` | (none) |
 | `output` | Default output format (`table`, `json`, `yaml`) | `table` |
 | `current_context` | Active context name | (none) |
+| `read_only` | Refuse every command that changes something, also `--read-only` or `MARMOT_READ_ONLY`. See [read-only mode](#read-only-mode-and-exit-codes) | `false` |
 
 ---
 
-## Output Formats
+## Output formats
 
 All commands support `--output` / `-o` with `table` (default), `json` or `yaml`.
 
 ```bash
 marmot assets list -o json | jq '.assets[].name'
 ```
+
+## Read-only mode and exit codes
+
+For an agent or script driving the CLI, turn on read-only mode unless it's meant to change things: `--read-only`, `MARMOT_READ_ONLY=true` or `read_only: true` in the config file. Every command that writes to the server or changes local configuration then exits with code 9 instead of running. It's a guardrail, not a security boundary: the API key's permissions decide what's allowed.
+
+Branch on the exit code rather than the error message:
+
+| Code | Name | Meaning |
+| --- | --- | --- |
+| 0 | `ok` | The command succeeded |
+| 1 | `error` | Any failure not covered below |
+| 2 | `usage` | Wrong arguments or flags |
+| 3 | `unauthenticated` | No valid credentials; run `marmot login` or set `MARMOT_API_KEY` |
+| 4 | `forbidden` | Signed in but not allowed, including a data query you may not run |
+| 5 | `not_found` | The resource doesn't exist or isn't visible to you |
+| 6 | `invalid` | The server rejected the request as invalid |
+| 7 | `rate_limited` | Too many requests; wait and retry |
+| 8 | `server` | The server failed or couldn't be reached; retrying later may help |
+| 9 | `read_only` | The command changes something and read-only mode is on |
+| 10 | `confirmation_required` | The command needs confirmation and there's no terminal; pass `--yes` once the change is agreed |
+| 11 | `cancelled` | The confirmation prompt was declined |
+
+`marmot agent schema` prints all of this as JSON, along with every command, flag and whether it reads or writes, so an agent can load it once instead of walking `--help`.
 
 ---
 
@@ -240,7 +256,7 @@ View pipeline ingestion runs. Filter with `--pipelines` and `--statuses`.
 marmot query <sources | tables | run | history | show | stats> [flags]
 ```
 
-Run read-only SQL against catalogued sources as yourself, for example `marmot query run shop-pg --table orders`. It needs the `assets:query` permission, which admins hold by default, and every query is recorded.
+Run read-only SQL against catalogued sources as yourself, for example `marmot query run shop-pg --table orders`. It needs the `assets:query` permission, which admins hold by default, and every query appears in **Query audit**.
 
 ### marmot lineage
 
@@ -317,6 +333,22 @@ marmot service-accounts apikeys create \
 
 See [users, roles and access](Configure/access-control.md) for what to grant.
 
+### marmot agent
+
+```
+marmot agent schema
+```
+
+Print every command, flag, exit code and setting as one JSON document, with whether each command reads, writes to the server or changes local configuration. See [read-only mode and exit codes](#read-only-mode-and-exit-codes).
+
+### marmot plugins
+
+```
+marmot plugins <list | outdated | update | pin | unpin | rollback | reset | check>
+```
+
+Manage the versions of the core plugins your server runs, separately from Marmot upgrades. `outdated` lists plugins with an update or an open security advisory, `update <id>[@version]` moves one forward and `rollback` returns it to the version it ran before and pins it there. See [plugin updates](Configure/plugin-updates.md).
+
 ### marmot ingest
 
 ```
@@ -374,7 +406,7 @@ Manage CLI configuration. See [Configuration](#configuration) above for details.
 
 ---
 
-## Tab Completion
+## Tab completion
 
 Generate shell completions with `marmot completion <shell>`. Supported shells are `bash`, `zsh`, `fish` and `powershell`.
 
@@ -384,40 +416,9 @@ source <(marmot completion bash)
 
 ---
 
-## Next Steps
+## Next steps
 
-<DocCardGrid>
-  <DocCard
-    title="Populating Your Catalog"
-    description="Learn about all the ways to add assets to Marmot"
-    docId="Populating/index"
-    icon="mdi:database-plus"
-  />
-  <DocCard
-    title="Query Language"
-    description="Use advanced search queries to find assets"
-    docId="queries"
-    icon="mdi:code-tags"
-  />
-  <DocCard
-    title="REST API"
-    description="View the full API documentation for custom integrations"
-    href="/api"
-    icon="mdi:api"
-  />
-  <DocCard
-    title="Deployment Options"
-    description="Deploy Marmot to production with Docker, Helm or the CLI"
-    docId="Deploy/index"
-    icon="mdi:cloud-upload"
-  />
-</DocCardGrid>
-
-<CalloutCard
-  title="Need Help?"
-  description="Join the Discord community to ask questions and connect with other Marmot users."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+- [Populating with the CLI](Populating/CLI.md): run plugins on your own machine and push what they find.
+- [Search and the query language](queries.md): the syntax for precise searches.
+- [REST API](/api): everything the CLI does, for your own integrations.
+- [Discord](https://discord.gg/TWCk7hVFN4): ask questions and talk to other Marmot users.

@@ -50,10 +50,17 @@ func (t *TLSConfig) ToTLSConfig() (*tls.Config, error) {
 	return tlsCfg, nil
 }
 
+// ServerTLSConfig holds the certificate Marmot serves HTTPS with and the CA that enables mutual TLS. It has no skip-verify option as a server does not verify its own certificate.
+type ServerTLSConfig struct {
+	CACertPath string `mapstructure:"ca_cert_path"`
+	CertPath   string `mapstructure:"cert_path"`
+	KeyPath    string `mapstructure:"key_path"`
+}
+
 // ToServerTLSConfig builds a *crypto/tls.Config suitable for an HTTP server.
 // CertPath/KeyPath provide the server's own certificate.
 // CACertPath, if set, enables mutual TLS by requiring and verifying client certificates.
-func (t *TLSConfig) ToServerTLSConfig() (*tls.Config, error) {
+func (t *ServerTLSConfig) ToServerTLSConfig() (*tls.Config, error) {
 	if t == nil {
 		return nil, nil
 	}

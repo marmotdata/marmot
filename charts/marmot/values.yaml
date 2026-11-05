@@ -123,7 +123,6 @@ config:
     #   cert_path: "/path/to/cert.pem"
     #   key_path: "/path/to/key.pem"
     #   ca_cert_path: "/path/to/ca.pem"  # enables mutual TLS
-    #   insecure_skip_verify: false
 
   # Database configuration
   database:

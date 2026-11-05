@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '@marmotdata/elements/filter-pill.js';
 	import '@marmotdata/elements/toolbar.js';
+	import '@marmotdata/elements/tag.js';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import type { PluginInfo } from './pipeline';
@@ -96,17 +97,6 @@
 				(c) => c.list.length < matches.filter((p) => (p.category ?? 'other') === c.key).length
 			)
 	);
-
-	function caption(p: PluginInfo): string {
-		const uses = connected[p.id] ?? 0;
-		return [
-			p.supports_query ? m.plugins_filter_queryable() : '',
-			p.produces_lineage ? m.plugins_lineage_tag() : '',
-			uses ? m.plugins_connected_uses({ count: uses }) : ''
-		]
-			.filter(Boolean)
-			.join(' · ');
-	}
 </script>
 
 <mm-section
@@ -155,13 +145,23 @@
 									href={canAdd
 										? resolve(`/pipelines/new?plugin=${encodeURIComponent(p.id)}` as NewRoute)
 										: undefined}
-									secondary={p.description}
 								>
 									<mm-provider-logo slot="start" provider={p.icon || p.id} size="20" decorative
 									></mm-provider-logo>
 									{p.name}
-									{#if caption(p)}
-										<mm-text slot="end" variant="caption" tone="secondary">{caption(p)}</mm-text>
+									<span slot="secondary" class="mm-stack" style="--mm-gap: var(--space-1)">
+										<span>{p.description}</span>
+										{#if p.supports_query || p.produces_lineage}
+											<span class="mm-cluster" style="--mm-gap: var(--space-1)">
+												{#if p.supports_query}<mm-tag>{m.plugins_filter_queryable()}</mm-tag>{/if}
+												{#if p.produces_lineage}<mm-tag>{m.plugins_lineage_tag()}</mm-tag>{/if}
+											</span>
+										{/if}
+									</span>
+									{#if connected[p.id]}
+										<mm-text slot="end" variant="caption" tone="secondary" numeric
+											>{m.plugins_connected_uses({ count: connected[p.id] })}</mm-text
+										>
 									{/if}
 								</mm-list-item>
 							{/each}

@@ -1,122 +1,112 @@
 ---
 sidebar_position: 5
-title: Single sign-on
+title: Set up single sign-on
 description: Connect Okta, Entra ID, Auth0, Keycloak or any OIDC provider to your instance from the Marmot Cloud console, and map provider groups onto Marmot roles.
 ---
 
-import { CalloutCard } from '@site/src/components/DocCard';
-import { Steps, Step, TipBox } from '@site/src/components/Steps';
+import { TipBox, Steps, Step } from '@site/src/components/Steps';
+import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# Single sign-on
+# Set up single sign-on
 
-Single sign-on is configured in the Marmot Cloud console at [cloud.marmotdata.io](https://cloud.marmotdata.io), on your instance's page or in the launch form when you create it. Saving the form delivers the configuration to the instance without a restart. Nothing is configured on the instance itself.
+Let your team sign in to your instance through your identity provider over OIDC, with directory groups deciding who gets which Marmot role. You set it up in the [Marmot Cloud console](https://cloud.marmotdata.io).
 
-The same form maps groups from your provider's ID token onto Marmot roles, so who is an administrator is decided by your directory.
+## Before you start
 
-Do this before anyone but you signs in. An instance whose only account is `admin` is converted with one form. An instance with fifty local accounts has to have each one reconciled by hand.
+- Your account is on Team or above.
+- Your identity provider has an OIDC web application with a client ID and a client secret.
 
-## Requirements
-
-From your identity provider you need an OIDC web application with a client id and a client secret. It must be a confidential client: Marmot uses the authorization code flow, and a public or single-page client fails at the token exchange.
-
-The application also has to put group membership in the ID token. Requesting the scope and emitting the claim are usually two separate settings, and you need both.
-
-- Okta: add a groups claim to the ID token and request the `groups` scope.
-- Entra ID: emit app-role claims. They arrive in the `roles` claim.
-- Auth0: add a namespaced claim in a login action.
-- Keycloak: add a `groups` client scope mapper to the client.
-
-## Setup
+## Connect your provider
 
 <Steps>
-<Step title="Open the form">
+<Step title="Send groups in the ID token">
 
-In the console, open your instance and find the Single sign-on card. Turn on **Enable single sign-on**. When launching a new instance, the same fields are in the launch form.
+Marmot maps groups to roles, so the ID token has to carry them. In most providers that takes a scope and a claim:
 
-</Step>
-<Step title="Pick your identity provider">
-
-**Identity provider** prefills the group claim and scopes that provider uses. Every field stays editable.
-
-| Provider | Group claim | Scopes |
-| --- | --- | --- |
-| Okta | `groups` | `openid, profile, email, groups` |
-| Microsoft Entra ID | `roles` | `openid, profile, email` |
-| Auth0 | `https://marmot/groups` | `openid, profile, email` |
-| Keycloak | `groups` | `openid, profile, email` |
-| Logto | `roles` | `openid, profile, email, roles` |
-| Other | `groups` | `openid, profile, email` |
+| Provider | What to set up |
+| --- | --- |
+| Okta | A groups claim on the ID token, and the `groups` scope |
+| Microsoft Entra ID | App roles, which arrive in the `roles` claim |
+| Auth0 | A namespaced claim added in a login action |
+| Keycloak | A `groups` mapper on the client |
 
 </Step>
-<Step title="Register the redirect URI">
+<Step title="Connect it in the console">
 
-Copy the **Redirect URI** shown in the form and register it as the redirect URI of the application in your provider. It is your instance URL followed by `/auth/oidc/callback`.
+1. In the [console](https://cloud.marmotdata.io), open your instance, find **Single sign-on** and turn on **Use single sign-on**.
+2. Choose your **Identity provider**, which fills in **Group claim** and **Scopes**.
+3. Register the **Redirect URI** the console shows with your provider.
+4. Enter the **Issuer URL**, **Client ID** and **Client secret**. The secret isn't shown again.
+5. Turn on **Allow sign-up**, so people can sign in before an account exists for them.
 
-</Step>
-<Step title="Enter the application's details">
+The Single sign-on section with the provider details entered:
 
-**Issuer URL** is the issuer from your provider's OpenID configuration. Marmot discovers the endpoints from it.
-
-**Client ID** and **Client secret** are shown by your provider alongside each other. The secret is write-only: once saved, the console shows dots and never returns it. If it is lost, generate a new one and paste it here.
-
-**Scopes** are comma separated. Leave them as prefilled unless your provider needs more.
-
-</Step>
-<Step title="Decide who gets an account">
-
-**Allow sign-up** creates a Marmot account the first time someone signs in through the provider. Turn it on when your provider already decides who reaches your internal applications. Leave it off when the tenant behind it is much broader than the people who should read the catalog; someone then creates each account first.
-
-**Create teams from groups** creates a Marmot team for each provider group that has no team yet, and keeps membership in step. Teams own assets and data products and are what [access grants](access-control.md#members) should name.
+<ThemedImg
+  lightSrc="/img/cloud-console-sso-light.png"
+  darkSrc="/img/cloud-console-sso-dark.png"
+  alt="The console Single sign-on section with Use single sign-on on, the redirect URI to register and an Okta issuer URL and client ID entered"
+  size="panel"
+/>
 
 </Step>
 <Step title="Map groups to roles">
 
-**Group claim** is the token claim carrying group membership. **Group field** is only needed when the claim returns objects rather than strings; set it to the property to read, usually `name`.
-
-**Role mapping** grants Marmot roles to members of a provider group. One row per group, roles comma separated.
+Under **Role mapping**, add each **Provider group** with its **Marmot roles**, comma separated. For example:
 
 | Provider group | Marmot roles |
 | --- | --- |
-| `platform-engineering` | `admin` |
 | `data-engineering` | `editor, ingestion.admin` |
-| `analysts` | `user` |
+| `analytics` | `catalog.viewer` |
 
-The roles can be the coarse `admin`, `editor` and `user` or any [granular role](access-control.md#roles). A user in several groups gets the union. Users in no mapped group keep the roles they already have; a new user with no mapped group gets the instance's default role.
+Optional: turn on **Create teams from groups** to keep a Marmot team in step with each provider group.
 
 </Step>
-<Step title="Save and check">
+<Step title="Save">
 
-Save. The sign-in page picks up the provider immediately.
-
-Sign in as an ordinary user in a private window and look at the profile page. The roles listed there are what the mappings produced. Testing as `admin` proves nothing, because that account already holds everything.
+Select **Save single sign-on**. The instance restarts with the new configuration.
 
 </Step>
 </Steps>
 
-<TipBox variant="warning" title="Sign-up and the default role">
-A new user matching none of your mappings gets the instance's default role, which is `user`, read-only across the catalog, unless you changed it. If the catalog holds anything not everyone in your directory should read, set the default to `catalog.none` before turning sign-up on.
+<TipBox variant="warning" title="Check the base role before you allow sign-up">
+Someone new who matches none of your mappings gets the base role. Unless you've changed it, that's `user`, which reads the whole catalog. [Lower the base role to `catalog.none`](grant-access.md#set-the-base-role) first if not everyone in your directory should read it.
 </TipBox>
 
-## Notes
+## How role mapping behaves
 
-- Keep one local administrator as break-glass, with a long generated password in your password manager, for the day your provider is down or a mapping change locks everyone out.
-- Rotate the client secret by pasting the new value and saving. The console cannot show the old one back.
-- Mapping changes apply at the next sign-in. To cut someone off immediately, revoke them in your provider.
-- Turning single sign-on off clears the configuration. Local accounts keep working.
+- Mapped roles replace a person's roles at every sign-in. Someone in several mapped groups gets all their roles.
+- Someone in no mapped group keeps their roles, or gets the base role if they're new.
+- Any [role](access-control.md#roles) can be mapped, and it applies across the whole catalog.
+
+Your instance's **Settings → Authentication** has 2 more controls. **Group mappings** map a group to a team, a role or both, and their roles only apply when the console's mapping matches none of a person's groups. To admit only people invited from **Settings → Members**, turn off **Create members on their first single sign-on**:
+
+<ThemedImg
+  lightSrc="/img/cloud-new-members-light.png"
+  darkSrc="/img/cloud-new-members-dark.png"
+  alt="New members in Settings, Authentication, with Create members on their first single sign-on turned on"
+  size="dialog"
+/>
+
+## Check that it worked
+
+Sign in as an ordinary user in a private window, then find them under **Settings → Members** as an administrator. Their roles there are what your mappings produced. Testing as `admin` proves nothing, because it already holds every role.
+
+## Keep it running
+
+- Administrators can always sign in with a password, so keep one with a long generated password for the day your provider is down.
+- Mapping changes apply at each person's next sign-in. To cut someone off at once, revoke them in your provider.
+- Turning off **Use single sign-on** removes the configuration from the instance.
 
 ## Troubleshooting
 
-| Symptom | Cause |
+| What you see | What to do |
 | --- | --- |
-| Redirect fails right after the provider | The registered redirect URI is not exactly the one shown in the form. |
-| Sign-in works, every user is read-only | The groups claim is not in the token. Check the scope is requested and the claim is configured. |
-| Sign-in works, the mapping matches nothing | The claim holds objects, so set the group field. Or the group name is a path like `/analysts`. |
-| New users cannot sign in | Allow sign-up is off and they have no account. |
+| Sign-in fails as soon as the provider redirects back | Register the **Redirect URI** exactly as the console shows it. |
+| "No Marmot account exists for this user and your administrator has not enabled sign-up." | Turn on **Allow sign-up**. |
+| New users get the base role and no teams | The group claim isn't in the token. Request the scope and set up the claim in your provider. |
+| The claim is there but no mapping matches | If the claim holds objects, set **Group field**. Otherwise enter the group name exactly as the token carries it, including any leading `/`. |
 
-<CalloutCard
-  title="Then decide who sees what"
-  description="Roles from your provider are the floor. Per-resource grants are how a sensitive data product stays sensitive."
-  docId="Cloud/access-control"
-  buttonText="Access control"
-  icon="mdi:shield-key"
-/>
+## Next steps
+
+- [Pipelines](pipelines.md): catalog your systems on a schedule.
+- [Grant and check access](grant-access.md): mapped roles apply across the whole catalog, so restrict a sensitive data product with grants on it.

@@ -9,7 +9,9 @@
 	import { marked } from 'marked';
 	import { common, createLowlight } from 'lowlight';
 	import { toHtml } from 'hast-util-to-html';
-	import { sanitizeHtml } from '$lib/sanitize';
+	import { escapeHtml, sanitizeHtml } from '$lib/sanitize';
+	// The picker fetches its emoji list at runtime; Marmot's CSP only allows its own origin, so the list ships with the app instead of coming from a CDN
+	import emojiDataUrl from 'emoji-picker-element-data/en/emojibase/data.json?url';
 	import { deferDocImages, docImages } from '$lib/docs/images';
 	import '@marmotdata/elements/tree.js';
 	import type {
@@ -238,14 +240,16 @@
 
 	function preprocessMentions(markdown: string): string {
 		// Mentions are stored as markdown links: [@Label](mention:type:id)
+		// The label and id are written by whoever edits the page, so they are escaped and the id must look like one before either goes into HTML
 		return markdown.replace(
-			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
+			/\[@([^\]]+)\]\(mention:(user|team):([A-Za-z0-9_-]+)\)/g,
 			(_match, label, mentionType, id) => {
 				const cls = mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
-				if (mentionType === 'team' && id) {
-					return `<a href="/settings/teams/${id}" class="${cls}">@${label}</a>`;
+				const text = `@${escapeHtml(label)}`;
+				if (mentionType === 'team') {
+					return `<a href="/settings/teams/${encodeURIComponent(id)}" class="${cls}">${text}</a>`;
 				}
-				return `<span class="${cls}">@${label}</span>`;
+				return `<span class="${cls}">${text}</span>`;
 			}
 		);
 	}
@@ -258,7 +262,7 @@
 				const highlighted = toHtml(lowlight.highlight(language, text));
 				return `<pre><code class="hljs language-${language}">${highlighted}</code></pre>`;
 			} catch {
-				return `<pre><code class="language-${language}">${text}</code></pre>`;
+				return `<pre><code class="language-${language}">${escapeHtml(text)}</code></pre>`;
 			}
 		};
 		return deferDocImages(
@@ -328,7 +332,8 @@
 						>
 						{#if showEmojiPicker}
 							<div class="emoji-panel">
-								<emoji-picker bind:this={emojiPickerElement}></emoji-picker>
+								<emoji-picker bind:this={emojiPickerElement} data-source={emojiDataUrl}
+								></emoji-picker>
 								<div class="mm-cluster mm-cluster--between" style="padding: var(--space-2)">
 									<mm-button
 										variant="ghost"

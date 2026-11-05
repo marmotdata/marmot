@@ -146,13 +146,6 @@ type Source interface {
 	Discover(ctx context.Context, config RawPluginConfig) (*DiscoveryResult, error)
 }
 
-// DataFetcher is an optional interface that plugins can implement to support
-// data preview functionality. Plugins that can query/fetch sample data from
-// their data sources should implement this interface.
-type DataFetcher interface {
-	FetchSampleData(ctx context.Context, config RawPluginConfig, a *asset.Asset) (columnNames []string, rows [][]interface{}, err error)
-}
-
 // UnmarshalPluginConfig unmarshals raw config into a specific plugin config type
 func UnmarshalPluginConfig[T any](raw RawPluginConfig) (*T, error) {
 	data, err := yaml.Marshal(raw)

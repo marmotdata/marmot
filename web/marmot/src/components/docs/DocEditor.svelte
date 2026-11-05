@@ -22,6 +22,7 @@
 	import { fetchApi } from '$lib/api';
 	import { mergeAttributes } from '@tiptap/core';
 	import { docImagePath, loadDocImage } from '$lib/docs/images';
+	import { escapeHtml, sanitizeEditorHtml } from '$lib/sanitize';
 	import { m } from '$lib/paraglide/messages';
 	import MentionList from '$components/editor/MentionList.svelte';
 
@@ -269,11 +270,13 @@
 	function preprocessMentions(markdown: string): string {
 		// Match markdown link format: [@Label](mention:type:id)
 		return markdown.replace(
-			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
+			/\[@([^\]]+)\]\(mention:(user|team):([A-Za-z0-9_-]+)\)/g,
 			(_match, label, mentionType, id) => {
 				const mentionClass =
 					mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
-				return `<span data-type="mention" data-id="${id}" data-label="${label}" data-mention-type="${mentionType}" class="${mentionClass}">@${label}</span>`;
+				// Stored labels are user text, so they are escaped before becoming attribute values and content
+				const safeLabel = escapeHtml(label);
+				return `<span data-type="mention" data-id="${id}" data-label="${safeLabel}" data-mention-type="${mentionType}" class="${mentionClass}">@${safeLabel}</span>`;
 			}
 		);
 	}
@@ -349,7 +352,9 @@
 			}
 		});
 
-		const initialHtml = value ? (marked(preprocessMentions(value)) as string) : '';
+		const initialHtml = value
+			? sanitizeEditorHtml(marked(preprocessMentions(value)) as string)
+			: '';
 
 		editor = new Editor({
 			element: element,
@@ -517,7 +522,7 @@
 		) {
 			isUpdating = true;
 			lastExternalValue = value;
-			const html = value ? (marked(preprocessMentions(value)) as string) : '';
+			const html = value ? sanitizeEditorHtml(marked(preprocessMentions(value)) as string) : '';
 			editor.commands.setContent(html);
 			isUpdating = false;
 		}

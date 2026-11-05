@@ -60,6 +60,18 @@ func (s *Setup) Initialize(ctx context.Context) error {
 		return fmt.Errorf("seeding version from legacy table: %w", err)
 	}
 
+	// A schema ahead of this release's migrations means a newer release has
+	// already run against this database: this one is a rollback, or an old
+	// pod restarting mid-upgrade. Migrations only ever add to the schema, and
+	// CI runs the previous release against each one, so carry on rather than
+	// refuse to start and turn every rollback into a crash loop.
+	if current, err := migrator.GetCurrentVersion(ctx); err != nil {
+		return fmt.Errorf("getting current version: %w", err)
+	} else if known := int32(len(migrator.Migrations)); current > known {
+		log.Warn().Int32("version", current).Int32("known", known).Msg("Database schema is ahead of this release, not migrating")
+		return nil
+	}
+
 	if err := migrator.Migrate(ctx); err != nil {
 		return fmt.Errorf("running migrations: %w", err)
 	}

@@ -139,7 +139,7 @@ export const traceDemo: DemoConfig<LineageState & Focus> = {
 
 export const accessDemo: DemoConfig<AccessState & Focus> = {
 	label:
-		'An administrator grants the service account svc-finance-agent the asset.dataViewer role on orders_daily, and nothing else.',
+		'An administrator grants the service account svc-finance-agent the asset.dataQuerier role on orders_daily, and nothing else.',
 	screen: accessScreen,
 	initial: { granted: false, focus: 'mm-page-header' },
 	async steps(demo, set) {

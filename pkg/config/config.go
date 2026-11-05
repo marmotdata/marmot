@@ -66,7 +66,7 @@ type Config struct {
 		CustomResponseHeaders map[string]string `mapstructure:"custom_response_headers"`
 		EncryptionKey         string            `mapstructure:"encryption_key"`
 		AllowUnencrypted      bool              `mapstructure:"allow_unencrypted"`
-		TLS                   *TLSConfig        `mapstructure:"tls"`
+		TLS                   *ServerTLSConfig  `mapstructure:"tls"`
 	} `mapstructure:"server"`
 
 	Metrics struct {
@@ -149,10 +149,6 @@ type Config struct {
 		Endpoint string `mapstructure:"endpoint"`
 		Interval int    `mapstructure:"interval"` // seconds
 	} `mapstructure:"telemetry"`
-
-	Experimental struct {
-		TablePreview bool `mapstructure:"table_preview"`
-	} `mapstructure:"experimental"`
 
 	Plugins struct {
 		// Registry overrides the OCI registry namespace core plugins
@@ -384,7 +380,6 @@ func loadConfig(configPath string) error {
 	v.BindEnv("server.tls.cert_path")
 	v.BindEnv("server.tls.key_path")
 	v.BindEnv("server.tls.ca_cert_path")
-	v.BindEnv("server.tls.insecure_skip_verify")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
@@ -426,9 +421,6 @@ func loadConfig(configPath string) error {
 	v.BindEnv("telemetry.enabled")
 	v.BindEnv("telemetry.endpoint")
 	v.BindEnv("telemetry.interval")
-
-	// Experimental env vars
-	v.BindEnv("experimental.table_preview")
 
 	// Search env vars
 	v.BindEnv("search.timeout")
@@ -581,9 +573,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("telemetry.enabled", true)
 	v.SetDefault("telemetry.endpoint", "https://telemetry.marmotdata.io/v1/ingest")
 	v.SetDefault("telemetry.interval", 86400) // 24h
-
-	// Experimental defaults
-	v.SetDefault("experimental.table_preview", false)
 
 	// Search defaults
 	v.SetDefault("search.timeout", 10) // 10 seconds

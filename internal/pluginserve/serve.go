@@ -109,6 +109,46 @@ func parseBundle(res *EnrolResult) (*trustedBundle, error) {
 	return b, nil
 }
 
+// serveClientTLS is how a serving process dials Marmot's serve port. The address's host goes out as SNI so a shared TLS passthrough proxy can route the connection to the right instance, but the certificate is checked against the fixed replica name only this instance's CA issues, never against the host, so the check holds behind any load balancer or proxy.
+func serveClientTLS(roots *x509.CertPool, instanceID, address string, cert tls.Certificate) *tls.Config {
+	sni, _, err := net.SplitHostPort(address)
+	if err != nil {
+		sni = address
+	}
+	return &tls.Config{
+		MinVersion:   tls.VersionTLS13,
+		ServerName:   sni,
+		Certificates: []tls.Certificate{cert},
+		// ServerName now names the route rather than the peer, so the default check, which matches the certificate to it, is replaced by VerifyConnection below.
+		InsecureSkipVerify: true, //nolint:gosec // verified in VerifyConnection against roots and the replica name
+		VerifyConnection: func(cs tls.ConnectionState) error {
+			_, err := verifyReplicaChain(roots, instanceID, cs.PeerCertificates)
+			return err
+		},
+	}
+}
+
+// verifyReplicaChain verifies the certificates a Marmot replica presented: issued by one of roots, for server use, under this instance's replica name.
+func verifyReplicaChain(roots *x509.CertPool, instanceID string, certs []*x509.Certificate) ([][]*x509.Certificate, error) {
+	if len(certs) == 0 {
+		return nil, errors.New("Marmot presented no certificate")
+	}
+	intermediates := x509.NewCertPool()
+	for _, c := range certs[1:] {
+		intermediates.AddCert(c)
+	}
+	chains, err := certs[0].Verify(x509.VerifyOptions{
+		Roots:         roots,
+		Intermediates: intermediates,
+		DNSName:       ServerNameFor(instanceID),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("verifying Marmot's serve certificate: %w", err)
+	}
+	return chains, nil
+}
+
 // acceptBundle checks an enrolment's bundle against the pins and moves the pins on to it.
 func acceptBundle(p **pins, instanceID string, b *trustedBundle) error {
 	if *p != nil {
@@ -237,13 +277,7 @@ func connect(ctx context.Context, opts ServeOptions, pinned **pins) (*servingCon
 	if address == "" {
 		address = net.JoinHostPort(opts.Host, res.Port)
 	}
-	tlsConfig := &tls.Config{
-		MinVersion: tls.VersionTLS13,
-		RootCAs:    bundle.pool,
-		// Replicas are recognised by a fixed name only this instance's CA issues, not by DNS, so this check holds behind any load balancer.
-		ServerName:   ServerNameFor(res.InstanceID),
-		Certificates: []tls.Certificate{{Certificate: [][]byte{certBlock.Bytes}, PrivateKey: key}},
-	}
+	tlsConfig := serveClientTLS(bundle.pool, res.InstanceID, address, tls.Certificate{Certificate: [][]byte{certBlock.Bytes}, PrivateKey: key})
 
 	dialer := &tls.Dialer{NetDialer: &net.Dialer{Timeout: dialTimeout}, Config: tlsConfig}
 	raw, err := dialer.DialContext(ctx, "tcp", address)
@@ -266,6 +300,12 @@ func connect(ctx context.Context, opts ServeOptions, pinned **pins) (*servingCon
 	audience := "spiffe://" + res.InstanceID + "/serve/" + res.EnrolmentID
 	// The gRPC server runs on yamux streams inside the mutual TLS connection just made. gRPC is handed that connection's verified state rather than running a handshake of its own, and every call is checked to come from a replica of the Marmot this process enrolled with.
 	state := conn.ConnectionState()
+	// The handshake verified the peer in VerifyConnection, which Go does not record, so the chains are rebuilt the same way for gRPC and the per-call checks to see.
+	state.VerifiedChains, err = verifyReplicaChain(bundle.pool, res.InstanceID, state.PeerCertificates)
+	if err != nil {
+		_ = mux.Close()
+		return nil, err
+	}
 	server := grpc.NewServer(append(requirePeer(isReplicaOf(res.InstanceID)), grpc.Creds(establishedTLS{state: &state}))...)
 	pb.RegisterPluginServer(server, &pluginService{
 		verifier: NewVerifier(bundle.keys, res.InstanceID, audience, binding),

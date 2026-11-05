@@ -40,6 +40,12 @@ type QueryRefusedResponse struct {
 	Refusal dataquery.Refusal `json:"refusal"`
 } // @name QueryRefusedResponse
 
+// QueryUnavailableResponse is returned with HTTP 503 when a query cannot run yet. Code is "plugins_loading" while Marmot is still loading plugins after starting; retry after the Retry-After header.
+type QueryUnavailableResponse struct {
+	Error string `json:"error"`
+	Code  string `json:"code"`
+} // @name QueryUnavailableResponse
+
 // respondServiceError maps data query service errors onto HTTP statuses.
 func respondServiceError(w http.ResponseWriter, err error) {
 	var denied *dataquery.DeniedError
@@ -56,6 +62,10 @@ func respondServiceError(w http.ResponseWriter, err error) {
 		common.RespondError(w, http.StatusForbidden, err.Error())
 	case errors.Is(err, dataquery.ErrQueryUnsupported):
 		common.RespondError(w, http.StatusConflict, err.Error())
+	case errors.Is(err, dataquery.ErrPluginsLoading):
+		// Marmot has just started and the source's plugin is still loading, which is temporary, so callers are told to retry rather than shown a failure.
+		w.Header().Set("Retry-After", "5")
+		common.RespondJSON(w, http.StatusServiceUnavailable, QueryUnavailableResponse{Error: "Marmot is still starting up, try again in a moment", Code: "plugins_loading"})
 	default:
 		log.Error().Err(err).Msg("Query request failed")
 		common.RespondError(w, http.StatusInternalServerError, "Query request failed")
@@ -107,6 +117,31 @@ func (h *Handler) listSourceTables(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.RespondJSON(w, http.StatusOK, tables)
+}
+
+// @Summary  Preview a table
+// @Description Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect.
+// @Tags     query
+// @Produce  json
+// @Param    asset_id query string true "Asset ID of the table"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success  200 {object} dataquery.AssetPreview
+// @Failure  404 {object} common.ErrorResponse
+// @Router   /api/v1/query/preview [get]
+func (h *Handler) previewAsset(w http.ResponseWriter, r *http.Request) {
+	assetID := r.URL.Query().Get("asset_id")
+	if assetID == "" {
+		common.RespondError(w, http.StatusBadRequest, "asset_id is required")
+		return
+	}
+	principal, _ := common.PrincipalFromContext(r.Context())
+	preview, err := h.queryService.PreviewAsset(r.Context(), principal, assetID)
+	if err != nil {
+		respondServiceError(w, err)
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, preview)
 }
 
 // @Summary  Query plugin instance status
@@ -189,6 +224,7 @@ func parseTime(value string) (time.Time, error) {
 // @Failure  403 {object} QueryRefusedResponse
 // @Failure  404 {object} common.ErrorResponse
 // @Failure  409 {object} common.ErrorResponse "The query was cancelled"
+// @Failure  503 {object} QueryUnavailableResponse "Marmot is still loading plugins after starting; retry after Retry-After"
 // @Router   /api/v1/query/run [post]
 func (h *Handler) query(w http.ResponseWriter, r *http.Request) {
 	principal, ok := common.PrincipalFromContext(r.Context())

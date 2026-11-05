@@ -367,9 +367,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		SchedulerInterval: time.Duration(config.Pipelines.SchedulerInterval) * time.Second,
 		LeaseExpiry:       time.Duration(config.Pipelines.LeaseExpiry) * time.Second,
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
-		// The query API lists a source's tables from these links, so they are kept
-		// whenever data querying is on as well as for table previews.
-		LinkAssets: config.Experimental.TablePreview || config.Query.Enabled,
+		// The query API lists a source's tables from these links, so they are kept whenever data querying is on.
+		LinkAssets: config.Query.Enabled,
 		DB:         db,
 	}
 	if config.Plugins.Autoinstall {

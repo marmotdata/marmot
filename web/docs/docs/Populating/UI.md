@@ -1,51 +1,54 @@
 ---
 sidebar_position: 2
+title: Create a pipeline in the UI
 ---
 
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# UI
+# Create a pipeline in the UI
 
-The Runs page creates and manages [pipelines](Pipelines.md) from a form. It is the quickest way to try a plugin. A pipeline people rely on belongs in Terraform, so its definition has one owner.
-
-## Managing Pipelines
-
-The **Runs** page displays all pipelines with their status, schedule, and last run time. You can run, edit, or delete pipelines, and view run history in the **Run History** tab.
+The **Plugins** page creates and runs [pipelines](Pipelines.md) from a form, which is the quickest way to try a plugin. Every pipeline is listed there with its last run, recent runs, schedule and the assets it catalogs:
 
 <ThemedImg
   lightSrc="/img/ui-runs.png"
   darkSrc="/img/ui-runs-dark.png"
-  alt="Runs page"
+  alt="The Plugins page listing pipelines with their last run, recent runs, schedule and asset count, and Run now on each row"
+  size="panel"
 />
 
-## Creating a Pipeline
+## Create a pipeline
 
-Navigate to **Runs** and click **Create Pipeline** to open the pipeline wizard.
+1. On **Plugins**, select **Add plugin**, or pick a plugin under **Add a source**.
+2. Under **Choose plugin**, search for your source, select it and select **Continue**.
+3. Under **Basic info**, enter a **Pipeline name**, such as `marketplace-postgres`, and select **Continue**.
+4. Under **Configure**, fill in the connection details. **Test connection** lists what the plugin can see without changing the catalog. For a plugin marked **Supports querying**, turn on **Let agents and people query this source** if it should answer read-only queries. Select **Check and continue**.
+5. Under **Schedule and filters**, turn on **Run on a schedule** if it should run by itself, choose when the **First run** happens and select **Create pipeline**.
 
-### Step 1: Basic Info
-
-Enter a unique name for your pipeline, e.g. `daily-postgres-sync`.
-
-### Step 2: Choose Plugin
-
-Select the data source you want to discover assets from. Use the search box to quickly find the plugin you need.
+The plugin chosen:
 
 <ThemedImg
   lightSrc="/img/ui-choose-plugin.png"
   darkSrc="/img/ui-choose-plugin-dark.png"
-  alt="Choose Plugin step"
+  alt="The Choose plugin step of New pipeline, filtered to PostgreSQL"
+  size="panel"
 />
 
-### Step 3: Configure
-
-Configure the connection settings for your chosen plugin. Options vary by data source but typically include host, authentication, and discovery settings.
+The **Configure** step for a PostgreSQL source:
 
 <ThemedImg
   lightSrc="/img/ui-configure.png"
   darkSrc="/img/ui-configure-dark.png"
-  alt="Configure step"
+  alt="The Configure step for a PostgreSQL pipeline named marketplace-postgres, with host db.internal, user marmot_reader and the discovery switches"
+  size="panel"
 />
 
-### Step 4: Schedule
+Options differ by plugin. Each plugin's page in the [plugin registry](https://plugins.marmotdata.io) lists them.
 
-Set a CRON schedule for automated runs, or leave as manual to run on-demand.
+## Run and edit pipelines
+
+**Run now** on a pipeline's row starts it straight away. The menu on the row has **View runs**, for its run history and the log of each run, **Edit pipeline** and delete.
+
+## Next steps
+
+- [Pipelines](Pipelines.md): how pipelines run and how to declare them in Terraform.
+- [From the CLI](CLI.md): run a plugin from your own machine or CI and push the results.

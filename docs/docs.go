@@ -1730,74 +1730,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/assets/preview/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Fetches sample data from the asset's data source. Requires assets:preview permission.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get preview data for an asset",
-                "operationId": "getAssetsPreviewID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/PreviewResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Missing assets:preview permission",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "501": {
-                        "description": "Data preview not supported for this asset",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/assets/qualified-name/{name}": {
             "get": {
                 "security": [
@@ -7571,6 +7503,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/query/preview": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Finds a queryable source you may use that reaches the catalogued table, and the statement that previews it in that source's dialect.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "query"
+                ],
+                "summary": "Preview a table",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the table",
+                        "name": "asset_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/QueryAssetPreview"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/query/run": {
             "post": {
                 "security": [
@@ -7638,6 +7613,12 @@ const docTemplate = `{
                         "description": "The query was cancelled",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Marmot is still loading plugins after starting; retry after Retry-After",
+                        "schema": {
+                            "$ref": "#/definitions/QueryUnavailableResponse"
                         }
                     }
                 }
@@ -15494,27 +15475,6 @@ const docTemplate = `{
                 }
             }
         },
-        "PreviewResponse": {
-            "type": "object",
-            "properties": {
-                "column_names": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "rows": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {}
-                    }
-                },
-                "total_rows": {
-                    "type": "integer"
-                }
-            }
-        },
         "ProductImageMeta": {
             "type": "object",
             "properties": {
@@ -15737,6 +15697,17 @@ const docTemplate = `{
                     }
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryAssetPreview": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "statement": {
                     "type": "string"
                 }
             }
@@ -16270,6 +16241,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/PluginInstanceStatus"
                     }
+                }
+            }
+        },
+        "QueryUnavailableResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
                 }
             }
         },
@@ -17112,6 +17094,10 @@ const docTemplate = `{
                     "description": "ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
                     "type": "string"
                 },
+                "serving_connected": {
+                    "description": "ServingConnected reports, for a served source, whether its plugin holds a live connection to Marmot now; it is only filled in when schedules are read one at a time or listed.",
+                    "type": "boolean"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -17773,9 +17759,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "encryption_configured": {
-                    "type": "boolean"
-                },
-                "table_preview_enabled": {
                     "type": "boolean"
                 }
             }

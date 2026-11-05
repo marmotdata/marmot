@@ -88,7 +88,6 @@ const categories = ['catalog', 'identity', 'platform'];
 const actionLabels: Record<string, () => string> = {
 	view: m.roles_action_view,
 	manage: m.roles_action_manage,
-	preview: m.roles_action_preview,
 	query: m.roles_action_query,
 	viewneighbors: m.roles_action_view_neighbors,
 	emit: m.roles_action_emit,
@@ -102,7 +101,6 @@ const actionLabels: Record<string, () => string> = {
 const actionOrder = [
 	'view',
 	'viewneighbors',
-	'preview',
 	'query',
 	'read',
 	'use',

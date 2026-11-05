@@ -16,13 +16,18 @@ export default function prismIncludeLanguages(
   const PrismBefore = globalThis.Prism;
   globalThis.Prism = PrismObject;
 
+  // Grammars are required by name because webpack's context module for a template string did not include every component.
+  const grammars: Record<string, () => unknown> = {
+    bash: () => require("prismjs/components/prism-bash.js"),
+    hcl: () => require("prismjs/components/prism-hcl.js"),
+  };
   additionalLanguages.forEach((lang) => {
-    if (lang === "php") {
-      // eslint-disable-next-line global-require
-      require("prismjs/components/prism-markup-templating.js");
-    }
-    // eslint-disable-next-line global-require, import/no-dynamic-require
-    require(`prismjs/components/prism-${lang}`);
+    const load = grammars[lang];
+    if (!load) throw new Error(`Add a loader for the "${lang}" Prism grammar in src/theme/prism-include-languages.ts`);
+    load();
+    // The grammar can land on another Prism already on the window instead of the one assigned above, so copy it across.
+    const loaded = (globalThis as { Prism?: typeof PrismNamespace }).Prism?.languages[lang];
+    if (!PrismObject.languages[lang] && loaded) PrismObject.languages[lang] = loaded;
   });
 
   // Clear the global to avoid polluting global namespace.

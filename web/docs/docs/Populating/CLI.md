@@ -1,21 +1,21 @@
 ---
 sidebar_position: 3
+title: Run plugins from the CLI
 ---
 
-import { TipBox } from '@site/src/components/Steps';
 import { CliInstall } from '@site/src/components/CliInstall';
 
-# CLI
+# Run plugins from the CLI
 
-The `ingest` command discovers metadata from configured data sources and catalogs them as assets in Marmot. It supports multiple data sources, can establish lineage relationships between assets and can attach documentation to assets.
+`marmot ingest` runs plugins on the machine where you invoke it and pushes what they discover to Marmot, including lineage and documentation. Use it when the server can't reach a source, or to run ingestion in CI.
 
 ## Installation
 
 <CliInstall />
 
-See the [CLI Reference](/docs/cli) for configuring the host, API key and other global options.
+See the [CLI reference](/docs/cli) for configuring the host, API key and other global options.
 
-## Configuration File
+## Configuration file
 
 The ingest command requires a YAML configuration file that defines the data sources to ingest. The configuration follows this structure:
 
@@ -28,13 +28,9 @@ runs:
       # source-specific configuration
 ```
 
-Where `source_type` is one of the supported data source types. You can find all [available source types and their configuration in the Plugins documentation.](/docs/Plugins)
+`source_type` is a plugin ID from the [plugin registry](https://plugins.marmotdata.io), which lists each plugin's configuration. Give every pipeline a unique `name`: Marmot tracks what each pipeline has cataloged by its name.
 
-<TipBox variant="info" title="Pipeline Names">
-Give your pipeline a unique name. This is used to track the state of the ingestion.
-</TipBox>
-
-## Example: Ingesting Kafka Topics
+## Example: ingesting Kafka topics
 
 ```yaml
 runs:
@@ -60,7 +56,7 @@ This configuration connects to a Kafka broker at `kafka-broker:9092` with SASL P
 marmot ingest -c config.yaml
 ```
 
-### Credentials from the Environment
+### Credentials from the environment
 
 Any string value can refer to an environment variable as `${NAME}`, which keeps credentials out of the file:
 
@@ -77,7 +73,7 @@ runs:
 
 The CLI stops with an error if a referenced variable is not set, rather than connecting with an empty credential. Only the `${NAME}` form is expanded, so a plain `$` in a value is left as it is.
 
-## Where Plugins Run
+## Where plugins run
 
 Discovery runs wherever the CLI runs, not on the Marmot server. The CLI connects to your data sources directly and pushes the discovered assets to the Marmot API. This means the machine running `marmot ingest` needs network access to the data sources, while the Marmot server does not: it only receives the results.
 
@@ -86,7 +82,7 @@ On the first ingest, the CLI downloads the core plugins from `ghcr.io/marmotdata
 - `MARMOT_PLUGINS_AUTOINSTALL=false` disables the download, for example on air-gapped runners with pre-installed plugins
 - `MARMOT_PLUGINS_REGISTRY` installs from a registry mirror instead of GHCR
 
-## Serving Queries
+## Serving queries
 
 Add `--serve` and mark a run `queryable: true` to keep the CLI running after ingestion, answering Marmot's data queries from where it runs. The database credentials stay with the CLI and Marmot never connects to your network; see [Serving Queries from Your Network](../Configure/serving-plugins.md).
 

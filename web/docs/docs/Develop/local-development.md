@@ -1,4 +1,4 @@
-# Local Development
+# Local development
 
 1. Start PostgreSQL:
 

@@ -2,11 +2,11 @@
 sidebar_position: 5
 ---
 
-Using Pulumi with the Marmot Terraform provider provides a powerful "Data Catalog as Code" approach, allowing you to define, version control, and automate your data catalog infrastructure, or integrate with your existing infrastructure pipelines, all with the added benefits of your preferred programming language.
+Pulumi manages Marmot through the Marmot Terraform provider, so you can declare assets, lineage, glossary terms and data products in the language your infrastructure already uses and put every change through review.
 
-## Getting Started
+## Getting started
 
-### Setting Up the Provider
+### Setting up the provider
 
 First, add the Marmot Terraform provider to your Pulumi project:
 
@@ -16,11 +16,11 @@ $ pulumi package add terraform-provider marmotdata/marmot
 
 Follow the instructions provided to link the generated SDK into your project.
 
-### Using the Provider
+### Using the provider
 
 After adding the Marmot provider, you can use it in your Pulumi program:
 
-#### Go Example
+#### Go example
 
 ```go
 package main
@@ -72,7 +72,7 @@ func main() {
 }
 ```
 
-#### TypeScript Example
+#### TypeScript example
 
 ```typescript
 import * as pulumi from "@pulumi/pulumi";
@@ -109,7 +109,7 @@ export const databaseAssetId = databaseAsset.resourceId;
 export const databaseAssetMrn = databaseAsset.mrn;
 ```
 
-### Core Resources
+### Core resources
 
 The Marmot provider offers these primary resources:
 
@@ -121,7 +121,7 @@ Define data assets in your catalog. Refer to the [Terraform provider documentati
 
 Establish data lineage relationships between assets. Refer to the [Terraform provider documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/lineage) for all available configuration options.
 
-## Learn More
+## Learn more
 
 - [Pulumi Documentation](https://www.pulumi.com/docs/)
 - [Pulumi "Any Terraform Provider" Documentation](https://www.pulumi.com/registry/packages/terraform-provider/)

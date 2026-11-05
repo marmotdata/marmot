@@ -41,8 +41,7 @@ class TestUIConfigResponse(unittest.TestCase):
                     message = '',
                     variant = '', ),
                 default_language = '',
-                encryption_configured = True,
-                table_preview_enabled = True
+                encryption_configured = True
             )
         else:
             return UIConfigResponse(

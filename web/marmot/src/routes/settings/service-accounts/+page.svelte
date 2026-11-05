@@ -14,7 +14,6 @@
 	import { m } from '$lib/paraglide/messages';
 	import { listServiceAccounts, deleteServiceAccount } from '$lib/serviceaccounts/api';
 	import { rowMenu } from '$lib/users/cells';
-	import { roleLabel } from '$lib/users/format';
 	import { assetHref } from '$lib/assetrules/assets';
 	import type { ServiceAccount } from '$lib/serviceaccounts/types';
 	import CreateServiceAccountDrawer from '$components/serviceaccount/CreateServiceAccountDrawer.svelte';
@@ -83,21 +82,24 @@
 		{
 			key: 'name',
 			header: m.serviceaccounts_col_account(),
-			width: 200,
+			width: 212,
+			minWidth: 212,
 			href: (a) => resolve('/settings/service-accounts/[id]', { id: a.id })
 		},
-		{ key: 'description', header: m.common_description(), width: 340 },
+		{ key: 'description', header: m.common_description(), minWidth: 100 },
 		{
 			key: 'roles',
 			header: m.users_header_roles(),
-			width: 180,
-			value: (a) => (a.roles ?? []).map((r) => roleLabel(r.name)).join(', '),
+			width: 160,
+			minWidth: 160,
+			value: (a) => (a.roles ?? []).map((r) => r.name).join(', '),
 			empty: m.serviceaccounts_no_roles()
 		},
 		{
 			key: 'used_by',
 			header: m.serviceaccounts_col_used_by(),
-			width: 220,
+			width: 110,
+			minWidth: 96,
 			value: (a) => (a.used_by ?? []).map((g) => g.name).join(', '),
 			render: (a) =>
 				a.used_by?.length
@@ -113,18 +115,19 @@
 						>`
 					: html`<span class="mm-muted">${m.serviceaccounts_used_by_none()}</span>`
 		},
-		{ key: 'api_key_count', header: m.serviceaccounts_col_keys(), type: 'number', width: 100 },
 		{
 			key: 'last_used_at',
 			header: m.serviceaccounts_col_last_used(),
 			type: 'date',
-			width: 130,
+			width: 120,
+			minWidth: 120,
 			empty: m.common_never()
 		},
 		{
 			key: 'active',
 			header: m.common_status(),
-			width: 120,
+			width: 90,
+			minWidth: 80,
 			value: (a) => (a.active ? m.common_active() : m.common_inactive()),
 			render: (a) =>
 				a.active ? m.common_active() : html`<span class="mm-muted">${m.common_inactive()}</span>`
@@ -132,8 +135,8 @@
 		{
 			key: 'actions',
 			header: m.common_actions(),
-			width: 72,
-			minWidth: 72,
+			width: 80,
+			minWidth: 80,
 			align: 'end',
 			render: (a) =>
 				canManage

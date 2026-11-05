@@ -59,6 +59,10 @@ class Schedule(BaseModel):
         default=None,
         description="ServedByType and ServedByID name the principal whose plugin, running outside Marmot, serves this source's queries; nil when Marmot runs the plugin itself.",
     )
+    serving_connected: StrictBool | None = Field(
+        default=None,
+        description="ServingConnected reports, for a served source, whether its plugin holds a live connection to Marmot now; it is only filled in when schedules are read one at a time or listed.",
+    )
     updated_at: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
         "asset_count",
@@ -82,6 +86,7 @@ class Schedule(BaseModel):
         "queryable",
         "served_by_id",
         "served_by_type",
+        "serving_connected",
         "updated_at",
     ]
 
@@ -155,6 +160,7 @@ class Schedule(BaseModel):
                 "queryable": obj.get("queryable"),
                 "served_by_id": obj.get("served_by_id"),
                 "served_by_type": obj.get("served_by_type"),
+                "serving_connected": obj.get("serving_connected"),
                 "updated_at": obj.get("updated_at"),
             }
         )

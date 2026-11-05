@@ -28,9 +28,6 @@ type UIConfigResponse struct {
 
 	// encryption configured
 	EncryptionConfigured bool `json:"encryption_configured,omitempty"`
-
-	// table preview enabled
-	TablePreviewEnabled bool `json:"table_preview_enabled,omitempty"`
 }
 
 // Validate validates this UI config response

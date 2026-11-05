@@ -1,10 +1,15 @@
+---
+title: TLS
+description: Serve Marmot over HTTPS with your own certificate, and require client certificates with mutual TLS.
+---
+
 # TLS
 
-## Configuration
+Serve Marmot over HTTPS with your own certificate. Without a `tls` section the server stays on plain HTTP, which is fine behind a load balancer that terminates TLS.
 
-To enable TLS, provide a certificate and private key:
+## Use a certificate
 
-### YAML
+Point Marmot at a PEM certificate and its private key. Both are required:
 
 ```yaml
 server:
@@ -14,26 +19,16 @@ server:
     key_path: "/etc/ssl/private/marmot-key.pem"
 ```
 
-### Environment Variables
+Or with environment variables:
 
-```
+```bash
 MARMOT_SERVER_TLS_CERT_PATH=/etc/ssl/certs/marmot.pem
 MARMOT_SERVER_TLS_KEY_PATH=/etc/ssl/private/marmot-key.pem
 ```
 
-## Options
+## Require client certificates
 
-| Option                    | Description                                                                   | Default | Environment Variable             |
-| ------------------------- | ----------------------------------------------------------------------------- | ------- | -------------------------------- |
-| `server.tls.cert_path`    | Path to a PEM-encoded server certificate                                      | -       | `MARMOT_SERVER_TLS_CERT_PATH`    |
-| `server.tls.key_path`     | Path to the server certificate's private key                                  | -       | `MARMOT_SERVER_TLS_KEY_PATH`     |
-| `server.tls.ca_cert_path` | Path to a PEM-encoded CA certificate for verifying client certificates (mTLS) | -       | `MARMOT_SERVER_TLS_CA_CERT_PATH` |
-
-Both `cert_path` and `key_path` are required when TLS is enabled. Omitting the `tls` section entirely keeps the server on plain HTTP.
-
-## Mutual TLS (mTLS)
-
-To require clients to present a valid certificate, add `ca_cert_path` pointing to the CA that signed your client certificates:
+To accept only clients that present a certificate signed by your CA, add `ca_cert_path`. Marmot then rejects every request without a valid client certificate:
 
 ```yaml
 server:
@@ -44,4 +39,14 @@ server:
     ca_cert_path: "/etc/ssl/certs/client-ca.pem"
 ```
 
-When `ca_cert_path` is set, the server requires and verifies a client certificate on every request. Clients that do not present a certificate signed by the specified CA will be rejected.
+## Options
+
+| Key                       | Description                                            | Environment variable             |
+| ------------------------- | ------------------------------------------------------ | -------------------------------- |
+| `server.tls.cert_path`    | PEM-encoded server certificate                         | `MARMOT_SERVER_TLS_CERT_PATH`    |
+| `server.tls.key_path`     | The certificate's private key                          | `MARMOT_SERVER_TLS_KEY_PATH`     |
+| `server.tls.ca_cert_path` | CA certificate that client certificates must chain to  | `MARMOT_SERVER_TLS_CA_CERT_PATH` |
+
+## Next steps
+
+- [Configuration reference](index.md): every other server setting.

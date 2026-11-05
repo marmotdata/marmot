@@ -191,18 +191,6 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Get user's assets
         """
 
-    async def test_get_assets_preview_id(self) -> None:
-        """Test case for get_assets_preview_id
-
-        Get preview data for an asset
-        """
-
-    def test_get_assets_preview_id_sync(self) -> None:
-        """Test case for get_assets_preview_id (synchronous)
-
-        Get preview data for an asset
-        """
-
     async def test_get_assets_qualified_name_qualified_name(self) -> None:
         """Test case for get_assets_qualified_name_qualified_name
 

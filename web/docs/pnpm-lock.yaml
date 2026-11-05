@@ -59,6 +59,9 @@ importers:
       '@docusaurus/core':
         specifier: 3.10.2
         version: 3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)
+      '@docusaurus/plugin-client-redirects':
+        specifier: 3.10.2
+        version: 3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)
       '@docusaurus/plugin-content-blog':
         specifier: 3.10.2
         version: 3.10.2(@docusaurus/plugin-content-docs@3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3))(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)
@@ -78,20 +81,20 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2(react@19.3.1)
       '@marmotdata/css':
-        specifier: ^0.1.4
-        version: 0.1.4
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/elements':
-        specifier: ^0.1.4
-        version: 0.1.4
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/icons':
-        specifier: ^0.1.4
-        version: 0.1.4
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/react':
-        specifier: ^0.1.4
-        version: 0.1.4(@types/react@19.2.14)(react@19.3.1)
+        specifier: ^0.1.8
+        version: 0.1.8(@types/react@19.2.14)(react@19.3.1)
       '@marmotdata/tokens':
-        specifier: ^0.1.4
-        version: 0.1.4
+        specifier: ^0.1.8
+        version: 0.1.8
       '@mdx-js/react':
         specifier: ^3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.3.1)
@@ -1243,6 +1246,13 @@ packages:
       react: '*'
       react-dom: '*'
 
+  '@docusaurus/plugin-client-redirects@3.10.2':
+    resolution: {integrity: sha512-z5I5ttCXw+8y2gHVZvqAMmUw4Rb0ZzKA5eCPk87SfM/jCKOTvE24yDpPAwwipvug96ij7mOwEHXWw8G4LlWdGA==}
+    engines: {node: '>=20.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
   '@docusaurus/plugin-content-blog@3.10.2':
     resolution: {integrity: sha512-0cbEnNKf0InmLkhj/+nVRmqEnWEoOE8Mh+2x1qOXI0qYpCnphq4RXknVJ8BvybKRXqYVvbmdMfiJSup+k4tm5w==}
     engines: {node: '>=20.0'}
@@ -1599,22 +1609,22 @@ packages:
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
-  '@marmotdata/css@0.1.4':
-    resolution: {integrity: sha512-mTf9b70Z3W/z6g4taMNQ3OkojljQ1isltHV7DDygTeu9QkKuxrfKXjWN1JBYwiVN4CCiASVH+K9bai0cjuhYkw==}
+  '@marmotdata/css@0.1.8':
+    resolution: {integrity: sha512-uW/9nnvIYosIyMHcv2jTBqXN716qoWeI8At6gx+eFUH1GDtQoYHZhzcl+Fe2yr37DYHCjHxaYVv3H8H1d+0/jA==}
 
-  '@marmotdata/elements@0.1.4':
-    resolution: {integrity: sha512-jjQDdLjuAVb7f3Sbs+yrdUwFq/IWhyb5IkSDmlWMA3h7QX7+lWLoUm0fMXUgSfQ/pridJeN4U/4b06/ClFEiEQ==}
+  '@marmotdata/elements@0.1.8':
+    resolution: {integrity: sha512-Omb3buX+2yMY72z77aUvEk3pQmhI4yy+Gu466VMfPExBNWmr61dEeH7W26w/DLLDk6ggW320mGXEX4yQHn3kUg==}
 
-  '@marmotdata/icons@0.1.4':
-    resolution: {integrity: sha512-9xu/R0g1jdk1EVMOlBUl4Q6QIKA2+lSzmGo9buDbNKg2zMD7y7XjRQXlLGZmIVgrZKfl6FCyKFLMp4tFfR/Wkw==}
+  '@marmotdata/icons@0.1.8':
+    resolution: {integrity: sha512-zSPSWwfNPpCztuz9VE5iKxW1pmVJ7ehngMmJelkNgHptN2PMaB4/fz+BqGt0ZxF14u06oUDNlShH9mPYvvd8ew==}
 
-  '@marmotdata/react@0.1.4':
-    resolution: {integrity: sha512-BRHL33P/Z8TxKMzhPf1mFEeRyhl6Vqc7vACMjLTDE30vSO7MNl0ivVKmF2/QtCjHJB9KVEyaXs/++ibC76x/qQ==}
+  '@marmotdata/react@0.1.8':
+    resolution: {integrity: sha512-t00lSTyEE3gI+Z2a+RcilJvVHtbYLylas5t6vFqc8Xh5UflnsLWuATaFe/euNepRR7Y3RMAs9X5HZaslHahM+w==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  '@marmotdata/tokens@0.1.4':
-    resolution: {integrity: sha512-TPiDwJziS8rGGkYOivR1ZJ9EcKOsm/V+thTyajPWHb9WbPqONam8pAurI/G6pd+aBt/mJDCUEYDr4waDUUDxsw==}
+  '@marmotdata/tokens@0.1.8':
+    resolution: {integrity: sha512-zecFqh5QNDLN9B1VHo6yOV39ATd6btIAsL+W4gB7fwJ6j0XydxFUaw8FVYDYoOFoE/UnXeqX2SWSZjCh2/NMZA==}
 
   '@mdx-js/mdx@3.1.1':
     resolution: {integrity: sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ==}
@@ -3731,9 +3741,6 @@ packages:
   lit-html@3.3.2:
     resolution: {integrity: sha512-Qy9hU88zcmaxBXcc10ZpdK7cOLXvXpRoBxERdtqV9QOrfpMZZ6pSYP91LhpPtap3sFMUiL7Tw2RImbe0Al2/kw==}
 
-  lit@3.3.2:
-    resolution: {integrity: sha512-NF9zbsP79l4ao2SNrH3NkfmFgN/hBYSQo90saIVI1o5GpjAdCPVstVzO1MrLOakHoEhYkrtRjPK6Ob521aoYWQ==}
-
   lit@3.3.3:
     resolution: {integrity: sha512-fycuvZg/hkpozL00lm1pEJH5nN/lr9ZXd6mJI2HSN4+Bzc+LDNdEApJ6HFbPkdFNHLvOplIIuJvxkS4XUxqirw==}
 
@@ -5569,6 +5576,9 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tslib@2.9.1:
+    resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
+
   tsyringe@4.10.0:
     resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
     engines: {node: '>= 6.0.0'}
@@ -7253,7 +7263,7 @@ snapshots:
       '@docusaurus/utils': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       babel-plugin-dynamic-import-node: 2.3.3
       fs-extra: 11.3.4
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -7285,7 +7295,7 @@ snapshots:
       postcss-loader: 7.3.4(postcss@8.5.29)(typescript@5.8.3)(webpack@5.104.1)
       postcss-preset-env: 10.6.1(postcss@8.5.29)
       terser-webpack-plugin: 5.5.0(webpack@5.104.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       url-loader: 4.1.1(file-loader@6.2.0(webpack@5.104.1))(webpack@5.104.1)
       webpack: 5.104.1
       webpackbar: 7.0.0(webpack@5.104.1)
@@ -7372,12 +7382,12 @@ snapshots:
       cssnano-preset-advanced: 6.1.2(postcss@8.5.29)
       postcss: 8.5.29
       postcss-sort-media-queries: 5.2.0(postcss@8.5.29)
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@docusaurus/logger@3.10.2':
     dependencies:
       chalk: 4.1.2
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@docusaurus/mdx-loader@3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
@@ -7401,7 +7411,7 @@ snapshots:
       remark-frontmatter: 5.0.0
       remark-gfm: 4.0.1
       stringify-object: 3.3.0
-      tslib: 2.8.1
+      tslib: 2.9.1
       unified: 11.0.5
       unist-util-visit: 5.1.0
       url-loader: 4.1.1(file-loader@6.2.0(webpack@5.104.1))(webpack@5.104.1)
@@ -7430,6 +7440,37 @@ snapshots:
       - esbuild
       - supports-color
       - uglify-js
+      - webpack-cli
+
+  '@docusaurus/plugin-client-redirects@3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)':
+    dependencies:
+      '@docusaurus/core': 3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)
+      '@docusaurus/logger': 3.10.2
+      '@docusaurus/utils': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@docusaurus/utils-common': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@docusaurus/utils-validation': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      eta: 2.2.0
+      fs-extra: 11.3.4
+      lodash: 4.18.1
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - '@docusaurus/faster'
+      - '@mdx-js/react'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - bufferutil
+      - csso
+      - debug
+      - esbuild
+      - lightningcss
+      - supports-color
+      - typescript
+      - uglify-js
+      - utf-8-validate
       - webpack-cli
 
   '@docusaurus/plugin-content-blog@3.10.2(@docusaurus/plugin-content-docs@3.10.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3))(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.8.3)':
@@ -7524,7 +7565,7 @@ snapshots:
       fs-extra: 11.3.4
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       webpack: 5.104.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
@@ -7550,7 +7591,7 @@ snapshots:
       '@docusaurus/types': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@docusaurus/utils': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@docusaurus/utils-validation': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7580,7 +7621,7 @@ snapshots:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       react-json-view-lite: 2.5.0(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7606,7 +7647,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7632,7 +7673,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7658,7 +7699,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7689,7 +7730,7 @@ snapshots:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       sitemap: 7.1.3
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
       - '@mdx-js/react'
@@ -7718,7 +7759,7 @@ snapshots:
       '@svgr/webpack': 8.1.0(typescript@5.8.3)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       webpack: 5.104.1
     transitivePeerDependencies:
       - '@docusaurus/faster'
@@ -7811,7 +7852,7 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
       react-router-dom: 5.3.4(react@19.3.1)
       rtlcss: 4.3.0
-      tslib: 2.8.1
+      tslib: 2.9.1
       utility-types: 3.11.0
     transitivePeerDependencies:
       - '@docusaurus/faster'
@@ -7874,7 +7915,7 @@ snapshots:
       lodash: 4.18.1
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
       utility-types: 3.11.0
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -7900,7 +7941,7 @@ snapshots:
   '@docusaurus/theme-translations@3.10.2':
     dependencies:
       fs-extra: 11.3.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@docusaurus/tsconfig@3.10.2': {}
 
@@ -7928,7 +7969,7 @@ snapshots:
   '@docusaurus/utils-common@3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@docusaurus/types': 3.10.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -7947,7 +7988,7 @@ snapshots:
       joi: 17.13.9
       js-yaml: 4.3.2
       lodash: 4.18.1
-      tslib: 2.8.1
+      tslib: 2.9.1
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -7976,7 +8017,7 @@ snapshots:
       p-queue: 6.6.2
       prompts: 2.4.2
       resolve-pathname: 3.0.0
-      tslib: 2.8.1
+      tslib: 2.9.1
       url-loader: 4.1.1(file-loader@6.2.0(webpack@5.104.1))(webpack@5.104.1)
       utility-types: 3.11.0
       webpack: 5.104.1
@@ -8233,7 +8274,7 @@ snapshots:
   '@lit-labs/virtualizer@2.1.1':
     dependencies:
       lit: 3.3.3
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@lit/react@1.0.8(@types/react@19.2.14)':
     dependencies:
@@ -8245,11 +8286,11 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.4': {}
 
-  '@marmotdata/css@0.1.4':
+  '@marmotdata/css@0.1.8':
     dependencies:
-      '@marmotdata/tokens': 0.1.4
+      '@marmotdata/tokens': 0.1.8
 
-  '@marmotdata/elements@0.1.4':
+  '@marmotdata/elements@0.1.8':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
@@ -8264,8 +8305,8 @@ snapshots:
       '@floating-ui/dom': 1.8.0
       '@lezer/highlight': 1.2.5
       '@lit-labs/virtualizer': 2.1.1
-      '@marmotdata/icons': 0.1.4
-      '@marmotdata/tokens': 0.1.4
+      '@marmotdata/icons': 0.1.8
+      '@marmotdata/tokens': 0.1.8
       '@tanstack/virtual-core': 3.19.8
       codemirror: 6.0.2
       d3-array: 3.2.4
@@ -8275,22 +8316,22 @@ snapshots:
       d3-shape: 3.2.0
       d3-zoom: 3.0.0
       lit: 3.3.3
-      tslib: 2.8.1
+      tslib: 2.9.1
 
-  '@marmotdata/icons@0.1.4':
+  '@marmotdata/icons@0.1.8':
     dependencies:
       lit: 3.3.3
-      tslib: 2.8.1
+      tslib: 2.9.1
 
-  '@marmotdata/react@0.1.4(@types/react@19.2.14)(react@19.3.1)':
+  '@marmotdata/react@0.1.8(@types/react@19.2.14)(react@19.3.1)':
     dependencies:
       '@lit/react': 1.0.8(@types/react@19.2.14)
-      '@marmotdata/elements': 0.1.4
+      '@marmotdata/elements': 0.1.8
       react: 19.3.1
     transitivePeerDependencies:
       - '@types/react'
 
-  '@marmotdata/tokens@0.1.4': {}
+  '@marmotdata/tokens@0.1.8': {}
 
   '@mdx-js/mdx@3.1.1':
     dependencies:
@@ -8350,21 +8391,21 @@ snapshots:
       '@peculiar/asn1-x509': 2.6.1
       '@peculiar/asn1-x509-attr': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-csr@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-ecc@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-pfx@2.6.1':
     dependencies:
@@ -8373,14 +8414,14 @@ snapshots:
       '@peculiar/asn1-rsa': 2.6.1
       '@peculiar/asn1-schema': 2.6.0
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-pkcs8@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-pkcs9@2.6.1':
     dependencies:
@@ -8391,34 +8432,34 @@ snapshots:
       '@peculiar/asn1-x509': 2.6.1
       '@peculiar/asn1-x509-attr': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-rsa@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-schema@2.6.0':
     dependencies:
       asn1js: 3.0.10
       pvtsutils: 1.3.6
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-x509-attr@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.1
       asn1js: 3.0.10
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/asn1-x509@2.6.1':
     dependencies:
       '@peculiar/asn1-schema': 2.6.0
       asn1js: 3.0.10
       pvtsutils: 1.3.6
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   '@peculiar/x509@1.14.3':
     dependencies:
@@ -8431,7 +8472,7 @@ snapshots:
       '@peculiar/asn1-x509': 2.6.1
       pvtsutils: 1.3.6
       reflect-metadata: 0.2.2
-      tslib: 2.8.1
+      tslib: 2.9.1
       tsyringe: 4.10.0
 
   '@pnpm/config.env-replace@1.1.0': {}
@@ -8994,7 +9035,7 @@ snapshots:
     dependencies:
       pvtsutils: 1.3.6
       pvutils: 1.1.5
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   astring@1.9.0: {}
 
@@ -9181,7 +9222,7 @@ snapshots:
   camel-case@4.1.2:
     dependencies:
       pascal-case: 3.1.2
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   camelcase-css@2.0.1: {}
 
@@ -9798,7 +9839,7 @@ snapshots:
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   dot-prop@6.0.1:
     dependencies:
@@ -10141,7 +10182,7 @@ snapshots:
 
   giscus@1.6.0:
     dependencies:
-      lit: 3.3.2
+      lit: 3.3.3
 
   github-slugger@1.5.0: {}
 
@@ -10690,12 +10731,6 @@ snapshots:
     dependencies:
       '@types/trusted-types': 2.0.7
 
-  lit@3.3.2:
-    dependencies:
-      '@lit/reactive-element': 2.1.2
-      lit-element: 4.2.2
-      lit-html: 3.3.2
-
   lit@3.3.3:
     dependencies:
       '@lit/reactive-element': 2.1.2
@@ -10738,7 +10773,7 @@ snapshots:
 
   lower-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   lowercase-keys@3.0.0: {}
 
@@ -11371,7 +11406,7 @@ snapshots:
   no-case@3.0.4:
     dependencies:
       lower-case: 2.0.2
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   node-emoji@2.2.0:
     dependencies:
@@ -11542,7 +11577,7 @@ snapshots:
   param-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   parent-module@1.0.1:
     dependencies:
@@ -11581,7 +11616,7 @@ snapshots:
   pascal-case@3.1.2:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   path-browserify@1.0.1: {}
 
@@ -11634,7 +11669,7 @@ snapshots:
       bytestreamjs: 2.0.1
       pvtsutils: 1.3.6
       pvutils: 1.1.5
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   pluralize@8.0.0: {}
 
@@ -12164,7 +12199,7 @@ snapshots:
 
   pvtsutils@1.3.6:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   pvutils@1.1.5: {}
 
@@ -12731,7 +12766,7 @@ snapshots:
   snake-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.9.1
 
   sockjs@0.3.24:
     dependencies:
@@ -13007,6 +13042,8 @@ snapshots:
   tslib@1.14.1: {}
 
   tslib@2.8.1: {}
+
+  tslib@2.9.1: {}
 
   tsyringe@4.10.0:
     dependencies:

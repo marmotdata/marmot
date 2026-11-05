@@ -1,9 +1,9 @@
 ---
 sidebar_position: 9
-title: Serving Queries from Your Network
+title: Serving queries from your network
 ---
 
-# Serving Queries from Your Network
+# Serving queries from your network
 
 A queryable source normally runs its plugin on the Marmot server, which means the server needs network access to the database and holds its credentials. When that is not possible or not wanted, run the plugin yourself, next to the database, and let it serve Marmot's queries from there. The plugin keeps the credentials, and Marmot never connects to your network: the plugin dials out to Marmot and answers queries over that connection.
 
@@ -15,7 +15,7 @@ marmot plugin -c pipeline.yaml --serve
 
 `marmot plugin` is another name for `marmot ingest`. It ingests as usual, then stays running and answers queries for the run marked `queryable: true`.
 
-## Enabling It on the Server
+## Enabling it on the server
 
 Serving is off by default. Turn it on in the server config:
 
@@ -39,7 +39,7 @@ Serving requires the [encryption key](../Deploy/Helm.md#encryption-key), which p
 
 On Kubernetes, set `config.query.serve.enabled: true` in the Helm values. The chart opens the port, creates a `<release>-serve` Service and gives each replica the address its peers forward queries to.
 
-## Running a Serving Plugin
+## Running a serving plugin
 
 Mark one run in the pipeline as queryable and keep its credentials in the environment:
 
@@ -69,7 +69,7 @@ marmot plugin -c warehouse.yaml --serve
 
 Because it is the normal CLI, it runs anywhere the CLI runs: a VM under systemd, a Docker container, a pod you manage yourself or a CI runner. It needs outbound access to Marmot's API and serve port and to the database; it listens on no port. Stop it with `SIGTERM` or `SIGINT`.
 
-### With the Kubernetes Operator
+### With the Kubernetes operator
 
 Set `serve: true` on a `Run`. The operator runs it as a single-replica Deployment instead of a Job, so it ingests when it starts and then serves:
 
@@ -121,7 +121,7 @@ config:
       public_address: "serve.marmot.example.com:8443"
 ```
 
-When the serve port has a different host name to the API, set `public_address` so plugins know where to dial. With more than one Marmot replica, a plugin connects to one of them and the others forward its queries there, so replicas must reach each other on the serve port; the chart sets this up.
+When the serve port has a different host name to the API, set `public_address` so plugins know where to dial. The plugin sends that host name as the TLS server name (SNI), so one TLS passthrough proxy can route connections for several Marmot instances by name. It still checks Marmot's certificate against Marmot's own CA and instance name rather than the host name, so a connection routed to the wrong instance fails its handshake instead of reaching it. With more than one Marmot replica, a plugin connects to one of them and the others forward its queries there, so replicas must reach each other on the serve port; the chart sets this up.
 
 To keep a serving pod to exactly the traffic it needs, a NetworkPolicy like this allows egress to Marmot, DNS and the database and nothing inbound:
 
@@ -158,11 +158,11 @@ spec:
         - port: 5432
 ```
 
-## Giving the Database the Least Access
+## Giving the database the least access
 
 Marmot runs every statement through the plugin's read-only path, but the database account is what really decides what a query can do. Connect with an account that can only read the tables you want to expose. On PostgreSQL that means a role granted `SELECT` on those tables, or `pg_read_all_data`, rather than relying on read-only transactions, which a session can switch off.
 
-## Stopping a Serving Plugin
+## Stopping a serving plugin
 
 Every Marmot replica rechecks its serving connections every 15 seconds, so any of these cuts a plugin off within that time:
 
@@ -172,7 +172,7 @@ Every Marmot replica rechecks its serving connections every 15 seconds, so any o
 
 The check costs one database query per replica every 15 seconds however many keys you have, and nothing at all happens until a credential is actually revoked. API keys created before Marmot indexed keys cannot be watched this way, so they are refused for serving; create a new key.
 
-## Rotating the Serving Keys
+## Rotating the serving keys
 
 Marmot secures serving with two keys of its own: a certificate authority that issues the short-lived certificates, and a key that signs every query. Rotate them with:
 
@@ -185,7 +185,7 @@ A rotation is graceful by default. The new keys are published at once but only u
 
 If a key may have been compromised, rotate with `--immediate`. Marmot switches to new keys at once, stops trusting the old ones and closes every connection made under them. A running plugin will not accept keys it was never told about, so restart every serving plugin afterwards.
 
-## Keeping the Keys in a KMS
+## Keeping the keys in a KMS
 
 By default the serving keys are generated by Marmot and stored in its database, encrypted with the server encryption key. To keep them out of Marmot entirely, create two ECDSA P-256 keys in a KMS and name them:
 
@@ -207,7 +207,7 @@ query:
 These are the same key URIs cosign uses. Marmot then stores only the URIs and asks the KMS to sign each certificate and query, so a copy of Marmot's database and encryption key is no longer enough to impersonate Marmot to your plugins. The KMS keys are used when serving first starts; to move existing keys into a KMS, or to change KMS keys later, rotate with `--ca-key-uri` and `--signing-key-uri`. Marmot refuses a rotation that would take keys out of a KMS and back into its database.
 
 
-## How It Is Secured
+## How it is secured
 
 The plugin never listens on a port, so there is nothing for anyone to connect to. Everything else protects the one connection it makes to Marmot.
 
@@ -221,6 +221,6 @@ The plugin never listens on a port, so there is nothing for anyone to connect to
 
 **Limits on both sides.** The plugin stops at the row limit Marmot signed whatever the database returns, and both sides cap a result at 256 MiB.
 
-**Audit.** Marmot records every query in its query log as usual. The plugin logs each query it serves with the same query id, the user, a hash of the statement and the row count, so the two records can be matched.
+**Audit.** Marmot records every query in **Query audit** as usual. The plugin logs each query it serves with the same query id, the user, a hash of the statement and the row count, so the two records can be matched.
 
 **The plugin itself.** Marmot and the CLI refuse a plugin binary that another user could have written, check its SHA-256 on every launch, talk to it over mutual TLS on a private Unix socket and pass it the environment without Marmot's own `MARMOT_` variables. Core plugins are pinned by digest in each Marmot release and installed only by that digest.

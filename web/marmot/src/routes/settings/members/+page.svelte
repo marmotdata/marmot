@@ -16,7 +16,6 @@
 	import { m } from '$lib/paraglide/messages';
 	import { html, nothing } from 'lit';
 	import { rowMenu } from '$lib/users/cells';
-	import { roleLabel, signInMethods } from '$lib/users/format';
 	import { renewInvite, withdrawInvite } from '$lib/users/invites';
 	import type { Invitation, MemberStatus, User } from '$lib/users/types';
 	import type { Role } from '$lib/roles/types';
@@ -172,7 +171,8 @@
 		{
 			key: 'name',
 			header: m.members_col_member(),
-			width: 220,
+			width: 200,
+			minWidth: 170,
 			value: (u) => u.name || u.username,
 			render: (u) =>
 				html`<mm-owner-chip
@@ -187,17 +187,19 @@
 					}`
 		},
 		{ key: 'email', header: m.members_col_email() },
-		{ key: 'username', header: m.members_col_username(), width: 150 },
+		{ key: 'username', header: m.members_col_username(), width: 130, minWidth: 120 },
 		{
 			key: 'roles',
 			header: m.users_header_roles(),
-			width: 150,
-			value: (u) => u.roles.map((r) => roleLabel(r.name)).join(', ')
+			width: 120,
+			minWidth: 100,
+			value: (u) => u.roles.map((r) => r.name).join(', ')
 		},
 		{
 			key: 'active',
 			header: m.common_status(),
-			width: 130,
+			width: 104,
+			minWidth: 100,
 			value: statusLabel,
 			// No pill: none of these states is a problem that needs attention
 			render: (u) =>
@@ -206,23 +208,18 @@
 					: statusLabel(u)
 		},
 		{
-			key: 'signin',
-			header: m.members_col_signs_in_with(),
-			width: 140,
-			value: (u) => signInMethods(u)
-		},
-		{
 			key: 'last_seen_at',
 			header: m.members_col_last_seen(),
 			type: 'date',
-			width: 130,
+			width: 124,
+			minWidth: 124,
 			empty: '–'
 		},
 		{
 			key: 'actions',
 			header: m.common_actions(),
-			width: 72,
-			minWidth: 72,
+			width: 80,
+			minWidth: 80,
 			align: 'end',
 			render: (u) => {
 				if (!canManage || u.id === currentUserId) return nothing;
@@ -314,7 +311,7 @@
 		>
 			<mm-option value="all" label={m.members_all_roles()}></mm-option>
 			{#each roles as role (role.id)}
-				<mm-option value={role.id} label={roleLabel(role.name)}></mm-option>
+				<mm-option value={role.id} label={role.name}></mm-option>
 			{/each}
 		</mm-select>
 		<mm-select

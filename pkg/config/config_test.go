@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 // Load runs once per process, so this must stay the only test calling it.
 func TestLoad_DCRAllowedRedirectHostsFromEnv(t *testing.T) {
@@ -75,5 +78,24 @@ func TestValidate_DCRAllowedRedirectHostsNormalised(t *testing.T) {
 	got := cfg.Auth.DCR.AllowedRedirectHosts
 	if got[0] != "claude.ai" || got[1] != "example.com:8443" {
 		t.Fatalf("expected trimmed lowercase entries, got %v", got)
+	}
+}
+
+// Config loading is not strict, so files written before server.tls.insecure_skip_verify was removed still load.
+func TestLoadConfig_IgnoresRemovedServerTLSSkipVerify(t *testing.T) {
+	saved := config
+	t.Cleanup(func() { config = saved })
+
+	path := t.TempDir() + "/config.yaml"
+	body := "server:\n  tls:\n    cert_path: /certs/tls.crt\n    key_path: /certs/tls.key\n    insecure_skip_verify: true\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	if err := loadConfig(path); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if config.Server.TLS == nil || config.Server.TLS.CertPath != "/certs/tls.crt" || config.Server.TLS.KeyPath != "/certs/tls.key" {
+		t.Fatalf("unexpected server tls: %+v", config.Server.TLS)
 	}
 }

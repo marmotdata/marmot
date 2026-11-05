@@ -1,24 +1,14 @@
 ---
 sidebar_position: 0
 title: Docker Compose
+description: Run Marmot and PostgreSQL together with Docker Compose, with an encryption key for stored credentials.
 ---
 
 # Docker Compose
 
-Deploy Marmot and PostgreSQL together with Docker Compose.
+Run Marmot and PostgreSQL together with Docker Compose. Unlike the [quick start](../quick-start.md), this setup encrypts the credentials Marmot stores.
 
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
-import { Steps, Step, TipBox } from '@site/src/components/Steps';
-
-<CalloutCard
-  title="Looking for a Quick Test?"
-  description="Try the Quick Start guide for a simple local setup without encryption."
-  docId="quick-start"
-  buttonText="Quick Start"
-  icon="mdi:rocket-launch"
-/>
-
-## Quick Start
+import { Steps, Step } from '@site/src/components/Steps';
 
 <Steps>
 <Step title="Install the CLI">
@@ -30,18 +20,16 @@ curl -fsSL get.marmotdata.io | sh
 </Step>
 <Step title="Generate an encryption key">
 
-Marmot encrypts sensitive credentials stored in your catalog:
+Marmot encrypts the credentials it stores with this key. Keep it somewhere safe, because losing it means re-entering every stored credential:
 
 ```bash
 marmot generate-encryption-key
 ```
 
-Save this key securely. You'll need it in the next step.
-
 </Step>
-<Step title="Create your compose file">
+<Step title="Create your Compose file">
 
-Create a `docker-compose.yaml`:
+Save this as `docker-compose.yaml`:
 
 ```yaml
 services:
@@ -82,11 +70,11 @@ volumes:
 </Step>
 <Step title="Create your environment file">
 
-Create a `.env` file in the same directory:
+Save this as `.env` in the same directory:
 
 ```bash
-POSTGRES_PASSWORD=your-secure-password
-MARMOT_ENCRYPTION_KEY=your-generated-key
+POSTGRES_PASSWORD=<database-password>
+MARMOT_ENCRYPTION_KEY=<encryption-key>
 ```
 
 </Step>
@@ -97,45 +85,15 @@ docker compose up -d
 ```
 
 </Step>
-<Step title="Access the UI">
+<Step title="Sign in">
 
-Open [http://localhost:8080](http://localhost:8080) in your browser.
+Open [http://localhost:8080](http://localhost:8080) and sign in as `admin` with the password `admin`. Marmot asks you to choose a new password straight away.
 
 </Step>
 </Steps>
 
-<TipBox variant="info" title="Default Credentials">
-The default username and password is **admin:admin**. Change this after your first login.
-</TipBox>
+## Next steps
 
----
-
-## Reference
-
-For all configuration options, see the [configuration guide](/docs/Configure).
-
-## Next Steps
-
-<DocCardGrid>
-<DocCard
-  title="Add Data with Plugins"
-  description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
-  docId="Plugins/index"
-  icon="mdi:puzzle"
-/>
-<DocCard
-  title="Configure Authentication"
-  description="Set up SSO with GitHub, Google, Okta and more"
-  docId="Configure/Authentication/index"
-  icon="mdi:shield-account"
-/>
-</DocCardGrid>
-
-<CalloutCard
-  title="Need Help?"
-  description="Join the Discord community to get support and connect with other Marmot users."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+- [Configuration reference](../Configure/index.md): every setting and its environment variable.
+- [Plugins](../Plugins/index.md): catalog your first source.
+- [Single sign-on](../Configure/Authentication/index.md): let your team sign in with your identity provider.

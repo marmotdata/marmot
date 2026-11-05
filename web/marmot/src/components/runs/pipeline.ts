@@ -75,6 +75,10 @@ export interface Pipeline {
 	last_run_status?: string;
 	next_run_at?: string;
 	managed_by?: string;
+	/** Set when a plugin running outside Marmot serves this source's queries. */
+	served_by_id?: string;
+	/** Whether that plugin holds a live connection now. */
+	serving_connected?: boolean;
 	description?: string;
 	owner_type?: 'user' | 'team';
 	owner_id?: string;

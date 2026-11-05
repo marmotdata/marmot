@@ -1,24 +1,17 @@
 ---
 sidebar_position: 7
-title: Kubernetes Operator
+title: Kubernetes operator
 ---
 
-# Kubernetes Operator
+# Kubernetes operator
 
-Ingest assets into your catalog declaratively using the Marmot Operator.
-
-import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
-import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
-
-Instead of running `marmot ingest` from a CLI script or the UI, the operator lets you define ingestion pipelines as Kubernetes resources. Each pipeline discovers assets from a data source and syncs them into Marmot, while the cluster handles scheduling, retries and lifecycle for you. Pipeline config lives alongside your other manifests, so changes go through the same review and GitOps workflow as everything else.
+The Marmot operator runs pipelines as Kubernetes resources instead of from the CLI or the UI. Each pipeline discovers assets from a data source and syncs them into Marmot, while the cluster handles scheduling, retries and lifecycle for you. Pipeline config lives alongside your other manifests, so changes go through the same review and GitOps workflow as everything else.
 
 The operator watches `Run` resources and reconciles them into Kubernetes Jobs or CronJobs. Each ingestion job runs as its own pod, so you can scope credentials per data source rather than giving a single Marmot instance access to all your assets. Separate pods also keep large or frequent ingestion runs from competing with each other.
 
-<TipBox variant="info" title="Prerequisites">
-The operator is deployed alongside Marmot via the Helm chart. See the [Helm / Kubernetes](/docs/Deploy/Helm) guide to install Marmot first.
-</TipBox>
+The operator is deployed with Marmot by the Helm chart, so [install Marmot with Helm](/docs/Deploy/Helm) first.
 
-## Enabling the Operator
+## Enabling the operator
 
 Enable the operator in your Helm values:
 
@@ -79,7 +72,7 @@ Variables starting with `MARMOT_` are reserved for the operator and are rejected
 
 Ingestion pods authenticate to Marmot with their ServiceAccount token. That identity can only start and complete runs and write assets, lineage and documentation, so a token taken from an ingestion pod cannot administer Marmot.
 
-## Pod Labels and Annotations
+## Pod labels and annotations
 
 Use `podLabels` and `podAnnotations` to integrate ingestion pods with service meshes, observability tools or policy engines.
 
@@ -97,7 +90,7 @@ spec:
         region: "eu-west-1"
 ```
 
-## Manual Triggers
+## Manual triggers
 
 Trigger a scheduled pipeline outside its cron window by annotating the Run:
 
@@ -107,13 +100,13 @@ kubectl annotate run my-pipeline runs.marmotdata.io/trigger=true
 
 This creates a temporary Job that runs immediately and cleans up after 60 seconds.
 
-## Teardown on Delete
+## Teardown on delete
 
 By default, deleting a Run resource runs `marmot ingest --destroy` to remove all assets that pipeline previously discovered from Marmot. Set `teardownOnDelete: false` if you want to keep existing assets after removing the Run.
 
 ## Reference
 
-### Run Spec
+### Run spec
 
 | Field                        | Type                                                                                                                      | Default  | Description                                                     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
@@ -132,7 +125,7 @@ By default, deleting a Run resource runs `marmot ingest --destroy` to remove all
 | `podAnnotations`             | map                                                                                                                       |          | Additional annotations applied to the pod template              |
 | `teardownOnDelete`           | boolean                                                                                                                   | `true`   | Run `marmot ingest --destroy` when the Run is deleted           |
 
-### Operator Helm Values
+### Operator Helm values
 
 | Key                       | Default                | Description                               |
 | ------------------------- | ---------------------- | ----------------------------------------- |
@@ -143,19 +136,7 @@ By default, deleting a Run resource runs `marmot ingest --destroy` to remove all
 | `operator.marmot.url`     | auto-detected          | Marmot API URL passed to Job pods         |
 | `operator.resources`      | 100m/128Mi, 500m/256Mi | Operator pod resource requests and limits |
 
-## Next Steps
+## Next steps
 
-<DocCardGrid>
-  <DocCard
-    title="Browse Plugins"
-    description="See all available data source plugins and their configuration"
-    docId="Plugins/index"
-    icon="mdi:puzzle"
-  />
-  <DocCard
-    title="CLI Ingestion"
-    description="Learn the pipeline config format used by Run resources"
-    docId="Populating/CLI"
-    icon="mdi:console"
-  />
-</DocCardGrid>
+- [Plugins](../Plugins/index.md): every plugin and its configuration.
+- [Run plugins from the CLI](CLI.md): the pipeline config format `Run` resources use.

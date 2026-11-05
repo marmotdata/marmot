@@ -34,6 +34,9 @@ importers:
 
   .:
     dependencies:
+      '@cfworker/json-schema':
+        specifier: ^4.1.4
+        version: 4.1.4
       '@codemirror/autocomplete':
         specifier: 6.20.4
         version: 6.20.4
@@ -65,20 +68,20 @@ importers:
         specifier: 1.2.5
         version: 1.2.5
       '@marmotdata/css':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/elements':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/icons':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.8
+        version: 0.1.8
       '@marmotdata/svelte':
-        specifier: ^0.1.6
-        version: 0.1.6(@marmotdata/elements@0.1.6)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
+        specifier: ^0.1.8
+        version: 0.1.8(@marmotdata/elements@0.1.8)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
       '@marmotdata/tokens':
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.8
+        version: 0.1.8
       '@tiptap/core':
         specifier: ^3.32.0
         version: 3.32.0(@tiptap/pm@3.32.0)
@@ -133,9 +136,6 @@ importers:
       ajv-formats:
         specifier: ^3.0.1
         version: 3.0.1(ajv@8.20.0)
-      avsc:
-        specifier: ^5.7.9
-        version: 5.7.9
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
@@ -154,6 +154,9 @@ importers:
       emoji-picker-element:
         specifier: ^1.29.1
         version: 1.29.1
+      emoji-picker-element-data:
+        specifier: ^1.8.0
+        version: 1.8.0
       hast-util-to-html:
         specifier: ^9.0.5
         version: 9.0.5
@@ -340,6 +343,9 @@ packages:
 
   '@bytecodealliance/preview3-shim@0.6.1':
     resolution: {integrity: sha512-61mEfjfgGmZhEMA0H3waawPKvYd3za9y0vJ7pmQz/9yvm4FR6Ef+cmqhnxDE7ezsM07MY1btP92ymmgsgFwxmg==}
+
+  '@cfworker/json-schema@4.1.4':
+    resolution: {integrity: sha512-20rPE8EX0dSg6JGOVe31HpqsLYZTDSlcFJZA5mpZqQxcZ71vh/SXCMX+UuHO1mMcZBDKeb752z+3L8IWa+0Svg==}
 
   '@codemirror/autocomplete@6.20.4':
     resolution: {integrity: sha512-yF8RhOf2SXlg00+qtupzLhrglcas61boqaONiNcbPIebHCpJocpqTBA6dyrtUrQO47hqyTdeob/3XnYilT7TaQ==}
@@ -701,23 +707,23 @@ packages:
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
-  '@marmotdata/css@0.1.6':
-    resolution: {integrity: sha512-ERqE/ZV56lWCM5ORKGQV02VJnPj8R0uE7CI4LISb5pCOTCg+z2tZGIzQvsL+5IbD44Ssr8ROPYqbQWCgpVbFFQ==}
+  '@marmotdata/css@0.1.8':
+    resolution: {integrity: sha512-uW/9nnvIYosIyMHcv2jTBqXN716qoWeI8At6gx+eFUH1GDtQoYHZhzcl+Fe2yr37DYHCjHxaYVv3H8H1d+0/jA==}
 
-  '@marmotdata/elements@0.1.6':
-    resolution: {integrity: sha512-ZBxz9UkTRUnpo/xp/NAzignwcOTLAdfHh3jBcM8v4G+jM6NP04TY582q+D8K/uwvZGxCZkfz1aP3Jxy5pS6Bgw==}
+  '@marmotdata/elements@0.1.8':
+    resolution: {integrity: sha512-Omb3buX+2yMY72z77aUvEk3pQmhI4yy+Gu466VMfPExBNWmr61dEeH7W26w/DLLDk6ggW320mGXEX4yQHn3kUg==}
 
-  '@marmotdata/icons@0.1.6':
-    resolution: {integrity: sha512-dp67e0Sa/zBkQlabehmFnlTZ+CBQ7WR+jC5OUR0hHUJ1TzLaNfPquMOw/RWNlmpIfYITjETFX/FWQnM1LGyM6Q==}
+  '@marmotdata/icons@0.1.8':
+    resolution: {integrity: sha512-zSPSWwfNPpCztuz9VE5iKxW1pmVJ7ehngMmJelkNgHptN2PMaB4/fz+BqGt0ZxF14u06oUDNlShH9mPYvvd8ew==}
 
-  '@marmotdata/svelte@0.1.6':
-    resolution: {integrity: sha512-S/HxgrFSl5AisdqvXnTrLZXiOp6+cda1gZDIgYzDdfL6GrUFc4xEDQp9/17RWAMOTxqEx/xAce/0yKzGbFjwSg==}
+  '@marmotdata/svelte@0.1.8':
+    resolution: {integrity: sha512-V7lmLNt5WhYEgpUSaR6QZoKJtciHEemfaQdt3pV2BxOPgmkNsgfdg0U7q7XxOgAv35U6bxrEb/m9g19Iq85zvg==}
     peerDependencies:
-      '@marmotdata/elements': ^0.1.6
+      '@marmotdata/elements': ^0.1.8
       svelte: ^5.0.0
 
-  '@marmotdata/tokens@0.1.6':
-    resolution: {integrity: sha512-oCs77Efgk/VTt5/kz/cBhc0wxntX+uOzuORoQCzxnsg1CuGsYvhqqza1lgbtrLDBIr+ib6eHG9+kpZx+9IS02A==}
+  '@marmotdata/tokens@0.1.8':
+    resolution: {integrity: sha512-zecFqh5QNDLN9B1VHo6yOV39ATd6btIAsL+W4gB7fwJ6j0XydxFUaw8FVYDYoOFoE/UnXeqX2SWSZjCh2/NMZA==}
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -1493,10 +1499,6 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  avsc@5.7.9:
-    resolution: {integrity: sha512-yOA4wFeI7ET3v32Di/sUybQ+ttP20JHSW3mxLuNGeO0uD6PPcvLrIQXSvy/rhJOWU5JrYh7U4OHplWMmtAtjMg==}
-    engines: {node: '>=0.11'}
-
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
     engines: {node: '>= 0.4'}
@@ -1841,6 +1843,9 @@ packages:
 
   elliptic@6.6.1:
     resolution: {integrity: sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==}
+
+  emoji-picker-element-data@1.8.0:
+    resolution: {integrity: sha512-VfRuRJNEDLS1JKlNS4olaqhjX5S1nnZ+ZHG73b/dV8QeZyi0yPruTPEE72EmF6XO3k/9hj3lybMIYMOYXb/57A==}
 
   emoji-picker-element@1.29.1:
     resolution: {integrity: sha512-TOiHzu9Dqib3x4MwcAi3wi3RdyT4SoeB4b15AvH1ks4SBwTl7DeebhZ0d3x6dNi4XfNU7IGRZ7NBQllj0RqwrQ==}
@@ -3125,6 +3130,8 @@ snapshots:
       '@bytecodealliance/jco-node-fs': 0.3.2
       '@bytecodealliance/preview2-shim': 0.25.0
 
+  '@cfworker/json-schema@4.1.4': {}
+
   '@codemirror/autocomplete@6.20.4':
     dependencies:
       '@codemirror/language': 6.13.1
@@ -3477,11 +3484,11 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.4': {}
 
-  '@marmotdata/css@0.1.6':
+  '@marmotdata/css@0.1.8':
     dependencies:
-      '@marmotdata/tokens': 0.1.6
+      '@marmotdata/tokens': 0.1.8
 
-  '@marmotdata/elements@0.1.6':
+  '@marmotdata/elements@0.1.8':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
@@ -3496,8 +3503,8 @@ snapshots:
       '@floating-ui/dom': 1.8.0
       '@lezer/highlight': 1.2.5
       '@lit-labs/virtualizer': 2.1.1
-      '@marmotdata/icons': 0.1.6
-      '@marmotdata/tokens': 0.1.6
+      '@marmotdata/icons': 0.1.8
+      '@marmotdata/tokens': 0.1.8
       '@tanstack/virtual-core': 3.19.8
       codemirror: 6.0.2
       d3-array: 3.2.4
@@ -3509,17 +3516,17 @@ snapshots:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/icons@0.1.6':
+  '@marmotdata/icons@0.1.8':
     dependencies:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/svelte@0.1.6(@marmotdata/elements@0.1.6)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
+  '@marmotdata/svelte@0.1.8(@marmotdata/elements@0.1.8)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
     dependencies:
-      '@marmotdata/elements': 0.1.6
+      '@marmotdata/elements': 0.1.8
       svelte: 5.57.2(@typescript-eslint/types@8.71.2)
 
-  '@marmotdata/tokens@0.1.6': {}
+  '@marmotdata/tokens@0.1.8': {}
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -4195,8 +4202,6 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  avsc@5.7.9: {}
-
   axobject-query@4.1.0: {}
 
   balanced-match@4.0.4: {}
@@ -4580,6 +4585,8 @@ snapshots:
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
+
+  emoji-picker-element-data@1.8.0: {}
 
   emoji-picker-element@1.29.1: {}
 

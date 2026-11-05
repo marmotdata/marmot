@@ -97,23 +97,33 @@
 	};
 
 	const actionsCell = (r: Row) => {
-		if (r.managed_by)
-			return html`<mm-text variant="caption" tone="secondary"
-				>${m.runs_operator_managed_title()}</mm-text
+		if (r.managed_by === 'operator')
+			return html`<mm-text
+				variant="caption"
+				tone="secondary"
+				title=${m.runs_operator_managed_title()}
+				style="white-space:nowrap"
+				>${m.runs_operator_managed_short()}</mm-text
 			>`;
 		if (!canManage) return nothing;
+		// A served source's plugin runs outside Marmot, so Marmot can neither run it nor edit its config
+		const served = !!r.served_by_id;
 		return html`<span
 			class="mm-cluster"
 			style="--mm-gap:var(--space-1);justify-content:flex-end;flex-wrap:nowrap"
 		>
-			<mm-button
-				size="sm"
-				variant="ghost"
-				icon="play-arrow"
-				?disabled=${r.running || !$encryptionConfigured}
-				@click=${() => triggerPipeline(r)}
-				>${m.plugins_run_now()}</mm-button
-			>
+			${
+				served
+					? nothing
+					: html`<mm-button
+							size="sm"
+							variant="ghost"
+							icon="play-arrow"
+							?disabled=${r.running || !$encryptionConfigured}
+							@click=${() => triggerPipeline(r)}
+							>${m.plugins_run_now()}</mm-button
+						>`
+			}
 			<mm-menu-button
 				size="sm"
 				variant="ghost"
@@ -125,9 +135,13 @@
 					label=${m.plugins_actions_for({ name: r.name })}
 					@mm-select=${(e: CustomEvent<{ value: string }>) => rowAction(r, e.detail.value)}
 				>
-					<mm-menu-item icon="edit" value="edit" ?disabled=${!$encryptionConfigured}
-						>${m.pipelines_edit_pipeline()}</mm-menu-item
-					>
+					${
+						served
+							? nothing
+							: html`<mm-menu-item icon="edit" value="edit" ?disabled=${!$encryptionConfigured}
+									>${m.pipelines_edit_pipeline()}</mm-menu-item
+								>`
+					}
 					<mm-menu-item icon="history" value="runs">${m.plugins_view_runs()}</mm-menu-item>
 					<mm-menu-separator></mm-menu-separator>
 					<mm-menu-item icon="delete" value="delete" danger
@@ -147,7 +161,15 @@
 			href: (r) => resolve('/runs/[id]', { id: r.id }),
 			render: (r) =>
 				html`<mm-provider-logo provider=${r.plugin_id} size="16" decorative></mm-provider-logo
-					>&nbsp;&nbsp;${r.name}`
+					>&nbsp;&nbsp;${r.name}${
+						r.managed_by === 'operator'
+							? html`&nbsp;<mm-provider-logo
+										provider="kubernetes"
+										size="14"
+										title=${m.runs_operator_managed_title()}
+									></mm-provider-logo>`
+							: nothing
+					}`
 		},
 		{
 			key: 'last_run_at',
@@ -176,15 +198,24 @@
 			header: m.plugins_col_schedule(),
 			minWidth: 160,
 			render: (r) =>
-				html`<span class="mm-cluster" style="--mm-gap:var(--space-2);flex-wrap:nowrap"
-					>${describeCron(r.cron_expression)}${
-						r.cron_expression && !r.enabled
-							? html`<mm-status-pill status="neutral"
-									>${m.plugins_schedule_paused()}</mm-status-pill
-								>`
-							: nothing
-					}</span
-				>`
+				r.served_by_id
+					? html`<mm-status-pill
+							status=${r.serving_connected ? 'success' : 'neutral'}
+							icon=${r.serving_connected ? 'cloud-done' : 'cloud-off'}
+							title=${m.runs_serving_title()}
+							>${
+								r.serving_connected ? m.runs_serving_connected() : m.runs_serving_disconnected()
+							}</mm-status-pill
+						>`
+					: html`<span class="mm-cluster" style="--mm-gap:var(--space-2);flex-wrap:nowrap"
+							>${describeCron(r.cron_expression)}${
+								r.cron_expression && !r.enabled
+									? html`<mm-status-pill status="neutral"
+											>${m.plugins_schedule_paused()}</mm-status-pill
+										>`
+									: nothing
+							}</span
+						>`
 		},
 		{
 			key: 'asset_count',

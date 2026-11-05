@@ -1,113 +1,147 @@
 ---
 sidebar_position: 3
+title: MCP server
+description: Connect Claude Code, Claude Desktop, Cursor, Cline or LibreChat to Marmot's built-in MCP server so an assistant can search the catalog, trace lineage and look up owners and glossary terms.
 ---
 
-# Model Context Protocol (MCP)
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-Marmot includes a built-in **Model Context Protocol (MCP)** server that enables AI assistants like Claude, ChatGPT and other LLM-powered tools to interact with your data catalog using natural language.
+# MCP server
 
-import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
+Marmot has a built-in [Model Context Protocol](https://modelcontextprotocol.io) server at `https://<your-marmot-server>/api/v1/mcp`. Point an AI assistant at it and the assistant can search your catalog, trace lineage and look up owners and glossary terms, with the same permissions as the identity it signs in with.
 
-<CalloutCard
-  title="What is MCP?"
-  description="The Model Context Protocol is a standardised way for AI assistants to connect with external data sources - like a universal translator between AI models and your data."
-  href="https://modelcontextprotocol.io"
-  buttonText="Learn More"
-  icon="mdi:robot"
-  variant="external"
-/>
+## Before you start
 
-## What Can You Do?
+- You have a Marmot API key. Create one under **Account → API keys**, or use a [service account's key](#use-a-service-account) for an agent that runs on its own.
+- You know your Marmot server's address. On [Marmot Cloud](../Cloud/instances.md) it's `https://<instance>.marmotdata.cloud`.
 
-With MCP, you can ask questions like:
+## Connect a client
 
-- "What tables does the analytics team own?"
-- "Show me all BigQuery datasets tagged as 'production'"
-- "Find the upstream dependencies for the user_events table"
-- "Who owns the payment processing API?"
+Add Marmot to your client's MCP configuration:
 
-<FeatureGrid>
-  <FeatureCard
-    title="Search Assets"
-    description="Query your catalog using natural language"
-    icon="mdi:magnify"
-  />
-  <FeatureCard
-    title="View Lineage"
-    description="Explore upstream and downstream dependencies"
-    icon="mdi:source-branch"
-  />
-  <FeatureCard
-    title="Read Metadata"
-    description="Access descriptions, owners, tags and custom metadata"
-    icon="mdi:tag-multiple"
-  />
-  <FeatureCard
-    title="Discover Context"
-    description="Understand relationships between assets"
-    icon="mdi:graph"
-  />
-</FeatureGrid>
+<Tabs groupId="mcp-client" queryString="client">
+<TabItem value="claude-code" label="Claude Code" default>
 
-## Choose Your AI Assistant
+Add this to `~/.claude.json` for every project, or to `.mcp.json` in a project's root for that project only:
 
-<DocCardGrid>
-  <DocCard
-    title="Claude Desktop"
-    description="Anthropic's official desktop application"
-    docId="MCP/claude-desktop"
-    icon="simple-icons:anthropic"
-  />
-  <DocCard
-    title="Claude Code"
-    description="Claude's command-line interface"
-    docId="MCP/claude-code"
-    icon="mdi:console"
-  />
-  <DocCard
-    title="Cursor"
-    description="The AI-first code editor"
-    docId="MCP/cursor"
-    icon="mdi:cursor-default"
-  />
-  <DocCard
-    title="Cline"
-    description="VS Code extension for AI-powered coding"
-    docId="MCP/cline"
-    icon="mdi:microsoft-visual-studio-code"
-  />
-  <DocCard
-    title="LibreChat"
-    description="Universal AI chat interface supporting multiple providers"
-    docId="MCP/librechat"
-    icon="mdi:chat"
-  />
-  <DocCard
-    title="Skills"
-    description="Install the Marmot skill to give any AI agent catalog knowledge"
-    docId="MCP/skills"
-    icon="mdi:brain"
-  />
-</DocCardGrid>
+```json
+{
+  "mcpServers": {
+    "marmot": {
+      "type": "http",
+      "url": "https://<your-marmot-server>/api/v1/mcp",
+      "headers": {
+        "X-API-Key": "<api-key>"
+      }
+    }
+  }
+}
+```
 
-## Authentication
+If you've signed in with `marmot login`, you can send `"Authorization": "Bearer <token>"` instead of `X-API-Key`. Claude Code asks you to approve a project's servers the first time it uses them.
 
-MCP uses the same authentication as Marmot's REST API. You'll need an API key to connect:
+</TabItem>
+<TabItem value="claude-desktop" label="Claude Desktop">
 
-1. Navigate to your user profile in Marmot
-2. Go to **Settings** → **API Keys**
-3. Generate a new API key
-4. Use this key in your MCP client configuration
+Edit the configuration file for your platform:
 
-The AI assistant will have the same permissions as your user account, respecting all role-based access controls.
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-An agent that runs on its own identity uses a service account key instead. Create the service account on the **Service Accounts** page (`/service-accounts`), give it a role with `assets:view`, `glossary:view` and `teams:view`, and put one of its keys in the MCP client configuration. The agent then has the service account's permissions, not any person's.
+```json
+{
+  "mcpServers": {
+    "marmot": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://<your-marmot-server>/api/v1/mcp",
+        "--header",
+        "X-API-Key:<api-key>"
+      ]
+    }
+  }
+}
+```
 
-### Hosted clients (OAuth)
+For a server on plain HTTP, such as a local one, add `--allow-http` to `args`.
 
-MCP clients can also sign in through OAuth instead of an API key. The client registers itself with Marmot using OAuth dynamic client registration and completes a browser sign-in, so no manual client setup is needed. By default Marmot only accepts loopback redirect URIs (`http://localhost`, `http://127.0.0.1` or `http://[::1]`), which covers clients running on your own machine.
+</TabItem>
+<TabItem value="cursor" label="Cursor">
 
-Hosted clients such as claude.ai run in the cloud and use an `https` callback, so their callback host must be allowlisted in your server configuration:
+Add this to `~/.cursor/mcp.json` for every project, or to `.cursor/mcp.json` in a project's root for that project only:
+
+```json
+{
+  "mcpServers": {
+    "marmot": {
+      "url": "https://<your-marmot-server>/api/v1/mcp",
+      "headers": {
+        "X-API-Key": "<api-key>"
+      }
+    }
+  }
+}
+```
+
+To keep the key out of the file, use `${env:MARMOT_API_KEY}` in its place.
+
+</TabItem>
+<TabItem value="cline" label="Cline">
+
+In VS Code, open Cline, select the **MCP Servers** icon, then **Configure MCP Servers**, and add Marmot to `cline_mcp_settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "marmot": {
+      "url": "https://<your-marmot-server>/api/v1/mcp",
+      "headers": {
+        "X-API-Key": "<api-key>"
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem value="librechat" label="LibreChat">
+
+Add Marmot to `librechat.yaml`:
+
+```yaml
+mcpServers:
+  marmot:
+    type: streamable-http
+    url: https://<your-marmot-server>/api/v1/mcp
+    headers:
+      X-API-Key: <api-key>
+    timeout: 30000
+```
+
+To keep the key out of the file, use `${MARMOT_API_KEY}` in its place.
+
+</TabItem>
+</Tabs>
+
+Then ask the assistant something only your catalog knows, such as "who owns the orders table?". It should answer with a real owner and the asset it found.
+
+## Use a service account
+
+An assistant that signs in with your API key has your permissions. An agent that runs on its own should have its own identity instead, so you can limit what it reaches and see what it did:
+
+1. Under **Settings → Service accounts**, select **Create service account**.
+2. Give it a role with `assets:view`, `glossary:view` and `teams:view`.
+3. Create an API key for it and put that key in the client configuration.
+
+## Hosted clients
+
+Clients can also sign in with OAuth instead of an API key. The client registers itself with Marmot and completes a browser sign-in, so there's nothing to set up for clients running on your own machine.
+
+A hosted client such as claude.ai calls back to an `https` address, so add its host to the server configuration:
 
 ```yaml
 auth:
@@ -116,35 +150,29 @@ auth:
       - claude.ai
 ```
 
-The same setting is available as an environment variable, with multiple hosts separated by commas:
+The environment variable `MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS` takes the same list, separated by commas. Hosts on this list receive sign-in codes for your Marmot server, so only add hosts you trust.
 
-```bash
-MARMOT_AUTH_DCR_ALLOWED_REDIRECT_HOSTS=claude.ai
-```
+Each person sees the clients they've allowed under **Account → Connected apps**. **Revoke** signs one out straight away.
 
-Hosts on this list can receive OAuth authorization codes for your Marmot instance, so only add hosts you trust.
+## Tools
 
-## Available Tools
+The server gives an assistant these tools:
 
-Marmot's MCP server provides these tools to AI assistants:
+| Tool | What it answers |
+| --- | --- |
+| `discover_data` | Finds assets by name, type, provider, tags or metadata |
+| `find_ownership` | Who owns an asset, and everything a person or team owns |
+| `lookup_term` | Glossary definitions and the assets linked to a term |
+| `explore_data_products` | Which data products exist and the assets in each |
+| `explore_teams` | Teams and their members |
+| `trace_lineage` | What feeds an asset and what depends on it |
+| `update_documentation` | Writes a plain-language description on an asset, without touching the one a plugin ingested |
+| `manage_tags`, `manage_owners` | Adds or removes tags and owners on an asset |
+| `list_queryable_sources`, `query_data` | Runs a read-only SQL statement against a source whose pipeline is set up to answer queries; see [data queries](../data-queries.md) |
 
-### discover_data
+The tools that change the catalog need `assets:manage`. An identity without it can still use every read tool.
 
-Unified data discovery for finding any asset in the catalog. Supports natural language queries, specific lookups by ID or MRN (qualified identifiers like `postgres://db/schema/table`), filtering by type/provider/tags and metadata-based queries.
+## Next steps
 
-### find_ownership
-
-Bidirectional ownership queries to answer "Who owns this asset?", "What does this user own?" and "Show me all data owned by the data-eng team". Works for both data assets and glossary terms.
-
-### lookup_term
-
-Business glossary lookups for understanding terminology and definitions. Search for glossary terms by name or retrieve specific term definitions.
-
-<CalloutCard
-  title="Need Help?"
-  description="Join our Discord community to get help, share feedback, and connect with other Marmot users."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+- [Skills](skills.md): teach an agent the Marmot CLI and API as well.
+- [Marmot for agents](../Agents/index.md): build your own agent on the catalog with LangChain or the Claude Agent SDK.

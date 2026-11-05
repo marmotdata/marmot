@@ -1,34 +1,34 @@
-# Anonymous Authentication
+---
+title: Anonymous access
+---
 
-Marmot allows you to enable anonymous authentication, which provides restricted access to the application without requiring users to log in.
+# Anonymous access
 
-When anonymous authentication is enabled, users can still log in with other authentication methods to access their full permissions. Anonymous users will only have access to endpoints that match the permissions of their assigned role.
+Anonymous access lets people browse the catalog without signing in. Requests without credentials get the permissions of one role, and anyone who signs in still gets their own.
 
-## Configuration
-
-Anonymous authentication can be enabled using either YAML configuration or environment variables.
-
-### YAML
-
-Add the following to your `config.yaml` file:
+Turn it on in your configuration:
 
 ```yaml
 auth:
   anonymous:
     enabled: true
+    role: user
 ```
 
-### Environment Variables
+Or with environment variables:
 
-Set these environment variables:
-
-```
+```bash
 MARMOT_AUTH_ANONYMOUS_ENABLED=true
+MARMOT_AUTH_ANONYMOUS_ROLE=user
 ```
 
-## Options
+| Key | Description | Default |
+| --- | --- | --- |
+| `auth.anonymous.enabled` | Serve requests that carry no credentials | `false` |
+| `auth.anonymous.role` | The role those requests get | `user` |
 
-| Option    | Description                                 | Default |
-| --------- | ------------------------------------------- | ------- |
-| `enabled` | Whether anonymous authentication is enabled | `false` |
-| `role`    | The role to assign to anonymous users       | `user`  |
+The `user` role reads assets, the glossary, ingestion runs, teams and metrics. To show less, [create a role](access-control.md#roles) with only the permissions you want public, such as `assets:view` and `glossary:view`, and name it in `role`.
+
+## Next steps
+
+- [Users, roles and access](access-control.md): what each permission allows.

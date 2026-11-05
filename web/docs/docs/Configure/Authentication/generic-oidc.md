@@ -39,17 +39,17 @@ auth:
 
 The `url` field is the OIDC issuer URL. Marmot appends `/.well-known/openid-configuration` to discover endpoints automatically.
 
-Restart Marmot and the SSO login button will appear on the login page.
+Restart Marmot and its button appears on the sign-in page.
 
-### Custom Display Name
+### Custom display name
 
-By default the login button reads "Sign in with SSO". You can change this with the `name` field:
+By default the sign-in button reads "Sign in with SSO". You can change this with the `name` field:
 
 ```bash
 export MARMOT_AUTH_GENERIC_OIDC_NAME="Corporate Login"
 ```
 
-## Team Synchronisation
+## Team sync
 
 Marmot can automatically sync users to teams based on group claims from your identity provider.
 
@@ -64,13 +64,15 @@ auth:
       group:
         claim: "groups"
         filter:
-          mode: "include"
+          mode: "regex"
           pattern: ".*"
 ```
 
+`filter.mode` is `none`, `prefix`, `regex`, `allowlist` or `denylist`; for the lists, `pattern` is a comma-separated set of group names. Any other value matches no groups, so no teams are created.
+
 Your identity provider must include a `groups` claim (or your chosen claim name) in the ID token or userinfo response. Consult your identity provider's documentation for how to configure group claims.
 
-## Custom TLS Configuration
+## Custom TLS configuration
 
 If your identity provider uses a self-signed certificate or a certificate signed by an internal CA, you can configure Marmot to trust it:
 

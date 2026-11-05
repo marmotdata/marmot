@@ -129,8 +129,13 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 || len(filter.Owners) > 0 {
 			queryType = "filtered"
 		}
-		h.metricsService.RecordSearch(queryType, query, int64(response.Total))
+		h.metricsService.RecordSearch(queryType, query, int64(matchedCount(response)))
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)
+}
+
+// matchedCount is how many results a search found for its metrics: text searches skip the count and report a total of zero, so the page's results and offset stand in for it and a page past the end of a matching search is not counted as empty.
+func matchedCount(response *search.Response) int {
+	return max(response.Total, response.Offset+len(response.Results))
 }

@@ -51,6 +51,12 @@ func (o *PostAPIV1QueryRunReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
+	case 503:
+		result := NewPostAPIV1QueryRunServiceUnavailable()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[POST /api/v1/query/run] PostAPIV1QueryRun", response, response.Code())
 	}
@@ -387,6 +393,74 @@ func (o *PostAPIV1QueryRunConflict) GetPayload() *models.ErrorResponse {
 func (o *PostAPIV1QueryRunConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostAPIV1QueryRunServiceUnavailable creates a PostAPIV1QueryRunServiceUnavailable with default headers values
+func NewPostAPIV1QueryRunServiceUnavailable() *PostAPIV1QueryRunServiceUnavailable {
+	return &PostAPIV1QueryRunServiceUnavailable{}
+}
+
+// PostAPIV1QueryRunServiceUnavailable describes a response with status code 503, with default header values.
+//
+// Marmot is still loading plugins after starting; retry after Retry-After
+type PostAPIV1QueryRunServiceUnavailable struct {
+	Payload *models.QueryUnavailableResponse
+}
+
+// IsSuccess returns true when this post Api v1 query run service unavailable response has a 2xx status code
+func (o *PostAPIV1QueryRunServiceUnavailable) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post Api v1 query run service unavailable response has a 3xx status code
+func (o *PostAPIV1QueryRunServiceUnavailable) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post Api v1 query run service unavailable response has a 4xx status code
+func (o *PostAPIV1QueryRunServiceUnavailable) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this post Api v1 query run service unavailable response has a 5xx status code
+func (o *PostAPIV1QueryRunServiceUnavailable) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this post Api v1 query run service unavailable response a status code equal to that given
+func (o *PostAPIV1QueryRunServiceUnavailable) IsCode(code int) bool {
+	return code == 503
+}
+
+// Code gets the status code for the post Api v1 query run service unavailable response
+func (o *PostAPIV1QueryRunServiceUnavailable) Code() int {
+	return 503
+}
+
+func (o *PostAPIV1QueryRunServiceUnavailable) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/query/run][%d] postApiV1QueryRunServiceUnavailable %s", 503, payload)
+}
+
+func (o *PostAPIV1QueryRunServiceUnavailable) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/query/run][%d] postApiV1QueryRunServiceUnavailable %s", 503, payload)
+}
+
+func (o *PostAPIV1QueryRunServiceUnavailable) GetPayload() *models.QueryUnavailableResponse {
+	return o.Payload
+}
+
+func (o *PostAPIV1QueryRunServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.QueryUnavailableResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -212,7 +212,6 @@ __all__ = [
     "PluginserveEnrolResult",
     "PluginserveEnrolSource",
     "PreviewRequest",
-    "PreviewResponse",
     "ProductImageMeta",
     "ProfileRoleSource",
     "ProfileTeam",
@@ -221,6 +220,7 @@ __all__ = [
     "QueryAgentSummariesResponse",
     "QueryAgentSummary",
     "QueryAssetContext",
+    "QueryAssetPreview",
     "QueryAssetStats",
     "QueryColumn",
     "QueryCount",
@@ -240,6 +240,7 @@ __all__ = [
     "QueryStatsPoint",
     "QueryStatsTotals",
     "QueryStatusResponse",
+    "QueryUnavailableResponse",
     "RecentItem",
     "RecordRecentViewRequest",
     "RecordRunRequest",
@@ -711,7 +712,6 @@ if __import__("typing").TYPE_CHECKING:
         PluginserveEnrolSource as PluginserveEnrolSource,
     )
     from marmot.generated.models.preview_request import PreviewRequest as PreviewRequest
-    from marmot.generated.models.preview_response import PreviewResponse as PreviewResponse
     from marmot.generated.models.product_image_meta import ProductImageMeta as ProductImageMeta
     from marmot.generated.models.profile_role_source import ProfileRoleSource as ProfileRoleSource
     from marmot.generated.models.profile_team import ProfileTeam as ProfileTeam
@@ -726,6 +726,7 @@ if __import__("typing").TYPE_CHECKING:
     )
     from marmot.generated.models.query_agent_summary import QueryAgentSummary as QueryAgentSummary
     from marmot.generated.models.query_asset_context import QueryAssetContext as QueryAssetContext
+    from marmot.generated.models.query_asset_preview import QueryAssetPreview as QueryAssetPreview
     from marmot.generated.models.query_asset_stats import QueryAssetStats as QueryAssetStats
     from marmot.generated.models.query_column import QueryColumn as QueryColumn
     from marmot.generated.models.query_count import QueryCount as QueryCount
@@ -754,6 +755,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_stats_totals import QueryStatsTotals as QueryStatsTotals
     from marmot.generated.models.query_status_response import (
         QueryStatusResponse as QueryStatusResponse,
+    )
+    from marmot.generated.models.query_unavailable_response import (
+        QueryUnavailableResponse as QueryUnavailableResponse,
     )
     from marmot.generated.models.recent_item import RecentItem as RecentItem
     from marmot.generated.models.record_recent_view_request import (
@@ -1132,7 +1136,6 @@ from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInpu
 from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult as PluginserveEnrolResult
 from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource as PluginserveEnrolSource
 from marmot.generated.models.preview_request import PreviewRequest as PreviewRequest
-from marmot.generated.models.preview_response import PreviewResponse as PreviewResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta as ProductImageMeta
 from marmot.generated.models.profile_role_source import ProfileRoleSource as ProfileRoleSource
 from marmot.generated.models.profile_team import ProfileTeam as ProfileTeam
@@ -1141,6 +1144,7 @@ from marmot.generated.models.query_access_request_input import QueryAccessReques
 from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse as QueryAgentSummariesResponse
 from marmot.generated.models.query_agent_summary import QueryAgentSummary as QueryAgentSummary
 from marmot.generated.models.query_asset_context import QueryAssetContext as QueryAssetContext
+from marmot.generated.models.query_asset_preview import QueryAssetPreview as QueryAssetPreview
 from marmot.generated.models.query_asset_stats import QueryAssetStats as QueryAssetStats
 from marmot.generated.models.query_column import QueryColumn as QueryColumn
 from marmot.generated.models.query_count import QueryCount as QueryCount
@@ -1160,6 +1164,7 @@ from marmot.generated.models.query_stats_group import QueryStatsGroup as QuerySt
 from marmot.generated.models.query_stats_point import QueryStatsPoint as QueryStatsPoint
 from marmot.generated.models.query_stats_totals import QueryStatsTotals as QueryStatsTotals
 from marmot.generated.models.query_status_response import QueryStatusResponse as QueryStatusResponse
+from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse as QueryUnavailableResponse
 from marmot.generated.models.recent_item import RecentItem as RecentItem
 from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest as RecordRecentViewRequest
 from marmot.generated.models.record_run_request import RecordRunRequest as RecordRunRequest

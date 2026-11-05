@@ -1,90 +1,37 @@
 ---
 sidebar_position: 7
+title: OpenLineage
 ---
 
-import { CalloutCard, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
+import { TipBox } from '@site/src/components/Steps';
 
 # OpenLineage
 
-[OpenLineage](https://openlineage.io/) is an open standard for data lineage collection and analysis. It provides a unified way to track data flows across different tools and platforms by emitting standardised events during job execution.
+Marmot accepts [OpenLineage](https://openlineage.io/) run events, so a tool that emits them, such as Airflow, dbt or Spark, adds its jobs, datasets and lineage to the catalog as it runs. Support is experimental and hasn't been tested with every producer; report anything that doesn't map correctly on [GitHub](https://github.com/marmotdata/marmot/issues).
 
-Marmot integrates with OpenLineage to automatically discover assets and lineage relationships from your data pipelines, eliminating manual catalog maintenance.
+For your own integrations, send lineage with the [lineage API](lineage.md#send-lineage-from-your-own-pipelines) instead: it takes edges, down to the column, without the OpenLineage event format.
 
-<CalloutCard
-  title="What is OpenLineage?"
-  description="OpenLineage is a vendor-neutral, open standard for lineage metadata collection. It captures how data flows through your systems without locking you into a specific tool."
-  href="https://openlineage.io"
-  buttonText="Learn More"
-  icon="mdi:source-branch"
-  variant="external"
-/>
+## What gets cataloged
 
-:::note[Compatibility]
-OpenLineage support in Marmot is still experimental and has not been tested with all sources. Please report any issues you encounter on GitHub.
-:::
+Each event adds or updates the job and the datasets it read and wrote, links them with lineage and records the run with its status and timing. A dataset Marmot hasn't seen before is added as a stub, so lineage is complete without filling the catalog with undocumented assets.
 
-## What You Get
+Events map to these asset types:
 
-<FeatureGrid>
-  <FeatureCard
-    title="Automatic Asset Discovery"
-    description="Jobs, tables, files and topics are added to your catalog as they run."
-    icon="mdi:magnify-scan"
-  />
-  <FeatureCard
-    title="Lineage Relationships"
-    description="See how data flows between assets with upstream and downstream connections."
-    icon="mdi:source-branch"
-  />
-  <FeatureCard
-    title="Run History"
-    description="Track execution status, timing and data volumes for every pipeline run."
-    icon="mdi:history"
-  />
-  <FeatureCard
-    title="Stub Assets"
-    description="Lineage is captured even for undocumented datasets without polluting your catalog."
-    icon="mdi:file-hidden"
-  />
-</FeatureGrid>
-
-## Supported Asset Types
-
-Marmot maps OpenLineage events to specific asset types:
-
-| Asset Type | Description              |
-| ---------- | ------------------------ |
-| `DAG`      | Airflow workflows        |
-| `Task`     | Individual Airflow tasks |
-| `Model`    | DBT models               |
-| `Project`  | DBT projects             |
-| `Table`    | Database tables          |
-| `File`     | Data files               |
-| `Topic`    | Kafka topics             |
+| Asset type | From |
+| --- | --- |
+| `DAG` | Airflow workflows |
+| `Task` | Airflow tasks |
+| `Model` | dbt models |
+| `Project` | dbt projects |
+| `Table` | Database tables |
+| `File` | Data files |
+| `Topic` | Kafka topics |
 
 ## Authentication
 
-By default, the OpenLineage endpoint requires authentication via an API key. You can disable authentication for trusted environments if needed.
+Producers send events to `POST /api/v1/lineage` with an API key, either as `X-API-Key: <api-key>` or as `Authorization: Bearer <api-key>`. Create a key under **Account → API keys** with **Create API key**, or use a service account's key.
 
-### Generate API Key
-
-1. Navigate to **Profile** → **API Keys**
-2. Click **New Key**
-3. Copy the generated key
-4. Configure your OpenLineage producer
-
-### Endpoint URL
-
-```
-POST /api/v1/lineage
-Authorization: X-API-Key <your-api-key>
-```
-
-### Disable Authentication
-
-To disable authentication for the OpenLineage endpoint, set the following configuration:
-
-**Config file**
+To accept events without a key, turn authentication off for this endpoint:
 
 ```yaml
 openlineage:
@@ -92,58 +39,45 @@ openlineage:
     enabled: false
 ```
 
-**Environment variable:**
+Or set `MARMOT_OPENLINEAGE_AUTH_ENABLED=false`.
 
-```bash
-export MARMOT_OPENLINEAGE_AUTH_ENABLED=false
-```
+<TipBox variant="warning" title="Anyone who can reach the endpoint can then write lineage">
+Only turn authentication off on a network where every client is trusted.
+</TipBox>
 
-:::warning
-Disabling authentication allows anyone to send lineage events to your Marmot instance. Only use this in trusted environments.
-:::
-
-## Configuration Examples
+## Configure a producer
 
 ### Airflow
 
-Configure the OpenLineage provider in `airflow.cfg`:
+In `airflow.cfg`:
 
 ```ini
 [openlineage]
 transport = http
-url = https://your-marmot-instance.com/api/v1/lineage
-api_key = your-api-key
+url = https://marmot.example.com/api/v1/lineage
+api_key = <api-key>
 ```
 
-### DBT
+### dbt
 
-Add to your `profiles.yml`:
+In `profiles.yml`:
 
 ```yaml
-your_profile:
+kelp:
   outputs:
     prod:
-      # ... your connection details
+      # your connection details
   vars:
     openlineage:
-      url: https://your-marmot-instance.com/api/v1/lineage
-      api_key: your-api-key
+      url: https://marmot.example.com/api/v1/lineage
+      api_key: <api-key>
 ```
 
 ### Spark
 
-Set environment variables:
-
 ```bash
-export OPENLINEAGE_URL=https://your-marmot-instance.com/api/v1/lineage
-export OPENLINEAGE_API_KEY=your-api-key
+export OPENLINEAGE_URL=https://marmot.example.com/api/v1/lineage
+export OPENLINEAGE_API_KEY=<api-key>
 ```
 
-<CalloutCard
-  title="OpenLineage Documentation"
-  description="For detailed configuration options and supported integrations, see the official OpenLineage documentation."
-  href="https://openlineage.io/docs/"
-  buttonText="View Docs"
-  variant="external"
-  icon="mdi:book-open-variant"
-/>
+The [OpenLineage documentation](https://openlineage.io/docs/) covers every producer and its options.

@@ -1,66 +1,102 @@
 ---
 sidebar_position: 2
-title: Getting started
-description: Sign up for Marmot Cloud, launch an instance, sign in from the CLI and start a Terraform configuration.
+title: Get started
+description: Sign up for Marmot Cloud, launch an instance and catalog your first source from the UI.
 ---
 
-import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { CliInstall } from '@site/src/components/CliInstall';
-import { Steps, Step, TipBox } from '@site/src/components/Steps';
+import { Steps, Step } from '@site/src/components/Steps';
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# Getting started
+# Get started
 
-This guide gets you a running instance, a terminal signed in to it, and an empty Terraform configuration that can reach it. It takes about five minutes.
+By the end of this page you'll have a Marmot Cloud instance with your first source cataloged and searchable in **Discover**.
 
 <Steps>
 <Step title="Create your account">
 
-Sign up at [cloud.marmotdata.io](https://cloud.marmotdata.io) and pick a plan. Free needs no card and has no end date, which is enough to point Marmot at a system you actually run. The [pricing page](https://cloud.marmotdata.io/#pricing) covers what each plan includes.
+Sign up at [cloud.marmotdata.io](https://cloud.marmotdata.io), then choose a plan under **Billing**. **Start on Free** needs no card and gives you 1 instance with room for 500 assets. The [pricing page](/pricing) lists what the paid plans add.
 
 </Step>
 <Step title="Launch an instance">
 
-Launching takes about a minute and continues if you close the page. You end with an address like `https://acme.marmotdata.cloud`. That is your instance, and almost everything from here happens there rather than in the console.
+In the console, select **New instance**, enter an **Instance name** and select **Launch instance**. Launching usually takes about a minute and carries on if you leave the page.
+
+The New instance page with a name entered:
+
+<ThemedImg
+  lightSrc="/img/cloud-console-new-instance-light.png"
+  darkSrc="/img/cloud-console-new-instance-dark.png"
+  alt="The console New instance page with Kelp catalog as the instance name, the Europe region selected and the Launch instance button"
+  size="panel"
+/>
+
+When it's ready, the instance's page shows its **Address** under **Connect**, such as `<instance>.marmotdata.cloud`.
 
 </Step>
-<Step title="Sign in to your instance">
+<Step title="Sign in">
 
-Reveal the initial password next to the `admin` username in the console and sign in at your instance URL. Marmot asks for a new password immediately, and the generated one stops working.
+Under **Admin sign-in** on the instance's page, select **Reveal password**, then open the address and sign in as `admin`. Marmot asks for a new password straight away, and the initial one stops working.
 
-<TipBox variant="success" title="Do this before anyone else signs in">
-Configure [single sign-on](single-sign-on.md) now, while the instance has one user. Retrofitting it onto an instance full of local accounts means reconciling each one by hand.
-</TipBox>
+Admin sign-in on the instance's page:
+
+<ThemedImg
+  lightSrc="/img/cloud-console-admin-light.png"
+  darkSrc="/img/cloud-console-admin-dark.png"
+  alt="The Admin sign-in section of an instance page, showing the admin username and the Reveal password button"
+  size="dialog"
+/>
 
 </Step>
-<Step title="Connect your terminal">
+<Step title="Catalog your first source">
 
-<CliInstall />
+In your instance, open **Plugins** and pick your system under **Add a source**:
 
-```bash
-marmot login https://acme.marmotdata.cloud
-marmot assets list
-```
+<ThemedImg
+  lightSrc="/img/cloud-add-source-light.png"
+  darkSrc="/img/cloud-add-source-dark.png"
+  alt="Add a source on the Plugins page, listing plugins grouped by kind with a search box"
+/>
 
-Your browser opens, you sign in, and the CLI stores a 24-hour token. An empty asset list is correct on a fresh instance.
+1. Enter a **Pipeline name**, such as `warehouse`, and select **Continue**.
+2. Fill in the connection details and select **Check and continue**.
+3. Leave **Run on a schedule** off for now and select **Create pipeline**.
+4. On the pipeline's page, select **Run now**.
 
-Once a pipeline has run, the same catalog is on Discover: assets, data products, glossary terms and teams behind one search.
+Your instance connects to public addresses only. For a database on a private network, run the plugin inside that network with [`marmot plugin`](../Configure/serving-plugins.md). For BigQuery, Glue or Blob Storage, [connect your cloud](Guides/google.md) instead, so the pipeline needs no password.
+
+</Step>
+<Step title="Find it in Discover">
+
+When the run finishes, open **Discover**. Your source's tables, topics or files are listed there, alongside data products, glossary terms and teams in one search:
 
 <ThemedImg
   lightSrc="/img/cloud-discover-light.png"
   darkSrc="/img/cloud-discover-dark.png"
-  alt="The Discover page with filters for kind, type and provider beside a list of catalogued assets"
+  alt="Discover in a Marmot Cloud instance, with filters for kind, type and provider beside a list of cataloged assets"
+  size="window"
 />
 
 </Step>
-<Step title="Start a Terraform configuration">
+</Steps>
 
-Everything you do to the instance from here is declared in Terraform. Create a repository and start with the provider block alone:
+## Optional: work from your terminal
+
+Everything above can also be done from the CLI or Terraform. Neither is needed to use Marmot Cloud.
+
+Install the CLI and sign in. Your browser opens, and the CLI keeps a token for 24 hours:
+
+<CliInstall />
+
+```bash
+marmot login <instance>.marmotdata.cloud
+marmot assets list
+```
+
+The Terraform provider signs in with the same CLI session, so you don't need an API key on your own machine:
 
 ```hcl
 terraform {
-  required_version = ">= 1.11"
-
   required_providers {
     marmot = {
       source = "marmotdata/marmot"
@@ -69,76 +105,15 @@ terraform {
 }
 
 provider "marmot" {
-  host = "https://acme.marmotdata.cloud"
+  host = "https://<instance>.marmotdata.cloud"
 }
 ```
 
-```bash
-terraform init
-terraform plan
-```
-
-The provider authenticates with your CLI session, so there is no API key to create. An empty plan confirms it can reach the instance. When the configuration moves to CI it gets a [service account of its own](access-control.md#run-terraform-in-ci).
-
-</Step>
-</Steps>
-
-## Your first pipeline
-
-Pick the cloud your data lives in. Each guide walks you from the empty configuration above to a running pipeline that catalogs a native source with no credential at all, then shows how to add a source that needs a password.
-
-<DocCardGrid>
-  <DocCard
-    title="Google Cloud"
-    description="Catalog BigQuery with Workload Identity Federation"
-    docId="Cloud/Guides/google"
-    icon="mdi:google-cloud"
-  />
-  <DocCard
-    title="AWS"
-    description="Catalog the Glue Data Catalog with an IAM role"
-    docId="Cloud/Guides/aws"
-    icon="mdi:aws"
-  />
-  <DocCard
-    title="Azure"
-    description="Catalog Blob Storage with a federated app registration"
-    docId="Cloud/Guides/azure"
-    icon="mdi:microsoft-azure"
-  />
-  <DocCard
-    title="Somewhere else"
-    description="A pipeline that reads its password from your secret manager at run time"
-    docId="Cloud/pipelines"
-    icon="mdi:pipe"
-  />
-</DocCardGrid>
+In CI, give Terraform a [service account of its own](service-accounts.md#run-terraform-in-ci).
 
 ## Next steps
 
-<DocCardGrid>
-  <DocCard
-    title="Lock down access"
-    description="Grant roles per asset, data product, glossary term and secret store"
-    docId="Cloud/access-control"
-    icon="mdi:shield-key"
-  />
-  <DocCard
-    title="Connect your agents"
-    description="Point Claude, Cursor or your own agent at your instance's MCP endpoint"
-    docId="MCP/index"
-    icon="mdi:robot"
-  />
-  <DocCard
-    title="Manage your instance"
-    description="Sizes, stopping and starting, and your own domain"
-    docId="Cloud/instances"
-    icon="mdi:server"
-  />
-  <DocCard
-    title="Pricing"
-    description="What each plan includes and what it costs"
-    href="https://cloud.marmotdata.io/#pricing"
-    icon="mdi:chart-box"
-  />
-</DocCardGrid>
+- [Connect your cloud](Guides/google.md): catalog Google Cloud, AWS or Azure with no stored credential.
+- [Set up single sign-on](single-sign-on.md): let your team sign in through your identity provider.
+- [Access control](access-control.md): decide who sees what.
+- [Connect an agent](/docs/MCP): point Claude, Cursor or your own agent at `https://<instance>.marmotdata.cloud/api/v1/mcp`.

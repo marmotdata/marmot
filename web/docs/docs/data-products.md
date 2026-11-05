@@ -1,53 +1,46 @@
 ---
 sidebar_position: 4
+title: Data products
 ---
 
-import { CalloutCard } from '@site/src/components/DocCard';
 import { ThemedImg } from '@site/src/components/ThemedImg';
 
-# Data Products
+# Data products
 
-Data Products let you group related assets into logical collections. A "Customer Analytics" product might bundle together a PostgreSQL table storing profiles, a Kafka topic with real-time events, an API endpoint and a dashboard. Instead of navigating hundreds of individual assets, teams can discover and understand related data as a cohesive unit.
+A data product groups the assets one team publishes for others, so people find them together. *Buyer 360* might bundle the buyers table, the `dim_buyer` model, a session feature set and a retention dashboard, and someone looking for buyer data finds all of them in one place instead of hunting through the catalog.
 
-<CalloutCard
-  title="Get Started in Five Minutes"
-  description="Follow the Quick Start Guide to try Marmot out locally."
-  docId="quick-start"
-  buttonText="Quick Start"
-  icon="mdi:rocket-launch"
-/>
+## Create a data product
 
-## Creating a Data Product
-
-Navigate to **Data Products** in the header and click **Create Product**. Give your product a name and description, optionally add tags for categorisation, and assign owners responsible for the product.
+Open **Data products** in the sidebar and select **Create data product**. Give it a **Name**, the **Owners** people should ask about it and a **Description** of what's in it and who it's for:
 
 <ThemedImg
   lightSrc="/img/products-basicinfo-light.png"
   darkSrc="/img/products-basicinfo-dark.png"
-  alt="Data Product details"
+  alt="New data product with the name Seller payouts, Admin User as owner, a description, and Pick assets and Add rule under What is in it"
+  size="panel"
 />
 
-## Adding Assets
+Under **What is in it**, add assets now or later. **Tags** and **Metadata** are optional. Select **Create data product**.
 
-There are two ways to populate a Data Product with assets.
+## Add assets
 
-**Manual assignment** lets you add specific assets directly. Open the product, go to the **Assets** and search for what you want to include. This works well when you have a known set of assets that belong together.
+A data product holds assets in two ways, and most use both:
 
-**Dynamic rules** use Marmot's query language to automatically include assets matching certain criteria. Rules continuously evaluate as your catalog changes, so new assets matching the criteria are added automatically.
+- **Pick assets** adds specific assets by hand. It suits a known set that doesn't change often.
+- **Add rule** includes every asset that matches a [query](queries.md). Assets join when they start matching and leave when they stop, so the product keeps up as the catalog changes.
+
+A rule on the product's **Rules** tab, with the plain-language match above the query and the number of assets it adds:
 
 <ThemedImg
   lightSrc="/img/products-rules-light.png"
   darkSrc="/img/products-rules-dark.png"
-  alt="Dynamic rules for Data Products"
+  alt="The Rules tab of Marketplace KPIs with a rule named KPI assets matching @tag: kpi and adding 2 assets"
+  size="panel"
 />
 
-To add a rule, go to the **Rules** tab, click **Add Rule** and enter a name along with the query. For example, `@metadata.owner = "analytics-team"` would include all assets owned by that team, while `@type: "topic" AND @provider: "kafka"` would include all Kafka topics.
+For example, `@tag: "kpi"` includes everything tagged `kpi`, and `@type: "topic" AND @provider: "kafka"` includes every Kafka topic.
 
-<CalloutCard
-  title="Need Help?"
-  description="Join the Discord community to ask questions and share how you're using Data Products."
-  href="https://discord.gg/TWCk7hVFN4"
-  buttonText="Join Discord"
-  variant="secondary"
-  icon="mdi:account-group"
-/>
+## Next steps
+
+- [Search and the query language](queries.md): the fields and operators a rule can use.
+- [Asset rules](asset-rules.md): add tags, terms and owners to matching assets.

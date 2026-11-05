@@ -67,7 +67,7 @@ export default function IntroDiagram(): JSX.Element {
         <Flow />
 
         <div className="intro-map__hub">
-          <ThemedImg lightSrc="/img/marmot.svg" darkSrc="/img/dark-marmot.svg" alt="" className="intro-map__mascot" />
+          <ThemedImg bare lightSrc="/img/marmot.svg" darkSrc="/img/dark-marmot.svg" alt="" className="intro-map__mascot" />
           <div className="intro-map__panel">
             <mm-topography seed="7" density="sparse" fade="edges"></mm-topography>
             <p className="intro-map__name">Marmot</p>

@@ -1,57 +1,13 @@
-# Configure
+---
+title: Configuration reference
+description: Every setting for a self-hosted Marmot server, its environment variable and its default.
+---
 
-Marmot is configured using a YAML file or environment variables. All settings have sensible defaults so you only need to specify what you want to change. Every option is listed below with its default value.
+# Configuration reference
 
-import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
+Configure a self-hosted Marmot with a YAML file or environment variables. Every setting is optional apart from the database, and each table lists its default.
 
-## Configuration Topics
-
-<DocCardGrid>
-  <DocCard
-    title="Users, roles and access"
-    description="Roles, permissions, teams, service accounts and API keys"
-    docId="Configure/access-control"
-    icon="mdi:shield-key"
-  />
-  <DocCard
-    title="Authentication"
-    description="Set up SSO with Google, GitHub, GitLab, Okta, Slack or Auth0"
-    docId="Configure/Authentication/index"
-    icon="mdi:shield-account"
-  />
-  <DocCard
-    title="Anonymous Access"
-    description="Allow users to browse the Catalog without logging in"
-    docId="Configure/anonymous-access"
-    icon="mdi:incognito"
-  />
-  <DocCard
-    title="TLS"
-    description="Set up custom TLS configuration"
-    docId="Configure/tls"
-    icon="mdi:lock"
-  />
-  <DocCard
-    title="Customisable Banner"
-    description="Display announcements and notices to users"
-    docId="Configure/banner"
-    icon="mdi:message-alert"
-  />
-  <DocCard
-    title="Elasticsearch"
-    description="Enhance search with deep fuzzy matching across all fields"
-    docId="Configure/elasticsearch"
-    icon="mdi:magnify"
-  />
-  <DocCard
-    title="Translations"
-    description="Set the interface language and contribute new translations"
-    docId="Develop/translations"
-    icon="mdi:translate"
-  />
-</DocCardGrid>
-
-## Configuration File
+## Configuration file
 
 By default, Marmot looks for `config.yaml` in the current directory. Use the `--config` flag to specify a different path.
 
@@ -60,7 +16,7 @@ database:
   host: localhost
   port: 5432
   user: postgres
-  password: secret
+  password: <database-password>
   name: marmot
 server:
   host: 0.0.0.0
@@ -70,7 +26,7 @@ logging:
   format: json
 ```
 
-## Environment Variables
+## Environment variables
 
 All configuration options can be set via environment variables using the `MARMOT_` prefix with underscores separating nested keys. For example, `database.host` becomes `MARMOT_DATABASE_HOST`. List values can be given as comma-separated environment variables.
 
@@ -88,26 +44,18 @@ All configuration options can be set via environment variables using the `MARMOT
 | `server.tls.key_path`            | Path to server TLS private key                                                      | -         |
 | `server.tls.ca_cert_path`        | Path to CA cert for client verification (mTLS)                                      | -         |
 
-See [TLS](./tls.md) for setting up TLS and the [Helm deployment guide](../Deploy/Helm.md#encryption-key) for managing the encryption key in Kubernetes.
+See [TLS](./tls.md) to set up TLS and the [Helm deployment guide](../Deploy/Helm.md#encryption-key) for managing the encryption key in Kubernetes.
 
-:::info Root URL Required for Authentication
-`server.root_url` must be set when using OAuth/OIDC authentication or CLI login (`marmot login`). It is the URL that users access Marmot from (e.g. `https://marmot.example.com`). This is used to generate OAuth callback URLs and redirect users after authentication.
+Set `server.root_url` to the address people use, such as `https://marmot.example.com`, before you turn on single sign-on or use `marmot login`. Marmot builds its sign-in callback URLs from it:
 
 ```yaml
 server:
   root_url: https://marmot.example.com
 ```
 
-Or via environment variable:
-
-```bash
-export MARMOT_SERVER_ROOT_URL=https://marmot.example.com
-```
-:::
-
 ## Database
 
-Marmot requires PostgreSQL 14 or later. Ensure the database user has privileges to create tables and indexes.
+Marmot needs PostgreSQL 14 or later, and a database user that can create tables and indexes.
 
 | Key                      | Description                              | Default     |
 | ------------------------ | ---------------------------------------- | ----------- |
@@ -123,7 +71,7 @@ Marmot requires PostgreSQL 14 or later. Ensure the database user has privileges 
 
 ## Logging
 
-Marmot uses structured logging. Set the format to `console` for human-readable output during development.
+Set the format to `console` for readable output while you develop.
 
 | Key              | Description                                                | Default |
 | ---------------- | ---------------------------------------------------------- | ------- |
@@ -138,11 +86,11 @@ Marmot uses structured logging. Set the format to `console` for human-readable o
 | `auth.anonymous.role`              | Role assigned to anonymous users                                             | `user`  |
 | `auth.dcr.allowed_redirect_hosts`  | Hosts allowed in https redirect URIs for dynamically registered OAuth clients; empty keeps registration loopback-only | -       |
 
-See [Anonymous Access](./anonymous-access.md) for anonymous browsing and [MCP authentication](../MCP/index.md#hosted-clients-oauth) for allowing hosted MCP clients such as claude.ai to sign in with OAuth.
+See [anonymous access](./anonymous-access.md) for anonymous browsing and [MCP authentication](../MCP/index.md#hosted-clients) for allowing hosted MCP clients such as claude.ai to sign in with OAuth.
 
-### SSO providers
+### Single sign-on providers
 
-Single Sign-On providers are configured under `auth.<provider>`, where `<provider>` is one of `google`, `github`, `gitlab`, `keycloak`, `okta`, `slack` or `auth0`, or `generic_oidc` for any other OIDC-compliant provider. The common keys are:
+Single sign-on providers are configured under `auth.<provider>`, where `<provider>` is one of `google`, `github`, `gitlab`, `keycloak`, `okta`, `slack` or `auth0`, or `generic_oidc` for any other OIDC-compliant provider. The common keys are:
 
 | Key                              | Description                                        | Default            |
 | -------------------------------- | -------------------------------------------------- | ------------------ |
@@ -156,7 +104,7 @@ Single Sign-On providers are configured under `auth.<provider>`, where `<provide
 | `auth.<provider>.team_sync`      | Synchronise team membership from provider groups   | disabled           |
 | `auth.<provider>.group_mapping`  | Map provider groups to Marmot roles                | -                  |
 
-Each provider has its own options and setup steps. See [Authentication](./Authentication/index.md) for the per-provider guides.
+Each provider has its own options and setup steps. See [single sign-on](./Authentication/index.md) for each provider's guide.
 
 ## Search
 
@@ -164,7 +112,7 @@ Each provider has its own options and setup steps. See [Authentication](./Authen
 | ---------------- | ------------------------------- | ------- |
 | `search.timeout` | Search query timeout in seconds | `10`    |
 
-The optional Elasticsearch backend is configured under `search.elasticsearch`. See [Elasticsearch](./elasticsearch.md) for the full list of options.
+The optional Elasticsearch backend is configured under `search.elasticsearch`. See [search backend](./elasticsearch.md) for its options.
 
 ## Metrics
 
@@ -185,7 +133,7 @@ The optional Elasticsearch backend is configured under `search.elasticsearch`. S
 | `pipelines.lease_expiry`       | Seconds before an abandoned run lease is reclaimed          | `300`   |
 | `pipelines.claim_expiry`       | Seconds before an unstarted run claim expires               | `30`    |
 
-## Kubernetes Operator
+## Kubernetes operator
 
 | Key                        | Description                                              | Default         |
 | -------------------------- | --------------------------------------------------------- | --------------- |
@@ -193,7 +141,19 @@ The optional Elasticsearch backend is configured under `search.elasticsearch`. S
 | `operator.namespace`       | Namespace the operator manages pipeline resources in      | -               |
 | `operator.service_account` | Service account used for pipeline resources               | `marmot-ingest` |
 
-## Serving Plugins
+## Data queries
+
+| Key                                     | Description                                                                 | Default |
+| --------------------------------------- | --------------------------------------------------------------------------- | ------- |
+| `query.enabled`                         | Let people and agents query sources set up to answer queries               | `true`  |
+| `query.query_timeout`                   | Seconds before a query is cancelled                                         | `60`    |
+| `query.max_rows_default`                | Rows returned when a query doesn't ask for a limit                          | `1000`  |
+| `query.max_rows_cap`                    | Most rows any query can return                                              | `10000` |
+| `query.instance_idle_ttl`               | Seconds an unused plugin process stays alive between queries                | `300`   |
+| `query.ingest_on_query_source_interval` | Minimum seconds between query-triggered refreshes of one source             | `3600`  |
+| `query.ingest_on_query_global_interval` | Minimum seconds between any two query-triggered refreshes                   | `60`    |
+
+## Serving plugins
 
 | Key                           | Description                                                                         | Default |
 | ----------------------------- | ----------------------------------------------------------------------------------- | ------- |
@@ -204,7 +164,7 @@ The optional Elasticsearch backend is configured under `search.elasticsearch`. S
 | `query.serve.ca_key_uri`      | KMS URI of the serving CA key (ECDSA P-256); stored in the database when unset        | -       |
 | `query.serve.signing_key_uri` | KMS URI of the query signing key (ECDSA P-256)                                        | -       |
 
-See [Serving Queries from Your Network](./serving-plugins.md).
+See [serve queries from your network](./serving-plugins.md).
 
 ## OpenLineage
 
@@ -212,13 +172,13 @@ See [Serving Queries from Your Network](./serving-plugins.md).
 | -------------------------- | ---------------------------------------------------- | ------- |
 | `openlineage.auth.enabled` | Require authentication for the OpenLineage endpoint  | `true`  |
 
-## Rate Limiting
+## Rate limiting
 
 | Key                  | Description                        | Default |
 | -------------------- | ----------------------------------- | ------- |
 | `rate_limit.enabled` | Enable in-memory API rate limiting  | `false` |
 
-## UI Banner
+## Banner
 
 | Key                     | Description                              | Default    |
 | ----------------------- | ----------------------------------------- | ---------- |
@@ -228,9 +188,9 @@ See [Serving Queries from Your Network](./serving-plugins.md).
 | `ui.banner.message`     | Banner text                               | -          |
 | `ui.banner.id`          | Identifier used to remember dismissals    | `banner-1` |
 
-See [Customisable Banner](./banner.md) for examples.
+See [banner](./banner.md) for examples.
 
-## UI Language
+## Interface language
 
 | Key                   | Description                                                             | Default |
 | --------------------- | ----------------------------------------------------------------------- | ------- |
@@ -248,14 +208,6 @@ See [Translations](../Develop/translations.md) for the available languages and h
 
 See [Telemetry](./telemetry.md) for what is collected and how to opt out.
 
-## Experimental
-
-| Key                          | Description                                          | Default |
-| ---------------------------- | ----------------------------------------------------- | ------- |
-| `experimental.table_preview` | Show sample rows on asset detail pages                | `false` |
-
-See [Table Preview](./table-preview.md) before enabling this.
-
 ## Plugins
 
 | Key                   | Description                                                          | Default |
@@ -267,4 +219,4 @@ See [Table Preview](./table-preview.md) before enabling this.
 | `plugins.updates.check_interval` | Seconds between plugin index checks | `43200` |
 | `plugins.updates.index` | OCI reference or `https://` URL of the plugin index | `<registry>/index:latest` |
 
-See [Plugin Updates](./plugin-updates.md) for how plugin versions are chosen and changed.
+See [plugin updates](./plugin-updates.md) for how plugin versions are chosen and changed.

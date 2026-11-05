@@ -174,3 +174,97 @@ func TestClaimServedSourcesIsAllOrNothing(t *testing.T) {
 		assert.ErrorIs(t, err, ErrScheduleNotFound, "%s must not be left claimed", name)
 	}
 }
+
+// A serving plugin ingests through the CLI before it claims its source, so the claim is what links the source to the tables that run catalogued; deleted ones stay out and runs of other pipelines are ignored.
+func TestClaimServedSources_LinksTheLastRunsAssets(t *testing.T) {
+	repo, ctx := newPostgresRepo(t)
+	owner := uuid.NewString()
+	s := servedBy("service_account", owner)
+	s.PluginID = "duckdb"
+
+	asset := func(name string) string {
+		mrn := "mrn://table/duckdb/" + name + "-" + uuid.NewString()[:8]
+		_, err := repo.db.Exec(ctx, `INSERT INTO assets (id, name, mrn, type, providers, created_by) VALUES ($1, $2, $3, 'Table', ARRAY['DuckDB'], 'test')`,
+			uuid.NewString(), name, mrn)
+		require.NoError(t, err)
+		return mrn
+	}
+	run := func(pipeline string, checkpoints map[string]string) {
+		var id string
+		require.NoError(t, repo.db.QueryRow(ctx, `INSERT INTO runs (pipeline_name, source_name, run_id, status, completed_at) VALUES ($1, 'duckdb', $2, 'completed', NOW()) RETURNING id`,
+			pipeline, uuid.NewString()).Scan(&id))
+		for mrn, op := range checkpoints {
+			_, err := repo.db.Exec(ctx, `INSERT INTO run_checkpoints (run_id, entity_type, entity_mrn, operation) VALUES ($1, 'asset', $2, $3)`, id, mrn, op)
+			require.NoError(t, err)
+		}
+	}
+	linked := func() []string {
+		rows, err := repo.db.Query(ctx, `SELECT a.mrn FROM asset_schedules l JOIN assets a ON a.id = l.asset_id WHERE l.schedule_id = $1 ORDER BY a.mrn`, s.ID)
+		require.NoError(t, err)
+		defer rows.Close()
+		var out []string
+		for rows.Next() {
+			var mrn string
+			require.NoError(t, rows.Scan(&mrn))
+			out = append(out, mrn)
+		}
+		return out
+	}
+
+	orders, customers, gone, elsewhere := asset("orders"), asset("customers"), asset("gone"), asset("elsewhere")
+	run(s.Name, map[string]string{orders: "created", customers: "unchanged", gone: StatusDeleted})
+	run("another-pipeline", map[string]string{elsewhere: "created"})
+
+	require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{s}))
+	assert.ElementsMatch(t, []string{orders, customers}, linked())
+
+	again := servedBy("service_account", owner)
+	again.Name, again.PluginID = s.Name, s.PluginID
+	require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{again}), "re-enrolment claims and links again without error")
+	assert.ElementsMatch(t, []string{orders, customers}, linked())
+}
+
+// A served source shows whether its plugin is connected now and when it last ingested, which happens through the CLI rather than as a job Marmot runs.
+func TestServedSourceReportsConnectionAndLastRun(t *testing.T) {
+	repo, ctx := newPostgresRepo(t)
+	owner := uuid.NewString()
+	s := servedBy("service_account", owner)
+	s.PluginID = "duckdb"
+	require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{s}))
+
+	got, err := repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "nothing has connected yet")
+	assert.Nil(t, got.LastRunAt)
+
+	_, err = repo.db.Exec(ctx, `INSERT INTO runs (pipeline_name, source_name, run_id, status, completed_at) VALUES ($1, 'duckdb', $2, 'completed', NOW())`, s.Name, uuid.NewString())
+	require.NoError(t, err)
+	session := func(principalID string, heartbeat string) {
+		var enrolment string
+		require.NoError(t, repo.db.QueryRow(ctx, `
+			INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, expires_at)
+			VALUES ('service_account', $1, 'sa', $2, '\x00'::bytea, 'api_key', NOW() + INTERVAL '10 minutes') RETURNING id`,
+			principalID, []string{s.Name}).Scan(&enrolment))
+		_, err := repo.db.Exec(ctx, `INSERT INTO plugin_serve_sessions (enrolment_id, replica_id, replica_address, heartbeat_at) VALUES ($1, $2, '10.0.0.1:8443', NOW() - $3::interval)`,
+			enrolment, uuid.NewString(), heartbeat)
+		require.NoError(t, err)
+	}
+
+	session(uuid.NewString(), "0 seconds")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "another principal's session does not count")
+	require.NotNil(t, got.LastRunAt)
+	require.NotNil(t, got.LastRunStatus)
+	assert.Equal(t, JobStatusSucceeded, *got.LastRunStatus)
+
+	session(owner, "5 minutes")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.False(t, got.ServingConnected, "a session gone quiet does not count")
+
+	session(owner, "5 seconds")
+	got, err = repo.GetScheduleByName(ctx, s.Name)
+	require.NoError(t, err)
+	assert.True(t, got.ServingConnected)
+}

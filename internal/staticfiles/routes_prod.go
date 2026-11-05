@@ -25,6 +25,11 @@ func init() {
 	mime.AddExtensionType(".ico", "image/x-icon")
 	mime.AddExtensionType(".woff", "font/woff")
 	mime.AddExtensionType(".woff2", "font/woff2")
+
+	// The console's inline scripts change with every build, so their hashes come from the index.html actually embedded rather than a list kept by hand.
+	if index, err := embeddedFiles.ReadFile("build/index.html"); err == nil {
+		inlineScriptHashes = HashInlineScripts(index)
+	}
 }
 
 func (h *Handler) SetupRoutes(mux *http.ServeMux) error {

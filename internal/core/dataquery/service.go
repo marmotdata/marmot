@@ -32,7 +32,18 @@ var (
 	// ErrQueryFailed wraps errors the source itself reported while planning
 	// or running a statement, such as a syntax error or a missing table.
 	ErrQueryFailed = errors.New("query failed")
+	// ErrPluginsLoading means the source's plugin is not registered yet because Marmot is still installing and loading plugins after starting, so the caller should retry shortly rather than treat the source as broken.
+	ErrPluginsLoading = errors.New("plugins are still loading")
 )
+
+// pluginLoadWait is how long a query waits for plugin loading to finish when its source's plugin is not registered yet, so a query sent just after a restart runs instead of failing.
+var pluginLoadWait = 20 * time.Second
+
+// pluginLoadState reports whether startup plugin loading has finished; plugin.LoadState satisfies it.
+type pluginLoadState interface {
+	Ready() bool
+	Done() <-chan struct{}
+}
 
 // Clients that run queries, recorded on each query.
 const (
@@ -149,6 +160,8 @@ type Service interface {
 	Admits(ctx context.Context, principal auth.Principal) bool
 	ListSources(ctx context.Context, filter SourceFilter) ([]*Source, int, error)
 	ListSourceTables(ctx context.Context, principal auth.Principal, sourceName, search string, limit int) ([]SourceTable, error)
+	// PreviewAsset returns where and how to preview one catalogued table, or ErrSourceNotFound when no source the principal may query reaches it.
+	PreviewAsset(ctx context.Context, principal auth.Principal, assetID string) (*AssetPreview, error)
 	InstanceStatus() []plugin.InstanceStatus
 
 	Query(ctx context.Context, principal auth.Principal, input QueryInput, client string) (*QueryResult, error)
@@ -178,6 +191,7 @@ type service struct {
 	validator  *validator.Validate
 	authorizer Authorizer
 	running    *runningQueries
+	loadState  pluginLoadState
 }
 
 func NewService(repo Repository, sources SourceProvider, assets asset.Service, runner QueryRunner, ingest IngestTrigger, encryptor *crypto.Encryptor, opts Options) Service {
@@ -197,6 +211,7 @@ func NewService(repo Repository, sources SourceProvider, assets asset.Service, r
 		opts:       opts,
 		validator:  validator.New(),
 		running:    newRunningQueries(),
+		loadState:  plugin.GetLoadState(),
 	}
 }
 
@@ -377,7 +392,7 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 		return nil, err
 	}
 
-	runner, err := s.runnerFor(source)
+	runner, err := s.runnerFor(ctx, source)
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +574,7 @@ type sourceRunner interface {
 }
 
 // runnerFor picks how a source's queries run: through a long-running local plugin process with the decrypted stored config, or through the plugin that serves the source from outside Marmot, which holds its own config.
-func (s *service) runnerFor(source *Source) (sourceRunner, error) {
+func (s *service) runnerFor(ctx context.Context, source *Source) (sourceRunner, error) {
 	if source.Served {
 		if s.opts.Served == nil {
 			return nil, fmt.Errorf("%w: serving plugins is not enabled", ErrQueryUnsupported)
@@ -567,7 +582,10 @@ func (s *service) runnerFor(source *Source) (sourceRunner, error) {
 		return servedRunner{runner: s.opts.Served, source: source.Name}, nil
 	}
 
-	entry, err := plugin.GetRegistry().Get(source.PluginID)
+	entry, err := s.loadedPlugin(ctx, source.PluginID)
+	if errors.Is(err, ErrPluginsLoading) {
+		return nil, err
+	}
 	if err != nil {
 		return nil, fmt.Errorf("plugin %q for source %q is not loaded: %w", source.PluginID, source.Name, err)
 	}
@@ -585,6 +603,24 @@ func (s *service) runnerFor(source *Source) (sourceRunner, error) {
 		}
 	}
 	return localRunner{runner: s.runner, pluginID: source.PluginID, config: config}, nil
+}
+
+// loadedPlugin returns a source's plugin, waiting up to pluginLoadWait for startup loading to finish when the plugin is not registered yet. Plugins load in the background so a new replica serves the catalog straight away; only queries need their plugin, so they wait here instead.
+func (s *service) loadedPlugin(ctx context.Context, pluginID string) (*plugin.RegistryEntry, error) {
+	entry, err := plugin.GetRegistry().Get(pluginID)
+	if err == nil || s.loadState == nil || s.loadState.Ready() {
+		return entry, err
+	}
+	wait := time.NewTimer(pluginLoadWait)
+	defer wait.Stop()
+	select {
+	case <-s.loadState.Done():
+		return plugin.GetRegistry().Get(pluginID)
+	case <-wait.C:
+		return nil, ErrPluginsLoading
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 type localRunner struct {

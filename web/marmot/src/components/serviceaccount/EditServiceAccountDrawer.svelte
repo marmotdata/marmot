@@ -8,7 +8,6 @@
 	import { listRoles } from '$lib/roles/api';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { roleLabel } from '$lib/users/format';
 	import type { Role } from '$lib/roles/types';
 	import type { ServiceAccount } from '$lib/serviceaccounts/types';
 
@@ -102,8 +101,7 @@
 			onmm-change={(e: CustomEvent<{ value: string[] }>) => (roleIds = e.detail.value)}
 		>
 			{#each roles as role (role.id)}
-				<mm-option value={role.id} label={roleLabel(role.name)} description={role.description}
-				></mm-option>
+				<mm-option value={role.id} label={role.name} description={role.description}></mm-option>
 			{/each}
 		</mm-multiselect>
 		<mm-switch

@@ -43,6 +43,11 @@ export const notificationTypeOptions = (): { type: string; label: string; icon: 
 		icon: 'material-symbols:database-outline'
 	},
 	{
+		type: 'asset_deleted',
+		label: m.webhook_type_asset_deleted(),
+		icon: 'material-symbols:delete-outline'
+	},
+	{
 		type: 'team_invite',
 		label: m.webhook_type_team_invite(),
 		icon: 'material-symbols:group-add-outline'
@@ -77,6 +82,7 @@ export const NOTIFICATION_TYPES = [
 	'system',
 	'schema_change',
 	'asset_change',
+	'asset_deleted',
 	'team_invite',
 	'mention',
 	'job_complete',

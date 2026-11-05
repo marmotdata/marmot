@@ -54,6 +54,7 @@ class TestSchedule(unittest.TestCase):
                 queryable = True,
                 served_by_id = '',
                 served_by_type = '',
+                serving_connected = True,
                 updated_at = ''
             )
         else:

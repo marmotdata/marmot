@@ -180,7 +180,6 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
     from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
     from marmot.generated.models.preview_request import PreviewRequest
-    from marmot.generated.models.preview_response import PreviewResponse
     from marmot.generated.models.product_image_meta import ProductImageMeta
     from marmot.generated.models.profile_role_source import ProfileRoleSource
     from marmot.generated.models.profile_team import ProfileTeam
@@ -189,6 +188,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse
     from marmot.generated.models.query_agent_summary import QueryAgentSummary
     from marmot.generated.models.query_asset_context import QueryAssetContext
+    from marmot.generated.models.query_asset_preview import QueryAssetPreview
     from marmot.generated.models.query_asset_stats import QueryAssetStats
     from marmot.generated.models.query_column import QueryColumn
     from marmot.generated.models.query_count import QueryCount
@@ -208,6 +208,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.query_stats_point import QueryStatsPoint
     from marmot.generated.models.query_stats_totals import QueryStatsTotals
     from marmot.generated.models.query_status_response import QueryStatusResponse
+    from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse
     from marmot.generated.models.recent_item import RecentItem
     from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest
     from marmot.generated.models.record_run_request import RecordRunRequest
@@ -470,7 +471,6 @@ from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInpu
 from marmot.generated.models.pluginserve_enrol_result import PluginserveEnrolResult
 from marmot.generated.models.pluginserve_enrol_source import PluginserveEnrolSource
 from marmot.generated.models.preview_request import PreviewRequest
-from marmot.generated.models.preview_response import PreviewResponse
 from marmot.generated.models.product_image_meta import ProductImageMeta
 from marmot.generated.models.profile_role_source import ProfileRoleSource
 from marmot.generated.models.profile_team import ProfileTeam
@@ -479,6 +479,7 @@ from marmot.generated.models.query_access_request_input import QueryAccessReques
 from marmot.generated.models.query_agent_summaries_response import QueryAgentSummariesResponse
 from marmot.generated.models.query_agent_summary import QueryAgentSummary
 from marmot.generated.models.query_asset_context import QueryAssetContext
+from marmot.generated.models.query_asset_preview import QueryAssetPreview
 from marmot.generated.models.query_asset_stats import QueryAssetStats
 from marmot.generated.models.query_column import QueryColumn
 from marmot.generated.models.query_count import QueryCount
@@ -498,6 +499,7 @@ from marmot.generated.models.query_stats_group import QueryStatsGroup
 from marmot.generated.models.query_stats_point import QueryStatsPoint
 from marmot.generated.models.query_stats_totals import QueryStatsTotals
 from marmot.generated.models.query_status_response import QueryStatusResponse
+from marmot.generated.models.query_unavailable_response import QueryUnavailableResponse
 from marmot.generated.models.recent_item import RecentItem
 from marmot.generated.models.record_recent_view_request import RecordRecentViewRequest
 from marmot.generated.models.record_run_request import RecordRunRequest

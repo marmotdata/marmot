@@ -1,14 +1,5 @@
 import type { Field } from './types';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-
-const ajv = new Ajv({
-	allErrors: true,
-	verbose: true,
-	$data: true,
-	strict: false
-});
-addFormats(ajv);
+import { jsonSchemaProblem } from './jsonSchemaCheck';
 
 export interface JsonSchemaObject {
 	$ref?: string;
@@ -616,12 +607,8 @@ export function validateJsonSchema(schema: unknown): { message: string }[] {
 			if (schemaCopy.example) delete schemaCopy.example;
 			if (schemaCopy.examples) delete schemaCopy.examples;
 
-			try {
-				ajv.compile(schemaCopy);
-				return [];
-			} catch (error) {
-				return [{ message: error instanceof Error ? error.message : String(error) }];
-			}
+			const problem = jsonSchemaProblem(schemaCopy);
+			return problem ? [{ message: problem }] : [];
 		}
 
 		return [];
@@ -660,8 +647,7 @@ export function isJsonSchema(schemaSection: unknown): boolean {
 		const schemaCopy = JSON.parse(JSON.stringify(schemaSection));
 		if (schemaCopy.example) delete schemaCopy.example;
 		if (schemaCopy.examples) delete schemaCopy.examples;
-		ajv.compile(schemaCopy);
-		return true;
+		return jsonSchemaProblem(schemaCopy) === null;
 	} catch {
 		return false;
 	}

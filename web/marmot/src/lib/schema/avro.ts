@@ -1,5 +1,5 @@
 import type { Field } from './types';
-import avsc from 'avsc';
+import { avroSchemaError } from './avroCheck';
 
 type AvroSchemaValue = string | AvroSchemaObject | AvroSchemaValue[] | null | undefined;
 
@@ -310,19 +310,13 @@ export function prettyPrintSchema(schema: string): string {
 }
 
 /**
- * Validate an Avro schema using avsc
+ * Validate an Avro schema against the specification
  * Returns array of validation errors
  */
 export function validateAvroSchema(schema: unknown): { message: string }[] {
 	if (!schema) return [];
-
-	try {
-		// Use avsc to parse and validate the schema
-		avsc.Type.forSchema(schema as avsc.Schema);
-		return [];
-	} catch (error) {
-		return [{ message: error instanceof Error ? error.message : String(error) }];
-	}
+	const error = avroSchemaError(schema);
+	return error ? [{ message: error }] : [];
 }
 
 /**
@@ -341,11 +335,5 @@ export function isAvroSchema(schema: unknown): boolean {
 		return true;
 	}
 
-	// Try to parse with avsc
-	try {
-		avsc.Type.forSchema(schema as avsc.Schema);
-		return true;
-	} catch {
-		return false;
-	}
+	return avroSchemaError(schema) === null;
 }

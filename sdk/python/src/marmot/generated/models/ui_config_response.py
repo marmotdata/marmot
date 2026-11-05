@@ -32,13 +32,11 @@ class UIConfigResponse(BaseModel):
     banner: BannerResponse | None = None
     default_language: StrictStr | None = None
     encryption_configured: StrictBool | None = None
-    table_preview_enabled: StrictBool | None = None
     __properties: ClassVar[list[str]] = [
         "allow_unencrypted",
         "banner",
         "default_language",
         "encryption_configured",
-        "table_preview_enabled",
     ]
 
     model_config = ConfigDict(
@@ -100,6 +98,5 @@ class UIConfigResponse(BaseModel):
                 else None,
                 "default_language": obj.get("default_language"),
                 "encryption_configured": obj.get("encryption_configured"),
-                "table_preview_enabled": obj.get("table_preview_enabled"),
             }
         )

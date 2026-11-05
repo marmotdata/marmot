@@ -131,19 +131,37 @@ const config: Config = {
             "@id": "https://marmotdata.io/#cloud",
             name: "Marmot Cloud",
             description:
-              "Marmot Cloud is the managed edition of Marmot: everything in the open source core, plus SSO, backups, private networking and the features that ship to Cloud first. Provisioning, upgrades and TLS are handled for you. Free account, pay when you launch an instance.",
+              "Marmot Cloud is the managed edition of Marmot: everything in the open source core, plus single sign-on, continuous backups and the features that ship to Cloud first. Provisioning, upgrades and TLS are handled for you, and the Free plan needs no card.",
             url: "https://cloud.marmotdata.io",
             applicationCategory: "DeveloperApplication",
             operatingSystem: "Web",
             offers: [
               {
                 "@type": "Offer",
-                name: "Team",
-                price: "49",
+                name: "Free",
+                price: "0",
                 priceCurrency: "USD",
                 url: "https://cloud.marmotdata.io/signup",
                 description:
-                  "Per instance, per month. 100 seats, 5,000 assets, all plugins, MCP server, SSO and 30-day backups.",
+                  "500 assets on shared compute, every plugin, federated secret stores and a shared MCP endpoint for AI agents.",
+              },
+              {
+                "@type": "Offer",
+                name: "Team",
+                price: "595",
+                priceCurrency: "USD",
+                url: "https://cloud.marmotdata.io/signup",
+                description:
+                  "From $595 a month: $595 per compute unit, 1 to 3 units. Dedicated compute, a private plugin registry, single sign-on with role mapping and email support.",
+              },
+              {
+                "@type": "Offer",
+                name: "Scale",
+                price: "2380",
+                priceCurrency: "USD",
+                url: "https://cloud.marmotdata.io/signup",
+                description:
+                  "From $2,380 a month: $595 per compute unit, 4 or more units. Your own domain and priority email support.",
               },
               {
                 "@type": "Offer",
@@ -151,7 +169,7 @@ const config: Config = {
                 priceCurrency: "USD",
                 url: "https://marmotdata.io/pricing",
                 description:
-                  "Custom priced. Unlimited instances, seats and assets, private networking and VPC peering, audit log export, 99.9% uptime SLA and priority support.",
+                  "Custom terms. Several instances, data residency and VPC peering, and a named support contact.",
               },
             ],
             publisher: { "@id": "https://marmotdata.io/#organization" },
@@ -164,6 +182,23 @@ const config: Config = {
     tailwindPlugin,
     designSystemFontsPlugin,
     unpluginIconsPlugin,
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        // Pages removed from the docs point at their nearest replacement. A redirect is only written where the old page no longer exists, so older versions that still have it are left alone.
+        createRedirects(existingPath: string) {
+          const configure = existingPath.match(/^\/docs(\/next)?\/Configure\/?$/);
+          if (configure) return [`${existingPath.replace(/\/$/, "")}/table-preview`];
+          // The MCP client pages were folded into tabs on the MCP server page.
+          const mcp = existingPath.match(/^\/docs(\/next)?\/MCP\/?$/);
+          if (mcp) {
+            const base = existingPath.replace(/\/$/, "");
+            return ["claude-code", "claude-desktop", "cursor", "cline", "librechat"].map((c) => `${base}/${c}`);
+          }
+          return undefined;
+        },
+      },
+    ],
     [
       "@docusaurus/plugin-content-docs",
       {
@@ -422,7 +457,7 @@ const config: Config = {
     prism: {
       theme: lightTheme,
       darkTheme: darkTheme,
-      additionalLanguages: ["hcl"],
+      additionalLanguages: ["hcl", "bash"],
     },
   } satisfies Preset.ThemeConfig,
 };

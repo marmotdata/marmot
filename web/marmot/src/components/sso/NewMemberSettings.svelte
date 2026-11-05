@@ -4,7 +4,6 @@
 	import { getSignInSettings, saveSignInSettings } from '$lib/sso/api';
 	import { toasts } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
-	import { roleLabel } from '$lib/users/format';
 	import type { SignInSettings } from '$lib/sso/types';
 	import type { Role } from '$lib/roles/types';
 	import type { Team } from '$lib/teams/types';
@@ -81,7 +80,7 @@
 					form && (form.default_role = e.detail.value)}
 			>
 				{#each roles as role (role.id)}
-					<mm-option value={role.name} label={roleLabel(role.name)}></mm-option>
+					<mm-option value={role.name} label={role.name}></mm-option>
 				{/each}
 			</mm-select>
 			<mm-select

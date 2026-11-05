@@ -1,58 +1,29 @@
 ---
 sidebar_position: 1
+title: Marmot for agents
 ---
 
-# Marmot for Agents
+# Marmot for agents
 
-An agent acting without context is guessing. It doesn't know which table holds customer orders, who owns the payments service, what a column means, or what breaks downstream if it changes something. **Marmot for Agents** ends that context starvation: it plugs your LLM agents into the catalog so they read it for context and write back the lineage they generate.
+An agent without context guesses: it doesn't know which table holds customer orders, who owns the payments service or what breaks downstream if it changes something. Marmot gives your agents the catalog to read, so they can find assets, look up owners and glossary terms and trace lineage, and records the lineage they create in return.
 
-import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
+An agent that drives the Marmot CLI should run it in [read-only mode](../cli.md#read-only-mode-and-exit-codes) unless it's meant to change things, and branch on its exit codes.
 
-## What your agents can do
-
-<FeatureGrid>
-  <FeatureCard
-    title="Discover assets"
-    description="Find any service, API, queue, topic, table or pipeline by name, type or metadata."
-    icon="mdi:magnify"
-  />
-  <FeatureCard
-    title="Resolve ownership"
-    description="Answer who owns an asset and who to contact before acting on it."
-    icon="mdi:account-search-outline"
-  />
-  <FeatureCard
-    title="Understand meaning"
-    description="Pull business definitions and glossary terms so answers use your language."
-    icon="mdi:book-open-page-variant-outline"
-  />
-  <FeatureCard
-    title="Trace lineage"
-    description="See upstream and downstream dependencies to reason about impact."
-    icon="mdi:source-branch"
-  />
-</FeatureGrid>
-
-## Two ways to connect
+import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
 
 <DocCardGrid>
   <DocCard
-    title="MCP Server"
-    description="The fastest path: point any client that speaks MCP (Claude, Cursor, ChatGPT, Cline) at Marmot and start asking."
+    title="MCP server"
+    description="Point Claude Code, Claude Desktop, Cursor, Cline or LibreChat at Marmot and start asking."
     docId="MCP/index"
     icon="mdi:protocol"
   />
   <DocCard
-    title="SDK"
-    description="Build agents directly against the catalog with the typed Python, Go or TypeScript client."
-    docId="SDK/index"
-    icon="mdi:code-braces"
+    title="Skills"
+    description="Teach any coding agent the Marmot CLI and REST API."
+    docId="MCP/skills"
+    icon="mdi:brain"
   />
-</DocCardGrid>
-
-## Supported frameworks
-
-<DocCardGrid>
   <DocCard
     title="LangChain"
     description="Catalog tools and a callback handler for Python and TypeScript agents."
@@ -61,7 +32,7 @@ import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@si
   />
   <DocCard
     title="Claude Agent SDK"
-    description="Hooks for Anthropic's Agent SDK that auto-register the agent and capture lineage from MCP tool calls."
+    description="Hooks that register the agent and capture lineage from its MCP tool calls."
     docId="Agents/claude-agent"
     icon="simple-icons:claude"
   />
