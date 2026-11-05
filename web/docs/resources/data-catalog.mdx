@@ -11,7 +11,9 @@ keywords:
   - data catalog features
   - open source data catalog
   - data discovery
-date: 2026-06-30
+  - data catalog for AI agents
+  - business glossary
+date: 2026-11-05
 image: /img/resources/data-catalog.png
 ---
 
@@ -46,7 +48,7 @@ import Head from '@docusaurus/Head';
           "name": "What is the difference between a data catalog and a database?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog does not hold your records. It is the index and context layer that makes the data across all your systems discoverable and trustworthy."
+            "text": "A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog doesn't store your records. It's the index and context layer that makes the data across all your systems discoverable and trustworthy. Some catalogs, Marmot among them, can also run read-only queries against the sources they catalog on behalf of a person or agent, returning the rows without keeping them."
           }
         },
         {
@@ -54,7 +56,7 @@ import Head from '@docusaurus/Head';
           "name": "What is the best open source data catalog in 2026?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context to agents."
+            "text": "The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents, and it can also run governed, read-only SQL against your sources with every query recorded in an audit log. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context and data to agents."
           }
         },
         {
@@ -111,10 +113,11 @@ Whether you are evaluating tools or building a shortlist, these are the features
 
 - **Search and discovery.** Fast, fuzzy search across every asset, with filters by source, owner, tag and domain.
 - **Rich metadata and a business glossary.** Schemas, descriptions and shared definitions, so "active customer" means one thing.
-- **Column and table lineage.** Upstream and downstream flow, for impact analysis and root-cause work.
+- **Column and table lineage.** Upstream and downstream flow, for impact analysis and root-cause work. See [what data lineage is](/resources/data-lineage) for how it's collected.
 - **Ownership and access control.** Clear owners and permissions, so governance is enforced rather than documented.
 - **Data quality signals.** Freshness, certification and test results, so users know what to trust.
 - **An agent-queryable interface.** A clean API and native [MCP](/resources/mcp-for-data) support, so AI tools like Claude and Cursor reach governed context, not raw dumps.
+- **Governed data access.** Some catalogs also run read-only SQL against the sources they catalog, check each statement against the caller's permissions and record it in an audit log, so people and agents can query data without a database password of their own. We cover the pattern in [governed data access for AI agents](/resources/ai-agent-database-access).
 - **Broad integrations.** Connectors, SDKs and infrastructure-as-code paths to populate the catalog from the stack you already run.
 - **A sensible footprint.** What you have to deploy and maintain to keep the catalog running, which ranges from a single binary to a multi-service platform.
 
@@ -136,12 +139,28 @@ Catalogs differ along a few axes that matter more than marketing categories.
 - **Governance and compliance.** Access is scoped and auditable, which matters more, not less, once agents can act on data.
 - **Agent enablement.** A governed context layer is what lets AI tools work against your data without making things up.
 
+## What a data catalog looks like in Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source data catalog that runs as one Go binary on PostgreSQL, under the MIT licence, or as a managed service on [Marmot Cloud](/docs/Cloud). Here's how the features in this guide map onto it, with a link to the documentation for each.
+
+- **Populating the catalog.** 70+ [plugins](/docs/Plugins) read databases, warehouses, streams, orchestrators and BI tools on a schedule. Plugins are released separately from Marmot, so a plugin can [update without a Marmot upgrade](/docs/Configure/plugin-updates). For anything a plugin can't see, [Terraform](/docs/Populating/Terraform), [Pulumi](/docs/Populating/Pulumi), the [Kubernetes operator](/docs/Populating/Operator) and the [REST API](/docs/Populating/API) describe assets as code.
+- **Search.** Free text finds most things, and a [query language](/docs/queries) narrows a search precisely, such as every Kafka topic a team owns.
+- **Meaning.** A [business glossary](/docs/glossary) defines terms like GMV and links them to assets and to individual columns. [Data products](/docs/data-products) group the assets one team publishes, either picked by hand or kept up to date by a rule.
+- **Enrichment at scale.** [Asset rules](/docs/asset-rules) add glossary terms and links to every asset that matches a search, and keep doing it as new assets arrive.
+- **Lineage.** [Lineage](/docs/lineage) comes from plugins, [OpenLineage](/docs/open-lineage) events and a direct lineage API, down to the column where the mapping is known.
+- **Change notices.** [Notifications](/docs/Notifications) tell owners and followers when an asset or its schema changes, and [webhooks](/docs/Notifications/webhooks) send them to Slack, Discord or any HTTPS address.
+- **Governed data access.** People and agents can [run read-only SQL](/docs/data-queries) against sources that support it. Each query is checked against the caller's roles before it reaches the database, and the [query audit](/docs/query-audit) records who ran what.
+- **Agents and code.** A built-in [MCP server](/docs/MCP) connects Claude, Cursor, Cline and LibreChat, and [Go, Python and TypeScript SDKs](/docs/SDK), a [CLI](/docs/cli) and [LangChain and Claude Agent SDK integrations](/docs/Agents) let you build on the catalog.
+
+Open source Marmot grants roles across the whole instance. [Marmot Cloud](/docs/Cloud/access-control) adds roles granted on a single data product, asset, glossary term or source, [secret stores](/docs/Cloud/secret-stores) that read passwords from your own vault and [keyless pipelines](/docs/Cloud/pipelines) that sign in to Google Cloud, AWS or Azure with no stored credential.
+
 ## How to choose a data catalog in 2026 {#how-to-choose}
 
 The criteria changed once agents became a consumer. Beyond search and lineage, weigh these:
 
 - **How it exposes context to AI.** Native [MCP](/resources/mcp-for-data) support, an agent-queryable API and lineage reachable through that interface.
 - **Governed context, not raw access.** Every query scoped to the caller's permissions, so an agent sees only what it should.
+- **Whether it can answer with data.** A catalog that runs governed, audited queries saves you building a separate path for agents to read rows.
 - **Deployment footprint.** What you actually have to run and keep healthy.
 - **Connector coverage and integration paths.** Pre-built connectors, plus SDKs and infrastructure-as-code for the long tail.
 - **Cost model.** Per-seat or per-usage pricing behaves differently under agent workloads, where query volume is high.
@@ -160,11 +179,11 @@ A data catalog is used to find data, understand it and trust it. People use it t
 
 ### What is the difference between a data catalog and a database? {#faq-vs-database}
 
-A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog does not hold your records. It is the index and context layer that makes the data across all your systems discoverable and trustworthy.
+A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog doesn't store your records. It's the index and context layer that makes the data across all your systems discoverable and trustworthy. Some catalogs, Marmot among them, can also run read-only queries against the sources they catalog on behalf of a person or agent, returning the rows without keeping them.
 
 ### What is the best open source data catalog in 2026? {#faq-best-open-source}
 
-The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context to agents. See [the full comparison](/resources/data-catalogs-for-ai-agents).
+The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents, and it can also run governed, read-only SQL against your sources with every query recorded in an audit log. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context and data to agents. See [the open source data catalog guide](/resources/open-source-data-catalog) and [the AI context layer comparison](/resources/data-catalogs-for-ai-agents).
 
 ### Do I need a data catalog? {#faq-need}
 
@@ -180,6 +199,8 @@ They are closely related but not identical. Metadata management is the broader p
 - [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
 - [AI Data Engineering](/resources/ai-data-engineering)
 - [Data Governance](/resources/data-governance)
+- [What Is Data Lineage?](/resources/data-lineage)
+- [Best Open Source Data Catalogs](/resources/open-source-data-catalog)
 
 <CalloutCard
   title="Try Marmot"

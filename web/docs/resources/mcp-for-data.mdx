@@ -10,7 +10,10 @@ keywords:
   - connect catalog to Claude
   - MCP vs API
   - MCP for AI agents
-date: 2026-06-30
+  - MCP server for databases
+  - MCP SQL query
+  - Claude Code MCP server
+date: 2026-11-05
 image: /img/resources/mcp-for-data.png
 ---
 
@@ -53,7 +56,7 @@ import Head from '@docusaurus/Head';
           "name": "How do I connect a data catalog to Claude or Cursor?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided."
+            "text": "If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided. Marmot's built-in MCP server documents the setup for Claude Code, Claude Desktop, Cursor, Cline and LibreChat, and also accepts OAuth sign-in."
           }
         },
         {
@@ -69,7 +72,7 @@ import Head from '@docusaurus/Head';
           "name": "Is MCP access to a data catalog secure?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have."
+            "text": "It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have. When the MCP server can also run SQL, the same rule applies to data: Marmot checks each query against the caller's permissions before it reaches the database and records it in a query audit."
           }
         }
       ]
@@ -105,6 +108,8 @@ The exact tools vary by product, but a catalog's MCP server typically offers:
 - **Ownership lookup**, to answer "who is responsible for this".
 - **Lineage traversal**, to follow what feeds an asset and what depends on it.
 - **Glossary lookup**, to resolve business terms to their agreed meaning.
+- **Data queries**, in some catalogs, to run read-only SQL against a source through the catalog's permission checks rather than with a database password.
+- **Write tools**, to add descriptions, tags or owners, for identities allowed to change the catalog.
 
 Each call returns context scoped to the caller, so the assistant works with governed data, not a raw export.
 
@@ -120,6 +125,23 @@ A good catalog offers both, with the MCP server wrapping the same API and the sa
 
 Both speak the same protocol to assistants, so the difference is operational rather than functional: one fewer moving part against an additional service to run. It is one of the axes we compare across tools in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
 
+## Marmot's MCP server {#marmot}
+
+[Marmot](/docs/introduction) has an [MCP server](/docs/MCP) built into the binary at `/api/v1/mcp`, so it's running as soon as Marmot is. It gives an assistant these tools:
+
+| Tool | What it answers |
+| --- | --- |
+| `discover_data` | Finds assets by name, type, provider, tags or metadata |
+| `find_ownership` | Who owns an asset, and everything a person or team owns |
+| `lookup_term` | Glossary definitions and the assets linked to a term |
+| `explore_data_products` | Which data products exist and the assets in each |
+| `explore_teams` | Teams and their members |
+| `trace_lineage` | What feeds an asset and what depends on it |
+| `update_documentation`, `manage_tags`, `manage_owners` | Writes descriptions, tags and owners, for identities that can manage assets |
+| `list_queryable_sources`, `query_data` | Runs read-only SQL against a source set up to answer queries |
+
+`query_data` is what lets an assistant go from "which table holds failed orders" to the rows themselves. Marmot checks the caller's permission to query before the statement reaches the source, refuses anything that isn't a single read, returns the rows without storing them and records the query in the [query audit](/docs/query-audit). The source runs the statement with its own credentials, so the assistant never holds a database password. On [Marmot Cloud](/docs/Cloud/query-access), a statement runs only when every table it reads is covered by one of the caller's grants. We cover the pattern in [governed data access for AI agents](/resources/ai-agent-database-access).
+
 ## How to connect a data catalog to Claude or Cursor {#connect}
 
 **If the catalog has an MCP server, connecting an assistant is a short, standard setup.** The shape is the same across clients:
@@ -128,7 +150,9 @@ Both speak the same protocol to assistants, so the difference is operational rat
 - Point the **MCP client** in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint.
 - **Authenticate** with the key, and the assistant discovers the catalog's tools.
 
-From there the assistant can query assets, ownership and lineage in natural language, scoped to that key. Marmot ships its MCP server in the binary, so there is no separate package to run; the [Marmot MCP docs](https://marmotdata.io/docs/MCP/) walk through the exact steps.
+From there the assistant can query assets, ownership and lineage in natural language, scoped to that key. Marmot ships its MCP server in the binary, so there's no separate package to run, and the [Marmot MCP docs](/docs/MCP) have the configuration for Claude Code, Claude Desktop, Cursor, Cline and LibreChat. Clients can also sign in with OAuth instead of an API key, including hosted clients such as claude.ai once you allow their host.
+
+An assistant that signs in with your key has your permissions. An agent that runs on its own should have its own [service account](/docs/MCP#use-a-service-account), so you can limit what it reaches and see what it did in the query audit. For agents you build in code, Marmot's [LangChain and Claude Agent SDK integrations](/docs/Agents) connect to the same catalog, and the [Marmot skill](/docs/MCP/skills) teaches coding agents the CLI and API.
 
 ## Frequently asked questions {#faq}
 
@@ -146,7 +170,7 @@ A REST API is best for deterministic automation you control, where your code kno
 
 ### How do I connect a data catalog to Claude or Cursor? {#faq-connect}
 
-If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided.
+If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided. Marmot's built-in MCP server documents the setup for Claude Code, Claude Desktop, Cursor, Cline and LibreChat, and also accepts OAuth sign-in.
 
 ### What is the difference between native MCP and a separate MCP server? {#faq-native-vs-separate}
 
@@ -154,18 +178,20 @@ Native MCP means the server is built into the catalog, so it is available the mo
 
 ### Is MCP access to a data catalog secure? {#faq-secure}
 
-It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have.
+It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have. When the MCP server can also run SQL, the same rule applies to data: Marmot checks each query against the caller's permissions before it reaches the database and records it in a query audit.
 
 ## Related {#related}
 
+- [What Is Data Lineage?](/resources/data-lineage)
 - [What Is an AI Context Layer?](/resources/ai-context-layer)
 - [AI Data Engineering: Giving Agents Real Context](/resources/ai-data-engineering)
 - [Data Governance](/resources/data-governance)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
 - [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
 
 <CalloutCard
   title="Marmot's built-in MCP server"
-  description="Marmot ships MCP in the binary. Connect Claude, Cursor or Cline in minutes."
+  description="Marmot ships MCP in the binary. Connect Claude, Cursor, Cline or LibreChat to your catalog and governed queries."
   href="https://marmotdata.io/docs/MCP/"
   buttonText="Read the MCP docs"
   variant="external"

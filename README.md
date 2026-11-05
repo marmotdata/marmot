@@ -1,127 +1,152 @@
-<div align="center">
-  <img src="./marmot.svg" width="180">
+<p align="center">
+  <img src="./marmot.svg" alt="" height="96">
+  &nbsp;&nbsp;
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/marmot-wordmark-paper.svg">
+    <img src="./web/docs/static/img/marmot-wordmark-ink.svg" alt="Marmot" height="72">
+  </picture>
+</p>
 
-# Marmot
+<p align="center">
+  <strong>One governed way in to your data, for people and AI agents.</strong>
+</p>
 
-**Discover any data asset in seconds. Then let your AI do the same.**
+<p align="center">
+  Marmot is an open-source data catalog with lineage, ownership and a built-in MCP server.<br>
+  It runs as one Go binary backed by PostgreSQL.
+</p>
 
-_The open-source context layer for your AI. Catalog your tables, topics, queues and APIs then expose real metadata to your AI agents._
+<p align="center">
+  <a href="https://marmotdata.io/docs/quick-start">Quick start</a> ·
+  <a href="https://marmotdata.io/docs/introduction">Documentation</a> ·
+  <a href="https://plugins.marmotdata.io">Plugins</a> ·
+  <a href="https://cloud.marmotdata.io/signup">Marmot Cloud</a> ·
+  <a href="https://discord.gg/TWCk7hVFN4">Discord</a>
+</p>
 
-[Documentation](https://marmotdata.io/docs/introduction) • [Deploy](https://marmotdata.io/docs/Deploy) • [Community](https://discord.gg/TWCk7hVFN4)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/readme-discover-dark.png">
+  <img src="./web/docs/static/img/readme-discover-light.png" alt="Marmot's Discover page listing cataloged PostgreSQL tables with their teams, tags and PII labels, and filters for kind and type">
+</picture>
 
-</div>
+## What you can do with it
 
-## What is Marmot?
+Marmot catalogs the tables, topics, dashboards and pipelines you already run, records what each one means and who owns it, and serves that context to everyone from one place:
 
-Marmot is an **open-source data catalog** for teams who want powerful data discovery without enterprise complexity. Catalog every data asset, enrich it with the context that matters and make it accessible to your team and your AI tools.
+- **Search every source** in plain words, then narrow the results with the [query language](https://marmotdata.io/docs/queries).
+- **Trace lineage** upstream and downstream, from plugins and [OpenLineage](https://marmotdata.io/docs/open-lineage) runs, before you change something. See [lineage](https://marmotdata.io/docs/lineage).
+- **Explain what data means** with owners, descriptions, a [glossary](https://marmotdata.io/docs/glossary) and [data products](https://marmotdata.io/docs/data-products) that travel with every asset.
+- **Give agents the same context** through the [MCP server](https://marmotdata.io/docs/MCP), the CLI and SDKs for Go, Python and TypeScript.
+- **Run SQL through Marmot** against the sources you connect. Each query is checked against the caller's roles and recorded in the [query audit](https://marmotdata.io/docs/query-audit), so an agent never needs a database password of its own.
+- **Keep it current** with [70+ plugins](https://plugins.marmotdata.io) for systems such as PostgreSQL, BigQuery, Kafka, dbt and Airflow, or declare assets yourself with [Terraform](https://marmotdata.io/docs/Populating/Terraform) and the [API](https://marmotdata.io/docs/Populating/API).
 
-Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
+## Try it locally
 
-<div align="center">
+You need Docker with Docker Compose, and port 8080 free. Save this as `docker-compose.yaml`. It's for trying Marmot out, so it stores credentials unencrypted:
 
-<a href="https://www.youtube.com/watch?v=_JBcQGj_bFU">
-  <img src="https://img.youtube.com/vi/_JBcQGj_bFU/maxresdefault.jpg" alt="Watch the Marmot demo on YouTube" width="480">
-</a>
+```yaml
+services:
+  marmot:
+    image: ghcr.io/marmotdata/marmot:latest
+    ports:
+      - "8080:8080"
+    environment:
+      MARMOT_DATABASE_HOST: postgres
+      MARMOT_DATABASE_PORT: 5432
+      MARMOT_DATABASE_USER: marmot
+      MARMOT_DATABASE_PASSWORD: marmot
+      MARMOT_DATABASE_NAME: marmot
+      MARMOT_DATABASE_SSLMODE: disable
+      MARMOT_SERVER_ALLOW_UNENCRYPTED: true
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-<p><a href="https://www.youtube.com/watch?v=_JBcQGj_bFU">▶ Watch the 2-minute demo</a></p>
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: marmot
+      POSTGRES_PASSWORD: marmot
+      POSTGRES_DB: marmot
+    volumes:
+      - marmot_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marmot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-</div>
+volumes:
+  marmot_data:
+```
 
-## Features
+Start it:
 
-- **Search everything**: Find any data asset in seconds with full-text search plus structured queries, boolean logic and metadata filters.
-- **Interactive lineage**: Trace data flows from source to destination and analyse impact before making changes.
-- **Metadata-first**: Store rich metadata for any asset type, from tables and topics to APIs and dashboards.
-- **Team collaboration**: Assign ownership, document business context and maintain shared glossaries.
-- **AI-ready**: Expose certified context through MCP, the API and the UI.
+```bash
+docker compose up -d
+```
 
-<div align="center">
-  <img alt="Marmot context layer showing plugins, integrations and AI agents" src="./web/docs/static/img/graph.png" width="900">
-</div>
+Open [http://localhost:8080](http://localhost:8080) and sign in as `admin` with the password `admin`. Marmot asks you to choose a new password, then you can open **Plugins** and pick a system under **Add a source** to catalog it. The [quick start](https://marmotdata.io/docs/quick-start) walks through the first pipeline.
 
-## Deploy
+To skip running it yourself, [Marmot Cloud](https://marmotdata.io/docs/Cloud/getting-started) launches a managed instance. The free plan needs no card.
 
-**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup.
+## Connect an agent
 
-## Development
+Create an API key under **Account → API keys**, then add Marmot to your client's MCP configuration. For Claude Code, that's `.mcp.json` in your project's root:
 
-See [Local Development](https://marmotdata.io/docs/Develop/local-development) for how to get started developing locally.
+```json
+{
+  "mcpServers": {
+    "marmot": {
+      "type": "http",
+      "url": "http://localhost:8080/api/v1/mcp",
+      "headers": {
+        "X-API-Key": "<api-key>"
+      }
+    }
+  }
+}
+```
 
-## Community
+The agent can then search the catalog, trace lineage and look up owners and glossary terms, with the same permissions as the key it uses:
 
-Join our [Discord community](https://discord.gg/TWCk7hVFN4) for help, feedback and updates on new features.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/readme-agent-lineage-dark.png">
+  <img src="./web/docs/static/img/readme-agent-lineage-light.png" alt="Claude answering which upstream service writes to a data warehouse by tracing lineage in Marmot" width="640">
+</picture>
+
+The [MCP docs](https://marmotdata.io/docs/MCP) cover Claude Desktop, Cursor, Cline and LibreChat. [Marmot for agents](https://marmotdata.io/docs/Agents) covers skills, LangChain and the Claude Agent SDK.
+
+## Work from your terminal
+
+The `marmot` CLI searches the catalog, manages assets and runs the server. Install it with Homebrew:
+
+```bash
+brew install marmot
+```
+
+Or with the install script:
+
+```bash
+curl -fsSL get.marmotdata.io | sh
+```
+
+See the [CLI reference](https://marmotdata.io/docs/cli) for every command.
+
+## Run it for your team
+
+The core is open source under the MIT licence and runs anywhere you can run a container or a binary. [Self-host](https://marmotdata.io/docs/Deploy) covers Docker Compose, Docker, Helm and the binary, with an encryption key for stored credentials. [Marmot Cloud](https://marmotdata.io/docs/Cloud) runs it for you and adds access control per resource, secret stores and keyless pipelines. The data model, query language, plugins and MCP server are the same in both.
+
+## Get help
+
+- [Discord](https://discord.gg/TWCk7hVFN4) for questions and talking to the team and other people running Marmot.
+- [GitHub issues](https://github.com/marmotdata/marmot/issues) for bugs and feature requests.
+- [Report a vulnerability](https://marmotdata.io/security) privately, not in an issue.
 
 ## Contributing
 
-All types of contributions are encouraged and valued!
+Read the [contributing guide](CONTRIBUTING.md) before you open a pull request. [Local development](https://marmotdata.io/docs/Develop/local-development) gets Marmot running from source, and [build a plugin](https://marmotdata.io/docs/Develop/creating-plugins) covers connecting a system that has no plugin yet.
 
-- Report bugs or suggest features via [GitHub Issues](https://github.com/your-org/marmot/issues)
-- Improve documentation
-- Build new plugins for data sources
+## Licence
 
-Before contributing, please check out the [Contributing Guide](CONTRIBUTING.md).
-
-
-
-## FAQ
-
-### What is Marmot?
-
-Marmot is an **open-source data catalog** for teams who want powerful data discovery without enterprise complexity. It catalogs every data asset (tables, topics, queues, APIs), enriches it with context, and makes it accessible to both your team and AI tools. Unlike traditional catalogs requiring extensive infrastructure, Marmot ships as a **single binary** with an intuitive UI.
-
-### Why Use Marmot?
-
-| Feature | Benefit |
-|---------|---------|
-| **Search Everything** | Find any data asset in seconds with full-text search, structured queries, boolean logic, and metadata filters |
-| **Interactive Lineage** | Trace data flows from source to destination, analyze impact before making changes |
-| **Metadata-First** | Store rich metadata for any asset type (tables, topics, APIs, dashboards) |
-| **Team Collaboration** | Assign ownership, document business context, maintain shared glossaries |
-| **AI-Ready** | Expose certified context through MCP, API, and UI |
-| **Single Binary** | No complex infrastructure required, deploy in minutes |
-
-### How Does Marmot Integrate with AI Agents?
-
-Marmot exposes certified context through **MCP (Model Context Protocol)**, enabling AI agents to query real metadata about your data assets. This allows AI tools to understand your data landscape, trace lineage, and make informed decisions based on actual metadata rather than guessing.
-
-### What Data Sources Can I Catalog?
-
-Marmot supports cataloging various data asset types through its plugin system:
-- **Tables** (databases, data warehouses)
-- **Topics** (message queues, event streams)
-- **Queues** (job queues, messaging systems)
-- **APIs** (REST, GraphQL, internal services)
-- **Dashboards** (visualization tools, BI platforms)
-
-### How Do I Deploy Marmot?
-
-**Quick Start Options:**
-
-| Method | Description |
-|--------|-------------|
-| **Documentation Guide** | Follow the [Deploy](https://marmotdata.io/docs/Deploy) guide for step-by-step setup |
-| **Single Binary** | Download and run the single binary for your platform |
-
-### Is Marmot Free?
-
-Yes! Marmot is **open-source software** licensed under the **MIT License**. You can use, modify, and distribute it freely. Self-hosting is completely free with no licensing costs.
-
-### How Can I Contribute?
-
-All contributions are welcome:
-- **Report bugs** or suggest features via [GitHub Issues](https://github.com/marmotdata/marmot/issues)
-- **Improve documentation** (README, guides, API docs)
-- **Build new plugins** for additional data sources
-- **Check the [Contributing Guide](CONTRIBUTING.md)** before contributing
-
-### Where Can I Get Help?
-
-| Resource | Link |
-|----------|------|
-| **Documentation** | [marmotdata.io/docs](https://marmotdata.io/docs/introduction) |
-| **Discord Community** | [Join Discord](https://discord.gg/TWCk7hVFN4) |
-| **GitHub Issues** | [Report issues](https://github.com/marmotdata/marmot/issues) |
-
-## License
-
-Marmot is open-source software licensed under the [MIT License](LICENSE).
+Marmot is open source under the [MIT licence](LICENSE).

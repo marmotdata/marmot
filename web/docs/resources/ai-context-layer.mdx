@@ -10,7 +10,9 @@ keywords:
   - context layer MCP
   - governed context for AI
   - AI context layer vs RAG
-date: 2026-06-30
+  - governed data access for AI agents
+  - context layer for data
+date: 2026-11-05
 image: /img/resources/ai-context-layer.png
 ---
 
@@ -42,10 +44,10 @@ import Head from '@docusaurus/Head';
         },
         {
           "@type": "Question",
-          "name": "Does an AI context layer serve data or just metadata?",
+          "name": "Does an AI context layer serve data or only metadata?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like 'show me last week's failed orders' needs both: metadata to find the right table and data access to return the rows. Either way, access stays scoped to the caller's permissions."
+            "text": "Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like 'show me last week's failed orders' needs both: metadata to find the right table and data access to return the rows. Marmot does both: its MCP server serves catalog context, and its query_data tool runs read-only SQL that's checked against the agent's roles and recorded in the query audit. Either way, access stays scoped to the caller's permissions."
           }
         },
         {
@@ -149,6 +151,17 @@ When you evaluate options, weigh the things that decide whether the layer is act
 
 We compare the main catalogs on exactly these terms in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
 
+## Building an AI context layer with Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source data catalog built to be this layer for people and agents. It runs as one Go binary on PostgreSQL, or on [Marmot Cloud](/docs/Cloud) if you'd rather not run it. The pieces of a context layer described in this guide map onto it like this:
+
+- **Metadata context.** 70+ [plugins](/docs/Plugins) catalog your databases, warehouses, streams, pipelines and dashboards, and [Terraform](/docs/Populating/Terraform), [Pulumi](/docs/Populating/Pulumi) and the [API](/docs/Populating/API) add whatever a plugin can't see. Owners, [glossary terms](/docs/glossary), [data products](/docs/data-products) and [lineage down to the column](/docs/lineage) travel with every asset.
+- **Data context.** A source whose plugin supports querying can [answer read-only SQL](/docs/data-queries) through Marmot. Marmot checks the caller's roles before the statement reaches the database, returns the rows without storing them and records the query in the [query audit](/docs/query-audit), so an agent never needs a database password of its own.
+- **One interface for agents.** The built-in [MCP server](/docs/MCP) gives Claude Code, Claude Desktop, Cursor, Cline and LibreChat tools to discover data, find owners, look up terms, trace lineage, explore data products and query sources. [Skills](/docs/MCP/skills), the [LangChain integration](/docs/Agents/langchain) and the [Claude Agent SDK integration](/docs/Agents/claude-agent) cover agents you build yourself.
+- **Governance.** Each agent signs in as its own [service account](/docs/Configure/access-control) with only the roles it needs. On [Marmot Cloud](/docs/Cloud/access-control), a role can be granted on a single data product, table, glossary term or source, so an agent given one data product [can only query the tables in it](/docs/Cloud/query-access).
+
+When an agent's service account queries a table, Marmot also records the agent in that table's lineage, so you can see which agents depend on which data.
+
 ## Frequently asked questions {#faq}
 
 ### What is an AI context layer? {#faq-what}
@@ -159,9 +172,9 @@ An AI context layer is the governed source of truth that tells AI agents what yo
 
 An AI agent is only as good as the context it is given. Without one it guesses about your schemas, ownership and meaning, and a confident wrong answer is worse than no answer. A context layer gives the agent real, governed information about your data at runtime, so it stops hallucinating about your stack and acts on facts instead. The model is rarely the limit; the context usually is.
 
-### Does an AI context layer serve data or just metadata? {#faq-data-or-metadata}
+### Does an AI context layer serve data or only metadata? {#faq-data-or-metadata}
 
-Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like "show me last week's failed orders" needs both: metadata to find the right table and data access to return the rows. Either way, access stays scoped to the caller's permissions.
+Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like "show me last week's failed orders" needs both: metadata to find the right table and data access to return the rows. Marmot does both: its MCP server serves catalog context, and its `query_data` tool runs read-only SQL that's checked against the agent's roles and recorded in the query audit. Either way, access stays scoped to the caller's permissions.
 
 ### What is the difference between an AI context layer and RAG? {#faq-vs-rag}
 
@@ -181,10 +194,12 @@ MCP, the Model Context Protocol, is the standard interface that lets AI tools re
 
 ## Related {#related}
 
+- [What Is Data Lineage?](/resources/data-lineage)
 - [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
 - [What Is a Data Catalog?](/resources/data-catalog)
 - [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
 - [AI Data Engineering](/resources/ai-data-engineering)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
 
 <CalloutCard
   title="Build your AI context layer with Marmot"

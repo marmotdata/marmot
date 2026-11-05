@@ -1,0 +1,234 @@
+---
+slug: /data-lineage
+title: "What Is Data Lineage? A 2026 Guide to Column-Level Lineage"
+description: "What data lineage is, table versus column-level lineage, how it's collected with OpenLineage and lineage APIs, the tools that track it and why AI agents need it."
+keywords:
+  - data lineage
+  - what is data lineage
+  - column-level lineage
+  - data lineage tools
+  - open source data lineage
+  - OpenLineage
+  - data lineage vs data provenance
+  - impact analysis
+  - data lineage for AI agents
+date: 2026-11-05
+image: /img/resources/data-lineage.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+import { ThemedImg } from '@site/src/components/ThemedImg';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/data-lineage" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is data lineage?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data lineage is the record of where data comes from, how it moves and changes, and where it ends up. It maps the path from a source system through pipelines and transformations to the tables, models and dashboards built on it, so you can see what feeds an asset and what depends on it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is column-level lineage?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Column-level lineage traces individual fields rather than whole tables. Where table-level lineage says the orders table feeds gmv_daily, column-level lineage says that amount_gbp feeds gmv_gbp and placed_at feeds day. It answers which reports a column change will break and where a wrong value came from, which table-level lineage can only narrow down."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is OpenLineage?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OpenLineage is an open standard for lineage metadata. Tools such as Airflow, dbt and Spark emit run events that describe a job, the datasets it read and wrote and the run's status, and any system that accepts OpenLineage, Marmot included, can build lineage from them without a custom integration per tool."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between data lineage and data provenance?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data lineage maps how data flows between systems and transformations: what feeds what. Data provenance is narrower and deeper, a record of the origin and history of a specific piece of data, such as who created a record and how it was changed. Lineage is mostly used for impact analysis and debugging; provenance for audit and reproducibility. The terms are often used interchangeably."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is data lineage collected?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There are four common ways. Connectors read lineage the source already knows, such as dbt refs or a view's SQL definition. Runtime events, usually OpenLineage, are emitted by orchestrators and engines as jobs run. A lineage API lets your own pipelines send edges directly. And people add edges manually for systems nothing else can see. Most catalogs combine all four."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the best data lineage tools?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data catalogs such as Marmot, DataHub and OpenMetadata collect lineage from many sources and show it alongside ownership and definitions. Marquez is the reference implementation of OpenLineage and focuses on job and dataset lineage. Transformation tools like dbt show lineage within their own project. Commercial catalogs add managed connectors. The right choice depends on how many systems you need to connect and who will read the lineage."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does data lineage matter for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An agent that changes a table, writes a query or answers a question needs to know what feeds the data and what depends on it, the same as an engineer would. Lineage exposed over an API or MCP lets the agent check impact before it acts. Marmot also records lineage from the tables an agent queries to the agent itself, so you can see which agents depend on which data."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+Data lineage is the record of where data comes from, how it changes on the way and where it ends up. It's what lets you answer "what breaks if I change this table" before you change it, and "where did this number come from" when a dashboard looks wrong.
+
+This guide explains what data lineage is, the difference between table and column-level lineage, how lineage is collected, the role of OpenLineage, the tools that track it and why it matters once AI agents work with your data.
+
+## What is data lineage? {#what-is}
+
+**Data lineage is a map of how data flows from its sources, through pipelines and transformations, to the assets built on it.** Each asset, such as a Kafka topic, a table, a dbt model or a dashboard, is a node. Each "this feeds that" relationship is an edge. Following the edges upstream tells you where an asset's data comes from; following them downstream tells you everything that depends on it.
+
+A typical path might run from an `orders` topic in Kafka to an `orders` table in PostgreSQL, through a `fct_orders` dbt model to a `gmv_daily` view and finally a revenue dashboard. Lineage records that whole chain across the tools involved, which no single tool sees on its own.
+
+## Why data lineage matters {#why}
+
+Lineage earns its place in a few recurring situations:
+
+- **Impact analysis.** Before you rename a column, drop a table or change a pipeline, lineage shows every model and dashboard downstream, and their owners, so you can warn them or change course.
+- **Root cause analysis.** When a number looks wrong, lineage narrows the search to the sources and transformations that feed it, instead of every system in the stack.
+- **Compliance and data protection.** Knowing where personal data flows makes it possible to answer an erasure request or a regulator's question about where a field ends up.
+- **Trust and onboarding.** Someone new to a dataset can see where it comes from and what it's used for, which says a lot about whether to rely on it.
+- **Context for AI agents.** An agent about to change or query data needs the same dependency picture an engineer would check, delivered through an interface it can call.
+
+## Table-level vs column-level lineage {#column-level}
+
+**Table-level lineage tells you which assets feed which. Column-level lineage tells you which fields feed which.** Table-level lineage says `orders` feeds `gmv_daily`. Column-level lineage says `amount_gbp` feeds `gmv_gbp`, `placed_at` feeds `day` and `fee_gbp` feeds `fees_gbp`.
+
+The difference matters most when you're about to change something. Dropping a column from a table with forty downstream assets is alarming at table level, but column-level lineage might show only two of them read that column. The same goes for debugging: a wrong value in one field can be traced through the specific columns and expressions that derive it, rather than every column in every upstream table.
+
+Column-level lineage is harder to collect because it needs to know how each output column is derived, from a SQL definition, a dbt model or the pipeline itself. Most catalogs record it where a source exposes that mapping and fall back to table-level lineage elsewhere.
+
+## How data lineage is collected {#how-collected}
+
+**Lineage is collected in four ways, and most catalogs combine them.**
+
+- **From the source's own definitions.** A connector reads lineage the system already knows: dbt models from their refs, database views from their SQL, Airflow DAGs from the datasets they produce and consume. This is the most accurate source of column-level lineage, because the transformation is right there.
+- **From runtime events.** Orchestrators and engines emit an event as each job runs, describing what it read and wrote. [OpenLineage](#openlineage) is the common standard for these events.
+- **From an API.** Your own pipelines and services send edges directly, with or without column mappings, as part of each run. This covers custom code that no connector understands.
+- **Manually.** People add edges for systems that nothing else can see, such as a spreadsheet that feeds a weekly import.
+
+Static definitions show what's supposed to happen. Runtime events and API calls show what did happen. A good lineage graph shows both and tells you which is which.
+
+## What is OpenLineage? {#openlineage}
+
+**OpenLineage is an open standard for lineage metadata, hosted by the LF AI & Data Foundation.** It defines run events that describe a job, the datasets it read and wrote and the run's state, with optional facets for details such as schemas and column lineage. Integrations exist for tools including Airflow, dbt and Spark, so a pipeline that already emits OpenLineage events can feed any system that accepts them.
+
+OpenLineage is the right choice when the tools you run already emit it. For lineage from your own code, a catalog's direct lineage API is often simpler, because it takes edges between assets without the run and job model OpenLineage wraps them in.
+
+## Data lineage vs data provenance {#vs-provenance}
+
+**Lineage maps how data flows between systems. Provenance records the origin and history of a particular piece of data.** Lineage answers "which tables and jobs feed this dashboard". Provenance answers "where did this record come from, who created it and how has it changed".
+
+In practice the terms overlap and are often used interchangeably. Data teams mostly mean lineage: the graph of assets and transformations used for impact analysis, debugging and compliance.
+
+## Data lineage tools {#tools}
+
+Lineage tools fall into a few groups:
+
+- **Data catalogs.** Open source catalogs such as Marmot, DataHub and OpenMetadata, and commercial ones such as Atlan and Collibra, collect lineage from many systems and show it next to ownership, definitions and access control. This is where lineage is most useful to people outside the data team.
+- **OpenLineage servers.** Marquez, the reference implementation of OpenLineage, collects run events and serves job and dataset lineage.
+- **Transformation tools.** dbt draws lineage within a project, which is precise but stops at the edge of that project.
+- **Observability platforms.** Data observability tools use lineage to trace an incident to its source and show what it affects.
+
+When you compare tools, check which of your systems each one can read lineage from, whether it records column-level lineage for those systems, whether it accepts OpenLineage and a direct API for everything else, and whether people and agents can query the lineage rather than only look at it. Marmot does each of these: its plugins record column-level lineage from systems such as dbt and PostgreSQL, it accepts OpenLineage events and has a direct lineage API, and agents query the graph through its built-in MCP server. We compare the main catalogs in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents) and the open source options in [Best Open Source Data Catalogs](/resources/open-source-data-catalog).
+
+## Data lineage for AI agents {#agents}
+
+**An agent needs lineage for the same reasons an engineer does, but it can't look at a diagram.** Before an agent changes a model, it should know what reads from it. Before it answers "why did revenue drop", it should know which sources feed the revenue table. That means lineage has to be available through an interface the agent can call, such as an API or [MCP](/resources/mcp-for-data), and scoped to what the agent may see.
+
+Lineage also runs the other way. When agents query your data, the tables they read become their upstream. Recording that tells you which agents depend on which data, so a schema change or a deprecation can take them into account. We cover the wider picture in [What Is an AI Context Layer?](/resources/ai-context-layer).
+
+## Data lineage in Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source data catalog that records [lineage](/docs/lineage) across your stack and draws it on every asset's **Lineage** tab, down to the column where it knows how columns map.
+
+- **From plugins.** Plugins record lineage as they catalog: dbt models from their refs, Airflow DAGs from the datasets they produce and consume and PostgreSQL views from their definitions, down to the column. The [plugin registry](https://plugins.marmotdata.io) lists what each of the 70+ plugins records.
+- **From OpenLineage.** Tools that emit [OpenLineage](/docs/open-lineage) events, such as Airflow, dbt and Spark, send them to Marmot as they run. Each event adds the job and its datasets and records the run with its status and timing.
+- **From the lineage API.** `POST /api/v1/lineage/batch` records a list of edges, each with optional column mappings, and `POST /api/v1/lineage/direct` records a single edge. Sending an edge that already exists refreshes its column lineage, so a pipeline can send its lineage on every run. This is the recommended path for new integrations.
+- **As code.** The [Terraform provider](/docs/Populating/Terraform) has a `marmot_lineage` resource, and [Pulumi](/docs/Populating/Pulumi) uses the same provider.
+- **Manually.** With permission to manage assets, select an asset on the graph and choose **Add upstream** or **Add downstream**.
+- **From agents' queries.** When an agent's service account runs a [data query](/docs/data-queries) against a table, Marmot records an observed edge from the table to the agent.
+
+On the graph, declared edges are solid and observed edges, such as a pipeline run or an agent's query, are dashed. Agents reach the same graph through the `trace_lineage` tool on Marmot's [MCP server](/docs/MCP), and code reaches it through the [SDKs](/docs/SDK) and [CLI](/docs/cli). Owners and followers get a [notification](/docs/Notifications) when an upstream schema changes, and a team's [webhook](/docs/Notifications/webhooks) can send those notices to Slack or Discord.
+
+Selecting an edge that carries column-level lineage traces each source column to the column it feeds:
+
+<ThemedImg
+  lightSrc="/img/lineage-columns-light.png"
+  darkSrc="/img/lineage-columns-dark.png"
+  alt="Column-level lineage in Marmot: Kafka topics feed the orders and listings tables, and the orders columns placed_at, amount_gbp and fee_gbp feed day, gmv_gbp and fees_gbp in the gmv_daily view"
+/>
+
+## Data lineage best practices {#best-practices}
+
+A few habits keep a lineage graph useful:
+
+- **Start where the transformations are.** Connect dbt, your orchestrator and your warehouse first, since they hold most of the column-level detail.
+- **Send lineage from custom pipelines on every run**, through OpenLineage or a lineage API, so the graph reflects what ran rather than what someone drew once.
+- **Keep owners on assets**, so impact analysis ends with someone to tell.
+- **Prefer column-level lineage for critical paths**, such as revenue and personal data, where table-level lineage is too coarse to act on.
+- **Make lineage queryable**, through an API, CLI or MCP, so automation and agents can check impact before they act.
+
+## Frequently asked questions {#faq}
+
+### What is data lineage? {#faq-what}
+
+Data lineage is the record of where data comes from, how it moves and changes, and where it ends up. It maps the path from a source system through pipelines and transformations to the tables, models and dashboards built on it, so you can see what feeds an asset and what depends on it.
+
+### What is column-level lineage? {#faq-column-level}
+
+Column-level lineage traces individual fields rather than whole tables. Where table-level lineage says the orders table feeds gmv_daily, column-level lineage says that amount_gbp feeds gmv_gbp and placed_at feeds day. It answers which reports a column change will break and where a wrong value came from, which table-level lineage can only narrow down.
+
+### What is OpenLineage? {#faq-openlineage}
+
+OpenLineage is an open standard for lineage metadata. Tools such as Airflow, dbt and Spark emit run events that describe a job, the datasets it read and wrote and the run's status, and any system that accepts OpenLineage, Marmot included, can build lineage from them without a custom integration per tool.
+
+### What is the difference between data lineage and data provenance? {#faq-vs-provenance}
+
+Data lineage maps how data flows between systems and transformations: what feeds what. Data provenance is narrower and deeper, a record of the origin and history of a specific piece of data, such as who created a record and how it was changed. Lineage is mostly used for impact analysis and debugging; provenance for audit and reproducibility. The terms are often used interchangeably.
+
+### How is data lineage collected? {#faq-how-collected}
+
+There are four common ways. Connectors read lineage the source already knows, such as dbt refs or a view's SQL definition. Runtime events, usually OpenLineage, are emitted by orchestrators and engines as jobs run. A lineage API lets your own pipelines send edges directly. And people add edges manually for systems nothing else can see. Most catalogs combine all four.
+
+### What are the best data lineage tools? {#faq-tools}
+
+Data catalogs such as Marmot, DataHub and OpenMetadata collect lineage from many sources and show it alongside ownership and definitions. Marquez is the reference implementation of OpenLineage and focuses on job and dataset lineage. Transformation tools like dbt show lineage within their own project. Commercial catalogs add managed connectors. The right choice depends on how many systems you need to connect and who will read the lineage.
+
+### Why does data lineage matter for AI agents? {#faq-agents}
+
+An agent that changes a table, writes a query or answers a question needs to know what feeds the data and what depends on it, the same as an engineer would. Lineage exposed over an API or MCP lets the agent check impact before it acts. Marmot also records lineage from the tables an agent queries to the agent itself, so you can see which agents depend on which data.
+
+## Related {#related}
+
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [Data Quality for AI Agents](/resources/data-quality)
+- [Data Governance](/resources/data-governance)
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+
+<CalloutCard
+  title="Track lineage with Marmot"
+  description="Column-level lineage from plugins, OpenLineage and a direct API, in an open source catalog that needs only Postgres."
+  href="https://marmotdata.io/docs/lineage"
+  buttonText="Read the lineage docs"
+  variant="external"
+  icon="mdi:graph-outline"
+/>

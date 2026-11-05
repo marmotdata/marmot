@@ -11,7 +11,9 @@ keywords:
   - data freshness
   - data certification
   - great expectations
-date: 2026-06-30
+  - schema change alerts
+  - data quality and lineage
+date: 2026-11-05
 image: /img/resources/data-quality.png
 ---
 
@@ -78,7 +80,7 @@ import Head from '@docusaurus/Head';
   </script>
 </Head>
 
-Data quality is the degree to which your data is accurate, fresh, complete and trustworthy enough to act on. It has always mattered. What changed in 2026 is who consumes it: an AI agent takes your data at face value, so poor quality no longer just misleads a person, it drives an autonomous action.
+Data quality is the degree to which your data is accurate, fresh, complete and trustworthy enough to act on. It has always mattered. What changed in 2026 is who consumes it: an AI agent takes your data at face value, so poor quality no longer only misleads a person, it drives an autonomous action.
 
 This guide explains what data quality is, the dimensions it breaks into, the tools that measure it, how it differs from data observability, and why it is the foundation an AI context layer is built on.
 
@@ -137,7 +139,20 @@ You do not fix quality by buying a tool. You fix it with a few habits the tool s
 
 **Certification and freshness are themselves metadata an agent should be able to read.** A catalog that surfaces "this table is certified and updated hourly" lets an agent prefer trusted sources and steer around deprecated ones. Without it, the agent cannot tell a golden table from a forgotten one, and every quality problem in your stack becomes a potential agent mistake.
 
-This is why quality belongs in the same governed context an agent queries for schema and ownership. When freshness, test results and certification travel with the asset, an agent has what it needs to choose the right data, not just any data that matches the question.
+This is why quality belongs in the same governed context an agent queries for schema and ownership. When freshness, test results and certification travel with the asset, an agent has what it needs to choose the right data, not only any data that matches the question.
+
+## Quality context in Marmot {#marmot}
+
+[Marmot](/docs/introduction) isn't a testing or observability tool, so it doesn't run checks against your data. It holds the context around quality that people and agents need to decide what to trust, and tells the right people when something changes.
+
+- **Owners on every asset.** A failing check needs someone accountable. **Insights** shows how many assets have an owner and which ones have gone stale, so you can see where the catalog is thin ([monitoring and metrics](/docs/metrics)).
+- **Schema change notices.** Owners and followers get a [notification](/docs/Notifications) when an asset or its schema changes, and a team's [webhook](/docs/Notifications/webhooks) can send schema changes and upstream schema changes to Slack, Discord or any HTTPS address.
+- **Lineage for root cause and impact.** [Lineage](/docs/lineage) shows what feeds a table and what depends on it, down to the column where the mapping is known, so a bad value can be traced upstream and its blast radius checked downstream.
+- **Run history.** Pipelines keep the history and log of each run, and [OpenLineage](/docs/open-lineage) events record each job's runs with their status and timing.
+- **Agreed definitions.** The [glossary](/docs/glossary) settles what a term like "active buyer" means and links it to the columns that hold it, which removes a common source of inconsistent numbers. [Asset rules](/docs/asset-rules) can attach a runbook link or a term to every asset that matches a search.
+- **Searchable signals.** Quality results you record as metadata on an asset can be filtered with the [query language](/docs/queries), such as `@metadata.environment: "production"`, by people in **Discover** and by agents over [MCP](/docs/MCP).
+
+When a source answers [data queries](/docs/data-queries), turning on **Refresh the catalog when queried** updates a table's details when a query reads it, at most hourly, so the catalog keeps up with the tables people use most.
 
 ## Frequently asked questions {#faq}
 
@@ -169,6 +184,7 @@ Start by defining what good looks like for your most important datasets, then te
 
 - [What Is a Data Catalog?](/resources/data-catalog)
 - [Data Governance](/resources/data-governance)
+- [What Is Data Lineage?](/resources/data-lineage)
 - [What Is an AI Context Layer?](/resources/ai-context-layer)
 - [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
 

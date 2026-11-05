@@ -5,7 +5,7 @@ type Testimonial = {
   quote: string;
   name: string;
   role: string;
-  company: string;
+  company?: string;
   avatar?: string;
 };
 
@@ -15,7 +15,6 @@ const testimonials: Testimonial[] = [
       "Marmot brings metadata, ownership and lineage into one searchable catalog, making data products easier to discover and understand.",
     name: "Manuel Jáñez García",
     role: "Senior Specialist of Data Governance Services",
-    company: "Telefónica",
     avatar: "/img/testimonials/manuel-janez-garcia.jpg",
   },
 ];
@@ -85,9 +84,11 @@ export default function Testimonials(): JSX.Element {
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {t.role}
                 </div>
-                <div className="mt-0.5 text-sm font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-400">
-                  {t.company}
-                </div>
+                {t.company && (
+                  <div className="mt-0.5 text-sm font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-400">
+                    {t.company}
+                  </div>
+                )}
               </div>
             </figcaption>
           </figure>

@@ -12,7 +12,7 @@ Marmot Cloud stores your catalog's metadata, never your data, and keeps every in
 
 ## What Marmot stores
 
-Marmot stores metadata: asset names, schemas, ownership, descriptions, tags, lineage, glossary terms and statistics. Plugins read structure, never rows, messages or payloads.
+Marmot stores metadata: asset names, schemas, ownership, descriptions, tags, lineage, glossary terms and statistics.
 
 There are two exceptions:
 

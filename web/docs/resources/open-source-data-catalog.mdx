@@ -1,0 +1,224 @@
+---
+slug: /open-source-data-catalog
+title: "Best Open Source Data Catalogs in 2026: Self-Hosted Options"
+description: "The main open source data catalogs compared on licence, footprint, lineage and AI agent support: Marmot, OpenMetadata, DataHub, Apache Atlas, Marquez and the archived Amundsen."
+keywords:
+  - open source data catalog
+  - self-hosted data catalog
+  - free data catalog
+  - open source data catalog tools
+  - open source metadata management
+  - open source data discovery
+  - data catalog on GitHub
+  - DataHub alternative
+  - OpenMetadata alternative
+date: 2026-11-05
+image: /img/resources/open-source-data-catalog.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/open-source-data-catalog" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the best open source data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It depends on what you can run and what you need it to see. Marmot is the lightest, a single Go binary on PostgreSQL with a built-in MCP server and governed SQL for agents. OpenMetadata has the widest open source connector library and runs as several services. DataHub has a broad ecosystem and runs on Kafka, a graph store and Elasticsearch. Apache Atlas suits Hadoop estates, and Amundsen is archived."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a free data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Open source catalogs such as Marmot (MIT licence), OpenMetadata and DataHub (both Apache 2.0) are free to download and self-host, with no per-seat fees. You pay for the infrastructure they run on and the time to operate them. Some also offer a managed edition: Marmot Cloud is free to start."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I self-host a data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Open source catalogs are built to be self-hosted on your own servers or cloud account, so metadata stays in your infrastructure. What differs is how much you run: Marmot needs one binary and PostgreSQL, while platforms such as DataHub and OpenMetadata add a search cluster and, for DataHub, Kafka and a graph store."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should I look for in an open source data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Check the licence, what you have to run, whether it has connectors for your sources and a way to add the rest as code, how it collects lineage, how access control works, how AI agents reach it, for example over MCP, how upgrades and connector updates work and whether the project is actively maintained."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Amundsen still maintained?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Amundsen's maintainers archived the repository on 10 September 2026, so it gets no new features, bug fixes or security patches. Teams running it can move to another catalog; Marmot's Amundsen plugin imports tables, columns, owners, tags, dashboards and lineage from an existing Amundsen graph."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Open source or managed data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Self-hosting open source gives you control, data residency and no licence fees, in exchange for running it. A managed catalog removes the operations work. Several open source catalogs have a commercial managed edition, so you can start on one and move to the other; Marmot runs the same catalog self-hosted or on Marmot Cloud."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+An open source data catalog gives you an inventory of your data, its owners, its meaning and its lineage, on infrastructure you control and without a licence fee. The choice between them comes down to licence, how much you have to run, what each one can see and how it serves people and AI agents.
+
+This guide explains what an open source data catalog is, when to choose one over a managed product, what to look for and how the main options compare.
+
+## What is an open source data catalog? {#what-is}
+
+**An open source data catalog is a [data catalog](/resources/data-catalog) whose source code is published under an open source licence, so you can run, inspect and change it yourself.** Like any catalog, it collects metadata from your databases, warehouses, streams, pipelines and dashboards into one searchable place, with owners, descriptions, glossary terms and lineage.
+
+The difference is in who controls it. You decide where it runs, which version you're on and who can see the metadata, and you can read the code before you trust it with your schemas and credentials.
+
+## Why choose an open source data catalog {#why}
+
+Teams pick open source catalogs for a few reasons:
+
+- **Cost.** No licence or per-seat fees. That matters more once AI agents query the catalog, because they ask far more often than people do.
+- **Control and data residency.** Metadata, and the credentials used to collect it, stay in your own infrastructure.
+- **Transparency.** You can read how access control and connectors work, and audit them for a security review.
+- **Extensibility.** You can write a connector for an in-house system, or fix one, rather than waiting on a vendor.
+- **No lock-in.** If the project or vendor changes direction, you still have the code and your data.
+
+The trade-off is operations. Someone has to deploy, upgrade, back up and secure the catalog, and the amount of work depends heavily on the architecture.
+
+## Open source vs managed data catalogs {#vs-managed}
+
+**Self-hosting open source trades operations work for control. A managed catalog trades control for not running anything.** Commercial platforms such as Atlan and Collibra are managed services with vendor support and compliance certifications. Several open source catalogs also have a commercial managed edition, so the choice isn't always one or the other.
+
+A practical approach is to pick a catalog whose open source edition you'd be happy to run, then decide whether to run it yourself or pay for the managed edition. Marmot, for example, runs the same catalog self-hosted under the MIT licence or on [Marmot Cloud](/docs/Cloud).
+
+## What to look for in an open source data catalog {#what-to-look-for}
+
+- **Licence.** MIT and Apache 2.0 are permissive; check whether any features you need sit outside the open source edition.
+- **Footprint.** What you have to deploy and keep healthy, from a single binary on a database to a platform with a message bus, graph store and search cluster.
+- **Connectors.** Whether your sources are covered, and how you add the ones that aren't: as code, through an SDK or an API.
+- **Lineage.** Which systems it reads lineage from, whether it records [column-level lineage](/resources/data-lineage) and whether it accepts OpenLineage.
+- **Governance.** How roles work, whether access can be granted per asset and whether there's an audit of who did what.
+- **AI agent support.** Whether agents can reach governed context through MCP and an API, and whether they can query data through the catalog with the same controls.
+- **Upgrades and connector updates.** How often you'll need to upgrade, and whether a connector fix can ship without upgrading the whole catalog.
+- **Project health.** Recent releases, open issues being answered and more than one company behind it.
+
+## The main open source data catalogs {#options}
+
+| Catalog | Licence | Core dependencies | MCP | Best for |
+|---|---|---|---|---|
+| **[Marmot](https://github.com/marmotdata/marmot)** | MIT | PostgreSQL (Elasticsearch optional) | Native, built in | The smallest footprint, with governed SQL for agents |
+| **[OpenMetadata](https://open-metadata.org)** | Apache 2.0 | Postgres or MySQL, Elasticsearch or OpenSearch, Airflow-based ingestion | Native, built in | The widest open source connector library |
+| **[DataHub](https://datahub.com)** | Apache 2.0 | Kafka, graph store, Elasticsearch | Official, separate server | Broad ecosystem, teams already running Kafka |
+| **[Apache Atlas](https://atlas.apache.org)** | Apache 2.0 | JanusGraph, HBase, Solr, Kafka | Community (unofficial) | Hadoop and Cloudera estates |
+| **[Amundsen](https://github.com/amundsen-io/amundsen)** (archived) | Apache 2.0, no longer maintained | Neo4j or Atlas, Elasticsearch | None | Existing installs planning a migration |
+| **[Marquez](https://marquezproject.ai)** | Apache 2.0 | PostgreSQL | None | OpenLineage job and dataset lineage only |
+
+### Marmot {#marmot}
+
+[Marmot](/docs/introduction) is a data catalog, query gateway and MCP server for people and agents, in one Go binary backed by PostgreSQL. 70+ [plugins](/docs/Plugins) catalog databases, warehouses, streams, orchestrators and BI tools, and [Terraform](/docs/Populating/Terraform), [Pulumi](/docs/Populating/Pulumi), a [Kubernetes operator](/docs/Populating/Operator) and the [API](/docs/Populating/API) cover the rest. It has a [glossary](/docs/glossary) with terms on columns, [data products](/docs/data-products), [asset rules](/docs/asset-rules) and [lineage](/docs/lineage) down to the column from plugins, OpenLineage and a direct API. People and agents can run [read-only SQL](/docs/data-queries) through it, checked against their roles and recorded in a [query audit](/docs/query-audit). The built-in [MCP server](/docs/MCP), [Go, Python and TypeScript SDKs](/docs/SDK) and [LangChain and Claude Agent SDK integrations](/docs/Agents) serve agents. Its connector library is smaller than OpenMetadata's, and grants on a single table or data product are part of Marmot Cloud rather than the open source edition.
+
+### OpenMetadata {#openmetadata}
+
+OpenMetadata is one of the most complete open source catalogs, with the widest open source connector library, well past 120 sources, and column-level lineage. It runs as several services: a relational database, Elasticsearch or OpenSearch, and an Airflow-based ingestion framework. See [Marmot vs OpenMetadata](/resources/marmot-vs-openmetadata).
+
+### DataHub {#datahub}
+
+DataHub has a broad integration ecosystem, column-level lineage, a GraphQL API and an official MCP server published as a separate package. A full deployment uses Kafka, a graph store and Elasticsearch, which suits teams already running that stack. See [Marmot vs DataHub](/resources/marmot-vs-datahub).
+
+### Apache Atlas {#apache-atlas}
+
+Apache Atlas is the metadata and governance backbone of the Hadoop world, with deep hooks into Hive, Spark and the rest of that ecosystem. Its stack of JanusGraph, HBase, Solr and Kafka is heavy for anything outside Hadoop.
+
+### Amundsen (archived) {#amundsen}
+
+**Amundsen is no longer maintained, so it isn't a choice for a new catalog.** Amundsen, originally from Lyft, helped define search-led data discovery. Its maintainers archived the repository on 10 September 2026, so it no longer gets fixes or security patches. Marmot's [Amundsen plugin](https://plugins.marmotdata.io/marmotdata/amundsen) imports an existing Amundsen graph, including tables, columns, owners, tags, dashboards and lineage, for teams moving off it.
+
+### Marquez {#marquez}
+
+Marquez is the reference implementation of [OpenLineage](/resources/data-lineage#openlineage). It collects run events and serves job and dataset lineage, rather than acting as a general catalog with ownership, glossary and access control.
+
+## Capabilities compared {#capabilities}
+
+The capabilities that most often decide between these catalogs, checked against each project's own documentation in November 2026:
+
+| Capability | Marmot | OpenMetadata | DataHub | Apache Atlas | Amundsen (archived) | Marquez |
+|---|---|---|---|---|---|---|
+| Query data through the catalog, with permission checks and an audit | Yes. Grants per table on Marmot Cloud | No. Saved queries are copied and run elsewhere | No. Queries are copied from its semantic layer and run elsewhere | No | No | No |
+| MCP server for agents | Built in | Built in | Official, separate server | Community only | None | None |
+| Lineage down to the column | Yes | Yes | Yes | Yes | Yes | Yes |
+| Catalog as code | Official Terraform provider, Pulumi and a Kubernetes operator | Community Terraform providers | Official Terraform provider | No | No | No |
+| Connectors | 70+ plugins, updated without upgrading the catalog | 120+ | Extensive | Hadoop ecosystem | Databuilder, unmaintained | OpenLineage emitters |
+| Managed option from the maintainers | Marmot Cloud | Collate | DataHub Cloud | No | No | No |
+| Actively maintained | Yes | Yes | Yes | Yes | Archived September 2026 | Yes |
+
+OpenMetadata has the largest connector library, and DataHub and Marmot both publish an official Terraform provider. Marmot is the only one of the six that lets people and agents run SQL against their sources through the catalog itself, with each query checked against the caller's roles and recorded in an audit, in the open source edition.
+
+For how these catalogs and the commercial ones serve AI agents, see [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
+
+## Self-hosting Marmot {#self-hosting-marmot}
+
+Marmot is one Go binary backed by PostgreSQL, so it runs wherever you already run containers or services:
+
+- **[Docker Compose](/docs/Deploy/Docker-Compose)** runs Marmot and PostgreSQL together, and the [quick start](/docs/quick-start) has a catalog running locally in about five minutes.
+- **[Helm](/docs/Deploy/Helm)** deploys it to Kubernetes, with an optional [operator](/docs/Populating/Operator) that runs pipelines as Kubernetes resources.
+- **[The binary](/docs/Deploy/CLI)** runs directly on a server against a PostgreSQL database you already have.
+
+Search works on PostgreSQL out of the box, and [Elasticsearch](/docs/Configure/elasticsearch) is optional for fuzzy matching across every field. Sign-in works with Marmot's own accounts or [single sign-on](/docs/Configure/Authentication) through Okta, Google, GitHub, GitLab, Keycloak, Auth0, Slack or any OIDC provider. Plugins are released separately from Marmot, so a plugin's security fix [reaches your install without a Marmot upgrade](/docs/Configure/plugin-updates), and the signed plugin index can be mirrored for installs without internet access. If you'd rather not run it, [Marmot Cloud](/docs/Cloud) is the managed edition, free to start, with access control per resource, secret stores and keyless pipelines.
+
+## Frequently asked questions {#faq}
+
+### What is the best open source data catalog? {#faq-best}
+
+It depends on what you can run and what you need it to see. Marmot is the lightest, a single Go binary on PostgreSQL with a built-in MCP server and governed SQL for agents. OpenMetadata has the widest open source connector library and runs as several services. DataHub has a broad ecosystem and runs on Kafka, a graph store and Elasticsearch. Apache Atlas suits Hadoop estates, and Amundsen is archived.
+
+### Is there a free data catalog? {#faq-free}
+
+Yes. Open source catalogs such as Marmot (MIT licence), OpenMetadata and DataHub (both Apache 2.0) are free to download and self-host, with no per-seat fees. You pay for the infrastructure they run on and the time to operate them. Some also offer a managed edition: Marmot Cloud is free to start.
+
+### Can I self-host a data catalog? {#faq-self-host}
+
+Yes. Open source catalogs are built to be self-hosted on your own servers or cloud account, so metadata stays in your infrastructure. What differs is how much you run: Marmot needs one binary and PostgreSQL, while platforms such as DataHub and OpenMetadata add a search cluster and, for DataHub, Kafka and a graph store.
+
+### What should I look for in an open source data catalog? {#faq-look-for}
+
+Check the licence, what you have to run, whether it has connectors for your sources and a way to add the rest as code, how it collects lineage, how access control works, how AI agents reach it, for example over MCP, how upgrades and connector updates work and whether the project is actively maintained.
+
+### Is Amundsen still maintained? {#faq-amundsen}
+
+No. Amundsen's maintainers archived the repository on 10 September 2026, so it gets no new features, bug fixes or security patches. Teams running it can move to another catalog; Marmot's Amundsen plugin imports tables, columns, owners, tags, dashboards and lineage from an existing Amundsen graph.
+
+### Open source or managed data catalog? {#faq-managed}
+
+Self-hosting open source gives you control, data residency and no licence fees, in exchange for running it. A managed catalog removes the operations work. Several open source catalogs have a commercial managed edition, so you can start on one and move to the other; Marmot runs the same catalog self-hosted or on Marmot Cloud.
+
+## Related {#related}
+
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [Marmot vs DataHub](/resources/marmot-vs-datahub)
+- [Marmot vs OpenMetadata](/resources/marmot-vs-openmetadata)
+
+<CalloutCard
+  title="Run Marmot yourself"
+  description="One Go binary and PostgreSQL, under the MIT licence. Catalog your first source in about five minutes."
+  href="https://marmotdata.io/docs/quick-start"
+  buttonText="Quick start"
+  variant="external"
+  icon="mdi:server"
+/>

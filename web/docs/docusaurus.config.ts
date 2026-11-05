@@ -381,6 +381,11 @@ const config: Config = {
           title: "Topics",
           items: [
             { label: "Data Catalog", to: "/resources/data-catalog" },
+            {
+              label: "Open Source Data Catalog",
+              to: "/resources/open-source-data-catalog",
+            },
+            { label: "Data Lineage", to: "/resources/data-lineage" },
             { label: "Data Governance", to: "/resources/data-governance" },
             { label: "Data Quality", to: "/resources/data-quality" },
             {
@@ -388,6 +393,10 @@ const config: Config = {
               to: "/resources/ai-data-engineering",
             },
             { label: "MCP for Data", to: "/resources/mcp-for-data" },
+            {
+              label: "Data Access for Agents",
+              to: "/resources/ai-agent-database-access",
+            },
           ],
         },
         {

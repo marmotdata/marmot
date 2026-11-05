@@ -11,7 +11,10 @@ keywords:
   - data governance vs data management
   - AI data governance
   - access control metadata
-date: 2026-06-30
+  - data access governance
+  - data access audit log
+  - AI agent governance
+date: 2026-11-05
 image: /img/resources/data-governance.png
 ---
 
@@ -38,7 +41,7 @@ import Head from '@docusaurus/Head';
           "name": "What does data governance cover?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than just documented."
+            "text": "Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than only documented."
           }
         },
         {
@@ -70,7 +73,7 @@ import Head from '@docusaurus/Head';
           "name": "Do I need a data governance tool?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced."
+            "text": "Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced. Marmot, for example, checks every catalog and data query against the caller's roles and records each data query in an audit log."
           }
         }
       ]
@@ -114,15 +117,26 @@ You need both. Management without governance gives you data nobody trusts or can
 
 ## How data governance works with AI agents {#agents}
 
-**The key shift is governed context rather than raw access.** A catalog that hands an agent everything is a liability. One that scopes each query to a role, the way [Marmot scopes MCP queries to the API key behind them](/resources/mcp-for-data), gives the agent trusted context without overreach.
+**The key shift is governed context rather than raw access.** A catalog that hands an agent everything is a liability. One that scopes each query to a role, the way Marmot runs every MCP call with the permissions of the identity behind it, gives the agent trusted context without overreach.
 
 In practice this means three things. Access is enforced when the agent queries, not assumed from where the data sits. Every response is scoped to the caller's permissions, so an agent never receives more than it is entitled to. And the context it does get carries ownership, certification and quality signals, so it can tell a trusted asset from a deprecated one. That is the difference between an agent that works from facts and one that hallucinates on top of whatever it could reach.
+
+## Data governance in Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source data catalog that applies governance where people and agents reach your data, in the catalog and in the queries they run through it.
+
+- **Ownership and meaning.** Every asset carries its owners, and teams receive [notifications](/docs/Notifications) when assets they own change. The [glossary](/docs/glossary) defines business terms and links them to tables and columns, and [asset rules](/docs/asset-rules) attach terms and links, such as a runbook, to every asset that matches a search.
+- **Roles for people and agents.** In open source Marmot, [roles](/docs/Configure/access-control) are named sets of permissions that apply across the instance. Agents, CI jobs and ingestion get [service accounts](/docs/Configure/access-control#service-accounts) with API keys that can expire, and Marmot warns before a key expires. Single sign-on can map directory groups to roles and teams at every sign-in.
+- **Governed queries.** People and agents can run [read-only SQL](/docs/data-queries) against sources you choose. Marmot checks the caller holds permission to query before the statement reaches the database and refuses anything that isn't a single read.
+- **An audit trail.** The [query audit](/docs/query-audit) lists every query, allowed or refused: who ran it, from which client, the tables it read with their owners and personal data columns, and the outcome. It never records the rows, and it exports to CSV for a review.
+
+[Marmot Cloud](/docs/Cloud/access-control) adds access control per resource. You grant a role to a person, team or service account on the whole catalog, a data product, an asset, a glossary term, a secret store or a source, and grants inherit downwards and can carry an end date. A query runs only when [every table it reads is covered](/docs/Cloud/query-access) by one of the caller's grants. [Secret stores](/docs/Cloud/secret-stores) keep source passwords in your own Google Secret Manager, AWS Secrets Manager, Azure Key Vault or HashiCorp Vault, and [keyless pipelines](/docs/Cloud/pipelines) sign in to your cloud with no stored credential at all. Grants can also be managed in [Terraform](/docs/Cloud/grant-access).
 
 ## Data governance best practices {#best-practices}
 
 You do not need a heavyweight programme to govern data well. A few practices carry most of the weight:
 
-- **Assign an owner to every important asset.** Governance without accountable owners is just documentation.
+- **Assign an owner to every important asset.** Governance without accountable owners is only documentation.
 - **Enforce access at query time.** Scope each request to the caller rather than copying data into walled gardens.
 - **Classify sensitive data and set retention.** Tag regulated data and attach the rules that apply to it.
 - **Make governance self-serve.** Surface ownership, definitions, lineage and quality in a catalog so people and agents find them without asking.
@@ -137,6 +151,7 @@ Because governance is usually applied through a [data catalog](/resources/data-c
 - **Ownership, classification and lineage as first-class metadata**, not bolted-on fields.
 - **Governed context for agents**, so an MCP query returns only what the key allows.
 - **An audit trail** of access for both people and agents.
+- **Governed access to the data itself**, if agents will query it, so the same roles decide who can read which tables and every query is recorded.
 
 We compare the main catalogs on how they expose governed context to AI in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
 
@@ -148,7 +163,7 @@ Data governance is the set of owners, policies and controls that decide who can 
 
 ### What does data governance cover? {#faq-covers}
 
-Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than just documented.
+Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than only documented.
 
 ### What is the difference between data governance and data management? {#faq-vs-management}
 
@@ -164,18 +179,20 @@ Start by assigning a clear owner to every important asset. Enforce access contro
 
 ### Do I need a data governance tool? {#faq-tool}
 
-Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced.
+Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced. Marmot, for example, checks every catalog and data query against the caller's roles and records each data query in an audit log.
 
 ## Related {#related}
 
+- [What Is Data Lineage?](/resources/data-lineage)
 - [What Is a Data Catalog?](/resources/data-catalog)
 - [What Is an AI Context Layer?](/resources/ai-context-layer)
 - [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
 - [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
 
 <CalloutCard
   title="Try Marmot"
-  description="Open source cataloguing with role-based access control, exposed to agents over MCP."
+  description="Open source cataloguing with role-based access control, governed SQL and a query audit, exposed to agents over MCP."
   href="https://marmotdata.io/docs/introduction"
   buttonText="Get started"
   variant="external"

@@ -72,7 +72,7 @@ People and agents can also run SQL through Marmot against the sources you connec
 
 ## How it fits together
 
-Plugins read metadata from the systems you already run into one catalog: schemas, owners, descriptions and lineage, never the rows themselves. People use it in the web UI, agents through the MCP server and your own code through the API, CLI and SDKs, so everyone works from the same answers.
+Plugins read metadata from the systems you already run into one catalog: schemas, owners, descriptions and lineage. People use it in the web UI, agents through the MCP server and your own code through the API, CLI and SDKs, so everyone works from the same answers.
 
 <IntroDiagram />
 

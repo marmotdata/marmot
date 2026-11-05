@@ -10,7 +10,9 @@ keywords:
   - context engineering for AI
   - giving agents data context
   - AI data engineering vs data engineering
-date: 2026-06-30
+  - LangChain data catalog
+  - Claude Agent SDK MCP
+date: 2026-11-05
 image: /img/resources/ai-data-engineering.png
 ---
 
@@ -53,7 +55,7 @@ import Head from '@docusaurus/Head';
           "name": "How is AI data engineering different from traditional data engineering?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not just the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed."
+            "text": "Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not only the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed."
           }
         },
         {
@@ -61,7 +63,7 @@ import Head from '@docusaurus/Head';
           "name": "How do you give an LLM context about your data?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed."
+            "text": "The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed. With Marmot, you connect the agent to the catalog's built-in MCP server, or use the LangChain or Claude Agent SDK integrations for agents you build yourself."
           }
         },
         {
@@ -77,7 +79,7 @@ import Head from '@docusaurus/Head';
   </script>
 </Head>
 
-AI data engineering is the work of giving LLMs and agents real, governed context about your data so they can build and reason without guessing. It is the part of working with AI that decides whether an agent is genuinely useful or just confidently wrong.
+AI data engineering is the work of giving LLMs and agents real, governed context about your data so they can build and reason without guessing. It is the part of working with AI that decides whether an agent is genuinely useful or confidently wrong.
 
 This guide explains what AI data engineering is, why context matters more than the model, what context an agent actually needs, and how to deliver it at runtime.
 
@@ -102,6 +104,7 @@ An agent needs the same things a careful engineer would check before touching un
 - **Lineage.** What feeds what, so it understands dependencies and impact.
 - **Glossary.** What business terms actually mean in your organisation.
 - **Quality signals.** Freshness and certification, so it prefers trusted sources over deprecated ones.
+- **A governed way to read rows.** When the question needs real values, a path to run read-only queries that checks the agent's permissions and records what it ran, rather than a database password in its configuration.
 
 All of it scoped to the agent's permissions, so it sees only what it is allowed to.
 
@@ -109,7 +112,7 @@ All of it scoped to the agent's permissions, so it sees only what it is allowed 
 
 **Traditional data engineering serves humans. AI data engineering adds the agent as a consumer.** Classic data engineering moves and shapes data into pipelines, models and dashboards that people read. That work does not go away.
 
-What is new is a consumer that needs the meaning and governance around the data, not just the data, and needs it at runtime through an interface it can query. A dashboard is rendered for a person to interpret. An agent has to fetch structured context and act on it directly. So the added job is making context machine-readable, governed and queryable, which is what the rest of this guide is about.
+What is new is a consumer that needs the meaning and governance around the data, not only the data, and needs it at runtime through an interface it can query. A dashboard is rendered for a person to interpret. An agent has to fetch structured context and act on it directly. So the added job is making context machine-readable, governed and queryable, which is what the rest of this guide is about.
 
 ## How agents get that context {#how}
 
@@ -117,14 +120,27 @@ What is new is a consumer that needs the meaning and governance around the data,
 
 That runtime delivery matters. Context pasted into a prompt is out of date the moment a schema changes. Context pulled from a catalog over MCP reflects the current state of your stack every time the agent asks. This governed, on-demand delivery is what turns a pile of metadata into a usable [AI context layer](/resources/ai-context-layer).
 
+## Giving agents context with Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source data catalog that does this job for agents and people alike. Each part of the context described in this guide has a place in it:
+
+- **Schemas, owners and lineage** come from 70+ [plugins](/docs/Plugins) that read your sources on a schedule, plus [OpenLineage](/docs/open-lineage) events and the [lineage API](/docs/lineage) for pipelines you run yourself. Lineage goes down to the column where the mapping is known.
+- **Business meaning** lives in the [glossary](/docs/glossary), with terms linked to tables and to individual columns, and [asset rules](/docs/asset-rules) keep those links current as new assets arrive.
+- **Runtime delivery** is the built-in [MCP server](/docs/MCP), which Claude Code, Claude Desktop, Cursor, Cline and LibreChat connect to with an API key or OAuth sign-in.
+- **Real values** come from [data queries](/docs/data-queries): an agent runs read-only SQL through Marmot with its `query_data` tool, Marmot checks its roles first and the [query audit](/docs/query-audit) records the statement and the tables it read.
+
+For agents you build yourself, the [Python, TypeScript and Go SDKs](/docs/SDK) wrap the REST API. The [LangChain integration](/docs/Agents/langchain) adds ready-made catalog tools and a callback handler, and the [Claude Agent SDK integration](/docs/Agents/claude-agent) connects the agent to the MCP server and adds hooks. Both register the agent as an asset in the catalog and record the lineage of what it read, so the catalog shows which agents depend on which data. For coding agents, the [Marmot skill](/docs/MCP/skills) teaches the CLI and API in one install.
+
 ## How to do AI data engineering well {#best-practices}
 
 A few habits carry most of the value:
 
-- **Catalog the whole stack**, not just the warehouse, so an agent sees the real landscape.
+- **Catalog the whole stack**, not only the warehouse, so an agent sees the real landscape.
 - **Keep context current** by ingesting from the systems of record, not hand-maintained docs.
 - **Make it queryable at runtime** over MCP and an API, rather than baking it into prompts.
 - **Govern every query**, scoping context to the caller so agents stay in their lane.
+- **Give each agent its own identity**, so you can limit what it reaches and see what it did.
+- **Route data queries through one audited path**, instead of handing agents database credentials.
 - **Carry quality and ownership** alongside schemas, so the agent can judge what to trust.
 
 ## Frequently asked questions {#faq}
@@ -143,11 +159,11 @@ An agent needs schemas, so it knows what tables and fields exist and their types
 
 ### How is AI data engineering different from traditional data engineering? {#faq-vs-traditional}
 
-Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not just the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed.
+Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not only the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed.
 
 ### How do you give an LLM context about your data? {#faq-how}
 
-The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed.
+The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed. With Marmot, you connect the agent to the catalog's built-in MCP server, or use the LangChain or Claude Agent SDK integrations for agents you build yourself.
 
 ### What is a data context layer? {#faq-context-layer}
 
@@ -157,6 +173,7 @@ A data context layer is the governed source an agent queries to understand your 
 
 - [What Is an AI Context Layer?](/resources/ai-context-layer)
 - [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
 - [What Is a Data Catalog?](/resources/data-catalog)
 - [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
 

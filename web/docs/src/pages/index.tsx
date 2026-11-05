@@ -206,7 +206,7 @@ export default function Home(): JSX.Element {
                 <img src="/img/testimonials/manuel-janez-garcia.jpg" alt="" width={40} height={40} loading="lazy" />
                 <span>
                   <strong>Manuel Jáñez García</strong>
-                  Senior Specialist of Data Governance Services, Telefónica
+                  Senior Specialist of Data Governance Services
                 </span>
               </figcaption>
             </figure>

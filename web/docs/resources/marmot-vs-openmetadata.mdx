@@ -8,7 +8,7 @@ keywords:
   - openmetadata mcp
   - data catalog for AI agents
   - open source data catalog comparison
-date: 2026-06-29
+date: 2026-11-05
 hide_table_of_contents: false
 image: /img/resources/marmot-vs-openmetadata.png
 ---
@@ -20,7 +20,7 @@ import Head from '@docusaurus/Head';
 <Head>
   <link rel="canonical" href="https://marmotdata.io/resources/marmot-vs-openmetadata" />
   <meta property="article:published_time" content="2026-06-29" />
-  <meta property="article:modified_time" content="2026-06-29" />
+  <meta property="article:modified_time" content="2026-11-05" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Marmot vs OpenMetadata: AI Context Layer Comparison (2026)" />
   <meta name="twitter:description" content="Native MCP on a single Go binary and Postgres versus OpenMetadata's broad connector platform on Postgres, Elasticsearch and Airflow." />
@@ -46,7 +46,7 @@ import Head from '@docusaurus/Head';
           "name": "What is the difference between Marmot and OpenMetadata?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Both ship native MCP and expose governed context to agents. OpenMetadata is the broader platform, with 120+ pre-built connectors and column-level lineage, but it runs as several services. Marmot is lighter: one binary on Postgres, a full CLI and a packaged agent Skill, and catalog-as-code through official Terraform and Pulumi providers for sources without a plugin."
+            "text": "Both ship native MCP and expose governed context to agents. OpenMetadata is the broader platform, with 120+ pre-built connectors, but it runs as several services. Marmot is lighter: one binary on Postgres, with column-level lineage, governed read-only SQL recorded in a query audit, a full CLI and a packaged agent Skill, and catalog-as-code through official Terraform and Pulumi providers for sources without a plugin."
           }
         },
         {
@@ -120,7 +120,7 @@ Both are open source data catalogs, both ship a native MCP server, and both have
       { status: "partial", text: "Multi-service, plus Airflow for ingestion" },
     ]},
     { feature: "Lineage to agents", cells: [
-      { status: "yes", text: "Via MCP, CLI, SDK and REST" },
+      { status: "yes", text: "Via MCP, CLI, SDK and REST, down to the column" },
       { status: "yes", text: "Via MCP and API, column-level lineage" },
     ]},
     { feature: "Connectors", cells: [
@@ -128,7 +128,7 @@ Both are open source data catalogs, both ship a native MCP server, and both have
       "120+ pre-built connectors",
     ]},
     { feature: "Ingestion methods", cells: [
-      { status: "yes", text: "Plugins and YAML via CLI, Kubernetes operator, Terraform, Pulumi, SDKs and API" },
+      { status: "yes", text: "Plugins and YAML via CLI, Kubernetes operator, Terraform, Pulumi, SDKs, API and OpenLineage" },
       { status: "partial", text: "Airflow ingestion, SDK and API" },
     ]},
     { feature: "Scales to large catalogs", cells: [
@@ -136,7 +136,7 @@ Both are open source data catalogs, both ship a native MCP server, and both have
       { status: "yes", text: "On a database and search cluster" },
     ]},
     { feature: "Governed context", cells: [
-      "RBAC-scoped per API key",
+      "Roles per identity, with per-resource grants on Marmot Cloud",
       "Roles and policies",
     ]},
     { feature: "Licence", cells: ["MIT", "Apache 2.0"] },
@@ -151,7 +151,7 @@ Both are open source data catalogs, both ship a native MCP server, and both have
 
 ## Deployment and footprint {#deployment}
 
-**This is the clearest difference between the two.** Marmot is a single Go binary that needs nothing but Postgres. There is no separate search cluster and no ingestion service to run, with Elasticsearch available only if you want it. You can run it on a small VM or scale it to zero on serverless.
+**This is the clearest difference between the two.** Marmot is a single Go binary that needs nothing but Postgres. There is no separate search cluster and no ingestion service to run, with Elasticsearch available only if you want it. You can run it on a small VM or in a container next to your other services, or let [Marmot Cloud](/docs/Cloud) run it for you.
 
 A standard OpenMetadata deployment is several services: a relational database for metadata, Elasticsearch or OpenSearch for search, and an Airflow-based ingestion framework to drive its connectors. It is a capable platform, but it is more to provision, secure and keep healthy. Both hold large catalogs, so this is a difference in operational complexity rather than in how much either tool can store. For a small team it is the difference between running one process and running a platform.
 
@@ -161,7 +161,7 @@ A standard OpenMetadata deployment is several services: a relational database fo
 
 **Both serve context to agents over a native MCP server, so neither makes you bolt on a separate package.** This is the rare pair where MCP itself is not the differentiator. What differs is what sits behind it.
 
-Marmot's MCP server is part of the binary, so the moment Marmot is running it is already an AI context layer. It exposes three focused tools: `discover_data` for natural language and qualified-identifier lookups with lineage traversal, `find_ownership` for "who owns this", and `lookup_term` for glossary definitions. Every query runs with the permissions of the API key behind it.
+Marmot's MCP server is part of the binary, so the moment Marmot is running it is already an AI context layer. Its tools cover discovery (`discover_data`), ownership (`find_ownership`), the glossary (`lookup_term`), data products, teams and lineage (`trace_lineage`), plus tools that write descriptions, tags and owners for identities allowed to edit, and `query_data` for governed, read-only SQL. The [MCP docs](/docs/MCP) have the setup for Claude Code, Claude Desktop, Cursor, Cline and LibreChat, and clients can sign in with an API key or OAuth. Every query runs with the permissions of the API key behind it.
 
 OpenMetadata's MCP server is a first-class part of the platform, with OAuth 2.0 authentication and access governed by its roles and policies. It is well-integrated, but it is one capability of a larger multi-service system you stand up first, rather than something that comes alive with a single process.
 
@@ -181,7 +181,13 @@ Both also offer SDKs, and Marmot's coverage is wider: fully featured Go, TypeScr
 
 **For agents, governance is not a nice-to-have.** An agent takes whatever metadata it retrieves at face value and acts on it, so the context has to be scoped and trustworthy or the agent confidently acts on the wrong thing.
 
-Marmot runs every MCP and API query with the permissions of the API key behind it, so an agent sees only what that key is allowed to see, never a raw dump of the whole catalog. OpenMetadata enforces access through roles and policies across the platform, and its MCP server respects them. Both keep an agent inside its lane. The difference is shape: Marmot's governance is one access layer in one process, where OpenMetadata's is part of the wider platform.
+Marmot runs every MCP and API query with the permissions of the API key behind it, so an agent sees only what that key is allowed to see, never a raw dump of the whole catalog. Each agent can have its own [service account](/docs/Configure/access-control#service-accounts) with only the roles it needs. Open source Marmot grants roles across the whole instance, and [Marmot Cloud](/docs/Cloud/access-control) adds grants on a single data product, asset, glossary term or source, with optional end dates. OpenMetadata enforces access through roles and policies across the platform, and its MCP server respects them. Both keep an agent inside its lane. The difference is shape: Marmot's governance is one access layer in one process, where OpenMetadata's is part of the wider platform.
+
+## Governed data queries {#data-queries}
+
+**Marmot can also answer with data, not only metadata.** A source whose plugin supports querying, such as PostgreSQL, MySQL, BigQuery, ClickHouse, Trino or DuckDB, can [answer read-only SQL](/docs/data-queries) from people in the Query editor, from scripts through the CLI and from agents through the MCP `query_data` tool. Marmot checks the caller's permission before the statement reaches the source and refuses anything that isn't a single read. The source runs it with its own credentials, so an agent never needs a database password.
+
+The [query audit](/docs/query-audit) records every query, allowed or refused, with who ran it, from which client, the tables it read and the outcome. It never records the rows. A database on a private network can [serve queries from inside that network](/docs/Configure/serving-plugins), with the plugin opening the connection to Marmot so nothing connects in. On [Marmot Cloud](/docs/Cloud/query-access), a statement runs only when every table it reads is covered by one of the caller's grants. [AI agent database access](/resources/ai-agent-database-access) covers the risks of giving agents database credentials and the patterns that avoid them.
 
 ---
 
@@ -195,7 +201,7 @@ Marmot ships 70+ plugins spanning databases, warehouses, lakes, object storage, 
 
 ## Lineage {#lineage}
 
-Both expose lineage to agents rather than just rendering it in a UI, and both hold large lineage graphs without trouble. Marmot serves lineage through MCP (`discover_data`), the `marmot` CLI, its Go, TypeScript and Python SDKs and a REST API, answers "what feeds this, and what breaks if I change it" for agents and humans, and stores the graph in Postgres alongside the rest of the catalog. OpenMetadata offers column-level lineage with field-level detail, which is the thing to reach for if you need impact analysis across many sources. Both store lineage at scale; the difference is the shape of the query surface, not how much either can hold.
+Both expose lineage to agents rather than only rendering it in a UI, and both hold large lineage graphs without trouble. Marmot serves lineage through MCP (`trace_lineage` and `discover_data`), the `marmot` CLI, its Go, TypeScript and Python SDKs and a REST API, answers "what feeds this, and what breaks if I change it" for agents and humans, and stores the graph in Postgres alongside the rest of the catalog. It records [column-level lineage](/docs/lineage) from plugins such as dbt and PostgreSQL views, from [OpenLineage](/docs/open-lineage) events and from a direct lineage API that takes column mappings, and lets you trace each column on the lineage graph. OpenMetadata also offers column-level lineage with field-level detail. Both store lineage at scale; the difference is the shape of the query surface, not how much either can hold. For a vendor-neutral primer on table and column-level lineage and how it's collected, see [what data lineage is](/resources/data-lineage).
 
 ---
 
@@ -203,6 +209,7 @@ Both expose lineage to agents rather than just rendering it in a UI, and both ho
 
 **Choose Marmot if:**
 
+- You want people and agents to query data through the catalog, with role checks and a query audit, instead of sharing database passwords.
 - You want native MCP and governed context with the smallest possible footprint.
 - You would rather run one binary on Postgres than a database, a search cluster and an ingestion framework.
 - You provision with Terraform or Pulumi and want catalog-as-code.
@@ -234,7 +241,7 @@ Yes. Both are open source data catalogs with a native, built-in MCP server, so b
 
 ### What is the difference between Marmot and OpenMetadata? {#faq-difference}
 
-Both ship native MCP and expose governed context to agents. OpenMetadata is the broader platform, with 120+ pre-built connectors and column-level lineage, but it runs as several services. Marmot is lighter: one binary on Postgres, a full CLI and a packaged agent Skill, and catalog-as-code through official Terraform and Pulumi providers for sources without a plugin.
+Both ship native MCP and expose governed context to agents. OpenMetadata is the broader platform, with 120+ pre-built connectors, but it runs as several services. Marmot is lighter: one binary on Postgres, with column-level lineage, governed read-only SQL recorded in a query audit, a full CLI and a packaged agent Skill, and catalog-as-code through official Terraform and Pulumi providers for sources without a plugin.
 
 ### Does OpenMetadata need Elasticsearch and Airflow? {#faq-dependencies}
 
@@ -252,8 +259,16 @@ Both offer a command line tool, but they differ in scope. OpenMetadata's officia
 
 For most teams standing up an AI context layer, Marmot is the faster path: native MCP, governed context and a full CLI from one binary on Postgres, with the least to run. OpenMetadata is the better fit when you need the widest pre-built connector coverage out of the box and are happy to run and maintain the supporting search and ingestion services.
 
+## Related {#related}
+
+- [Best Open Source Data Catalogs in 2026](/resources/open-source-data-catalog)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [What Is Data Lineage?](/resources/data-lineage)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+
 ---
 
-- **Marmot Cloud:** [cloud.marmotdata.io](https://cloud.marmotdata.io) - hosted Marmot, free account, $49 per instance per month
+- **Marmot Cloud:** [cloud.marmotdata.io](https://cloud.marmotdata.io), hosted Marmot that's free to start and priced per compute unit with unlimited users ([pricing](/pricing))
 - **Docs:** [marmotdata.io/docs](/docs/introduction)
 - **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)

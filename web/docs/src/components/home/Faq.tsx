@@ -29,7 +29,7 @@ export const productFaq: FaqItem[] = [
   },
   {
     q: 'What data leaves my systems?',
-    a: 'Only metadata: schemas, ownership, descriptions, lineage and run status. Plugins never send rows, messages or payloads to your instance.',
+    a: 'Plugins send schemas, ownership, descriptions, lineage and run status. Rows reach your instance only when someone runs a query through a plugin that supports queries, and each query is checked against their roles and recorded in the query audit.',
   },
   {
     q: 'Do I have to give Marmot my database credentials?',

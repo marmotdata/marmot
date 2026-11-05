@@ -1,13 +1,16 @@
 ---
 slug: /
-title: "Marmot Resources: Data Catalogs, Governance and AI Context"
-description: "Guides and comparisons on data catalogs, data governance, data quality, AI data engineering and MCP for data. Practical, vendor-neutral resources from the Marmot team."
+title: "Marmot Resources: Data Catalogs, Lineage, Governance and AI Context"
+description: "Guides and comparisons on data catalogs, data lineage, data governance, governed data access for AI agents, data quality and MCP for data. Practical resources from the Marmot team."
 keywords:
   - data catalog resources
   - data governance guide
   - data quality
   - AI data engineering
   - MCP for data
+  - data lineage
+  - open source data catalog
+  - AI agent database access
 hide_title: true
 hide_table_of_contents: true
 image: /img/resources/hero.png
@@ -17,7 +20,7 @@ import { ResourceHero, ResourceList, ResourceItem } from '@site/src/components/R
 
 <ResourceHero
   title="Build the context layer your engineers and AI agents need"
-  description="Guides and comparisons on cataloguing, governance, quality and giving AI agents real, governed context over MCP. Written by the team behind Marmot, the open source data catalog built for agents and humans."
+  description="Guides and comparisons on cataloguing, lineage, governance and quality, and on giving AI agents governed context and governed access to data. Written by the team behind Marmot, the open source data catalog, query gateway and MCP server for agents and humans."
   primaryHref="/resources/data-catalogs-for-ai-agents"
   primaryText="Compare data catalogs for AI"
   secondaryHref="/docs/introduction"
@@ -33,6 +36,16 @@ import { ResourceHero, ResourceList, ResourceItem } from '@site/src/components/R
     href="/resources/data-catalog"
   />
   <ResourceItem
+    title="Open source data catalog"
+    description="The self-hosted options compared on licence, footprint, lineage and agent support."
+    href="/resources/open-source-data-catalog"
+  />
+  <ResourceItem
+    title="Data lineage"
+    description="Table and column-level lineage, OpenLineage and how lineage is collected."
+    href="/resources/data-lineage"
+  />
+  <ResourceItem
     title="AI context layer"
     description="What an AI context layer is, why agents need one, and how it differs from RAG."
     href="/resources/ai-context-layer"
@@ -41,6 +54,11 @@ import { ResourceHero, ResourceList, ResourceItem } from '@site/src/components/R
     title="Data governance"
     description="Ownership, policies and access control for data and the agents that use it."
     href="/resources/data-governance"
+  />
+  <ResourceItem
+    title="AI agent database access"
+    description="SQL for agents without database passwords: identity, read-only checks and a query audit."
+    href="/resources/ai-agent-database-access"
   />
   <ResourceItem
     title="Data quality"
@@ -62,6 +80,21 @@ import { ResourceHero, ResourceList, ResourceItem } from '@site/src/components/R
 ## Latest {#latest}
 
 <ResourceList>
+  <ResourceItem
+    title="AI Agent Database Access: Governed SQL Without Passwords"
+    description="How to let agents query your databases safely: their own identity, read-only SQL checked before it runs, least-privilege grants and an audit of every query."
+    href="/resources/ai-agent-database-access"
+  />
+  <ResourceItem
+    title="What Is Data Lineage? A 2026 Guide to Column-Level Lineage"
+    description="Table versus column-level lineage, how lineage is collected with OpenLineage and lineage APIs, the tools that track it and why agents need it."
+    href="/resources/data-lineage"
+  />
+  <ResourceItem
+    title="Best Open Source Data Catalogs in 2026: Self-Hosted Options"
+    description="Marmot, OpenMetadata, DataHub, Apache Atlas, Marquez and the archived Amundsen compared on licence, footprint, lineage and AI agent support."
+    href="/resources/open-source-data-catalog"
+  />
   <ResourceItem
     title="Data Catalogs as the AI Context Layer: A 2026 Comparison"
     description="An honest, side-by-side look at how Marmot, OpenMetadata, DataHub, Atlan, Collibra, Secoda, Amundsen and Apache Atlas expose governed context to AI agents over MCP and API."
