@@ -113,7 +113,7 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 
 	ingest := findAsset(result, "Pipeline", "NiFi Flow/Ingest")
 	require.NotNil(t, ingest)
-	assert.Equal(t, "mrn://pipeline/nifi/nifi-flow-ingest", *ingest.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/nifi/nifi-flow-ingest", *ingest.MRN)
 	require.NotNil(t, ingest.Description)
 	assert.Equal(t, "Lands raw orders in S3 and Kafka", *ingest.Description)
 	// Counts arrive as float64 after the JSON hop over the wire.
@@ -129,7 +129,7 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 	// Tasks with their types and states.
 	gen := findAsset(result, "Task", "NiFi Flow/Ingest/Generate Orders")
 	require.NotNil(t, gen)
-	assert.Equal(t, "mrn://task/nifi/nifi-flow-ingest-generate-orders", *gen.MRN)
+	assert.Equal(t, "mrn://asset/task/nifi/nifi-flow-ingest-generate-orders", *gen.MRN)
 	assert.Equal(t, "GenerateFlowFile", gen.Metadata["type"])
 	assert.Equal(t, "org.apache.nifi.processors.standard.GenerateFlowFile", gen.Metadata["type_full"])
 	assert.Equal(t, "RUNNING", gen.Metadata["state"])
@@ -169,14 +169,14 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 	topic := findAsset(result, "Topic", "orders-events")
 	require.NotNil(t, topic)
 	assert.Equal(t, []string{"Kafka"}, topic.Providers)
-	assert.Equal(t, "mrn://topic/kafka/orders-events", *topic.MRN)
+	assert.Equal(t, "mrn://asset/topic/kafka/orders-events", *topic.MRN)
 	require.Len(t, topic.Sources, 1)
 	assert.Equal(t, "NiFi", topic.Sources[0].Name)
 	assert.True(t, hasEdge(result, taskMRN("NiFi Flow/Ingest/Publish Orders"), *topic.MRN, "PRODUCES"))
 	assert.True(t, hasEdge(result, *topic.MRN, taskMRN("NiFi Flow/Deliver/Consume Orders"), "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders-dlq", taskMRN("NiFi Flow/Deliver/Consume Orders"), "FEEDS"))
-	assert.True(t, hasEdge(result, *s3.MRN, "mrn://bucket/s3/marmot-landing", "PRODUCES"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", taskMRN("NiFi Flow/Deliver/Read Customers"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/topic/kafka/orders-dlq", taskMRN("NiFi Flow/Deliver/Consume Orders"), "FEEDS"))
+	assert.True(t, hasEdge(result, *s3.MRN, "mrn://asset/bucket/s3/marmot-landing", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", taskMRN("NiFi Flow/Deliver/Read Customers"), "FEEDS"))
 
 	assert.Empty(t, result.Statistics)
 	assert.Empty(t, result.RunHistory)

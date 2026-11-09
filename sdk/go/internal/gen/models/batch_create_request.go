@@ -53,6 +53,9 @@ type BatchCreateRequest struct {
 
 	// statistics
 	Statistics []*CreateStatRequest `json:"statistics"`
+
+	// ZoneBindings are the hosts the plugin connected to and the zone each belongs to.
+	ZoneBindings []*ZoneBinding `json:"zone_bindings"`
 }
 
 // Validate validates this batch create request
@@ -92,6 +95,10 @@ func (m *BatchCreateRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateStatistics(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateZoneBindings(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -315,6 +322,36 @@ func (m *BatchCreateRequest) validateStatistics(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *BatchCreateRequest) validateZoneBindings(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.ZoneBindings) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ZoneBindings); i++ {
+		if typeutils.IsZero(m.ZoneBindings[i]) { // not required
+			continue
+		}
+
+		if m.ZoneBindings[i] != nil {
+			if err := m.ZoneBindings[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("zone_bindings" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("zone_bindings" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // ContextValidate validate this batch create request based on the context it is used
 func (m *BatchCreateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
@@ -340,6 +377,10 @@ func (m *BatchCreateRequest) ContextValidate(ctx context.Context, formats strfmt
 	}
 
 	if err := m.contextValidateStatistics(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateZoneBindings(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -512,6 +553,35 @@ func (m *BatchCreateRequest) contextValidateStatistics(ctx context.Context, form
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("statistics" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *BatchCreateRequest) contextValidateZoneBindings(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ZoneBindings); i++ {
+
+		if m.ZoneBindings[i] != nil {
+
+			if typeutils.IsZero(m.ZoneBindings[i]) { // not required
+				return nil
+			}
+
+			if err := m.ZoneBindings[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("zone_bindings" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("zone_bindings" + "." + strconv.Itoa(i))
 				}
 
 				return err

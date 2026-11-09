@@ -332,6 +332,11 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 		return nil, err
 	}
 
+	config, err := parseConfig(raw)
+	if err != nil {
+		return nil, err
+	}
+
 	plan := &pluginsdk.QueryPlan{}
 	err = readOnly(ctx, pool, func(tx pgx.Tx) error {
 		var planJSON []byte
@@ -357,13 +362,14 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 
 		seen := map[string]bool{}
 		for _, r := range summary.relations {
-			var assetType, name string
+			var assetType string
+			target := r
 			if mapped, ok := resolved[r]; ok {
-				assetType, name = mapped.assetType, mapped.relation.name
+				assetType, target = mapped.assetType, mapped.relation
 			} else {
-				assetType, name = relationType(ctx, tx, r), r.name
+				assetType = relationType(ctx, tx, r)
 			}
-			mrnValue := assetMRN(assetType, name)
+			mrnValue := assetMRN(config, assetType, config.QueryDatabase, target.schema, target.name)
 			if !seen[mrnValue] {
 				seen[mrnValue] = true
 				plan.ReferencedMRNs = append(plan.ReferencedMRNs, mrnValue)

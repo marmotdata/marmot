@@ -241,20 +241,20 @@ func TestResolveRelations_ResolvesATableInTheQueryDatabase(t *testing.T) {
 	objects := map[string]string{"orders": "BASE TABLE", "customers": "BASE TABLE"}
 	relations := []relation{{database: "shop", table: "orders"}, {database: "shop", table: "customers"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.False(t, incomplete)
-	assert.ElementsMatch(t, []string{"mrn://table/mariadb/orders", "mrn://table/mariadb/customers"}, mrns)
+	assert.ElementsMatch(t, []string{"mrn://asset/table/mariadb/shop.orders", "mrn://asset/table/mariadb/shop.customers"}, mrns)
 }
 
 func TestResolveRelations_ResolvesViewsAndSequencesToTheirOwnType(t *testing.T) {
 	objects := map[string]string{"customer_totals": "VIEW", "order_seq": "SEQUENCE"}
 	relations := []relation{{database: "shop", table: "customer_totals"}, {database: "shop", table: "order_seq"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.False(t, incomplete)
-	assert.ElementsMatch(t, []string{"mrn://view/mariadb/customer_totals", "mrn://sequence/mariadb/order_seq"}, mrns)
+	assert.ElementsMatch(t, []string{"mrn://asset/view/mariadb/shop.customer_totals", "mrn://asset/sequence/mariadb/shop.order_seq"}, mrns)
 }
 
 func TestResolveRelations_MarksIncompleteForADifferentDatabase(t *testing.T) {
@@ -264,7 +264,7 @@ func TestResolveRelations_MarksIncompleteForADifferentDatabase(t *testing.T) {
 	objects := map[string]string{"orders": "BASE TABLE"}
 	relations := []relation{{database: "otherdb", table: "orders"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.True(t, incomplete)
 	assert.Empty(t, mrns)
@@ -274,7 +274,7 @@ func TestResolveRelations_MarksIncompleteForAnUncataloguedName(t *testing.T) {
 	objects := map[string]string{"orders": "BASE TABLE"}
 	relations := []relation{{database: "shop", table: "ghost"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.True(t, incomplete)
 	assert.Empty(t, mrns)
@@ -284,7 +284,7 @@ func TestResolveRelations_MarksIncompleteForAnUnknownObjectType(t *testing.T) {
 	objects := map[string]string{"tmp_session": "SYSTEM VIEW"}
 	relations := []relation{{database: "shop", table: "tmp_session"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.True(t, incomplete)
 	assert.Empty(t, mrns)
@@ -294,10 +294,10 @@ func TestResolveRelations_DedupesRepeatedTables(t *testing.T) {
 	objects := map[string]string{"orders": "BASE TABLE"}
 	relations := []relation{{database: "shop", table: "orders"}, {database: "shop", table: "orders"}}
 
-	mrns, incomplete := resolveRelations(relations, "shop", objects)
+	mrns, incomplete := resolveRelations(&Config{}, relations, "shop", objects)
 
 	assert.False(t, incomplete)
-	assert.Equal(t, []string{"mrn://table/mariadb/orders"}, mrns)
+	assert.Equal(t, []string{"mrn://asset/table/mariadb/shop.orders"}, mrns)
 }
 
 func TestCallsKnownFunction(t *testing.T) {

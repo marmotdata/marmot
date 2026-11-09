@@ -110,15 +110,15 @@ func storageContainerMRN(storageLocation string) string {
 
 	switch strings.ToLower(u.Scheme) {
 	case "s3", "s3a", "s3n":
-		return mrn.New("Bucket", "S3", u.Host)
+		return mrn.Asset("Bucket", "S3", u.Host).String()
 	case "gs":
-		return mrn.New("Bucket", "GCS", u.Host)
+		return mrn.Asset("Bucket", "GCS", u.Host).String()
 	case "abfss", "abfs", "wasbs", "wasb":
 		// abfss://<container>@<account>.dfs.core.windows.net/<path>
 		if u.User == nil {
 			return ""
 		}
-		return mrn.New("Container", "AzureBlob", u.User.Username())
+		return mrn.Asset("Container", "AzureBlob", u.User.Username()).String()
 	default:
 		return ""
 	}

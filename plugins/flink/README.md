@@ -4,7 +4,7 @@ It reads the JobManager REST API (`/config`, `/jobs/overview`, `/jobs/{jid}`, `/
 
 ## Naming
 
-A Pipeline is named after the job. Flink lets several jobs share a name, in which case the most recently started job keeps the bare name and the others are named `<name> (<jid>)`. A Task is named `<pipeline name>/<vertex name>`.
+A Pipeline is named after the job. Flink lets several jobs share a name, in which case the most recently started job keeps the bare name and the others are named `<name> (<jid>)`. A Task is named after its vertex and its MRN is `mrn://asset/task/flink/<pipeline name>.<vertex name>`. Set `zone` when you catalogue more than one JobManager, which puts it in every MRN, for example `mrn://asset/pipeline/flink@prod/wordcount`.
 
 ## Jobs the JobManager still lists
 

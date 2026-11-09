@@ -72,32 +72,44 @@ func TestParseRedshiftJDBCURL_RejectsGarbage(t *testing.T) {
 	assert.Equal(t, "", database)
 }
 
-func TestRedshiftTableName_QualifiesWithTheDatabase(t *testing.T) {
-	name, ok := redshiftTableName("analytics", "public.clicks")
+func TestRedshiftTablePath_QualifiesWithTheDatabase(t *testing.T) {
+	path, ok := redshiftTablePath("analytics", "public.clicks")
 
 	require.True(t, ok)
-	assert.Equal(t, "analytics.public.clicks", name)
+	assert.Equal(t, []string{"analytics", "public", "clicks"}, path)
 }
 
-func TestRedshiftTableName_KeepsAnAlreadyQualifiedName(t *testing.T) {
-	name, ok := redshiftTableName("analytics", "warehouse.public.clicks")
+func TestRedshiftTablePath_KeepsAnAlreadyQualifiedName(t *testing.T) {
+	path, ok := redshiftTablePath("analytics", "warehouse.public.clicks")
 
 	require.True(t, ok)
-	assert.Equal(t, "warehouse.public.clicks", name)
+	assert.Equal(t, []string{"warehouse", "public", "clicks"}, path)
 }
 
 // Redshift resolves a bare table name through the connection search path,
 // which the API never shows, so there is no name to point an edge at.
-func TestRedshiftTableName_RefusesABareTableName(t *testing.T) {
-	_, ok := redshiftTableName("analytics", "clicks")
+func TestRedshiftTablePath_RefusesABareTableName(t *testing.T) {
+	_, ok := redshiftTablePath("analytics", "clicks")
 
 	assert.False(t, ok)
 }
 
-func TestRedshiftTableName_RefusesAnUnparseableJDBCURL(t *testing.T) {
-	_, ok := redshiftTableName("", "public.clicks")
+func TestRedshiftTablePath_RefusesAnUnparseableJDBCURL(t *testing.T) {
+	_, ok := redshiftTablePath("", "public.clicks")
 
 	assert.False(t, ok)
+}
+
+func TestHostPortFromJDBC_AddsTheDefaultPort(t *testing.T) {
+	assert.Equal(t, "cluster.example.com:5439", hostPortFromJDBC("jdbc:redshift://Cluster.Example.com/analytics", "5439"))
+	assert.Equal(t, "cluster.example.com:5440", hostPortFromJDBC("jdbc:redshift://cluster.example.com:5440/analytics", "5439"))
+	assert.Equal(t, "", hostPortFromJDBC("not a url", "5439"))
+}
+
+func TestHostPortFromURL_AddsTheDefaultPort(t *testing.T) {
+	assert.Equal(t, "search.example.com:443", hostPortFromURL("https://Search.Example.com", "443"))
+	assert.Equal(t, "search.example.com:9200", hostPortFromURL("https://search.example.com:9200/path", "443"))
+	assert.Equal(t, "", hostPortFromURL("", "443"))
 }
 
 // moto, and some Firehose responses, fill both the plain and the extended
@@ -137,8 +149,8 @@ func TestClassifyDestination_ExtendedS3TargetsTheBucketAndTheGlueTable(t *testin
 	dest, _ := classifyDestination(ordersToS3().Destinations[0])
 
 	assert.Equal(t, []lineageTarget{
-		{Type: "Bucket", Provider: "S3", Name: "marmot-lake"},
-		{Type: "Table", Provider: "Glue", Name: "orders"},
+		{Type: "Bucket", Provider: "S3", Path: []string{"marmot-lake"}},
+		{Type: "Table", Provider: "Glue", Path: []string{"shop", "orders"}},
 	}, dest.Targets)
 }
 
@@ -150,7 +162,7 @@ func TestClassifyDestination_DisabledFormatConversionMakesNoGlueEdge(t *testing.
 
 	dest, _ := classifyDestination(description.Destinations[0])
 
-	assert.Equal(t, []lineageTarget{{Type: "Bucket", Provider: "S3", Name: "marmot-lake"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Bucket", Provider: "S3", Path: []string{"marmot-lake"}}}, dest.Targets)
 	assert.NotContains(t, dest.Settings, "glue_table")
 }
 
@@ -159,7 +171,7 @@ func TestClassifyDestination_PlainS3TargetsTheBucket(t *testing.T) {
 
 	require.True(t, ok)
 	assert.Equal(t, "s3", dest.Kind)
-	assert.Equal(t, []lineageTarget{{Type: "Bucket", Provider: "S3", Name: "marmot-lake"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Bucket", Provider: "S3", Path: []string{"marmot-lake"}}}, dest.Targets)
 }
 
 func TestClassifyDestination_RedshiftTargetsTheQualifiedTable(t *testing.T) {
@@ -167,7 +179,7 @@ func TestClassifyDestination_RedshiftTargetsTheQualifiedTable(t *testing.T) {
 
 	require.True(t, ok)
 	assert.Equal(t, "redshift", dest.Kind)
-	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Redshift", Name: "analytics.public.clicks"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Redshift", Path: []string{"analytics", "public", "clicks"}, Host: "cluster.abc.us-east-1.redshift.amazonaws.com:5439"}}, dest.Targets)
 }
 
 func TestClassifyDestination_RedshiftRecordsTheClusterAndCopyCommand(t *testing.T) {
@@ -185,7 +197,7 @@ func TestClassifyDestination_OpenSearchTargetsTheIndex(t *testing.T) {
 
 	require.True(t, ok)
 	assert.Equal(t, "opensearch", dest.Kind)
-	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "OpenSearch", Name: "orders-index"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "OpenSearch", Path: []string{"orders-index"}}}, dest.Targets)
 	assert.Equal(t, "arn:aws:es:eu-west-1:123456789012:domain/marmot-logs", dest.Settings["domain_arn"])
 	assert.Equal(t, "OneDay", dest.Settings["index_rotation_period"])
 }
@@ -200,7 +212,7 @@ func TestClassifyDestination_ElasticsearchTargetsTheIndex(t *testing.T) {
 
 	require.True(t, ok)
 	assert.Equal(t, "elasticsearch", dest.Kind)
-	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Elasticsearch", Name: "logs"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Elasticsearch", Path: []string{"logs"}}}, dest.Targets)
 }
 
 func TestClassifyDestination_SnowflakeTargetsTheThreePartTable(t *testing.T) {
@@ -216,7 +228,7 @@ func TestClassifyDestination_SnowflakeTargetsTheThreePartTable(t *testing.T) {
 
 	require.True(t, ok)
 	assert.Equal(t, "snowflake", dest.Kind)
-	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Snowflake", Name: "ANALYTICS.PUBLIC.EVENTS"}}, dest.Targets)
+	assert.Equal(t, []lineageTarget{{Type: "Table", Provider: "Snowflake", Path: []string{"ANALYTICS", "PUBLIC", "EVENTS"}, Host: "acme.snowflakecomputing.com:443"}}, dest.Targets)
 }
 
 func TestClassifyDestination_SnowflakeWithoutASchemaMakesNoEdge(t *testing.T) {
@@ -246,8 +258,8 @@ func TestClassifyDestination_IcebergTargetsEveryDestinationTable(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "iceberg", dest.Kind)
 	assert.Equal(t, []lineageTarget{
-		{Type: "Table", Provider: "Iceberg", Name: "orders"},
-		{Type: "Table", Provider: "Iceberg", Name: "returns"},
+		{Type: "Table", Provider: "Iceberg", Path: []string{"shop", "orders"}},
+		{Type: "Table", Provider: "Iceberg", Path: []string{"shop", "returns"}},
 	}, dest.Targets)
 	assert.Equal(t, []string{"shop.orders", "shop.returns"}, dest.Settings["tables"])
 	assert.Equal(t, "arn:aws:glue:us-east-1:123456789012:catalog", dest.Settings["catalog_arn"])

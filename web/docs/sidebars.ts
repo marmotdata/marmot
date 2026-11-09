@@ -58,6 +58,7 @@ const sidebars: SidebarsConfig = {
             doc('Deploy/CLI', 'Binary'),
           ],
         },
+        doc('Deploy/upgrade-0.13', 'Upgrade to 0.13'),
         {
           type: 'category',
           label: 'Configure',
@@ -88,6 +89,12 @@ const sidebars: SidebarsConfig = {
         doc('Populating/API', 'API'),
         doc('Configure/serving-plugins', 'Serve queries from your network'),
         doc('Plugins/index', 'Plugins'),
+        {
+          type: 'category',
+          label: 'MRNs',
+          link: {type: 'doc', id: 'MRNs/index'},
+          items: [doc('MRNs/zones', 'Zones')],
+        },
       ],
     },
     {

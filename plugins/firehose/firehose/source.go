@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +27,8 @@ const assetType = "DeliveryStream"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "firehose",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS Firehose",
 		Description:   "Discover Amazon Data Firehose delivery streams from AWS accounts",
 		Icon:          "firehose",
@@ -155,7 +155,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 		assets = append(assets, asset)
 
 		if s.config.DiscoverLineage {
-			lineages = append(lineages, streamLineage(description)...)
+			lineages = append(lineages, s.streamLineage(description)...)
 		}
 	}
 
@@ -209,7 +209,7 @@ func (s *Source) buildAsset(ctx context.Context, d *types.DeliveryStreamDescript
 		}
 	}
 
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := s.assetMRN(assetType, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -300,14 +300,14 @@ func firstDestination(d *types.DeliveryStreamDescription) (destination, bool) {
 // wired to. Firehose creates none of those assets: every edge points at an
 // identity another Marmot plugin produces, and the server drops the edge
 // when that plugin has not catalogued the asset.
-func streamLineage(d *types.DeliveryStreamDescription) []pluginsdk.LineageEdge {
-	streamMRN := assetMRN(assetType, aws.ToString(d.DeliveryStreamName))
+func (s *Source) streamLineage(d *types.DeliveryStreamDescription) []pluginsdk.LineageEdge {
+	streamMRN := s.assetMRN(assetType, aws.ToString(d.DeliveryStreamName))
 
 	var edges []pluginsdk.LineageEdge
 
 	for _, source := range sourceTargets(d) {
 		edges = append(edges, pluginsdk.LineageEdge{
-			Source: mrn.New(source.Type, source.Provider, source.Name),
+			Source: source.mrn(),
 			Target: streamMRN,
 			Type:   "FEEDS",
 		})
@@ -323,7 +323,7 @@ func streamLineage(d *types.DeliveryStreamDescription) []pluginsdk.LineageEdge {
 		for _, target := range dest.Targets {
 			edges = append(edges, pluginsdk.LineageEdge{
 				Source: streamMRN,
-				Target: mrn.New(target.Type, target.Provider, target.Name),
+				Target: target.mrn(),
 				Type:   "PRODUCES",
 			})
 		}
@@ -342,13 +342,13 @@ func sourceTargets(d *types.DeliveryStreamDescription) []lineageTarget {
 
 	if kinesis := d.Source.KinesisStreamSourceDescription; kinesis != nil {
 		if name := kinesisStreamFromARN(aws.ToString(kinesis.KinesisStreamARN)); name != "" {
-			targets = append(targets, lineageTarget{Type: "Stream", Provider: "Kinesis", Name: name})
+			targets = append(targets, lineageTarget{Type: "Stream", Provider: "Kinesis", Path: []string{name}})
 		}
 	}
 
 	if msk := d.Source.MSKSourceDescription; msk != nil {
 		if topic := aws.ToString(msk.TopicName); topic != "" {
-			targets = append(targets, lineageTarget{Type: "Topic", Provider: "Kafka", Name: topic})
+			targets = append(targets, lineageTarget{Type: "Topic", Provider: "Kafka", Path: []string{topic}})
 		}
 	}
 
@@ -363,7 +363,7 @@ func consoleURL(region, name string) string {
 // assetMRN is the single place a Firehose MRN is built. The asset pass and
 // the lineage pass both go through it so the two can never drift into
 // addressing the same stream differently. A delivery stream name is unique
-// within a region, so the bare name is the identity.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// within a region, so the bare name is the identity and the account and region are the zone.
+func (s *Source) assetMRN(assetType, name string) string {
+	return s.config.AssetMRN(assetType, provider, name)
 }

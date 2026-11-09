@@ -561,7 +561,7 @@ await client.assets.removeTag(assetId, "pii");
 
 ## Lineage
 
-Lineage edges identify endpoints by MRN (`<type>://<service>/<name>`). Read the graph from any node; write one edge or many at a time.
+Lineage edges identify endpoints by [MRN](../MRNs/index.md), such as `mrn://asset/table/postgresql/analytics.public.orders`. Read the graph from any node; write one edge or many at a time.
 
 ### Read the graph
 

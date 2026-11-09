@@ -150,7 +150,13 @@ func (h *Handler) record(w http.ResponseWriter, r *http.Request) {
 			common.RespondError(w, http.StatusBadRequest, "an asset needs an id, or a type, service and name")
 			return
 		}
-		resolved, err := h.store.ResolveAsset(r.Context(), mrn.New(req.Type, req.Service, req.Name))
+		// The service carries the instance, provider@instance, as it appears in the asset's URL.
+		assetMRN, err := mrn.Canonical("mrn://asset/" + req.Type + "/" + req.Service + "/" + req.Name)
+		if err != nil {
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		resolved, err := h.store.ResolveAsset(r.Context(), assetMRN)
 		if err != nil {
 			respondError(w, err)
 			return

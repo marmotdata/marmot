@@ -35,46 +35,56 @@ const (
 // hiveViewTableType is the table type Athena reports for a view.
 const hiveViewTableType = "VIRTUAL_VIEW"
 
-// assetMRN is the single place an MRN is built. The asset pass and the
-// lineage pass both go through it so the two can never drift into addressing
-// the same object differently.
-func assetMRN(assetType, provider, name string) string {
-	return mrn.New(assetType, provider, name)
-}
-
-// tableMRN addresses a table or view. Athena tables are named by their bare
-// name under the Glue provider, exactly as plugins/glue names them.
-func tableMRN(assetType, table string) string {
-	return assetMRN(assetType, providerGlue, table)
-}
-
-func databaseMRN(database string) string {
-	return assetMRN(typeDatabase, providerGlue, database)
-}
-
-func workGroupMRN(workGroup string) string {
-	return assetMRN(typeWorkGroup, providerAthena, workGroup)
-}
-
-func savedQueryMRN(workGroup, name string) string {
-	return assetMRN(typeSavedQuery, providerAthena, savedQueryName(workGroup, name))
-}
-
-func catalogMRN(catalog string) string {
-	return assetMRN(typeCatalog, providerAthena, catalog)
-}
-
-func bucketMRN(bucket string) string {
-	return assetMRN(typeBucket, providerS3, bucket)
-}
-
-// savedQueryName qualifies a saved query by its workgroup, because two
-// workgroups can each hold a query of the same name.
-func savedQueryName(workGroup, name string) string {
-	if workGroup == "" {
-		return name
+// glueCatalogPath is the catalog level an asset path starts with. The default catalog is the account's Glue Data Catalog, which plugins/glue files without a catalog level, so its databases and tables leave the level out and both plugins land on one asset. Any other catalog is named in the path.
+func glueCatalogPath(catalog string) []string {
+	if catalog == "" || catalog == defaultCatalogName {
+		return nil
 	}
-	return workGroup + "/" + name
+	return []string{catalog}
+}
+
+// tableMRN addresses a table or view under the Glue provider. The asset pass and the lineage pass both go through it so the two can never drift into addressing the same object differently.
+func (s *Source) tableMRN(assetType, catalog, database, table string) string {
+	path := append(glueCatalogPath(catalog), database, table)
+	return s.config.AssetMRN(assetType, providerGlue, path...)
+}
+
+func (s *Source) databaseMRN(catalog, database string) string {
+	path := append(glueCatalogPath(catalog), database)
+	return s.config.AssetMRN(typeDatabase, providerGlue, path...)
+}
+
+func (s *Source) workGroupMRN(workGroup string) string {
+	return s.config.AssetMRN(typeWorkGroup, providerAthena, workGroup)
+}
+
+func (s *Source) savedQueryMRN(workGroup, name string) string {
+	return s.config.AssetMRN(typeSavedQuery, providerAthena, savedQueryPath(workGroup, name)...)
+}
+
+func (s *Source) catalogMRN(catalog string) string {
+	return s.config.AssetMRN(typeCatalog, providerAthena, catalog)
+}
+
+// bucketMRN points at a bucket the S3 plugin owns. S3 names are global to the account, so no zone applies.
+func bucketMRN(bucket string) string {
+	return mrn.Asset(typeBucket, providerS3, bucket).String()
+}
+
+// savedQueryPath qualifies a saved query by its workgroup, because two workgroups can each hold a query of the same name.
+func savedQueryPath(workGroup, name string) []string {
+	if workGroup == "" {
+		return []string{name}
+	}
+	return []string{workGroup, name}
+}
+
+// previousSavedQueryMRN is the MRN earlier releases gave a saved query, which folded the workgroup into one name.
+func previousSavedQueryMRN(workGroup, name string) string {
+	if workGroup != "" {
+		name = workGroup + "/" + name
+	}
+	return mrn.Asset(typeSavedQuery, providerAthena, name).LegacyString()
 }
 
 // tableAssetType maps an Athena table type to a Marmot asset type. Athena

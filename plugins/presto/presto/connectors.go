@@ -1,29 +1,31 @@
 package presto
 
-// connectorInfo describes how the tables of one Presto connector map onto
-// the provider and name shape of the Marmot plugin that owns that
-// technology, so both runs land on one asset instead of two.
+import (
+	"strings"
+
+	"github.com/marmotdata/plugin-sdk/mrn"
+)
+
+// CatalogMapping says which native system a Presto catalog reads, so its tables get the MRN the native plugin gives them.
+type CatalogMapping struct {
+	Zone     string `json:"zone,omitempty" description:"Zone of the native plugin that discovers this system"`
+	Database string `json:"database,omitempty" description:"Database the catalog points at on the native system. Required for connectors whose native names start with a database, such as PostgreSQL, SQL Server, Oracle, Redshift, Snowflake and BigQuery (the project)"`
+}
+
+// connectorInfo describes the native identity of the tables behind one Presto connector.
 type connectorInfo struct {
 	Provider string
-	// MRNName builds the asset Name (and so the MRN's name segment) from
-	// the Presto path, in the shape the native plugin uses.
-	MRNName func(catalog, schema, table string) string
+	// NeedsDatabase is true when the native path starts with a database level that a Presto catalog does not carry, so the mapping has to supply it.
+	NeedsDatabase bool
+	// Path returns the native path levels of a table, given the mapped database and Presto's schema and table.
+	Path func(database, schema, table string) []string
 }
 
-// defaultMRNName returns catalog.schema.table, the shape for connectors
-// without a native Marmot plugin to agree with.
-func defaultMRNName(catalog, schema, table string) string {
-	return catalog + "." + schema + "." + table
-}
+func dbSchemaTable(database, schema, table string) []string { return []string{database, schema, table} }
+func schemaTable(_, schema, table string) []string          { return []string{schema, table} }
+func tableOnly(_, _, table string) []string                 { return []string{table} }
 
-// prestoNativeConnector is the mapping for data that exists only inside
-// Presto: its tables belong to Presto itself under their full path.
-var prestoNativeConnector = connectorInfo{Provider: provider, MRNName: defaultMRNName}
-
-// internalConnectors lists connectors that hold Presto-native data rather
-// than a view onto an external system. Trino skips their catalogs; here
-// they are discovered under the Presto provider because a memory or tpch
-// table has no other home.
+// internalConnectors lists connectors that hold Presto-native data rather than a view onto an external system. Their catalogs are discovered under the Presto provider because a memory or tpch table has no other home.
 var internalConnectors = map[string]bool{
 	"memory":    true,
 	"tpch":      true,
@@ -32,65 +34,108 @@ var internalConnectors = map[string]bool{
 	"localfile": true,
 }
 
-// connectorMap is copied from the Trino plugin so the two catalogue a
-// connector's tables identically. Presto spells a few connectors
-// differently from Trino; those rows sit at the end.
+// connectorMap maps Presto connector names to the native provider and the path its plugin gives a table. It only applies to catalogs named in catalog_map.
 var connectorMap = map[string]connectorInfo{
 	// Relational databases
-	"postgresql":  {Provider: "PostgreSQL", MRNName: func(_, _, table string) string { return table }},
-	"mysql":       {Provider: "MySQL", MRNName: func(_, _, table string) string { return table }},
-	"mariadb":     {Provider: "MariaDB", MRNName: func(_, _, table string) string { return table }},
-	"sqlserver":   {Provider: "SQL Server", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"oracle":      {Provider: "Oracle", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"clickhouse":  {Provider: "ClickHouse", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"singlestore": {Provider: "SingleStore", MRNName: func(_, _, table string) string { return table }},
-	"redshift":    {Provider: "Redshift", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"postgresql":  {Provider: "PostgreSQL", NeedsDatabase: true, Path: dbSchemaTable},
+	"mysql":       {Provider: "MySQL", Path: schemaTable},
+	"mariadb":     {Provider: "MariaDB", Path: schemaTable},
+	"sqlserver":   {Provider: "SQL Server", NeedsDatabase: true, Path: dbSchemaTable},
+	"oracle":      {Provider: "Oracle", NeedsDatabase: true, Path: dbSchemaTable},
+	"clickhouse":  {Provider: "ClickHouse", Path: schemaTable},
+	"singlestore": {Provider: "SingleStore", Path: schemaTable},
+	"redshift":    {Provider: "Redshift", NeedsDatabase: true, Path: dbSchemaTable},
 
 	// Cloud warehouses / lakehouses
-	"snowflake":  {Provider: "Snowflake", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"bigquery":   {Provider: "BigQuery", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"iceberg":    {Provider: "Iceberg", MRNName: defaultMRNName},
-	"delta_lake": {Provider: "Delta Lake", MRNName: defaultMRNName},
-	"hive":       {Provider: "Hive", MRNName: defaultMRNName},
-	"hudi":       {Provider: "Hudi", MRNName: defaultMRNName},
+	"snowflake":  {Provider: "Snowflake", NeedsDatabase: true, Path: dbSchemaTable},
+	"bigquery":   {Provider: "BigQuery", NeedsDatabase: true, Path: dbSchemaTable},
+	"iceberg":    {Provider: "Iceberg", Path: schemaTable},
+	"delta_lake": {Provider: "Delta Lake", Path: tableOnly},
+	"hive":       {Provider: "Hive", Path: schemaTable},
+	"hudi":       {Provider: "Hudi", Path: schemaTable},
 
 	// NoSQL / document / key-value
-	"mongodb":   {Provider: "MongoDB", MRNName: func(_, _, table string) string { return table }},
-	"cassandra": {Provider: "Cassandra", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"redis":     {Provider: "Redis", MRNName: func(_, _, table string) string { return table }},
-	"accumulo":  {Provider: "Accumulo", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"mongodb":   {Provider: "MongoDB", Path: schemaTable},
+	"cassandra": {Provider: "Cassandra", Path: schemaTable},
+	"redis":     {Provider: "Redis", Path: tableOnly},
+	"accumulo":  {Provider: "Accumulo", Path: schemaTable},
 
 	// Search / analytics engines
-	"elasticsearch": {Provider: "Elasticsearch", MRNName: func(_, _, table string) string { return table }},
-	"opensearch":    {Provider: "OpenSearch", MRNName: func(_, _, table string) string { return table }},
-	"druid":         {Provider: "Druid", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"pinot":         {Provider: "Pinot", MRNName: func(_, _, table string) string { return table }},
+	"elasticsearch": {Provider: "Elasticsearch", Path: tableOnly},
+	"opensearch":    {Provider: "OpenSearch", Path: tableOnly},
+	"druid":         {Provider: "Druid", Path: schemaTable},
+	"pinot":         {Provider: "Pinot", Path: tableOnly},
 
 	// Streaming
-	"kafka":   {Provider: "Kafka", MRNName: func(_, _, table string) string { return table }},
-	"kinesis": {Provider: "Kinesis", MRNName: func(_, _, table string) string { return table }},
+	"kafka":   {Provider: "Kafka", Path: tableOnly},
+	"kinesis": {Provider: "Kinesis", Path: tableOnly},
 
 	// Other
-	"prometheus":    {Provider: "Prometheus", MRNName: func(_, _, table string) string { return table }},
-	"google_sheets": {Provider: "Google Sheets", MRNName: func(_, _, table string) string { return table }},
-	"phoenix":       {Provider: "Phoenix", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"ignite":        {Provider: "Ignite", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"kudu":          {Provider: "Kudu", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"prometheus":    {Provider: "Prometheus", Path: tableOnly},
+	"google_sheets": {Provider: "Google Sheets", Path: tableOnly},
+	"phoenix":       {Provider: "Phoenix", Path: schemaTable},
+	"ignite":        {Provider: "Ignite", Path: schemaTable},
+	"kudu":          {Provider: "Kudu", Path: schemaTable},
 
 	// Presto names these connectors differently from Trino.
-	"hive-hadoop2": {Provider: "Hive", MRNName: defaultMRNName},
-	"delta":        {Provider: "Delta Lake", MRNName: defaultMRNName},
+	"hive-hadoop2": {Provider: "Hive", Path: schemaTable},
+	"delta":        {Provider: "Delta Lake", Path: tableOnly},
 }
 
-// connectorInfoForName picks the mapping for a catalog's connector.
-// Internal connectors and connectors no Marmot plugin covers both fall to
-// Presto itself: there is no native identity to merge with.
-func connectorInfoForName(connector string) connectorInfo {
-	if internalConnectors[connector] {
-		return prestoNativeConnector
+// mappingFor finds the catalog_map entry of a catalog, ignoring case because Presto lower-cases catalog names.
+func (c *Config) mappingFor(catalog string) (CatalogMapping, bool) {
+	if m, ok := c.CatalogMap[catalog]; ok {
+		return m, true
 	}
-	if info, ok := connectorMap[connector]; ok {
-		return info
+	for name, m := range c.CatalogMap {
+		if strings.EqualFold(name, catalog) {
+			return m, true
+		}
 	}
-	return prestoNativeConnector
+	return CatalogMapping{}, false
+}
+
+// tableTarget is where a Presto table lives in Marmot: either a native provider's asset or Presto's own.
+type tableTarget struct {
+	Provider string
+	Zone     string
+	Path     []string
+	// Native is true when the table is filed under the native plugin's identity.
+	Native bool
+}
+
+// targetFor decides the identity of a table. A table only gets a native identity when its catalog is mapped to a zone and, for connectors whose native names start with a database, a database; anything else is Presto's own asset, because guessing would merge same-named tables across every server behind Presto.
+func (c *Config) targetFor(catalog, connector, schema, table string) tableTarget {
+	if info, ok := connectorMap[connector]; ok && !internalConnectors[connector] {
+		if m, mapped := c.mappingFor(catalog); mapped && (!info.NeedsDatabase || m.Database != "") {
+			return tableTarget{Provider: info.Provider, Zone: m.Zone, Path: info.Path(m.Database, schema, table), Native: true}
+		}
+	}
+	return tableTarget{Provider: provider, Zone: c.Zone, Path: []string{catalog, schema, table}}
+}
+
+// mrn builds the MRN of a table of the given type.
+func (t tableTarget) mrn(assetType string) string {
+	return mrn.Asset(assetType, t.Provider, t.Path...).WithZone(t.Zone).String()
+}
+
+// catalogMRN builds the MRN of a catalog asset, which only Presto owns.
+func (c *Config) catalogMRN(catalog string) string {
+	return c.AssetMRN("Catalog", provider, catalog)
+}
+
+// unmappedReason explains why a catalog gets Presto's own assets, or returns "" when its tables get native identities.
+func (c *Config) unmappedReason(catalog, connector string) string {
+	info, known := connectorMap[connector]
+	if !known {
+		return "its connector " + connector + " has no native plugin"
+	}
+	m, mapped := c.mappingFor(catalog)
+	if !mapped {
+		return "it is not in catalog_map"
+	}
+	if info.NeedsDatabase && m.Database == "" {
+		return "its catalog_map entry has no database, which " + connector + " needs"
+	}
+	return ""
 }

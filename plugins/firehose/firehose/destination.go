@@ -1,10 +1,13 @@
 package firehose
 
 import (
+	"net"
+	neturl "net/url"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 // redacted replaces any value that could carry a credential.
@@ -12,11 +15,17 @@ const redacted = "REDACTED"
 
 // lineageTarget is an asset another Marmot plugin owns. Firehose never
 // creates these assets, it only points at them, so the type, provider and
-// name have to match that plugin exactly or the server drops the edge.
+// path have to match that plugin exactly or the server drops the edge. Host is the address of the target system when the stream settings give one, so the server can pick the right zone.
 type lineageTarget struct {
 	Type     string
 	Provider string
-	Name     string
+	Path     []string
+	Host     string
+}
+
+// mrn returns the MRN of the asset another plugin owns.
+func (t lineageTarget) mrn() string {
+	return mrn.Asset(t.Type, t.Provider, t.Path...).WithHost(t.Host).String()
 }
 
 // destination is one Firehose destination reduced to what the catalog
@@ -72,7 +81,7 @@ func s3Destination(d *types.S3DestinationDescription) destination {
 
 	dest := destination{Kind: "s3", Settings: settings}
 	if bucket != "" {
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Bucket", Provider: "S3", Name: bucket})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Bucket", Provider: "S3", Path: []string{bucket}})
 	}
 	return dest
 }
@@ -90,24 +99,24 @@ func extendedS3Destination(d *types.ExtendedS3DestinationDescription) destinatio
 
 	dest := destination{Kind: "extended_s3", Settings: settings}
 	if bucket != "" {
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Bucket", Provider: "S3", Name: bucket})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Bucket", Provider: "S3", Path: []string{bucket}})
 	}
 
 	glueTable := addFormatConversion(settings, d.DataFormatConversionConfiguration)
-	if glueTable != "" {
+	if len(glueTable) > 0 {
 		// Format conversion reads the column types from a Glue catalog
 		// table, so the stream writes data shaped by that table.
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Glue", Name: glueTable})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Glue", Path: glueTable})
 	}
 
 	return dest
 }
 
 // addFormatConversion records the record format conversion settings and
-// returns the Glue table the conversion reads its schema from.
-func addFormatConversion(settings map[string]any, c *types.DataFormatConversionConfiguration) string {
+// returns the path of the Glue table the conversion reads its schema from.
+func addFormatConversion(settings map[string]any, c *types.DataFormatConversionConfiguration) []string {
 	if c == nil || !aws.ToBool(c.Enabled) {
-		return ""
+		return nil
 	}
 
 	settings["format_conversion_enabled"] = true
@@ -115,14 +124,21 @@ func addFormatConversion(settings map[string]any, c *types.DataFormatConversionC
 	putString(settings, "output_format", serializerName(c.OutputFormatConfiguration))
 
 	if c.SchemaConfiguration == nil {
-		return ""
+		return nil
 	}
 	putString(settings, "glue_catalog_id", aws.ToString(c.SchemaConfiguration.CatalogId))
 	putString(settings, "glue_database", aws.ToString(c.SchemaConfiguration.DatabaseName))
 	putString(settings, "glue_table", aws.ToString(c.SchemaConfiguration.TableName))
 	putString(settings, "glue_region", aws.ToString(c.SchemaConfiguration.Region))
 
-	return aws.ToString(c.SchemaConfiguration.TableName)
+	table := aws.ToString(c.SchemaConfiguration.TableName)
+	if table == "" {
+		return nil
+	}
+	if database := aws.ToString(c.SchemaConfiguration.DatabaseName); database != "" {
+		return []string{database, table}
+	}
+	return []string{table}
 }
 
 func deserializerName(c *types.InputFormatConfiguration) string {
@@ -168,37 +184,77 @@ func redshiftDestination(d *types.RedshiftDestinationDescription) destination {
 	}
 
 	dest := destination{Kind: "redshift", Settings: settings}
-	if name, ok := redshiftTableName(database, dataTable); ok {
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Redshift", Name: name})
+	if path, ok := redshiftTablePath(database, dataTable); ok {
+		host := hostPortFromJDBC(aws.ToString(d.ClusterJDBCURL), "5439")
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Redshift", Path: path, Host: host})
 	}
 	return dest
 }
 
-// redshiftTableName builds the database.schema.table name the Marmot
+// redshiftTablePath builds the database, schema and table levels the Marmot
 // Redshift plugin gives its tables.
 //
 // The copy command normally names the table as schema.table. When it names
 // only a table, Redshift resolves the schema through the connection's
 // search path, which is not visible here, so there is no name to point at
 // and the caller drops the edge rather than guessing a schema.
-func redshiftTableName(database, dataTableName string) (string, bool) {
+func redshiftTablePath(database, dataTableName string) ([]string, bool) {
 	if database == "" || dataTableName == "" {
-		return "", false
+		return nil, false
 	}
 
 	parts := strings.Split(dataTableName, ".")
-	switch len(parts) {
-	case 2:
-		if parts[0] == "" || parts[1] == "" {
-			return "", false
+	for _, part := range parts {
+		if part == "" {
+			return nil, false
 		}
-		return database + "." + dataTableName, true
-	case 3:
-		// Already fully qualified, the database in the name wins.
-		return dataTableName, true
 	}
 
-	return "", false
+	switch len(parts) {
+	case 2:
+		return []string{database, parts[0], parts[1]}, true
+	case 3:
+		// Already fully qualified, the database in the name wins.
+		return parts, true
+	}
+
+	return nil, false
+}
+
+// hostPortFromJDBC returns the lowercase host:port of a JDBC URL, using defaultPort when the URL names none.
+func hostPortFromJDBC(url, defaultPort string) string {
+	_, after, found := strings.Cut(url, "://")
+	if !found {
+		return ""
+	}
+	hostPort, _, _ := strings.Cut(after, "/")
+	return withDefaultPort(hostPort, defaultPort)
+}
+
+// hostPortFromURL returns the lowercase host:port of an endpoint URL, using defaultPort when the URL names none.
+func hostPortFromURL(raw, defaultPort string) string {
+	if raw == "" {
+		return ""
+	}
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := neturl.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return withDefaultPort(u.Host, defaultPort)
+}
+
+func withDefaultPort(hostPort, defaultPort string) string {
+	hostPort = strings.ToLower(strings.TrimSpace(hostPort))
+	if hostPort == "" {
+		return ""
+	}
+	if _, _, err := net.SplitHostPort(hostPort); err == nil {
+		return hostPort
+	}
+	return net.JoinHostPort(hostPort, defaultPort)
 }
 
 // parseRedshiftJDBCURL pulls the cluster host and the database out of a
@@ -239,7 +295,7 @@ func elasticsearchDestination(d *types.ElasticsearchDestinationDescription) dest
 
 	dest := destination{Kind: "elasticsearch", Settings: settings}
 	if index != "" {
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Elasticsearch", Name: index})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Elasticsearch", Path: []string{index}, Host: hostPortFromURL(aws.ToString(d.ClusterEndpoint), "443")})
 	}
 	return dest
 }
@@ -255,7 +311,7 @@ func openSearchDestination(d *types.AmazonopensearchserviceDestinationDescriptio
 
 	dest := destination{Kind: "opensearch", Settings: settings}
 	if index != "" {
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "OpenSearch", Name: index})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "OpenSearch", Path: []string{index}, Host: hostPortFromURL(aws.ToString(d.ClusterEndpoint), "443")})
 	}
 	return dest
 }
@@ -310,7 +366,8 @@ func snowflakeDestination(d *types.SnowflakeDestinationDescription) destination 
 		dest.Targets = append(dest.Targets, lineageTarget{
 			Type:     "Table",
 			Provider: "Snowflake",
-			Name:     database + "." + schema + "." + table,
+			Path:     []string{database, schema, table},
+			Host:     hostPortFromURL(aws.ToString(d.AccountUrl), "443"),
 		})
 	}
 	return dest
@@ -331,12 +388,14 @@ func icebergDestination(d *types.IcebergDestinationDescription) destination {
 		if name == "" {
 			continue
 		}
+		path := []string{name}
 		if database := aws.ToString(table.DestinationDatabaseName); database != "" {
 			tables = append(tables, database+"."+name)
+			path = []string{database, name}
 		} else {
 			tables = append(tables, name)
 		}
-		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Iceberg", Name: name})
+		dest.Targets = append(dest.Targets, lineageTarget{Type: "Table", Provider: "Iceberg", Path: path})
 	}
 	if len(tables) > 0 {
 		settings["tables"] = tables

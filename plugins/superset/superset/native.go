@@ -1,6 +1,8 @@
 package superset
 
 import (
+	"net"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -16,62 +18,91 @@ import (
 type nativeNaming struct {
 	// Provider is the exact provider string that plugin sets.
 	Provider string
-	// Name builds the table name from the database (or catalog), schema
-	// and table. Plugins that address tables by bare name ignore the
-	// first two.
-	Name func(database, schema, table string) string
+	// Path builds the levels of the table's MRN from the database (or catalog), schema and table.
+	Path func(database, schema, table string) []string
+	// Port is the port the backend listens on when the connection names a host without one. Empty for hosted services, whose address says nothing a Marmot plugin could match.
+	Port string
 }
 
-func bare(_, _, table string) string             { return table }
-func schemaQualified(_, schema, t string) string { return join(schema, t) }
-func fullyQualified(db, schema, t string) string { return join(db, schema, t) }
-
-func join(parts ...string) string {
+func levels(parts ...string) []string {
 	kept := make([]string, 0, len(parts))
 	for _, p := range parts {
 		if p != "" {
 			kept = append(kept, p)
 		}
 	}
-	return strings.Join(kept, ".")
+	return kept
 }
 
-// backendMap maps the SQLAlchemy dialect name Superset reports as a
-// database's backend to the naming rule of the matching Marmot plugin.
-// The rules mirror the table in plugins/openmetadata/openmetadata/projection.go.
+func tableOnly(_, _, t string) []string { return levels(t) }
+
+// databaseTable names a table database.table, the way MySQL and ClickHouse do. Superset's schema is the database for these backends, so it is preferred over the connection's default.
+func databaseTable(db, schema, t string) []string {
+	if schema != "" {
+		return levels(schema, t)
+	}
+	return levels(db, t)
+}
+func schemaTable(_, schema, t string) []string { return levels(schema, t) }
+func fullPath(db, schema, t string) []string   { return levels(db, schema, t) }
+
+func nonEmpty(parts ...string) []string { return levels(parts...) }
+
+// backendMap maps the SQLAlchemy dialect name Superset reports as a database's backend to the naming of the matching Marmot plugin. The rules mirror the naming table in plugins/openmetadata/openmetadata/projection.go.
 var backendMap = map[string]nativeNaming{
-	"postgresql":   {Provider: "PostgreSQL", Name: bare},
-	"mysql":        {Provider: "MySQL", Name: bare},
-	"mariadb":      {Provider: "MariaDB", Name: bare},
-	"bigquery":     {Provider: "BigQuery", Name: bare},
-	"clickhouse":   {Provider: "ClickHouse", Name: bare},
-	"clickhousedb": {Provider: "ClickHouse", Name: bare},
-	"sqlite":       {Provider: "SQLite", Name: bare},
-	"duckdb":       {Provider: "DuckDB", Name: bare},
-	// Athena reads the Glue Data Catalog, which the Glue plugin already
-	// catalogues by bare table name.
-	"awsathena":   {Provider: "Glue", Name: bare},
-	"athena":      {Provider: "Glue", Name: bare},
-	"snowflake":   {Provider: "Snowflake", Name: fullyQualified},
-	"redshift":    {Provider: "Redshift", Name: fullyQualified},
-	"mssql":       {Provider: "SQL Server", Name: fullyQualified},
-	"cockroachdb": {Provider: "CockroachDB", Name: fullyQualified},
-	"oracle":      {Provider: "Oracle", Name: schemaQualified},
-	"druid":       {Provider: "Druid", Name: schemaQualified},
-	"trino":       {Provider: "Trino", Name: fullyQualified},
-	"databricks":  {Provider: "Databricks", Name: fullyQualified},
+	"postgresql":   {Provider: "PostgreSQL", Path: fullPath, Port: "5432"},
+	"mysql":        {Provider: "MySQL", Path: databaseTable, Port: "3306"},
+	"mariadb":      {Provider: "MariaDB", Path: databaseTable, Port: "3306"},
+	"bigquery":     {Provider: "BigQuery", Path: fullPath},
+	"clickhouse":   {Provider: "ClickHouse", Path: databaseTable, Port: "8123"},
+	"clickhousedb": {Provider: "ClickHouse", Path: databaseTable, Port: "8123"},
+	"sqlite":       {Provider: "SQLite", Path: fullPath},
+	"duckdb":       {Provider: "DuckDB", Path: fullPath},
+	// Athena reads the Glue Data Catalog, which the Glue plugin names database.table.
+	"awsathena":   {Provider: "Glue", Path: schemaTable},
+	"athena":      {Provider: "Glue", Path: schemaTable},
+	"snowflake":   {Provider: "Snowflake", Path: fullPath},
+	"redshift":    {Provider: "Redshift", Path: fullPath, Port: "5439"},
+	"mssql":       {Provider: "SQL Server", Path: fullPath, Port: "1433"},
+	"cockroachdb": {Provider: "CockroachDB", Path: fullPath, Port: "26257"},
+	"oracle":      {Provider: "Oracle", Path: fullPath, Port: "1521"},
+	"druid":       {Provider: "Druid", Path: schemaTable},
+	"trino":       {Provider: "Trino", Path: fullPath, Port: "8080"},
+	"databricks":  {Provider: "Databricks", Path: fullPath},
 }
 
-// nativeTableMRN returns the MRN the owning plugin gives a table, or ""
-// when Superset's backend is one Marmot has no naming rule for. The
-// backend arrives as Superset reports it, which is lowercase already;
-// lowering it again costs nothing and guards a hand-typed value.
-func nativeTableMRN(backend, database, schema, table string) string {
+// nativeTableMRN returns the MRN the owning plugin gives a table, or "" when Superset's backend is one Marmot has no naming rule for. The backend arrives as Superset reports it, which is lowercase already; lowering it again costs nothing and guards a hand-typed value. host is the connection's host:port and becomes a hint, so Marmot picks the zone that owns that server.
+func nativeTableMRN(backend, host, database, schema, table string) string {
 	naming, ok := backendMap[strings.ToLower(backend)]
 	if !ok || table == "" {
 		return ""
 	}
-	return mrn.New("Table", naming.Provider, naming.Name(database, schema, table))
+	path := naming.Path(database, schema, table)
+	if len(path) == 0 {
+		return ""
+	}
+	return mrn.Asset("Table", naming.Provider, path...).WithHost(host).String()
+}
+
+// connectionHost reads the host:port of a connection, from its parameters or else its SQLAlchemy URI, with the backend's default port when there is none. It is empty for a backend with no host to match.
+func connectionHost(backend string, conn *databaseConnection) string {
+	naming, ok := backendMap[strings.ToLower(backend)]
+	if !ok || naming.Port == "" {
+		return ""
+	}
+	host, port := strings.ToLower(strings.TrimSpace(conn.Parameters.Host)), conn.Parameters.Port.String()
+	if host == "" {
+		if u, err := url.Parse(conn.SQLAlchemyURI); err == nil {
+			host, port = strings.ToLower(u.Hostname()), u.Port()
+		}
+	}
+	if host == "" {
+		return ""
+	}
+	if port == "" {
+		port = naming.Port
+	}
+	return net.JoinHostPort(host, port)
 }
 
 // tableRef is one table a SQL statement reads from.

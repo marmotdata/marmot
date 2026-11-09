@@ -81,3 +81,15 @@ func TestSource_ValidateDefaults(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 4222, s.config.Port)
 }
+
+func TestSource_StreamMRN(t *testing.T) {
+	s := &Source{}
+	_, err := s.Validate(pluginsdk.RawConfig{"host": "localhost"})
+	require.NoError(t, err)
+	assert.Equal(t, "mrn://asset/stream/nats/orders", s.streamMRN("ORDERS"))
+
+	s = &Source{}
+	_, err = s.Validate(pluginsdk.RawConfig{"host": "localhost", "zone": "prod"})
+	require.NoError(t, err)
+	assert.Equal(t, "mrn://asset/stream/nats@prod/orders", s.streamMRN("ORDERS"))
+}

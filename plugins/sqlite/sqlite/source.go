@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/filesource"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite" // pure-Go SQLite driver, registered as "sqlite"
 )
@@ -35,7 +35,8 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "sqlite",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeFile,
 		Name:          "SQLite",
 		Description:   "Discover tables, views and foreign key relationships from SQLite database files",
 		Icon:          "sqlite",
@@ -259,7 +260,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset,
 			"object_type": objectType,
 		}
 
-		mrnValue := assetMRN(assetType, name)
+		mrnValue := assetMRN(s.config, assetType, name)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, pluginsdk.Asset{
@@ -431,8 +432,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEd
 			Str("target", fmt.Sprintf("%s.%s", targetTable.String, targetColumn.String)).
 			Msg("Found foreign key relationship")
 
-		sourceMRN := assetMRN("Table", sourceTable.String)
-		targetMRN := assetMRN("Table", targetTable.String)
+		sourceMRN := assetMRN(s.config, "Table", sourceTable.String)
+		targetMRN := assetMRN(s.config, "Table", targetTable.String)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -554,10 +555,16 @@ func quoteIdent(name string) string {
 	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
 }
 
-// assetMRN is the single place a SQLite MRN is built. The table pass and the
-// foreign key pass both go through it so the two can never drift into
-// addressing the same table differently. SQLite has no schema layer, so a
-// table is addressed by its bare name, matching the other database plugins.
-func assetMRN(assetType, table string) string {
-	return mrn.New(assetType, "SQLite", table)
+// assetMRN is the single place a SQLite MRN is built. The table pass, the foreign key pass and the query planner all go through it so they can never drift into addressing the same table differently. SQLite has no schema layer, so the path is the database file name followed by the table.
+func assetMRN(cfg *Config, assetType, table string) string {
+	return cfg.AssetMRN(assetType, "SQLite", databaseName(cfg.Path), table)
+}
+
+// databaseName is the name a database file goes by in an MRN: the file name without its directory, query string or extension. A path may be a local file, an S3 key or a Git URL, and the same file always gives the same name.
+func databaseName(filePath string) string {
+	if i := strings.IndexByte(filePath, '?'); i >= 0 {
+		filePath = filePath[:i]
+	}
+	base := path.Base(strings.ReplaceAll(filePath, `\`, "/"))
+	return strings.TrimSuffix(base, path.Ext(base))
 }

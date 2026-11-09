@@ -156,7 +156,7 @@ func TestDiscoverModels_SkipsAModelItCannotDescribe(t *testing.T) {
 func TestDiscoverModels_LinksTheArtifactBucketToTheModel(t *testing.T) {
 	result := discoverWith(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-artifacts", "mrn://model/sagemaker/churn-xgb", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-artifacts", "mrn://asset/model/sagemaker/churn-xgb", "FEEDS"))
 }
 
 func TestDiscoverModels_FollowsPaginationToTheEnd(t *testing.T) {
@@ -250,7 +250,7 @@ func TestDiscoverModelPackageGroups_RecordsTheModelQualityReport(t *testing.T) {
 func TestDiscoverModelPackageGroups_LinksTheRegistryBucketToTheGroup(t *testing.T) {
 	result := discoverWith(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-registry", "mrn://model/sagemaker/churn-registry", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-registry", "mrn://asset/model/sagemaker/churn-registry", "FEEDS"))
 }
 
 func TestDiscoverModelPackageGroups_HasNoConsoleLink(t *testing.T) {

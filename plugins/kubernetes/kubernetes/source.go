@@ -7,7 +7,10 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"slices"
+	"strings"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/rs/zerolog/log"
@@ -518,7 +521,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "kubernetes",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Kubernetes",
 		Description:   "Discover namespaces, services, workloads, and cron jobs from Kubernetes clusters",
 		Icon:          "kubernetes",
@@ -598,7 +601,37 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		s.client = client
 	}
 
-	return NewDiscoverer(s.client, &config.DiscoveryConfig).Discover(ctx)
+	result, err := NewDiscoverer(s.client, &config.DiscoveryConfig).Discover(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if binding, ok := apiServerBinding(config); ok {
+		result.ZoneBindings = append(result.ZoneBindings, binding)
+	}
+	return result, nil
+}
+
+// apiServerBinding binds the API server of a direct host and token connection to the configured zone. A kubeconfig or in-cluster connection names no host the plugin controls, so it gets no binding.
+func apiServerBinding(config *Config) (pluginsdk.ZoneBinding, bool) {
+	if config.Host == "" {
+		return pluginsdk.ZoneBinding{}, false
+	}
+	u, err := url.Parse(config.Host)
+	if err != nil || u.Hostname() == "" {
+		return pluginsdk.ZoneBinding{}, false
+	}
+	port := u.Port()
+	if port == "" {
+		port = "443"
+		if u.Scheme == "http" {
+			port = "80"
+		}
+	}
+	return pluginsdk.ZoneBinding{
+		Provider: "Kubernetes",
+		Host:     net.JoinHostPort(strings.ToLower(u.Hostname()), port),
+		Zone:     config.Zone,
+	}, true
 }
 
 // newClient builds a Kubernetes client from the plugin configuration.

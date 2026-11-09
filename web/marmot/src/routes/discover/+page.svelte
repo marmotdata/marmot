@@ -19,6 +19,7 @@
 	import { auth } from '$lib/stores/auth';
 	import { setCrumbs } from '$lib/mm';
 	import { m } from '$lib/paraglide/messages';
+	import { mrnZone, mrnQualifiedName } from '$lib/mrn';
 	import { formatRelativeTime } from '$lib/utils/format';
 	import type { Asset } from '$lib/assets/types';
 	import type { DataProduct } from '$lib/dataproducts/types';
@@ -414,6 +415,11 @@
 			if (r.metadata?.type) parts.push(typeLabel(r.metadata.type));
 			const providers = r.metadata?.providers ?? [];
 			if (providers.length) parts.push(providers.map(providerLabel).join(', '));
+			// The zone tells two systems of one technology apart, and the qualified name tells apart same-named tables
+			const zone = mrnZone(r.metadata?.mrn);
+			if (zone) parts.push(zone);
+			const qualified = mrnQualifiedName(r.metadata?.mrn);
+			if (qualified && qualified !== r.name.toLowerCase()) parts.push(qualified);
 			if (r.column_count) parts.push(m.discover_result_columns({ count: r.column_count }));
 			if (r.row_count)
 				parts.push(

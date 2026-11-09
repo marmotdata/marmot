@@ -365,8 +365,8 @@ func TestDiscover_LinksInputTablesToThePipeline(t *testing.T) {
 
 	result := discoverAgainstFake(t, fake, nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://pipeline/spline/daily-etl", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://pipeline/spline/daily-etl", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.orders", "mrn://asset/pipeline/spline/daily-etl", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.customers", "mrn://asset/pipeline/spline/daily-etl", "FEEDS"))
 }
 
 func TestDiscover_LinksThePipelineToItsOutputTable(t *testing.T) {
@@ -374,7 +374,7 @@ func TestDiscover_LinksThePipelineToItsOutputTable(t *testing.T) {
 
 	result := discoverAgainstFake(t, fake, nil)
 
-	assert.True(t, hasEdge(result, "mrn://pipeline/spline/daily-etl", "mrn://table/postgresql/order_summary", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/pipeline/spline/daily-etl", "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary", "PRODUCES"))
 }
 
 func TestDiscover_LinksAnS3BucketToThePipeline(t *testing.T) {
@@ -382,8 +382,8 @@ func TestDiscover_LinksAnS3BucketToThePipeline(t *testing.T) {
 
 	result := discoverAgainstFake(t, fake, nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", "mrn://pipeline/spline/events-loader", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://pipeline/spline/events-loader", "mrn://table/hive/sales.orders", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/pipeline/spline/events-loader", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/pipeline/spline/events-loader", "mrn://asset/table/hive/sales.orders", "PRODUCES"))
 }
 
 func TestDiscover_DoesNotCreateTablesOrBuckets(t *testing.T) {
@@ -430,7 +430,7 @@ func TestDiscover_BuildsRunHistoryForEveryRun(t *testing.T) {
 		byMRN[history.AssetMRN] = history
 	}
 
-	daily := byMRN["mrn://pipeline/spline/daily-etl"]
+	daily := byMRN["mrn://asset/pipeline/spline/daily-etl"]
 	require.Len(t, daily.Runs, 2)
 	assert.Equal(t, planDaily+":mtsf3vmm", daily.Runs[0].RunID)
 	assert.Equal(t, "spline", daily.Runs[0].JobNamespace)
@@ -444,7 +444,7 @@ func TestDiscover_MarksAFailedRunAsFail(t *testing.T) {
 	result := discoverAgainstFake(t, fake, nil)
 
 	for _, history := range result.RunHistory {
-		if history.AssetMRN != "mrn://pipeline/spline/nightly-report" {
+		if history.AssetMRN != "mrn://asset/pipeline/spline/nightly-report" {
 			continue
 		}
 		require.Len(t, history.Runs, 1)
@@ -460,7 +460,7 @@ func TestDiscover_AttachesRunFacets(t *testing.T) {
 	result := discoverAgainstFake(t, fake, nil)
 
 	for _, history := range result.RunHistory {
-		if history.AssetMRN != "mrn://pipeline/spline/daily-etl" {
+		if history.AssetMRN != "mrn://asset/pipeline/spline/daily-etl" {
 			continue
 		}
 		facets := history.Runs[0].RunFacets
@@ -485,7 +485,7 @@ func TestDiscover_RecordsColumnLineageForTheOutputTable(t *testing.T) {
 	var lineage map[string][]ColumnLineageEntry
 	require.NoError(t, json.Unmarshal([]byte(encoded), &lineage))
 
-	entries := lineage["mrn://table/postgresql/order_summary"]
+	entries := lineage["mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"]
 	require.Len(t, entries, 1)
 	assert.Equal(t, "revenue", entries[0].ToColumn)
 	assert.Equal(t, []string{"order_id", "total"}, entries[0].FromColumns)
@@ -581,7 +581,7 @@ func TestDiscover_ContinuesWhenOnePlanCannotBeRead(t *testing.T) {
 	result := discoverAgainstFake(t, fake, nil)
 
 	assert.Len(t, result.Assets, 3)
-	assert.True(t, hasEdge(result, "mrn://pipeline/spline/daily-etl", "mrn://table/postgresql/order_summary", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/pipeline/spline/daily-etl", "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary", "PRODUCES"))
 }
 
 func TestMeta_DeclaresWhatDiscoverEmits(t *testing.T) {

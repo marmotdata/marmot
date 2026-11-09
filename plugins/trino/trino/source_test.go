@@ -147,163 +147,200 @@ func TestBuildColumnSummary(t *testing.T) {
 	})
 }
 
-func TestConnectorMRNNames(t *testing.T) {
+func mappedConfig() *Config {
+	return &Config{
+		Host: "trino.example.com",
+		Port: 8080,
+		CatalogMap: map[string]CatalogMapping{
+			"pg":   {Zone: "prod-eu", Database: "shop"},
+			"my":   {Zone: "billing"},
+			"ice":  {},
+			"ch":   {},
+			"dl":   {},
+			"pgno": {Zone: "x"},
+		},
+	}
+}
+
+func TestTargetFor_MappedCatalogsGetTheNativeIdentity(t *testing.T) {
+	cfg := mappedConfig()
+
 	tests := []struct {
 		name      string
-		connector string
 		catalog   string
+		connector string
 		schema    string
 		table     string
-		wantName  string
+		wantMRN   string
 	}{
-		// PostgreSQL, MySQL and MongoDB all have a Marmot plugin that
-		// names a table by its bare object name, so this map matches them
-		// and the two sources land on one asset. See the mrn_test.go in
-		// each of those plugins for why they stay bare.
-		{"postgresql bare table", "postgresql", "pg", "public", "products", "products"},
-		{"mysql bare table", "mysql", "my", "mydb", "users", "users"},
-		{"mongodb bare collection", "mongodb", "mongo", "mydb", "users", "users"},
-		// ClickHouse's plugin declares schema.table, so this follows it.
-		{"clickhouse schema.table", "clickhouse", "ch", "analytics", "events", "analytics.events"},
-		// Connectors with no matching convention fall back to the full
-		// catalog.schema.table path, with Trino as the authority.
-		{"iceberg full path", "iceberg", "ice", "warehouse", "orders", "ice.warehouse.orders"},
-		{"delta lake full path", "delta_lake", "dl", "default", "events", "dl.default.events"},
-		{"hive full path", "hive", "hv", "warehouse", "orders", "hv.warehouse.orders"},
+		{"postgresql database comes from the map", "pg", "postgresql", "public", "products", "mrn://asset/table/postgresql@prod-eu/shop.public.products"},
+		{"mysql schema is the database", "my", "mysql", "mydb", "users", "mrn://asset/table/mysql@billing/mydb.users"},
+		{"clickhouse database and table", "ch", "clickhouse", "analytics", "events", "mrn://asset/table/clickhouse/analytics.events"},
+		{"iceberg namespace and table", "ice", "iceberg", "warehouse", "orders", "mrn://asset/table/iceberg/warehouse.orders"},
+		{"delta lake is named by table", "dl", "delta_lake", "default", "events", "mrn://asset/table/delta-lake/events"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			info := connectorMap[tt.connector]
-			got := info.MRNName(tt.catalog, tt.schema, tt.table)
-			assert.Equal(t, tt.wantName, got)
+			target := cfg.targetFor(tt.catalog, tt.connector, tt.schema, tt.table)
+			assert.True(t, target.Native)
+			assert.Equal(t, tt.wantMRN, target.mrn("Table"))
 		})
 	}
 }
 
-func TestCreateTableAsset_NativeProvider(t *testing.T) {
-	s := &Source{
-		config: &Config{
-			BaseConfig: pluginsdk.BaseConfig{},
-			Host:       "trino.example.com",
-			Port:       8080,
-		},
+func TestTargetFor_UnmappedCatalogIsATrinoAsset(t *testing.T) {
+	cfg := mappedConfig()
+
+	// Two catalogs reading different PostgreSQL servers must never merge, so an unmapped one keeps its catalog in the path.
+	a := cfg.targetFor("other_pg", "postgresql", "public", "products")
+	b := cfg.targetFor("another_pg", "postgresql", "public", "products")
+
+	assert.False(t, a.Native)
+	assert.Equal(t, "mrn://asset/table/trino/other_pg.public.products", a.mrn("Table"))
+	assert.NotEqual(t, a.mrn("Table"), b.mrn("Table"))
+}
+
+func TestTargetFor_ConnectorNeedingADatabaseWithoutOneIsATrinoAsset(t *testing.T) {
+	target := mappedConfig().targetFor("pgno", "postgresql", "public", "products")
+
+	assert.False(t, target.Native)
+	assert.Equal(t, "mrn://asset/table/trino/pgno.public.products", target.mrn("Table"))
+}
+
+func TestTargetFor_UnknownConnectorIsATrinoAsset(t *testing.T) {
+	cfg := mappedConfig()
+	cfg.CatalogMap["future"] = CatalogMapping{Zone: "x"}
+
+	target := cfg.targetFor("future", "some_future_connector", "s", "t")
+
+	assert.False(t, target.Native)
+	assert.Equal(t, "mrn://asset/table/trino/future.s.t", target.mrn("Table"))
+}
+
+func TestTargetFor_TrinoAssetsCarryTheTrinoZone(t *testing.T) {
+	cfg := mappedConfig()
+	cfg.Zone = "data-platform"
+
+	target := cfg.targetFor("unmapped", "hive", "sales", "orders")
+
+	assert.Equal(t, "mrn://asset/table/trino@data-platform/unmapped.sales.orders", target.mrn("Table"))
+	// A mapped catalog uses the mapped zone, not Trino's own.
+	assert.Equal(t, "mrn://asset/table/postgresql@prod-eu/shop.public.p", cfg.targetFor("pg", "postgresql", "public", "p").mrn("Table"))
+}
+
+func TestTargetFor_CatalogMapIgnoresCase(t *testing.T) {
+	target := mappedConfig().targetFor("PG", "postgresql", "public", "products")
+	assert.True(t, target.Native)
+}
+
+func TestTargetFor_InternalConnectorsAreNeverNative(t *testing.T) {
+	cfg := &Config{CatalogMap: map[string]CatalogMapping{"mem": {}}}
+	assert.False(t, cfg.targetFor("mem", "memory", "default", "t").Native)
+}
+
+func TestUnmappedReason(t *testing.T) {
+	cfg := mappedConfig()
+
+	assert.Empty(t, cfg.unmappedReason("pg", "postgresql"))
+	assert.Contains(t, cfg.unmappedReason("other", "postgresql"), "not in catalog_map")
+	assert.Contains(t, cfg.unmappedReason("pgno", "postgresql"), "no database")
+	assert.Contains(t, cfg.unmappedReason("x", "some_future_connector"), "no native plugin")
+}
+
+func TestCreateTableAsset_MappedCatalog(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+
+	a := s.createTableAsset("pg", "public", "products", "BASE TABLE", "postgresql")
+
+	assert.Equal(t, "mrn://asset/table/postgresql@prod-eu/shop.public.products", *a.MRN)
+	assert.Equal(t, "products", *a.Name)
+	assert.Equal(t, []string{"PostgreSQL"}, a.Providers)
+	assert.Equal(t, "Trino", a.Sources[0].Name, "source is always Trino")
+	assert.Equal(t, "pg", a.Metadata["catalog"])
+	assert.Equal(t, "public", a.Metadata["schema"])
+	assert.Equal(t, "products", a.Metadata["table_name"])
+	assert.Empty(t, a.PreviousMRNs)
+}
+
+func TestCreateTableAsset_ViewType(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+
+	a := s.createTableAsset("pg", "public", "my_view", "VIEW", "postgresql")
+
+	assert.Equal(t, "View", a.Type)
+	assert.Equal(t, "mrn://asset/view/postgresql@prod-eu/shop.public.my_view", *a.MRN)
+}
+
+func TestCreateTableAsset_UnmappedCatalogIsTrinos(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+
+	a := s.createTableAsset("lake", "sales", "orders", "BASE TABLE", "hive")
+
+	assert.Equal(t, "mrn://asset/table/trino/lake.sales.orders", *a.MRN)
+	assert.Equal(t, "orders", *a.Name)
+	assert.Equal(t, []string{"Trino"}, a.Providers)
+	assert.Equal(t, []string{"mrn://table/hive/lake.sales.orders"}, a.PreviousMRNs, "the catalog qualified identity earlier releases gave it")
+}
+
+func TestPreviousMRNs_OnlyTheCatalogQualifiedOnesAreClaimed(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+
+	// A bare postgresql name was shared with the native plugin's own asset, so a Trino asset must not take it over.
+	pg := s.createTableAsset("other_pg", "public", "products", "BASE TABLE", "postgresql")
+	assert.Empty(t, pg.PreviousMRNs)
+
+	unknown := s.createTableAsset("x", "s", "t", "BASE TABLE", "some_future_connector")
+	assert.Equal(t, []string{"mrn://table/some_future_connector/x.s.t"}, unknown.PreviousMRNs)
+}
+
+func TestCreateCatalogAsset(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+	s.config.Zone = "data-platform"
+
+	a := s.createCatalogAsset("lake")
+
+	assert.Equal(t, "mrn://asset/catalog/trino@data-platform/lake", *a.MRN)
+	assert.Equal(t, "lake", *a.Name)
+}
+
+func TestCreateTableAsset_NameAndMRNAgree(t *testing.T) {
+	s := &Source{config: mappedConfig()}
+
+	for _, tc := range []struct{ catalog, connector string }{{"pg", "postgresql"}, {"ice", "iceberg"}, {"nope", "hive"}} {
+		a := s.createTableAsset(tc.catalog, "sch", "orders", "BASE TABLE", tc.connector)
+
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.Equal(t, *a.Name, parsed.Path()[len(parsed.Path())-1], tc.catalog)
 	}
+}
 
-	tests := []struct {
-		name         string
-		connector    string
-		catalog      string
-		schema       string
-		table        string
-		wantMRN      string
-		wantName     string
-		wantProvider string
-	}{
-		{
-			name:         "postgresql produces native MRN",
-			connector:    "postgresql",
-			catalog:      "pg",
-			schema:       "public",
-			table:        "products",
-			wantMRN:      "mrn://table/postgresql/products",
-			wantName:     "products",
-			wantProvider: "PostgreSQL",
+func TestParseConfig_CatalogMap(t *testing.T) {
+	cfg, err := parseConfig(pluginsdk.RawConfig{
+		"host": "localhost",
+		"user": "marmot",
+		"catalog_map": map[string]any{
+			"pg": map[string]any{"zone": "prod-eu", "database": "shop"},
 		},
-		{
-			name:         "clickhouse produces native MRN",
-			connector:    "clickhouse",
-			catalog:      "ch",
-			schema:       "analytics",
-			table:        "events",
-			wantMRN:      "mrn://table/clickhouse/analytics.events",
-			wantName:     "analytics.events",
-			wantProvider: "ClickHouse",
-		},
-		{
-			name:         "iceberg falls back to the full path",
-			connector:    "iceberg",
-			catalog:      "ice",
-			schema:       "warehouse",
-			table:        "orders",
-			wantMRN:      "mrn://table/iceberg/ice.warehouse.orders",
-			wantName:     "ice.warehouse.orders",
-			wantProvider: "Iceberg",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			info := connectorMap[tt.connector]
-
-			a := s.createTableAsset(tt.catalog, tt.schema, tt.table, "BASE TABLE", info)
-			assert.Equal(t, tt.wantMRN, *a.MRN)
-			assert.Equal(t, tt.wantName, *a.Name)
-			assert.Equal(t, []string{tt.wantProvider}, a.Providers)
-			assert.Equal(t, "Trino", a.Sources[0].Name, "source is always Trino")
-			assert.Equal(t, tt.catalog, a.Metadata["catalog"])
-			assert.Equal(t, tt.schema, a.Metadata["schema"])
-			assert.Equal(t, tt.table, a.Metadata["table_name"])
-		})
-	}
-
-	t.Run("view type", func(t *testing.T) {
-		info := connectorMap["postgresql"]
-		a := s.createTableAsset("pg", "public", "my_view", "VIEW", info)
-		assert.Equal(t, "View", a.Type)
-		assert.Equal(t, "mrn://view/postgresql/my_view", *a.MRN)
 	})
+	require.NoError(t, err)
+
+	assert.Equal(t, CatalogMapping{Zone: "prod-eu", Database: "shop"}, cfg.CatalogMap["pg"])
 }
 
-func TestCreateTableAsset_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
-	// Name and the MRN's name segment carry the same string, even where
-	// that means a Trino asset reads as "analytics.events".
-	s := &Source{config: &Config{Host: "trino.example.com", Port: 8080}}
+func TestMeta_FederatesAndDeclaresCatalogMap(t *testing.T) {
+	meta := Meta()
+	assert.True(t, meta.Federates)
 
-	for _, connector := range []string{"postgresql", "clickhouse", "iceberg", "hive"} {
-		info := connectorMap[connector]
-		a := s.createTableAsset("cat", "sch", "orders", "BASE TABLE", info)
-
-		require.NotNil(t, a.Name)
-		require.NotNil(t, a.MRN)
-		assert.Equal(t, mrn.New("Table", a.Providers[0], *a.Name), *a.MRN,
-			"%s: MRN and Name must agree", connector)
+	var found bool
+	for _, f := range meta.ConfigSpec {
+		if f.Name == "catalog_map" {
+			found = true
+			assert.Equal(t, "Discovery", f.Group)
+		}
 	}
-}
-
-func TestCreateTableAsset_ProviderWithASpaceIsDashedInTheMRN(t *testing.T) {
-	// mrn.New sanitizes every part, so the provider "Delta Lake" becomes
-	// "delta-lake" rather than putting a space in the MRN. The Presto and
-	// OpenMetadata plugins address the same table the same way.
-	s := &Source{config: &Config{Host: "trino.example.com", Port: 8080}}
-
-	a := s.createTableAsset("dl", "default", "events", "BASE TABLE", connectorMap["delta_lake"])
-
-	assert.Equal(t, "mrn://table/delta-lake/dl.default.events", *a.MRN)
-	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
-}
-
-func TestConnectorInfoForName(t *testing.T) {
-	// Internal connectors are skipped
-	for _, c := range []string{"memory", "tpch", "tpcds", "blackhole", "localfile"} {
-		_, ok := connectorInfoForName(c)
-		assert.False(t, ok, "%s should be skipped", c)
-	}
-
-	// Known connectors return their native provider
-	info, ok := connectorInfoForName("postgresql")
-	assert.True(t, ok)
-	assert.Equal(t, "PostgreSQL", info.Provider)
-
-	info, ok = connectorInfoForName("snowflake")
-	assert.True(t, ok)
-	assert.Equal(t, "Snowflake", info.Provider)
-
-	// Unknown external connectors get a default mapping
-	info, ok = connectorInfoForName("some_future_connector")
-	assert.True(t, ok)
-	assert.Equal(t, "some_future_connector", info.Provider)
-	assert.Equal(t, "cat.sch.tbl", info.MRNName("cat", "sch", "tbl"))
+	assert.True(t, found)
 }
 
 func TestQuoteIdentifier(t *testing.T) {

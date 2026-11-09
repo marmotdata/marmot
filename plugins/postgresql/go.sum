@@ -156,8 +156,8 @@ github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e h1:Q6MvJtQK/iRcRt
 github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
-github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d h1:Jr9Jx2ZJAE+ljTmihe1u+dns+9QfjlLa6IuEwsWKERA=
-github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d/go.mod h1:UvHylmDqS0d+0ufcL01RaRRfCpL+/cbRLJ7LSvQsCkA=
+github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a h1:q8SsHFQNIGpWvRtsAULQ1O/FQl1TwI5pfVlLMGCVb3g=
+github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a/go.mod h1:TXVXnacPsBlQIWPAX4xmU5sRNANWLZp3syAzTIASN/Y=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

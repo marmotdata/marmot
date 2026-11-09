@@ -253,8 +253,8 @@ func TestE2E_DiscoversBothDatabasesAsContainers(t *testing.T) {
 	shop := findAsset(t, result, "Database", "shop")
 	analytics := findAsset(t, result, "Database", "analytics")
 
-	assert.Equal(t, "mrn://database/sql-server/shop", *shop.MRN)
-	assert.Equal(t, "mrn://database/sql-server/analytics", *analytics.MRN)
+	assert.Equal(t, "mrn://asset/database/sql-server/shop", *shop.MRN)
+	assert.Equal(t, "mrn://asset/database/sql-server/analytics", *analytics.MRN)
 	assert.Equal(t, []string{"SQL Server"}, shop.Providers)
 }
 
@@ -287,7 +287,7 @@ func TestE2E_TableNamesAreFullyQualified(t *testing.T) {
 
 	for _, name := range []string{"shop.dbo.customers", "shop.dbo.orders", "shop.sales.regions"} {
 		asset := findAsset(t, result, "Table", name)
-		assert.Equal(t, "mrn://table/sql-server/"+name, *asset.MRN)
+		assert.Equal(t, "mrn://asset/table/sql-server/"+name, *asset.MRN)
 	}
 }
 
@@ -434,7 +434,7 @@ func TestE2E_DiscoversStoredProceduresAndFunctionsAsFunctions(t *testing.T) {
 	assert.Equal(t, "stored_procedure", procedure.Metadata["object_type"])
 	assert.Equal(t, "scalar_function", scalar.Metadata["object_type"])
 	assert.Equal(t, "inline_table_function", inline.Metadata["object_type"])
-	assert.Equal(t, "mrn://function/sql-server/shop.dbo.get_customer", *procedure.MRN)
+	assert.Equal(t, "mrn://asset/function/sql-server/shop.dbo.get_customer", *procedure.MRN)
 }
 
 func TestE2E_FunctionCarriesItsBodyAsAQuery(t *testing.T) {
@@ -453,37 +453,37 @@ func TestE2E_DatabaseContainsItsTables(t *testing.T) {
 	result := discover(t)
 
 	assert.True(t, hasEdge(result, "CONTAINS",
-		"mrn://database/sql-server/shop", "mrn://table/sql-server/shop.dbo.orders"))
+		"mrn://asset/database/sql-server/shop", "mrn://asset/table/sql-server/shop.dbo.orders"))
 	assert.True(t, hasEdge(result, "CONTAINS",
-		"mrn://database/sql-server/analytics", "mrn://table/sql-server/analytics.dbo.daily_totals"))
+		"mrn://asset/database/sql-server/analytics", "mrn://asset/table/sql-server/analytics.dbo.daily_totals"))
 }
 
 func TestE2E_DatabaseContainsItsViewsAndFunctions(t *testing.T) {
 	result := discover(t)
 
 	assert.True(t, hasEdge(result, "CONTAINS",
-		"mrn://database/sql-server/shop", "mrn://view/sql-server/shop.dbo.order_totals"))
+		"mrn://asset/database/sql-server/shop", "mrn://asset/view/sql-server/shop.dbo.order_totals"))
 	assert.True(t, hasEdge(result, "CONTAINS",
-		"mrn://database/sql-server/shop", "mrn://function/sql-server/shop.dbo.get_customer"))
+		"mrn://asset/database/sql-server/shop", "mrn://asset/function/sql-server/shop.dbo.get_customer"))
 }
 
 func TestE2E_ForeignKeyEdgeRunsFromTheReferencingTable(t *testing.T) {
 	result := discover(t)
 
 	assert.True(t, hasEdge(result, "FOREIGN_KEY",
-		"mrn://table/sql-server/shop.dbo.orders",
-		"mrn://table/sql-server/shop.dbo.customers"))
+		"mrn://asset/table/sql-server/shop.dbo.orders",
+		"mrn://asset/table/sql-server/shop.dbo.customers"))
 }
 
 func TestE2E_ViewOfEdgesRunFromTheBaseTablesToTheView(t *testing.T) {
 	result := discover(t)
 
 	assert.True(t, hasEdge(result, "VIEW_OF",
-		"mrn://table/sql-server/shop.dbo.customers",
-		"mrn://view/sql-server/shop.dbo.order_totals"))
+		"mrn://asset/table/sql-server/shop.dbo.customers",
+		"mrn://asset/view/sql-server/shop.dbo.order_totals"))
 	assert.True(t, hasEdge(result, "VIEW_OF",
-		"mrn://table/sql-server/shop.dbo.orders",
-		"mrn://view/sql-server/shop.dbo.order_totals"))
+		"mrn://asset/table/sql-server/shop.dbo.orders",
+		"mrn://asset/view/sql-server/shop.dbo.order_totals"))
 }
 
 func TestE2E_ViewOfResolvesAnAliasedReferenceInAnotherSchema(t *testing.T) {
@@ -492,8 +492,8 @@ func TestE2E_ViewOfResolvesAnAliasedReferenceInAnotherSchema(t *testing.T) {
 	result := discover(t)
 
 	assert.True(t, hasEdge(result, "VIEW_OF",
-		"mrn://table/sql-server/shop.sales.regions",
-		"mrn://view/sql-server/shop.sales.regional_orders"))
+		"mrn://asset/table/sql-server/shop.sales.regions",
+		"mrn://asset/view/sql-server/shop.sales.regional_orders"))
 }
 
 func TestE2E_EveryEdgeEndpointIsAnAssetThisRunProduced(t *testing.T) {
@@ -517,22 +517,22 @@ func TestE2E_EveryEdgeEndpointIsAnAssetThisRunProduced(t *testing.T) {
 func TestE2E_RowCountsMatchTheSeededData(t *testing.T) {
 	result := discover(t)
 
-	assert.EqualValues(t, 2, statistic(t, result, "mrn://table/sql-server/shop.dbo.customers", "asset.row_count"))
-	assert.EqualValues(t, 3, statistic(t, result, "mrn://table/sql-server/shop.dbo.orders", "asset.row_count"))
-	assert.EqualValues(t, 2, statistic(t, result, "mrn://table/sql-server/shop.sales.regions", "asset.row_count"))
+	assert.EqualValues(t, 2, statistic(t, result, "mrn://asset/table/sql-server/shop.dbo.customers", "asset.row_count"))
+	assert.EqualValues(t, 3, statistic(t, result, "mrn://asset/table/sql-server/shop.dbo.orders", "asset.row_count"))
+	assert.EqualValues(t, 2, statistic(t, result, "mrn://asset/table/sql-server/shop.sales.regions", "asset.row_count"))
 }
 
 func TestE2E_ColumnCountsMatchTheDiscoveredColumns(t *testing.T) {
 	result := discover(t)
 
-	assert.EqualValues(t, 8, statistic(t, result, "mrn://table/sql-server/shop.dbo.customers", "asset.column_count"))
-	assert.EqualValues(t, 5, statistic(t, result, "mrn://table/sql-server/shop.dbo.orders", "asset.column_count"))
+	assert.EqualValues(t, 8, statistic(t, result, "mrn://asset/table/sql-server/shop.dbo.customers", "asset.column_count"))
+	assert.EqualValues(t, 5, statistic(t, result, "mrn://asset/table/sql-server/shop.dbo.orders", "asset.column_count"))
 }
 
 func TestE2E_TableSizesAreReported(t *testing.T) {
 	result := discover(t)
 
-	assert.Greater(t, statistic(t, result, "mrn://table/sql-server/shop.dbo.orders", "asset.size_bytes"), float64(0))
+	assert.Greater(t, statistic(t, result, "mrn://asset/table/sql-server/shop.dbo.orders", "asset.size_bytes"), float64(0))
 }
 
 func TestE2E_ViewsGetNoRowCount(t *testing.T) {
@@ -542,7 +542,7 @@ func TestE2E_ViewsGetNoRowCount(t *testing.T) {
 
 	for _, stat := range result.Statistics {
 		if stat.MetricName == "asset.row_count" {
-			assert.NotEqual(t, "mrn://view/sql-server/shop.dbo.order_totals", stat.AssetMRN)
+			assert.NotEqual(t, "mrn://asset/view/sql-server/shop.dbo.order_totals", stat.AssetMRN)
 		}
 	}
 }
@@ -675,9 +675,22 @@ func TestE2E_FetchSampleDataWorksForAView(t *testing.T) {
 
 // Helpers.
 
+// assetKey is the database.schema.object path of an asset, or just the name for a database.
+func assetKey(asset pluginsdk.Asset) string {
+	if asset.Name == nil {
+		return ""
+	}
+	database, _ := asset.Metadata["database"].(string)
+	schema, _ := asset.Metadata["schema"].(string)
+	if asset.Type == "Database" || schema == "" {
+		return *asset.Name
+	}
+	return database + "." + schema + "." + *asset.Name
+}
+
 func lookupAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, asset := range result.Assets {
-		if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
+		if asset.Type == assetType && assetKey(asset) == name {
 			return &result.Assets[i]
 		}
 	}

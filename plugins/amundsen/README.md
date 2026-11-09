@@ -10,7 +10,9 @@ No database, cluster or schema assets are created. Those belong to the technolog
 
 ## Naming
 
-The Amundsen hierarchy is `Database -> Cluster -> Schema -> Table`, where `Database` holds the technology name. The cluster enters an asset's name only where the technology's Marmot name has room for it, such as the leading part of a Snowflake `database.schema.table`. Everywhere else it is an environment label and is recorded in metadata.
+The Amundsen hierarchy is `Database -> Cluster -> Schema -> Table`, where `Database` holds the technology name. The cluster enters an asset's name only where the technology's Marmot name has room for it, such as the leading part of a Snowflake `database.schema.table`. Everywhere else it is an environment label and is recorded in metadata. A table keeps its own name and its MRN carries the path, for example `mrn://asset/table/postgresql/prod.public.orders`, `mrn://asset/table/mysql/shop.orders` and `mrn://asset/table/bigquery/acme.sales.orders`.
+
+Amundsen holds no address for the systems it describes, so its MRNs have no zone. If you run two systems of one technology and their own plugins set `zone`, Amundsen's copies of those assets stay separate from them.
 
 ## Tests
 

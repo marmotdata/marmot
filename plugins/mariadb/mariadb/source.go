@@ -15,7 +15,6 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,7 +26,7 @@ const provider = "MariaDB"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "mariadb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "MariaDB",
 		Description:   "Discover databases, tables, views and sequences from MariaDB servers",
 		Icon:          "mariadb",
@@ -227,6 +226,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -295,7 +299,7 @@ func (s *Source) databaseAsset() pluginsdk.Asset {
 		"database": name,
 	}
 
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	return pluginsdk.Asset{
 		Name:      &name,
@@ -525,7 +529,7 @@ func (s *Source) discoverObjects(ctx context.Context) ([]pluginsdk.Asset, []plug
 			metadata["system_versioned"] = systemVersioned
 		}
 
-		mrnValue := assetMRN(assetType, objectName)
+		mrnValue := assetMRN(s.config, assetType, s.config.Database, objectName)
 
 		assets = append(assets, pluginsdk.Asset{
 			Name:        &objectName,
@@ -1006,8 +1010,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEd
 			continue
 		}
 
-		sourceMRN := assetMRN("Table", sourceTable)
-		targetMRN := assetMRN("Table", targetTable.String)
+		sourceMRN := assetMRN(s.config, "Table", s.config.Database, sourceTable)
+		targetMRN := assetMRN(s.config, "Table", s.config.Database, targetTable.String)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -1191,11 +1195,7 @@ func convertValue(val interface{}) interface{} {
 	}
 }
 
-// assetMRN is the single place a MariaDB MRN is built, so the object pass,
-// the lineage passes and the statistics can never address one object
-// differently. Names are bare: the database is a separate asset joined by
-// CONTAINS edges, which is also the shape the OpenMetadata and Trino
-// plugins use for MariaDB tables.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a MariaDB MRN is built, so the object pass, the lineage passes and the statistics can never address one object differently. The path runs from the database down, which is also the shape the OpenMetadata and Trino plugins use for MariaDB tables.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }

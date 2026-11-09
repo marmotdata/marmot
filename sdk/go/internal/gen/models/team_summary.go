@@ -42,6 +42,9 @@ type TeamSummary struct {
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
+	// MRN is mrn://team/<slug>, derived from the name.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

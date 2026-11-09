@@ -319,7 +319,7 @@ func TestE2E_DiscoversTheModel(t *testing.T) {
 	model := assetNamed(t, result, "Model", "churn-predictor")
 
 	assert.Equal(t, []string{"Vertex AI"}, model.Providers)
-	assert.Equal(t, "mrn://model/vertex-ai/churn-predictor", *model.MRN)
+	assert.Equal(t, "mrn://asset/model/vertex-ai/churn-predictor", *model.MRN)
 	assert.Equal(t, modelID, model.Metadata["resource_id"])
 	assert.Equal(t, location, model.Metadata["location"])
 	assert.Equal(t, "us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-5:latest", model.Metadata["container_image"])
@@ -331,7 +331,7 @@ func TestE2E_DiscoversTheEndpoint(t *testing.T) {
 
 	endpoint := assetNamed(t, result, "Endpoint", "churn-prod")
 
-	assert.Equal(t, "mrn://endpoint/vertex-ai/churn-prod", *endpoint.MRN)
+	assert.Equal(t, "mrn://asset/endpoint/vertex-ai/churn-prod", *endpoint.MRN)
 	assert.Equal(t, "deployed-1=100", endpoint.Metadata["traffic_split"])
 	assert.Equal(t, "churn-predictor", endpoint.Metadata["deployed_models"])
 }
@@ -340,8 +340,8 @@ func TestE2E_LinksTheModelToTheEndpoint(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://model/vertex-ai/churn-predictor",
-		"mrn://endpoint/vertex-ai/churn-prod",
+		"mrn://asset/model/vertex-ai/churn-predictor",
+		"mrn://asset/endpoint/vertex-ai/churn-prod",
 		"FEEDS"))
 }
 
@@ -349,8 +349,8 @@ func TestE2E_LinksTheArtifactBucketToTheModel(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://bucket/gcs/"+bucket,
-		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://asset/bucket/gcs/"+bucket,
+		"mrn://asset/model/vertex-ai/churn-predictor",
 		"FEEDS"))
 }
 
@@ -358,8 +358,8 @@ func TestE2E_LinksThePipelineJobToTheModelItProduced(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://job/vertex-ai/churn-training",
-		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://asset/job/vertex-ai/churn-training",
+		"mrn://asset/model/vertex-ai/churn-predictor",
 		"PRODUCES"))
 }
 
@@ -385,8 +385,8 @@ func TestE2E_LinksTheBigQueryTableToTheDataset(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/bigquery/"+table,
-		"mrn://dataset/vertex-ai/churn-training-data",
+		"mrn://asset/table/bigquery/"+project+".analytics."+table,
+		"mrn://asset/dataset/vertex-ai/churn-training-data",
 		"FEEDS"))
 }
 
@@ -409,8 +409,8 @@ func TestE2E_LinksTheBigQueryTableToTheFeatureGroup(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/bigquery/"+table,
-		"mrn://dataset/vertex-ai/"+featureName,
+		"mrn://asset/table/bigquery/"+project+".features."+table,
+		"mrn://asset/dataset/vertex-ai/"+featureName,
 		"FEEDS"))
 }
 
@@ -419,7 +419,7 @@ func TestE2E_EmitsRunHistoryForThePipelineJob(t *testing.T) {
 
 	var history *pluginsdk.AssetRunHistory
 	for i := range result.RunHistory {
-		if result.RunHistory[i].AssetMRN == "mrn://job/vertex-ai/churn-training" {
+		if result.RunHistory[i].AssetMRN == "mrn://asset/job/vertex-ai/churn-training" {
 			history = &result.RunHistory[i]
 		}
 	}

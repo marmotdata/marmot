@@ -288,6 +288,11 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	if err != nil {
 		return nil, err
 	}
+	config, err := parseQueryConfig(raw)
+	if err != nil {
+		return nil, err
+	}
+	database := databaseName(config.Path)
 
 	rows, err := db.QueryContext(ctx, "EXPLAIN (FORMAT JSON) "+req.Statement)
 	if err != nil {
@@ -307,7 +312,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 			return nil, fmt.Errorf("parsing plan: %w", err)
 		}
 		for _, n := range nodes {
-			walkPlan(n, plan, seen)
+			walkPlan(config, database, n, plan, seen)
 		}
 	}
 	if err := rows.Err(); err != nil {
@@ -317,21 +322,21 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 }
 
 // walkPlan adds every table the plan scans and marks it incomplete if it calls a table function Marmot has not vetted as side-effect and data free.
-func walkPlan(node explainNode, plan *pluginsdk.QueryPlan, seen map[tableRef]bool) {
+func walkPlan(cfg *Config, database string, node explainNode, plan *pluginsdk.QueryPlan, seen map[tableRef]bool) {
 	if qualified, _ := node.ExtraInfo["Table"].(string); qualified != "" {
 		if ref, ok := parseTableRef(qualified); ok && !seen[ref] {
 			seen[ref] = true
-			plan.ReferencedMRNs = append(plan.ReferencedMRNs, assetMRN("Table", ref.schema, ref.table))
+			plan.ReferencedMRNs = append(plan.ReferencedMRNs, assetMRN(cfg, database, "Table", ref.schema, ref.table))
 		}
 	} else if fn, _ := node.ExtraInfo["Function"].(string); fn != "" && !safeTableFunctions[fn] {
 		plan.Incomplete = true
 	}
 	for _, child := range node.Children {
-		walkPlan(child, plan, seen)
+		walkPlan(cfg, database, child, plan, seen)
 	}
 }
 
-// parseTableRef splits a plan's "<database>.<schema>.<name>" into the schema and name discovery addresses the same table or view by; the database component is the file itself and plays no part in the MRN.
+// parseTableRef splits a plan's "<database>.<schema>.<name>" into the schema and name discovery addresses the same table or view by; the database component is the file itself, which the MRN takes from the configured path instead.
 func parseTableRef(qualified string) (tableRef, bool) {
 	parts := strings.Split(qualified, ".")
 	if len(parts) < 2 {

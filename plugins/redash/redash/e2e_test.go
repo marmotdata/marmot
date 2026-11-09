@@ -137,7 +137,7 @@ func TestE2E_DiscoversThePublishedDashboard(t *testing.T) {
 
 	dashboard := findAsset(t, result, "Dashboard", "Revenue")
 
-	assert.Equal(t, "mrn://dashboard/redash/revenue", *dashboard.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/redash/revenue", *dashboard.MRN)
 	assert.Equal(t, []string{"Redash"}, dashboard.Providers)
 	assert.Equal(t, false, dashboard.Metadata["is_draft"])
 	assert.Equal(t, "revenue", dashboard.Metadata["slug"])
@@ -186,7 +186,7 @@ func TestE2E_DiscoversTheColumnChartWithItsNormalisedType(t *testing.T) {
 
 	chart := findAsset(t, result, "Chart", "Revenue/Orders by day")
 
-	assert.Equal(t, "mrn://chart/redash/revenue-orders-by-day", *chart.MRN)
+	assert.Equal(t, "mrn://asset/chart/redash/revenue-orders-by-day", *chart.MRN)
 	assert.Equal(t, "CHART", chart.Metadata["visualization_type"])
 	// Read out of options.globalSeriesType, which is where Redash keeps the
 	// real shape.
@@ -221,7 +221,7 @@ func TestE2E_DiscoversThePublishedQueryWithItsSQL(t *testing.T) {
 
 	query := findAsset(t, result, "Data Model Object", "Orders by day")
 
-	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", *query.MRN)
+	assert.Equal(t, "mrn://asset/data-model-object/redash/orders-by-day", *query.MRN)
 	require.NotNil(t, query.Query)
 	assert.Contains(t, *query.Query, "FROM public.orders o JOIN public.customers c")
 	require.NotNil(t, query.QueryLanguage)
@@ -266,7 +266,7 @@ func TestE2E_DiscoversTheDataSourceWithItsConnectionDetails(t *testing.T) {
 
 	source := findAsset(t, result, "DataSource", "shop")
 
-	assert.Equal(t, "mrn://datasource/redash/shop", *source.MRN)
+	assert.Equal(t, "mrn://asset/datasource/redash/shop", *source.MRN)
 	assert.Equal(t, "pg", source.Metadata["type"])
 	assert.Equal(t, "sql", source.Metadata["syntax"])
 	assert.Equal(t, "marmot-test-redash-source", source.Metadata["host"])
@@ -290,20 +290,20 @@ func TestE2E_DataSourceNeverRecordsAPassword(t *testing.T) {
 func TestE2E_DashboardContainsItsCharts(t *testing.T) {
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://dashboard/redash/revenue", "mrn://chart/redash/revenue-orders-by-day", "CONTAINS"))
-	assert.True(t, findsEdge(result, "mrn://dashboard/redash/revenue", "mrn://chart/redash/revenue-total-revenue", "CONTAINS"))
+	assert.True(t, findsEdge(result, "mrn://asset/dashboard/redash/revenue", "mrn://asset/chart/redash/revenue-orders-by-day", "CONTAINS"))
+	assert.True(t, findsEdge(result, "mrn://asset/dashboard/redash/revenue", "mrn://asset/chart/redash/revenue-total-revenue", "CONTAINS"))
 }
 
 func TestE2E_QueryFeedsTheChartThatRendersIt(t *testing.T) {
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://asset/data-model-object/redash/orders-by-day", "mrn://asset/chart/redash/revenue-orders-by-day", "FEEDS"))
 }
 
 func TestE2E_DataSourceFeedsTheQuery(t *testing.T) {
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://asset/datasource/redash/shop", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestE2E_PostgresTablesFeedTheQueryThatReadsThem(t *testing.T) {
@@ -311,8 +311,8 @@ func TestE2E_PostgresTablesFeedTheQueryThatReadsThem(t *testing.T) {
 	// merges with that plugin's assets rather than minting new ones.
 	result := e2eDiscover(t, nil)
 
-	assert.True(t, findsEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
-	assert.True(t, findsEdge(result, "mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://asset/table/postgresql/orders", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, findsEdge(result, "mrn://asset/table/postgresql/customers", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestE2E_IncludesDraftsByDefault(t *testing.T) {

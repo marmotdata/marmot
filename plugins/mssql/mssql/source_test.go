@@ -509,11 +509,11 @@ func viewAssets(t *testing.T) []pluginsdk.Asset {
 	}
 }
 
-func discoveredNames() map[string]string {
-	return map[string]string{
-		"shop.dbo.customers":    "shop.dbo.customers",
-		"shop.dbo.orders":       "shop.dbo.orders",
-		"shop.dbo.order_totals": "shop.dbo.order_totals",
+func discoveredNames() map[string]objectRef {
+	return map[string]objectRef{
+		"shop.dbo.customers":    {Database: "shop", Schema: "dbo", Name: "customers", Type: "Table"},
+		"shop.dbo.orders":       {Database: "shop", Schema: "dbo", Name: "orders", Type: "Table"},
+		"shop.dbo.order_totals": {Database: "shop", Schema: "dbo", Name: "order_totals", Type: "View"},
 	}
 }
 
@@ -524,15 +524,15 @@ func TestViewOfEdges_PointFromTheBaseTableToTheView(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.customers c JOIN dbo.orders o ON o.customer_id = c.customer_id",
 	}
 
-	edges := viewOfEdges("shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	require.Len(t, edges, 2)
 	for _, edge := range edges {
 		assert.Equal(t, "VIEW_OF", edge.Type)
-		assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals", edge.Target)
+		assert.Equal(t, "mrn://asset/view/sql-server/shop.dbo.order_totals", edge.Target)
 	}
 	assert.ElementsMatch(t,
-		[]string{"mrn://table/sql-server/shop.dbo.customers", "mrn://table/sql-server/shop.dbo.orders"},
+		[]string{"mrn://asset/table/sql-server/shop.dbo.customers", "mrn://asset/table/sql-server/shop.dbo.orders"},
 		[]string{edges[0].Source, edges[1].Source})
 }
 
@@ -543,7 +543,7 @@ func TestViewOfEdges_SkipAnObjectThisRunDidNotDiscover(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.audit_log",
 	}
 
-	edges := viewOfEdges("shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Empty(t, edges)
 }
@@ -553,13 +553,13 @@ func TestViewOfEdges_SkipAViewReferencingItself(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.order_totals",
 	}
 
-	edges := viewOfEdges("shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Empty(t, edges)
 }
 
 func TestViewOfEdges_SkipATableWithNoDefinition(t *testing.T) {
-	edges := viewOfEdges("shop", viewAssets(t), map[string]string{}, discoveredNames())
+	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), map[string]string{}, discoveredNames())
 
 	assert.Empty(t, edges)
 }
@@ -569,19 +569,9 @@ func TestViewOfEdges_EmitOneEdgePerBaseObject(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.orders UNION ALL SELECT * FROM dbo.orders",
 	}
 
-	edges := viewOfEdges("shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Len(t, edges, 1)
-}
-
-func TestBaseAssetType_ReportsAViewBaseAsAView(t *testing.T) {
-	// A view built on another view needs the View MRN, because that is the
-	// only MRN the base object has.
-	assert.Equal(t, "View", baseAssetType("shop.dbo.order_totals", viewAssets(t)))
-}
-
-func TestBaseAssetType_ReportsATableBaseAsATable(t *testing.T) {
-	assert.Equal(t, "Table", baseAssetType("shop.dbo.orders", viewAssets(t)))
 }
 
 func mustValidate(s *Source, raw pluginsdk.RawConfig) error {

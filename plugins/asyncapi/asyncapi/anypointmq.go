@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/anypointmq"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createAnypointMQDestination(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *anypointmq.ChannelBinding) pluginsdk.Asset {
@@ -31,7 +30,7 @@ func (s *Source) createAnypointMQDestination(doc *asyncapi3.Document, channelNam
 		description = fmt.Sprintf("Anypoint MQ %s for channel %s", assetType, channelName)
 	}
 
-	mrnValue := mrn.New(assetType, "AnypointMQ", name)
+	mrnValue := s.brokerMRN(doc, channel, assetType, "AnypointMQ", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

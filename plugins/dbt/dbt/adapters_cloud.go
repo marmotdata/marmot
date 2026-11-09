@@ -65,7 +65,7 @@ type GlueAdapter struct {
 }
 
 func (a *GlueAdapter) Name() string {
-	return "AWS Glue"
+	return "Glue"
 }
 
 // FabricAdapter handles Microsoft Fabric Data Warehouse

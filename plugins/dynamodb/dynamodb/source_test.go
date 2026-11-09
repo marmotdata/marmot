@@ -99,3 +99,17 @@ func TestSource_ValidateStoresConfig(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, s.config)
 }
+
+func TestTableMRN_IsTheTableName(t *testing.T) {
+	if got, want := tableMRN(&Config{}, "orders"), "mrn://asset/table/dynamodb/orders"; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestTableMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod-eu"}}
+
+	if got, want := tableMRN(cfg, "orders"), "mrn://asset/table/dynamodb@prod-eu/orders"; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}

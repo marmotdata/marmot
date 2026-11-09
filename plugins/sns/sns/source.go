@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,7 +17,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "sns",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS SNS",
 		Description:   "Discover SNS topics from AWS accounts",
 		Icon:          "sns",
@@ -170,7 +170,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (plugi
 	}
 
 	name := extractTopicName(*topic.TopicArn)
-	mrnValue := mrn.New("Topic", "SNS", name)
+	mrnValue := s.config.AssetMRN("Topic", "SNS", name)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 

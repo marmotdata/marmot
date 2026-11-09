@@ -5,11 +5,13 @@ package timescale
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +25,7 @@ const provider = "PostgreSQL"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "timescale",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "TimescaleDB",
 		Description:   "Discover databases, tables, hypertables and continuous aggregates from TimescaleDB instances",
 		Icon:          "postgresql",
@@ -198,6 +200,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -234,10 +241,10 @@ func (s *Source) discoverDatabase(ctx context.Context, dbName, dbMRN string) (*p
 		})
 	}
 
-	lineages = append(lineages, viewLineage(objects, ts)...)
+	lineages = append(lineages, viewLineage(s.config, objects, ts)...)
 
 	if s.config.DiscoverForeignKeys {
-		fkLineages, err := s.discoverForeignKeys(ctx)
+		fkLineages, err := s.discoverForeignKeys(ctx, dbName)
 		if err != nil {
 			log.Warn().Err(err).Str("database", dbName).Msg("Failed to discover foreign key relationships")
 		} else {
@@ -286,7 +293,7 @@ func (s *Source) buildAssets(objects []object, ts *timescaleInfo) []pluginsdk.As
 			}
 		}
 
-		mrnValue := assetMRN(assetType, obj.Name)
+		mrnValue := objectMRN(s.config, obj)
 		description := fmt.Sprintf("%s %s.%s in database %s", describeKind(metadata), obj.Schema, obj.Name, obj.Database)
 
 		asset := pluginsdk.Asset{
@@ -342,12 +349,16 @@ func describeKind(metadata map[string]interface{}) string {
 	}
 }
 
-// assetMRN is the single place a TimescaleDB MRN is built. Object discovery,
-// foreign keys and view lineage all go through it so the three can never
-// drift into addressing the same table differently. The name is the bare
-// object name under the PostgreSQL provider, byte for byte what the
-// PostgreSQL plugin produces, so a run of either plugin against the same
-// server updates the same assets instead of duplicating them.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a TimescaleDB MRN is built. Object discovery, foreign keys and view lineage all go through it so the three can never drift into addressing the same table differently. The path runs from the database down under the PostgreSQL provider, byte for byte what the PostgreSQL plugin produces, so a run of either plugin against the same server updates the same assets instead of duplicating them.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
+}
+
+// objectMRN is the MRN of a discovered table or view.
+func objectMRN(cfg *Config, obj object) string {
+	assetType := "Table"
+	if obj.Kind != kindTable {
+		assetType = "View"
+	}
+	return assetMRN(cfg, assetType, obj.Database, obj.Schema, obj.Name)
 }

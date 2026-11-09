@@ -1,5 +1,7 @@
 The MariaDB plugin discovers a database and its tables, views and sequences from a MariaDB server. It captures column information (including invisible and generated columns), row and size statistics, foreign key relationships and view lineage (a view is fed by the tables it reads: base table -> view).
 
+Tables, views and sequences are identified in their MRN by `database.name`, for example `mrn://asset/table/mariadb/shop.orders`. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone.
+
 ## Required Permissions
 
 The user needs read access to the database and the information schema. `SHOW VIEW` is needed to read view definitions:

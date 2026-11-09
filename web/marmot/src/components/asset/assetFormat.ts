@@ -1,17 +1,12 @@
 import { resolve } from '$app/paths';
 import type { Asset } from '$lib/assets/types';
 import { mmIcon } from '$lib/mm';
+import { discoverPath } from '$lib/mrn';
 
 /** The resolved asset page href for an asset, or undefined when its MRN cannot be read. */
 export function assetHref(a: Pick<Asset, 'mrn' | 'type'>): string | undefined {
-	if (!a?.mrn || !a?.type) return undefined;
-	const parts = a.mrn.replace('mrn://', '').split('/');
-	if (parts.length < 3) return undefined;
-	return resolve('/discover/[type]/[service]/[name]', {
-		type: a.type.toLowerCase(),
-		service: parts[1],
-		name: encodeURIComponent(parts.slice(2).join('/'))
-	});
+	const path = discoverPath(a?.mrn);
+	return path ? resolve(path) : undefined;
 }
 
 /** The provider key for the header logo: the single provider when there is one, otherwise the type so the logo element can fall back. */

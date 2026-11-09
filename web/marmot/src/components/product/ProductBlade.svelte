@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import { resolve } from '$app/paths';
 	import '@marmotdata/elements/popularity.js';
 	import { BladeSlot } from '$lib/mm';
@@ -153,6 +154,7 @@
 				{#if p.created_by}
 					<mm-description term={m.products_created_by()}>{p.created_by}</mm-description>
 				{/if}
+				<mm-description term={m.mrn_label()} mono><MrnValue value={p.mrn} /></mm-description>
 				<mm-description term={m.products_created_at()}
 					>{formatDateTime(p.created_at)}</mm-description
 				>

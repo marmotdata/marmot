@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { mrnShortName } from '$lib/mrn';
 	import '@marmotdata/elements/lineage-canvas.js';
 	import type {
 		MmLineageCanvas,
@@ -127,7 +128,7 @@
 	});
 
 	function nameOf(id: string): string {
-		return lineageData?.nodes.find((n) => n.id === id)?.asset?.name || id.split('/').pop() || id;
+		return lineageData?.nodes.find((n) => n.id === id)?.asset?.name || mrnShortName(id) || id;
 	}
 
 	let selectedNode = $derived.by(() => {

@@ -100,7 +100,7 @@ func TestValidate_RejectsCredentialsAlongsideAnEmulator(t *testing.T) {
 	assert.Contains(t, err.Error(), "emulator_host")
 }
 
-func TestValidate_AcceptsAnEmulatorWithInstancesListed(t *testing.T) {
+func TestValidate_AcceptsAnEmulatorWithZonesListed(t *testing.T) {
 	s := &Source{}
 
 	_, err := s.Validate(pluginsdk.RawConfig{

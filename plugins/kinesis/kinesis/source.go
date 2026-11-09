@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +22,8 @@ const provider = "Kinesis"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "kinesis",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS Kinesis",
 		Description:   "Discover Kinesis Data Streams from AWS accounts",
 		Icon:          "kinesis",
@@ -270,7 +270,7 @@ func (s *Source) streamAsset(info streamInfo) pluginsdk.Asset {
 		metadata["url"] = url
 	}
 
-	mrnValue := assetMRN("Stream", name)
+	mrnValue := s.assetMRN("Stream", name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -411,7 +411,7 @@ func stringValue(s *string) string {
 
 // assetMRN is the single place a Kinesis MRN is built. Stream names are
 // unique per account and region, so the bare name is the identity, the
-// same shape the OpenMetadata projection uses for Kinesis.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// same shape the OpenMetadata projection uses for Kinesis. The account and region are the zone.
+func (s *Source) assetMRN(assetType, name string) string {
+	return s.config.AssetMRN(assetType, provider, name)
 }

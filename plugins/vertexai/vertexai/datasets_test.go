@@ -13,7 +13,7 @@ func TestDataset_IsNamedAfterItsDisplayName(t *testing.T) {
 
 	dataset := assetNamed(t, result, "Dataset", "churn-training-data")
 
-	assert.Equal(t, "mrn://dataset/vertex-ai/churn-training-data", *dataset.MRN)
+	assert.Equal(t, "mrn://asset/dataset/vertex-ai/churn-training-data", *dataset.MRN)
 }
 
 func TestDataset_CarriesItsDescription(t *testing.T) {
@@ -76,8 +76,8 @@ func TestDataset_LinksTheBigQueryTableItReads(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/bigquery/"+testTable,
-		"mrn://dataset/vertex-ai/churn-training-data",
+		"mrn://asset/table/bigquery/"+testProject+".analytics."+testTable,
+		"mrn://asset/dataset/vertex-ai/churn-training-data",
 		"FEEDS"))
 }
 
@@ -94,8 +94,8 @@ func TestDataset_LinksTheBucketHoldingItsBlobs(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	assert.True(t, hasEdge(result,
-		"mrn://bucket/gcs/"+testBucket,
-		"mrn://dataset/vertex-ai/receipt-scans",
+		"mrn://asset/bucket/gcs/"+testBucket,
+		"mrn://asset/dataset/vertex-ai/receipt-scans",
 		"FEEDS"))
 }
 
@@ -105,7 +105,7 @@ func TestDataset_EmitsNoEdgeForAMetadataShapeItDoesNotRecognise(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	for _, edge := range result.Lineage {
-		assert.NotEqual(t, "mrn://dataset/vertex-ai/experimental-corpus", edge.Target)
+		assert.NotEqual(t, "mrn://asset/dataset/vertex-ai/experimental-corpus", edge.Target)
 	}
 }
 
@@ -253,7 +253,7 @@ func TestDataset_LinksTwoObjectsInOneBucketOnlyOnce(t *testing.T) {
 
 	count := 0
 	for _, edge := range result.Lineage {
-		if edge.Target == "mrn://dataset/vertex-ai/churn-training-data" {
+		if edge.Target == "mrn://asset/dataset/vertex-ai/churn-training-data" {
 			count++
 		}
 	}

@@ -39,7 +39,7 @@ func (c *collector) discoverPipelines(ctx context.Context, client *client) error
 		putIf(metadata, "concurrency", pl.Concurrency)
 		putIf(metadata, "task_count", len(pl.Tasks))
 
-		asset := c.newAsset(pl.entityBase, "pipeline", "Pipeline", p, c.mrnName(pipelineName, pl.FullyQualifiedName), metadata)
+		asset := c.newAsset(pl.entityBase, "pipeline", "Pipeline", p, c.ident(pipelineName, pl.FullyQualifiedName), metadata)
 		c.add(pl.ID, asset)
 		discovered++
 
@@ -183,7 +183,7 @@ func (c *collector) taskAsset(pl pipeline, task pipelineTask, p projection, pipe
 	base.Tags = task.Tags
 	base.Owners = task.Owners
 
-	asset := c.newAsset(base, "", "Task", p, name, metadata)
+	asset := c.newAsset(base, "", "Task", p, identity{Name: task.Name, Path: append(fqnBelowService(pl.FullyQualifiedName), task.Name), Legacy: name}, metadata)
 
 	// The task's own OpenMetadata address is the pipeline it belongs to.
 	if url := c.entityURL(pl.entityBase, "pipeline"); url != "" {

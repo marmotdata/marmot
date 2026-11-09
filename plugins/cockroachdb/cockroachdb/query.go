@@ -522,7 +522,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 				log.Info().Str("table", name).Msg("Statement reads a table this source cannot place in exactly one schema; it needs access to the whole source")
 				continue
 			}
-			plan.ReferencedMRNs = append(plan.ReferencedMRNs, assetMRN(assetType, qualifiedName(config.QueryDatabase, schema, name)))
+			plan.ReferencedMRNs = append(plan.ReferencedMRNs, assetMRN(config, assetType, config.QueryDatabase, schema, name))
 		}
 		return nil
 	})

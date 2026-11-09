@@ -220,7 +220,7 @@ func TestLocate_FallsBackToTheScannedLocation(t *testing.T) {
 }
 
 func TestBigQueryTable_ReturnsTheTableOfAnURI(t *testing.T) {
-	assert.Equal(t, "events", bigQueryTable("bq://acme.analytics.events"))
+	assert.Equal(t, []string{"acme", "analytics", "events"}, bigQueryTable("bq://acme.analytics.events"))
 }
 
 func TestBigQueryTable_IgnoresAURIWithoutATable(t *testing.T) {
@@ -291,8 +291,8 @@ func TestNames_FallsBackToTheIDWhenThereIsNoDisplayName(t *testing.T) {
 func TestEdgeSet_KeepsOneCopyOfARepeatedEdge(t *testing.T) {
 	edges := newEdgeSet()
 
-	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex-ai/churn", "FEEDS")
-	edges.add("mrn://bucket/gcs/artifacts", "mrn://model/vertex-ai/churn", "FEEDS")
+	edges.add("mrn://asset/bucket/gcs/artifacts", "mrn://asset/model/vertex-ai/churn", "FEEDS")
+	edges.add("mrn://asset/bucket/gcs/artifacts", "mrn://asset/model/vertex-ai/churn", "FEEDS")
 
 	assert.Len(t, edges.all(), 1)
 }
@@ -312,7 +312,7 @@ func TestEdgeSet_KeepsTheOrderEdgesWereAddedIn(t *testing.T) {
 func TestEdgeSet_IgnoresAnEdgeWithAMissingEnd(t *testing.T) {
 	edges := newEdgeSet()
 
-	edges.add("", "mrn://model/vertex-ai/churn", "FEEDS")
+	edges.add("", "mrn://asset/model/vertex-ai/churn", "FEEDS")
 
 	assert.Empty(t, edges.all())
 }

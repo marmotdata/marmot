@@ -39,7 +39,7 @@ func (c *collector) discoverSearchIndexes(ctx context.Context, client *client) e
 		putIf(metadata, "index_type", idx.IndexType)
 		putIf(metadata, "field_count", len(idx.Fields))
 
-		asset := c.newAsset(idx.entityBase, "searchIndex", p.IndexType, p, c.mrnName(name, idx.FullyQualifiedName), metadata)
+		asset := c.newAsset(idx.entityBase, "searchIndex", p.IndexType, p, c.ident(name, idx.FullyQualifiedName), metadata)
 		if c.config.IncludeColumns {
 			setColumns(&asset, idx.Fields)
 		}

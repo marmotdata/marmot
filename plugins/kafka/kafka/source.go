@@ -4,6 +4,8 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -58,7 +60,7 @@ type SchemaRegistryConfig struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "kafka",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Kafka",
 		Description:   "Discover Kafka topics from Kafka clusters",
 		Icon:          "kafka",
@@ -159,6 +161,42 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	}
 
 	return &pluginsdk.DiscoveryResult{
-		Assets: assets,
+		Assets:       assets,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
+}
+
+// topicMRN is the single place a Kafka topic MRN is built. The cluster is the zone, so the path is the topic name alone.
+func (s *Source) topicMRN(topic string) string {
+	return s.config.AssetMRN("Topic", "Kafka", topic)
+}
+
+// zoneBindings binds each bootstrap broker to the configured zone so lineage from other plugins that only know a broker address lands on this cluster.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	var bindings []pluginsdk.ZoneBinding
+	seen := make(map[string]bool)
+	for _, broker := range strings.Split(s.config.BootstrapServers, ",") {
+		host := normaliseBroker(broker)
+		if host == "" || seen[host] {
+			continue
+		}
+		seen[host] = true
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: "Kafka", Host: host, Zone: s.config.Zone})
+	}
+	return bindings
+}
+
+// normaliseBroker lowercases a broker address, drops any scheme and adds the default Kafka port when none is given.
+func normaliseBroker(broker string) string {
+	broker = strings.ToLower(strings.TrimSpace(broker))
+	if i := strings.Index(broker, "://"); i >= 0 {
+		broker = broker[i+3:]
+	}
+	if broker == "" {
+		return ""
+	}
+	if _, _, err := net.SplitHostPort(broker); err != nil {
+		return net.JoinHostPort(strings.Trim(broker, "[]"), "9092")
+	}
+	return broker
 }

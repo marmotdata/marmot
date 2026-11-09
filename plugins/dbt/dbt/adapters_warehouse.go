@@ -6,7 +6,7 @@ type PostgresAdapter struct {
 }
 
 func (a *PostgresAdapter) Name() string {
-	return "Postgres"
+	return "PostgreSQL"
 }
 
 // AlloyDBAdapter handles Google AlloyDB
@@ -33,7 +33,7 @@ type SQLServerAdapter struct {
 }
 
 func (a *SQLServerAdapter) Name() string {
-	return "SQLServer"
+	return "SQL Server"
 }
 
 // SnowflakeAdapter handles Snowflake Data Cloud

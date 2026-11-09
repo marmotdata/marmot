@@ -7,13 +7,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	opensearchgo "github.com/opensearch-project/opensearch-go/v4"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/rs/zerolog/log"
@@ -23,7 +24,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "opensearch",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "OpenSearch",
 		Description:   "Discover indices, data streams, and aliases from OpenSearch clusters",
 		Icon:          "opensearch",
@@ -190,10 +191,42 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		Msg("OpenSearch discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		Statistics: statistics,
+		Assets:       assets,
+		Lineage:      lineages,
+		Statistics:   statistics,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
+}
+
+// zoneBindings names the cluster's node addresses so other plugins can resolve them to this zone.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	var bindings []pluginsdk.ZoneBinding
+	seen := map[string]bool{}
+	for _, address := range s.config.Addresses {
+		host := addressHostPort(address)
+		if host == "" || seen[host] {
+			continue
+		}
+		seen[host] = true
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: "OpenSearch", Host: host, Zone: s.config.Zone})
+	}
+	return bindings
+}
+
+// addressHostPort returns the lowercase host:port of a node URL, with the scheme's default port when none is given.
+func addressHostPort(address string) string {
+	u, err := url.Parse(address)
+	if err != nil || u.Hostname() == "" {
+		return ""
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return net.JoinHostPort(strings.ToLower(u.Hostname()), port)
 }
 
 func (s *Source) getClusterName(ctx context.Context) (string, error) {
@@ -267,7 +300,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]plu
 			"creation_date": idx.CreationDateString,
 		}
 
-		mrnValue := mrn.New("table", "opensearch", idx.Index)
+		mrnValue := s.config.AssetMRN("Table", "opensearch", idx.Index)
 		name := idx.Index
 		description := fmt.Sprintf("OpenSearch index %s in cluster %s", idx.Index, clusterName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
@@ -422,7 +455,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 			"template":         ds.Template,
 		}
 
-		mrnValue := mrn.New("data-stream", "opensearch", ds.Name)
+		mrnValue := s.config.AssetMRN("Data Stream", "opensearch", ds.Name)
 		name := ds.Name
 		description := fmt.Sprintf("OpenSearch data stream %s in cluster %s", ds.Name, clusterName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
@@ -447,7 +480,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 			if !s.config.IncludeSystemIndices && strings.HasPrefix(backingIndex.Name, ".") {
 				continue
 			}
-			indexMRN := mrn.New("table", "opensearch", backingIndex.Name)
+			indexMRN := s.config.AssetMRN("Table", "opensearch", backingIndex.Name)
 			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,
@@ -511,7 +544,7 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]plu
 			"filter_defined": filterDefined,
 		}
 
-		mrnValue := mrn.New("alias", "opensearch", aliasName)
+		mrnValue := s.config.AssetMRN("Alias", "opensearch", aliasName)
 		name := aliasName
 		description := fmt.Sprintf("OpenSearch alias %s in cluster %s", aliasName, clusterName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
@@ -539,7 +572,7 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]plu
 			if !s.config.IncludeSystemIndices && strings.HasPrefix(indexName, ".") {
 				continue
 			}
-			indexMRN := mrn.New("table", "opensearch", indexName)
+			indexMRN := s.config.AssetMRN("Table", "opensearch", indexName)
 			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,

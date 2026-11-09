@@ -126,17 +126,18 @@ func TestDeliveryType_CloudStorageWhenABucketIsSet(t *testing.T) {
 	assert.Equal(t, "cloud_storage", deliveryType(subscriptionInfo{CloudStorageBucket: "archive"}))
 }
 
-func TestBigQueryTableID_TakesTheTableFromADottedTarget(t *testing.T) {
-	assert.Equal(t, "orders_raw", bigQueryTableID("test-project.analytics.orders_raw"))
+func TestBigQueryTablePath_SplitsADottedTarget(t *testing.T) {
+	assert.Equal(t, []string{"test-project", "analytics", "orders_raw"}, bigQueryTablePath("test-project.analytics.orders_raw"))
 }
 
 // The BigQuery API also writes the project separator as a colon.
-func TestBigQueryTableID_TakesTheTableFromAColonSeparatedTarget(t *testing.T) {
-	assert.Equal(t, "orders_raw", bigQueryTableID("test-project:analytics.orders_raw"))
+func TestBigQueryTablePath_SplitsAColonSeparatedTarget(t *testing.T) {
+	assert.Equal(t, []string{"test-project", "analytics", "orders_raw"}, bigQueryTablePath("test-project:analytics.orders_raw"))
 }
 
-func TestBigQueryTableID_IsEmptyForAnEmptyTarget(t *testing.T) {
-	assert.Equal(t, "", bigQueryTableID(""))
+func TestBigQueryTablePath_IsNilForAnIncompleteTarget(t *testing.T) {
+	assert.Nil(t, bigQueryTablePath(""))
+	assert.Nil(t, bigQueryTablePath("analytics.orders_raw"))
 }
 
 func TestKinesisStreamName_TakesTheNameFromAnARN(t *testing.T) {

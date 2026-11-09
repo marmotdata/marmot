@@ -3,9 +3,11 @@ package amundsen
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/require"
 )
 
@@ -247,15 +249,25 @@ func discover(t *testing.T, config *Config, r reader) *collector {
 	return c
 }
 
-// assetNamed is the one asset with this name, failing the test when
-// there is not exactly one.
+// assetNamed is the one asset whose own name, or the single string name earlier releases gave it, is this name, failing the test when there is not exactly one.
 func assetNamed(t *testing.T, c *collector, assetType, name string) pluginsdk.Asset {
 	t.Helper()
 
 	var found []pluginsdk.Asset
 	for _, asset := range c.assets {
-		if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
+		if asset.Type != assetType || asset.Name == nil {
+			continue
+		}
+		legacy := mrn.New(assetType, asset.Providers[0], name)
+		if *asset.MRN == legacy || slices.Contains(asset.PreviousMRNs, legacy) {
 			found = append(found, asset)
+		}
+	}
+	if len(found) == 0 {
+		for _, asset := range c.assets {
+			if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
+				found = append(found, asset)
+			}
 		}
 	}
 	require.Len(t, found, 1, "expected exactly one %s named %q", assetType, name)

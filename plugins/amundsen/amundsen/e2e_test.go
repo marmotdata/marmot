@@ -129,7 +129,7 @@ func TestE2E_DiscoverWithBadCredentialsFails(t *testing.T) {
 func TestE2E_PostgresTableIsProjectedOntoThePostgreSQLPlugin(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://table/postgresql/orders")
+	asset := assetWithMRN(t, result, "mrn://asset/table/postgresql/prod.public.orders")
 	assert.Equal(t, "Table", asset.Type)
 	assert.Equal(t, []string{"PostgreSQL"}, asset.Providers)
 	require.NotNil(t, asset.Description)
@@ -139,7 +139,7 @@ func TestE2E_PostgresTableIsProjectedOntoThePostgreSQLPlugin(t *testing.T) {
 func TestE2E_HiveTableIsProjectedOntoASchemaQualifiedName(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://table/hive/sales.orders")
+	asset := assetWithMRN(t, result, "mrn://asset/table/hive/sales.orders")
 	assert.Equal(t, []string{"Hive"}, asset.Providers)
 	assert.Equal(t, "sales.orders", *asset.Name)
 }
@@ -147,13 +147,13 @@ func TestE2E_HiveTableIsProjectedOntoASchemaQualifiedName(t *testing.T) {
 func TestE2E_HiveViewIsTypedAsAView(t *testing.T) {
 	result := discoverGraph(t)
 
-	assert.Equal(t, "View", assetWithMRN(t, result, "mrn://view/hive/sales.orders_view").Type)
+	assert.Equal(t, "View", assetWithMRN(t, result, "mrn://asset/view/hive/sales.orders_view").Type)
 }
 
 func TestE2E_ColumnsArriveInSortOrderWithTheirDescriptions(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://table/postgresql/orders")
+	asset := assetWithMRN(t, result, "mrn://asset/table/postgresql/prod.public.orders")
 	encoded, ok := asset.Schema["columns"]
 	require.True(t, ok, "expected a column list")
 
@@ -175,7 +175,7 @@ func TestE2E_ColumnsArriveInSortOrderWithTheirDescriptions(t *testing.T) {
 func TestE2E_OwnersTagsAndBadgesSurviveTheWire(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://table/postgresql/orders")
+	asset := assetWithMRN(t, result, "mrn://asset/table/postgresql/prod.public.orders")
 	assert.ElementsMatch(t, []string{"finance", "pii"}, asset.Tags)
 	assert.ElementsMatch(t, []any{"Ann Ops", "Bo Analyst"}, asset.Metadata["owners"])
 
@@ -194,11 +194,11 @@ func TestE2E_UsageCountsAreNotInflatedByTheOtherJoins(t *testing.T) {
 	// of 42 instead.
 	result := discoverGraph(t)
 
-	reads, ok := statistic(result, "mrn://table/postgresql/orders", "asset.read_count")
+	reads, ok := statistic(result, "mrn://asset/table/postgresql/prod.public.orders", "asset.read_count")
 	require.True(t, ok)
 	assert.Equal(t, float64(42), reads)
 
-	readers, ok := statistic(result, "mrn://table/postgresql/orders", "asset.unique_readers")
+	readers, ok := statistic(result, "mrn://asset/table/postgresql/prod.public.orders", "asset.unique_readers")
 	require.True(t, ok)
 	assert.Equal(t, float64(2), readers)
 }
@@ -206,14 +206,14 @@ func TestE2E_UsageCountsAreNotInflatedByTheOtherJoins(t *testing.T) {
 func TestE2E_TableFeedsTableLineage(t *testing.T) {
 	result := discoverGraph(t)
 
-	assert.True(t, hasLineage(result, "mrn://table/postgresql/customers", "mrn://table/postgresql/orders", "FEEDS"),
+	assert.True(t, hasLineage(result, "mrn://asset/table/postgresql/prod.public.customers", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS"),
 		"customers is the upstream of orders")
 }
 
 func TestE2E_DashboardIsNamedByItsGroup(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://dashboard/superset/finance-revenue")
+	asset := assetWithMRN(t, result, "mrn://asset/dashboard/superset/finance-revenue")
 	assert.Equal(t, "Dashboard", asset.Type)
 	assert.Equal(t, []string{"Superset"}, asset.Providers)
 	assert.Equal(t, "finance/revenue", *asset.Name)
@@ -225,7 +225,7 @@ func TestE2E_DashboardLastSuccessfulRunIsRead(t *testing.T) {
 	// reads a sixth key segment that does not exist.
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://dashboard/superset/finance-revenue")
+	asset := assetWithMRN(t, result, "mrn://asset/dashboard/superset/finance-revenue")
 	provenance, ok := asset.Metadata["amundsen"].(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "2025-09-04T15:53:54Z", provenance["last_successful_run"])
@@ -235,11 +235,11 @@ func TestE2E_DashboardContainsItsCharts(t *testing.T) {
 	result := discoverGraph(t)
 
 	for _, chart := range []string{
-		"mrn://chart/superset/finance-revenue-revenue-by-region",
-		"mrn://chart/superset/finance-revenue-revenue-trend",
+		"mrn://asset/chart/superset/finance-revenue-revenue-by-region",
+		"mrn://asset/chart/superset/finance-revenue-revenue-trend",
 	} {
 		assert.Equal(t, "Chart", assetWithMRN(t, result, chart).Type)
-		assert.True(t, hasLineage(result, "mrn://dashboard/superset/finance-revenue", chart, "CONTAINS"),
+		assert.True(t, hasLineage(result, "mrn://asset/dashboard/superset/finance-revenue", chart, "CONTAINS"),
 			"missing CONTAINS edge for %s", chart)
 	}
 }
@@ -247,13 +247,13 @@ func TestE2E_DashboardContainsItsCharts(t *testing.T) {
 func TestE2E_TableFeedsDashboardLineage(t *testing.T) {
 	result := discoverGraph(t)
 
-	assert.True(t, hasLineage(result, "mrn://table/postgresql/orders", "mrn://dashboard/superset/finance-revenue", "FEEDS"))
+	assert.True(t, hasLineage(result, "mrn://asset/table/postgresql/prod.public.orders", "mrn://asset/dashboard/superset/finance-revenue", "FEEDS"))
 }
 
 func TestE2E_DashboardUsageBecomesAStatistic(t *testing.T) {
 	result := discoverGraph(t)
 
-	reads, ok := statistic(result, "mrn://dashboard/superset/finance-revenue", "asset.read_count")
+	reads, ok := statistic(result, "mrn://asset/dashboard/superset/finance-revenue", "asset.read_count")
 	require.True(t, ok)
 	assert.Equal(t, float64(7), reads)
 }
@@ -261,7 +261,7 @@ func TestE2E_DashboardUsageBecomesAStatistic(t *testing.T) {
 func TestE2E_AssetsLinkBackToAmundsen(t *testing.T) {
 	result := discoverGraph(t)
 
-	asset := assetWithMRN(t, result, "mrn://table/postgresql/orders")
+	asset := assetWithMRN(t, result, "mrn://asset/table/postgresql/prod.public.orders")
 	require.NotEmpty(t, asset.ExternalLinks)
 	assert.Equal(t, "https://amundsen.marmot.test/table_detail/prod/postgres/public/orders", asset.ExternalLinks[0].URL)
 }
@@ -296,9 +296,9 @@ func TestE2E_PagingReadsTheWholeGraph(t *testing.T) {
 		assert.Equal(t, 1, count, "%s was discovered more than once", mrn)
 	}
 
-	assert.Contains(t, seen, "mrn://table/postgresql/orders")
-	assert.Contains(t, seen, "mrn://table/postgresql/customers")
-	assert.Contains(t, seen, "mrn://table/hive/sales.orders")
-	assert.Contains(t, seen, "mrn://view/hive/sales.orders_view")
-	assert.Contains(t, seen, "mrn://dashboard/superset/finance-revenue")
+	assert.Contains(t, seen, "mrn://asset/table/postgresql/prod.public.orders")
+	assert.Contains(t, seen, "mrn://asset/table/postgresql/prod.public.customers")
+	assert.Contains(t, seen, "mrn://asset/table/hive/sales.orders")
+	assert.Contains(t, seen, "mrn://asset/view/hive/sales.orders_view")
+	assert.Contains(t, seen, "mrn://asset/dashboard/superset/finance-revenue")
 }

@@ -66,7 +66,8 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "pubsub",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google Pub/Sub",
 		Description:   "Discover topics and subscriptions from Google Cloud Pub/Sub",
 		Icon:          "googlepubsub",
@@ -271,7 +272,7 @@ func (s *Source) topicAsset(topic topicInfo, subs []subscriptionInfo, schemas ma
 	}
 
 	name := topic.ID
-	mrnValue := assetMRN("Topic", name)
+	mrnValue := s.assetMRN("Topic", name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -377,7 +378,7 @@ func (s *Source) subscriptionAsset(sub subscriptionInfo) pluginsdk.Asset {
 	}
 
 	name := sub.ID
-	mrnValue := assetMRN("Subscription", name)
+	mrnValue := s.assetMRN("Subscription", name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -408,10 +409,10 @@ func (s *Source) subscriptionAsset(sub subscriptionInfo) pluginsdk.Asset {
 // subscriptionLineage links a subscription to the topic it reads and to
 // wherever its messages end up.
 func (s *Source) subscriptionLineage(topic topicInfo, sub subscriptionInfo) []pluginsdk.LineageEdge {
-	subMRN := assetMRN("Subscription", sub.ID)
+	subMRN := s.assetMRN("Subscription", sub.ID)
 
 	edges := []pluginsdk.LineageEdge{{
-		Source: assetMRN("Topic", topic.ID),
+		Source: s.assetMRN("Topic", topic.ID),
 		Target: subMRN,
 		Type:   "FEEDS",
 	}}
@@ -419,10 +420,10 @@ func (s *Source) subscriptionLineage(topic topicInfo, sub subscriptionInfo) []pl
 	// BigQuery and Cloud Storage subscriptions write straight into another
 	// system. Those assets belong to the BigQuery and GCS plugins, so only
 	// the edge is emitted; Marmot drops it when the target is not catalogued.
-	if table := bigQueryTableID(sub.BigQueryTable); table != "" {
+	if table := bigQueryTablePath(sub.BigQueryTable); table != nil {
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: subMRN,
-			Target: mrn.New("Table", "BigQuery", table),
+			Target: mrn.Asset("Table", "BigQuery", table...).String(),
 			Type:   "PRODUCES",
 		})
 	}
@@ -430,7 +431,7 @@ func (s *Source) subscriptionLineage(topic topicInfo, sub subscriptionInfo) []pl
 	if sub.CloudStorageBucket != "" {
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: subMRN,
-			Target: mrn.New("Bucket", "GCS", sub.CloudStorageBucket),
+			Target: mrn.Asset("Bucket", "GCS", sub.CloudStorageBucket).String(),
 			Type:   "PRODUCES",
 		})
 	}
@@ -438,7 +439,7 @@ func (s *Source) subscriptionLineage(topic topicInfo, sub subscriptionInfo) []pl
 	if s.config.IncludeDeadLetterTopics && sub.DeadLetterTopicID != "" {
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: subMRN,
-			Target: assetMRN("Topic", sub.DeadLetterTopicID),
+			Target: s.assetMRN("Topic", sub.DeadLetterTopicID),
 			Type:   "FEEDS",
 		})
 	}
@@ -455,8 +456,8 @@ func (s *Source) topicIngestionLineage(topic topicInfo) []pluginsdk.LineageEdge 
 	}
 
 	return []pluginsdk.LineageEdge{{
-		Source: mrn.New("Stream", "Kinesis", stream),
-		Target: assetMRN("Topic", topic.ID),
+		Source: mrn.Asset("Stream", "Kinesis", stream).String(),
+		Target: s.assetMRN("Topic", topic.ID),
 		Type:   "FEEDS",
 	}}
 }
@@ -579,22 +580,16 @@ func deliveryType(sub subscriptionInfo) string {
 	}
 }
 
-// bigQueryTableID pulls the table id out of a BigQuery subscription's target,
-// which the API returns as "project.dataset.table" or "project:dataset.table".
-// The BigQuery plugin names a table by its bare id, so an edge has to match.
-func bigQueryTableID(target string) string {
-	if target == "" {
-		return ""
-	}
-
+// bigQueryTablePath splits a BigQuery subscription's target, which the API returns as "project.dataset.table" or "project:dataset.table", into the levels the BigQuery plugin names a table by. It returns nil when the target is not a full table path.
+func bigQueryTablePath(target string) []string {
 	parts := strings.FieldsFunc(target, func(r rune) bool {
 		return r == '.' || r == ':'
 	})
-	if len(parts) == 0 {
-		return ""
+	if len(parts) != 3 {
+		return nil
 	}
 
-	return parts[len(parts)-1]
+	return parts
 }
 
 // kinesisStreamName pulls the stream name out of a Kinesis ARN such as
@@ -623,10 +618,9 @@ func subscriptionIDs(subs []subscriptionInfo) []string {
 
 // assetMRN is the single place a Pub/Sub MRN is built. Topics, subscriptions
 // and every lineage edge go through it so the two can never drift into
-// addressing the same resource differently. Pub/Sub ids are unique within a
-// project, so the bare id is the name.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// addressing the same resource differently. Pub/Sub ids are unique within a project, so the bare id is the name and the project is the zone.
+func (s *Source) assetMRN(assetType, name string) string {
+	return s.config.AssetMRN(assetType, provider, name)
 }
 
 // gcpCredentials is the plugin's flat credential fields in the SDK's

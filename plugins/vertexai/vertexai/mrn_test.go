@@ -1,6 +1,7 @@
 package vertexai
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -8,105 +9,87 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func assetMRN(assetType, name string) string {
+	return mrnWithZone("", assetType, name)
+}
+
+func mrnWithZone(zone, assetType, name string) string {
+	cfg := &Config{}
+	cfg.Zone = zone
+	return cfg.AssetMRN(assetType, provider, name)
+}
+
+func TestMRN_CarriesTheZone(t *testing.T) {
+	assert.Equal(t, "mrn://asset/model/vertex-ai@prod/churn-predictor", mrnWithZone("prod", "Model", "churn-predictor"))
+}
+
 // The provider loses its space: mrn.New lowercases every part and replaces
 // slashes and spaces in all three.
 
 func TestModelMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://model/vertex-ai/churn-predictor", assetMRN("Model", "churn-predictor"))
+	assert.Equal(t, "mrn://asset/model/vertex-ai/churn-predictor", assetMRN("Model", "churn-predictor"))
 }
 
 func TestModelMRN_CarriesTheIDWhenDisplayNamesCollide(t *testing.T) {
 	// The space between the display name and the id becomes a hyphen.
 	assert.Equal(t,
-		"mrn://model/vertex-ai/fraud-detector-(2000000000000000002)",
+		"mrn://asset/model/vertex-ai/fraud-detector-(2000000000000000002)",
 		assetMRN("Model", "fraud-detector (2000000000000000002)"))
 }
 
 func TestEndpointMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://endpoint/vertex-ai/churn-prod", assetMRN("Endpoint", "churn-prod"))
+	assert.Equal(t, "mrn://asset/endpoint/vertex-ai/churn-prod", assetMRN("Endpoint", "churn-prod"))
 }
 
 func TestDatasetMRN_IsTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://dataset/vertex-ai/churn-training-data", assetMRN("Dataset", "churn-training-data"))
+	assert.Equal(t, "mrn://asset/dataset/vertex-ai/churn-training-data", assetMRN("Dataset", "churn-training-data"))
 }
 
 func TestFeatureGroupMRN_IsADatasetNamedAfterTheGroupID(t *testing.T) {
 	// A feature group and a managed dataset are both Datasets, so a group
 	// id equal to a dataset display name would resolve to one asset.
-	assert.Equal(t, "mrn://dataset/vertex-ai/customer_features", assetMRN("Dataset", "customer_features"))
+	assert.Equal(t, "mrn://asset/dataset/vertex-ai/customer_features", assetMRN("Dataset", "customer_features"))
 }
 
 func TestPipelineJobMRN_IsAJobNamedAfterTheDisplayName(t *testing.T) {
-	assert.Equal(t, "mrn://job/vertex-ai/churn-training", assetMRN("Job", "churn-training"))
+	assert.Equal(t, "mrn://asset/job/vertex-ai/churn-training", assetMRN("Job", "churn-training"))
 }
 
 func TestBigQueryTableMRN_MatchesWhatTheBigQueryPluginProduces(t *testing.T) {
-	// Lineage into BigQuery has to use that plugin's own identity, which
-	// is the bare table name, or the server drops the edge.
-	assert.Equal(t, "mrn://table/bigquery/customer_events",
-		mrn.New("Table", "BigQuery", bigQueryTable("bq://acme-ml.analytics.customer_events")))
+	// Lineage into BigQuery has to use that plugin's own identity, project.dataset.table, or the server drops the edge.
+	assert.Equal(t, "mrn://asset/table/bigquery/acme-ml.analytics.customer_events",
+		mrn.Asset("Table", "BigQuery", bigQueryTable("bq://acme-ml.analytics.customer_events")...).String())
 }
 
 func TestGCSBucketMRN_MatchesWhatTheGCSPluginProduces(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/gcs/marmot-vertexai-artifacts",
-		mrn.New("Bucket", "GCS", gcsBucket("gs://marmot-vertexai-artifacts/models/churn/")))
+	assert.Equal(t, "mrn://asset/bucket/gcs/marmot-vertexai-artifacts",
+		mrn.Asset("Bucket", "GCS", gcsBucket("gs://marmot-vertexai-artifacts/models/churn/")).String())
 }
 
-func TestModelMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so an MRN has to survive that unchanged
-	// or the asset becomes unreachable from the UI.
-	original := assetMRN("Model", "churn-predictor")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestQualifiedModelMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Model", "fraud-detector (2000000000000000002)")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestJobMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Job", "churn-training")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestEveryAssetMRN_MatchesTheServersDerivation(t *testing.T) {
-	// The server rebuilds identity from an asset's type, first provider
-	// and name, so any MRN that disagrees would create a second, orphaned
-	// asset.
+func TestEveryAssetMRN_IsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discoverWith(t, fullFake(), withPipelineJobs)
 	require.NotEmpty(t, result.Assets)
 
 	for _, asset := range result.Assets {
-		require.NotNil(t, asset.Name)
 		require.NotNil(t, asset.MRN)
-		require.NotEmpty(t, asset.Providers)
-
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+		parsed, err := mrn.ParseMRN(*asset.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy)
+		assert.Equal(t, strings.ToLower(asset.Type), parsed.Type)
+		assert.Equal(t, "vertex-ai", parsed.Provider)
+		assert.Empty(t, asset.PreviousMRNs)
 	}
 }
 
-func TestEveryLineageEndpoint_IsAnMRNTheServerCanParse(t *testing.T) {
+func TestEveryLineageEndpoint_IsAKindedMRN(t *testing.T) {
 	result := discoverWith(t, fullFake(), withPipelineJobs)
 	require.NotEmpty(t, result.Lineage)
 
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err, endpoint)
-			assert.Equal(t, endpoint, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+			assert.False(t, parsed.Legacy, endpoint)
 		}
 	}
 }
@@ -121,9 +104,9 @@ func TestEveryEdgeThisPluginOwnsBothEndsOf_PointsAtADiscoveredAsset(t *testing.T
 
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err)
-			if parsed.Service != "vertex-ai" {
+			if parsed.Provider != "vertex-ai" {
 				// The other end belongs to the BigQuery or GCS plugin.
 				continue
 			}

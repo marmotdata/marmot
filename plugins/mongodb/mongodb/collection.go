@@ -7,7 +7,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -132,7 +131,7 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]plug
 			assetDesc = fmt.Sprintf("MongoDB collection %s.%s", dbName, collName)
 		}
 
-		mrnValue := mrn.New(assetType, "MongoDB", collName)
+		mrnValue := assetMRN(s.config, assetType, dbName, collName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, pluginsdk.Asset{

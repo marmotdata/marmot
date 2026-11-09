@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -196,6 +197,8 @@ func (s *service) ensureDAGAssetExists(ctx context.Context, dagMRN, dagName, nam
 		Metadata:    metadata,
 		Tags:        []string{"openlineage", strings.ToLower(AssetTypeDAG), strings.ToLower(provider)},
 		CreatedBy:   createdBy,
+		Writer:      openLineageWriter,
+		Role:        asset.RoleNative,
 		Sources: []asset.AssetSource{{
 			Name:       "OpenLineage",
 			LastSyncAt: time.Now(),
@@ -245,7 +248,7 @@ func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent
 	projectJobName := extractSimpleJobName(parentJobName)
 	projectMRN := openLineageMRN(AssetTypeProject, provider, parentNamespace, projectJobName)
 
-	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS", ""); err != nil{
+	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS", ""); err != nil {
 		log.Warn().Err(err).
 			Str("project_mrn", projectMRN).
 			Str("model_mrn", jobAssetMRN).
@@ -304,6 +307,8 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 		Metadata:      metadata,
 		Tags:          []string{"openlineage", strings.ToLower(assetType), strings.ToLower(provider)},
 		CreatedBy:     createdBy,
+		Writer:        openLineageWriter,
+		Role:          asset.RoleNative,
 		Query:         queryPtr,
 		QueryLanguage: queryLanguagePtr,
 		Sources: []asset.AssetSource{{
@@ -322,24 +327,21 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 				return "", fmt.Errorf("failed to get existing asset: %w", getErr)
 			}
 
-			updateInput := asset.UpdateInput{
-				Description: &desc,
-				Metadata:    metadata,
-				Sources: []asset.AssetSource{{
-					Name:       "OpenLineage",
-					LastSyncAt: event.EventTime,
-					Properties: runMetadata,
-					Priority:   1,
-				}},
-			}
-
+			fields := asset.ContributionFields{Description: &desc, Metadata: metadata}
 			if query != "" {
-				updateInput.Query = &query
-				updateInput.QueryLanguage = &queryLanguage
+				fields.Query = &query
+				fields.QueryLanguage = &queryLanguage
 			}
-
-			if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, updateInput); updateErr != nil {
+			if _, updateErr := s.assetSvc.Contribute(ctx, existingAsset.ID, openLineageWriter, asset.RoleNative, fields, false); updateErr != nil {
 				log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing job asset")
+			}
+			if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, asset.UpdateInput{Sources: []asset.AssetSource{{
+				Name:       "OpenLineage",
+				LastSyncAt: event.EventTime,
+				Properties: runMetadata,
+				Priority:   1,
+			}}, SkipNotification: true}); updateErr != nil {
+				log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to record OpenLineage as a source of the job asset")
 			}
 
 			return jobMRN, nil
@@ -403,7 +405,11 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 	name := dataset.Name
 	namespace := dataset.Namespace
 
-	datasetMRN := openLineageMRN(assetType, provider, namespace, name)
+	datasetMRN := openLineageDatasetMRN(assetType, provider, namespace, name)
+	if resolved, err := s.assetSvc.ResolveMRN(ctx, datasetMRN); err == nil && resolved != "" {
+		datasetMRN = resolved
+	}
+	s.adoptLegacyStub(ctx, openLineageMRN(assetType, provider, namespace, name), datasetMRN)
 
 	desc := fmt.Sprintf("%s from %s namespace (%s)", assetType, namespace, role)
 
@@ -427,28 +433,25 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 
 	existingAsset, err := s.assetSvc.GetByMRN(ctx, datasetMRN)
 	if err == nil {
-		updateInput := asset.UpdateInput{
-			Metadata: metadata,
-			Sources: []asset.AssetSource{{
-				Name:       "OpenLineage",
-				LastSyncAt: time.Now(),
-				Properties: runMetadata,
-				Priority:   1,
-			}},
-		}
-		if schema != nil {
-			updateInput.Schema = schema
-		}
+		// OpenLineage only mentions a dataset, so what it says ranks below the system that owns it and never overwrites that system's metadata or schema.
+		fields := asset.ContributionFields{Metadata: metadata, Schema: schema}
 		if query != "" {
-			updateInput.Query = &query
-			updateInput.QueryLanguage = &queryLanguage
+			fields.Query = &query
+			fields.QueryLanguage = &queryLanguage
 		}
-
-		if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, updateInput); updateErr != nil {
+		if _, updateErr := s.assetSvc.Contribute(ctx, existingAsset.ID, openLineageWriter, asset.RoleReference, fields, false); updateErr != nil {
 			log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing dataset asset")
 		}
+		if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, asset.UpdateInput{Sources: []asset.AssetSource{{
+			Name:       "OpenLineage",
+			LastSyncAt: time.Now(),
+			Properties: runMetadata,
+			Priority:   1,
+		}}, SkipNotification: true}); updateErr != nil {
+			log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to record OpenLineage as a source of the dataset asset")
+		}
 
-		return datasetMRN, nil
+		return *existingAsset.MRN, nil
 	}
 
 	createInput := asset.CreateInput{
@@ -462,6 +465,8 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 		Tags:        []string{"openlineage", strings.ToLower(assetType), role, strings.ToLower(provider)},
 		CreatedBy:   createdBy,
 		IsStub:      true,
+		Writer:      openLineageWriter,
+		Role:        asset.RoleReference,
 		Sources: []asset.AssetSource{{
 			Name:       "OpenLineage",
 			LastSyncAt: time.Now(),
@@ -477,6 +482,11 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 
 	_, err = s.assetSvc.Create(ctx, createInput)
 	if err != nil {
+		// A stub from an earlier event is hidden from GetByMRN, so seeing it again is not a failure: the dataset is already there.
+		var exists *asset.ExistsError
+		if errors.As(err, &exists) && exists.Asset != nil && exists.Asset.MRN != nil {
+			return *exists.Asset.MRN, nil
+		}
 		return "", fmt.Errorf("failed to create stub asset: %w", err)
 	}
 
@@ -654,6 +664,84 @@ func extractDatasetMetadata(metadata map[string]interface{}, facets, inputFacets
 // guarantees no space or stray slash reaches the MRN.
 func openLineageMRN(assetType, provider, namespace, name string) string {
 	return mrn.New(assetType, provider, namespace+"."+name)
+}
+
+// openLineageWriter is the contribution OpenLineage events make to the assets they describe.
+const openLineageWriter = "openlineage"
+
+// defaultPorts fills in the port of a namespace that leaves it out, so the host hint matches the host:port the system's own plugin reported.
+var defaultPorts = map[string]string{
+	"postgres": "5432", "postgresql": "5432", "mysql": "3306", "mariadb": "3306", "sqlserver": "1433", "mssql": "1433",
+	"kafka": "9092", "trino": "8080", "presto": "8080", "clickhouse": "8123", "oracle": "1521", "redshift": "5439",
+}
+
+// singlePartSchemes are namespaces whose dataset name is one opaque name, such as a Kafka topic or an object key, rather than dotted levels.
+var singlePartSchemes = map[string]bool{"kafka": true, "s3": true, "s3a": true, "gs": true, "gcs": true, "abfss": true, "wasbs": true, "hdfs": true, "file": true, "dbfs": true}
+
+// openLineageDatasetMRN names a dataset from an OpenLineage event the way the system's own plugin names it. OpenLineage identifies a dataset by a namespace, the data source's address such as postgres://pg-eu:5432, and a name, the dotted path inside it, so the address becomes a host hint Marmot resolves to a zone and the name becomes the path. A namespace that is not an address, such as a scheduler's name, keeps the namespace in the name as before.
+func openLineageDatasetMRN(assetType, provider, namespace, name string) string {
+	u, err := url.Parse(namespace)
+	if err != nil || u.Scheme == "" {
+		if strings.EqualFold(namespace, "bigquery") {
+			return mrn.Asset(assetType, provider, strings.Split(name, ".")...).String()
+		}
+		return openLineageMRN(assetType, provider, namespace, name)
+	}
+	scheme := strings.ToLower(u.Scheme)
+	host := strings.ToLower(u.Host)
+	if host != "" && u.Port() == "" {
+		if port, ok := defaultPorts[scheme]; ok {
+			host += ":" + port
+		}
+	}
+
+	var m mrn.MRN
+	switch {
+	case scheme == "s3" || scheme == "s3a" || scheme == "gs" || scheme == "gcs":
+		bucket := u.Host
+		key := strings.TrimPrefix(name, "/")
+		if key == "" {
+			m = mrn.Asset(assetType, provider, bucket)
+		} else {
+			m = mrn.Asset(assetType, provider, bucket, key)
+		}
+		return m.String()
+	case singlePartSchemes[scheme]:
+		m = mrn.Asset(assetType, provider, name)
+	default:
+		m = mrn.Asset(assetType, provider, strings.Split(name, ".")...)
+	}
+	if host != "" {
+		m = m.WithHost(host)
+	}
+	return m.String()
+}
+
+// adoptLegacyStub moves a dataset stub an older Marmot named by its whole namespace onto the MRN the dataset has now, or folds it into the asset already there, so its lineage and anything people added to it carry over.
+func (s *service) adoptLegacyStub(ctx context.Context, legacyMRN, currentMRN string) {
+	if legacyMRN == currentMRN {
+		return
+	}
+	found, err := s.assetSvc.GetByMRNs(ctx, []string{legacyMRN, currentMRN})
+	if err != nil {
+		return
+	}
+	stub, ok := found[legacyMRN]
+	if !ok || stub.MRN == nil || *stub.MRN != legacyMRN {
+		return
+	}
+	if target, ok := found[currentMRN]; ok && target.ID != stub.ID {
+		if !stub.IsStub {
+			return
+		}
+		if _, err := s.assetSvc.Merge(ctx, stub.ID, target.ID); err != nil {
+			log.Warn().Err(err).Str("stub", legacyMRN).Str("into", currentMRN).Msg("Failed to merge legacy OpenLineage stub")
+		}
+		return
+	}
+	if err := s.assetSvc.MoveMRN(ctx, stub.ID, currentMRN, "openlineage-naming"); err != nil {
+		log.Warn().Err(err).Str("stub", legacyMRN).Str("to", currentMRN).Msg("Failed to move legacy OpenLineage stub")
+	}
 }
 
 func inferJobType(event *RunEvent, provider string) string {

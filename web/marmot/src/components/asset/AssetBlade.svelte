@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
+	import { discoverPath } from '$lib/mrn';
 	import { formatDateTime } from '$lib/utils';
 	import { formatRelativeTime } from '$lib/utils/format';
 	import { compactNumber, providerLabel, typeLabel } from '$components/query/catalogSearch';
@@ -63,12 +64,9 @@
 
 	let isRunHistoryTab = $derived(page.url.searchParams.get('tab') === 'run-history');
 
-	/** The discover route for any asset: its type, then the MRN's service and the rest of the name. */
+	/** The discover route for any asset, from its MRN. */
 	function routeOf(a: Pick<Asset, 'mrn' | 'type'>): DiscoverAssetRoute | '' {
-		if (!a?.mrn || !a?.type) return '';
-		const parts = a.mrn.replace('mrn://', '').split('/');
-		if (parts.length < 3) return '';
-		return `/discover/${a.type.toLowerCase()}/${parts[1]}/${encodeURIComponent(parts.slice(2).join('/'))}`;
+		return discoverPath(a?.mrn) ?? '';
 	}
 
 	let fullViewUrl = $derived(

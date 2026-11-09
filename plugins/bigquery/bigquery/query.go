@@ -16,7 +16,6 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 )
@@ -268,11 +267,11 @@ func classifyTable(ctx context.Context, t *bigquery.Table) string {
 // expanding it to the tables it queries, so classify sees the view and the
 // plan names only the view, matching how BigQuery's own authorized views
 // work.
-func referencedMRNs(ctx context.Context, tables []*bigquery.Table, classify func(ctx context.Context, t *bigquery.Table) string) []string {
+func referencedMRNs(ctx context.Context, cfg *Config, tables []*bigquery.Table, classify func(ctx context.Context, t *bigquery.Table) string) []string {
 	var mrns []string
 	seen := map[string]bool{}
 	for _, t := range tables {
-		m := mrn.New(classify(ctx, t), "BigQuery", t.TableID)
+		m := cfg.AssetMRN(classify(ctx, t), "BigQuery", t.ProjectID, t.DatasetID, t.TableID)
 		if !seen[m] {
 			seen[m] = true
 			mrns = append(mrns, m)
@@ -287,7 +286,7 @@ func referencedMRNs(ctx context.Context, tables []*bigquery.Table, classify func
 // the statement, unlike engines where even planning a write has side
 // effects.
 func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
-	client, _, err := s.connect(ctx, raw)
+	client, cfg, err := s.connect(ctx, raw)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +300,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	}
 
 	return &pluginsdk.QueryPlan{
-		ReferencedMRNs: referencedMRNs(ctx, stats.ReferencedTables, classifyTable),
+		ReferencedMRNs: referencedMRNs(ctx, cfg, stats.ReferencedTables, classifyTable),
 		EstimatedBytes: stats.TotalBytesProcessed,
 		// EXTERNAL_QUERY reads from a connection to an external database at
 		// execution time, so the tables it touches there never appear in

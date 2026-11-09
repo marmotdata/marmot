@@ -3,7 +3,6 @@ package googledrive
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -143,7 +142,7 @@ func discover(t *testing.T, drive *fakeDrive, sheets sheetsAPI, overrides plugin
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, a := range result.Assets {
 		if a.Type == assetType && a.MRN != nil && len(a.Providers) > 0 &&
-			*a.MRN == mrn.New(assetType, a.Providers[0], name) {
+			*a.MRN == mrn.Asset(assetType, a.Providers[0], name).String() {
 			return &result.Assets[i]
 		}
 	}
@@ -208,9 +207,9 @@ func TestDiscover_NestsFoldersAndFiles(t *testing.T) {
 	}}, nil, nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://folder/googledrive/marketing", "mrn://folder/googledrive/marketing-campaigns_2024"))
+		"mrn://asset/folder/googledrive/marketing", "mrn://asset/folder/googledrive/marketing-campaigns_2024"))
 	assert.True(t, hasEdge(result,
-		"mrn://folder/googledrive/marketing", "mrn://file/googledrive/marketing-brand_guidelines.pdf"))
+		"mrn://asset/folder/googledrive/marketing", "mrn://asset/file/googledrive/marketing-brand_guidelines.pdf"))
 }
 
 // The whole point of matching the OpenMetadata plugin's projection is
@@ -224,11 +223,11 @@ func TestDiscover_MatchesTheOpenMetadataProjection(t *testing.T) {
 
 	folderAsset := findAsset(result, "Folder", "Marketing")
 	require.NotNil(t, folderAsset)
-	assert.Equal(t, "mrn://folder/googledrive/marketing", *folderAsset.MRN)
+	assert.Equal(t, "mrn://asset/folder/googledrive/marketing", *folderAsset.MRN)
 
 	fileAsset := findAsset(result, "File", "Marketing/plan.pdf")
 	require.NotNil(t, fileAsset)
-	assert.Equal(t, "mrn://file/googledrive/marketing-plan.pdf", *fileAsset.MRN)
+	assert.Equal(t, "mrn://asset/file/googledrive/marketing-plan.pdf", *fileAsset.MRN)
 }
 
 // The MRN has to survive being split apart and rebuilt. That the MRN and
@@ -246,9 +245,9 @@ func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		parts := strings.SplitN(strings.TrimPrefix(*a.MRN, "mrn://"), "/", 3)
-		require.Len(t, parts, 3, "malformed MRN %q", *a.MRN)
-		assert.Equal(t, *a.MRN, mrn.New(parts[0], parts[1], parts[2]), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err, *a.MRN)
+		assert.Equal(t, *a.MRN, parsed.String())
 	}
 }
 
@@ -263,9 +262,9 @@ func TestDiscover_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
 
 	file := findAsset(result, "File", "Marketing/brief.pdf")
 	require.NotNil(t, file)
-	assert.Equal(t, "mrn://file/googledrive/marketing-brief.pdf", *file.MRN)
+	assert.Equal(t, "mrn://asset/file/googledrive/marketing-brief.pdf", *file.MRN)
 	assert.Equal(t, "Marketing/brief.pdf", *file.Name)
-	assert.Equal(t, *file.MRN, mrn.New("File", file.Providers[0], *file.Name),
+	assert.Equal(t, *file.MRN, mrn.Asset("File", file.Providers[0], *file.Name).String(),
 		"MRN and Name must agree")
 }
 
@@ -427,7 +426,7 @@ func TestDiscover_CataloguesTheDriveItself(t *testing.T) {
 
 	assert.NotNil(t, findAsset(result, "Drive", "My Drive"))
 	assert.True(t, hasEdge(result,
-		"mrn://drive/googledrive/my-drive", "mrn://folder/googledrive/marketing"),
+		"mrn://asset/drive/googledrive/my-drive", "mrn://asset/folder/googledrive/marketing"),
 		"a folder with nothing above it sits at the top of the drive")
 }
 
@@ -438,7 +437,7 @@ func TestDiscover_NamesTheDriveAfterASharedDrive(t *testing.T) {
 
 	assert.NotNil(t, findAsset(result, "Drive", "0AItAbCdEfGh"))
 	assert.True(t, hasEdge(result,
-		"mrn://drive/googledrive/0aitabcdefgh", "mrn://folder/googledrive/marketing"))
+		"mrn://asset/drive/googledrive/0aitabcdefgh", "mrn://asset/folder/googledrive/marketing"))
 }
 
 func TestDiscover_OnlyTheTopOfTheTreeBelongsToTheDrive(t *testing.T) {
@@ -449,12 +448,12 @@ func TestDiscover_OnlyTheTopOfTheTreeBelongsToTheDrive(t *testing.T) {
 	}}, nil, nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://drive/googledrive/my-drive", "mrn://folder/googledrive/marketing"))
+		"mrn://asset/drive/googledrive/my-drive", "mrn://asset/folder/googledrive/marketing"))
 	assert.False(t, hasEdge(result,
-		"mrn://drive/googledrive/my-drive", "mrn://folder/googledrive/marketing-campaigns_2024"),
+		"mrn://asset/drive/googledrive/my-drive", "mrn://asset/folder/googledrive/marketing-campaigns_2024"),
 		"a nested folder belongs to its parent, not to the drive")
 	assert.False(t, hasEdge(result,
-		"mrn://drive/googledrive/my-drive", "mrn://file/googledrive/marketing-campaigns_2024-brief.pdf"),
+		"mrn://asset/drive/googledrive/my-drive", "mrn://asset/file/googledrive/marketing-campaigns_2024-brief.pdf"),
 		"a file inside a folder belongs to that folder")
 }
 
@@ -474,7 +473,7 @@ func TestDiscover_ReportsItemsThatMergeIntoOneAsset(t *testing.T) {
 	}}, nil, nil)
 
 	require.Len(t, c.collisions, 1)
-	assert.Equal(t, "mrn://folder/googledrive/q4-reports", c.collisions[0].MRN)
+	assert.Equal(t, "mrn://asset/folder/googledrive/q4-reports", c.collisions[0].MRN)
 	assert.Equal(t, "/Q4 Reports", metadataPath(c.collisions[0].First))
 	assert.Equal(t, "/Q4-Reports", metadataPath(c.collisions[0].Second))
 }
@@ -555,4 +554,19 @@ func TestValidate_RefusesAZeroConcurrency(t *testing.T) {
 	_, err = source.Validate(pluginsdk.RawConfig{})
 	require.NoError(t, err)
 	assert.Equal(t, 8, source.config.Concurrency, "an absent value still defaults")
+}
+
+func TestDiscover_MRNCarriesTheZone(t *testing.T) {
+	result := discover(t, &fakeDrive{items: []driveItem{
+		folder("f1", "Marketing"),
+	}}, nil, pluginsdk.RawConfig{"zone": "acme"})
+
+	var found bool
+	for _, a := range result.Assets {
+		if a.Type == "Folder" {
+			found = true
+			assert.Equal(t, "mrn://asset/folder/googledrive@acme/marketing", *a.MRN)
+		}
+	}
+	assert.True(t, found)
 }

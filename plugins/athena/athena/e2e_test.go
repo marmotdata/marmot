@@ -279,9 +279,9 @@ func TestE2E_ValidateAcceptsTheEndpointConfig(t *testing.T) {
 func TestE2E_DiscoversTheGlueDatabaseAndTables(t *testing.T) {
 	result := discover(t)
 
-	assert.Equal(t, "mrn://database/glue/shop", mrnOf(t, result, "shop"))
-	assert.Equal(t, "mrn://table/glue/orders", mrnOf(t, result, "orders"))
-	assert.Equal(t, "mrn://table/glue/customers", mrnOf(t, result, "customers"))
+	assert.Equal(t, "mrn://asset/database/glue/shop", mrnOf(t, result, "shop"))
+	assert.Equal(t, "mrn://asset/table/glue/shop.orders", mrnOf(t, result, "orders"))
+	assert.Equal(t, "mrn://asset/table/glue/shop.customers", mrnOf(t, result, "customers"))
 }
 
 func TestE2E_TablesAreFiledUnderTheGlueProvider(t *testing.T) {
@@ -323,7 +323,7 @@ func TestE2E_VirtualViewBecomesAViewWithItsSQL(t *testing.T) {
 	view := findAsset(t, result, "order_totals")
 
 	assert.Equal(t, "View", view.Type)
-	assert.Equal(t, "mrn://view/glue/order_totals", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/glue/shop.order_totals", *view.MRN)
 	require.NotNil(t, view.Query)
 	assert.Equal(t, "SELECT sum(total) FROM shop.orders", *view.Query)
 }
@@ -340,10 +340,10 @@ func TestE2E_WorkGroupCarriesItsResultConfiguration(t *testing.T) {
 
 func TestE2E_SavedQueryCarriesItsSQL(t *testing.T) {
 	result := discover(t)
-	query := findAsset(t, result, "analytics/daily-revenue")
+	query := findAsset(t, result, "daily-revenue")
 
 	assert.Equal(t, "Data Model Object", query.Type)
-	assert.Equal(t, "mrn://data-model-object/athena/analytics-daily-revenue", *query.MRN)
+	assert.Equal(t, "mrn://asset/data-model-object/athena/analytics.daily-revenue", *query.MRN)
 	require.NotNil(t, query.Query)
 	assert.Contains(t, *query.Query, "JOIN customers c")
 	assert.Equal(t, "shop", query.Metadata["database"])
@@ -352,37 +352,37 @@ func TestE2E_SavedQueryCarriesItsSQL(t *testing.T) {
 func TestE2E_DataCatalogsAreCatalogued(t *testing.T) {
 	result := discover(t)
 
-	assert.Equal(t, "mrn://catalog/athena/awsdatacatalog", mrnOf(t, result, "AwsDataCatalog"))
-	assert.Equal(t, "mrn://catalog/athena/hive_lab", mrnOf(t, result, "hive_lab"))
+	assert.Equal(t, "mrn://asset/catalog/athena/awsdatacatalog", mrnOf(t, result, "AwsDataCatalog"))
+	assert.Equal(t, "mrn://asset/catalog/athena/hive_lab", mrnOf(t, result, "hive_lab"))
 	assert.Equal(t, "HIVE", findAsset(t, result, "hive_lab").Metadata["type"])
 }
 
 func TestE2E_ContainmentLineage(t *testing.T) {
 	result := discover(t)
 
-	assertEdge(t, result, "mrn://catalog/athena/awsdatacatalog", "mrn://database/glue/shop", "CONTAINS")
-	assertEdge(t, result, "mrn://database/glue/shop", "mrn://table/glue/orders", "CONTAINS")
-	assertEdge(t, result, "mrn://workgroup/athena/analytics", "mrn://data-model-object/athena/analytics-daily-revenue", "CONTAINS")
+	assertEdge(t, result, "mrn://asset/catalog/athena/awsdatacatalog", "mrn://asset/database/glue/shop", "CONTAINS")
+	assertEdge(t, result, "mrn://asset/database/glue/shop", "mrn://asset/table/glue/shop.orders", "CONTAINS")
+	assertEdge(t, result, "mrn://asset/workgroup/athena/analytics", "mrn://asset/data-model-object/athena/analytics.daily-revenue", "CONTAINS")
 }
 
 func TestE2E_BucketFeedsTheTableItStores(t *testing.T) {
 	result := discover(t)
 
-	assertEdge(t, result, "mrn://bucket/s3/marmot-lake", "mrn://table/glue/orders", "FEEDS")
+	assertEdge(t, result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/table/glue/shop.orders", "FEEDS")
 }
 
 func TestE2E_WorkGroupProducesItsResultBucket(t *testing.T) {
 	result := discover(t)
 
-	assertEdge(t, result, "mrn://workgroup/athena/analytics", "mrn://bucket/s3/marmot-results", "PRODUCES")
+	assertEdge(t, result, "mrn://asset/workgroup/athena/analytics", "mrn://asset/bucket/s3/marmot-results", "PRODUCES")
 }
 
 func TestE2E_TablesASavedQueryReadsFeedIt(t *testing.T) {
 	result := discover(t)
-	target := "mrn://data-model-object/athena/analytics-daily-revenue"
+	target := "mrn://asset/data-model-object/athena/analytics.daily-revenue"
 
-	assertEdge(t, result, "mrn://table/glue/orders", target, "FEEDS")
-	assertEdge(t, result, "mrn://table/glue/customers", target, "FEEDS")
+	assertEdge(t, result, "mrn://asset/table/glue/shop.orders", target, "FEEDS")
+	assertEdge(t, result, "mrn://asset/table/glue/shop.customers", target, "FEEDS")
 }
 
 func TestE2E_TagsToMetadataReadsWorkGroupTags(t *testing.T) {

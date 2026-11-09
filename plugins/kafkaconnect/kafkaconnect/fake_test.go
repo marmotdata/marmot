@@ -2,6 +2,7 @@ package kafkaconnect
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -223,6 +224,10 @@ func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *plugi
 	for i := range result.Assets {
 		a := &result.Assets[i]
 		if a.Type == assetType && a.Name != nil && *a.Name == name {
+			return a
+		}
+		// A task is looked up as <connector>.<task name> because its own name is only task-N.
+		if a.Type == "Task" && assetType == "Task" && a.Name != nil && fmt.Sprint(a.Metadata["connector"])+"."+*a.Name == name {
 			return a
 		}
 	}

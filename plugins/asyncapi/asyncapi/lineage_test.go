@@ -54,10 +54,10 @@ func testDoc() *asyncapi3.Document {
 // These are two separate code paths over the same binding, and when their
 // fallback conditions drift the asset is created with no edge pointing at
 // it, so the lineage silently disappears.
-func assertChannelMRNsMatchCreatedAssets(t *testing.T, s *Source, channelName string, channel *asyncapi3.Channel, created []string) {
+func assertChannelMRNsMatchCreatedAssets(t *testing.T, s *Source, doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, created []string) {
 	t.Helper()
 
-	got := s.getChannelAssetMRNs(channelName, channel)
+	got := s.getChannelAssetMRNs(doc, channelName, channel)
 	assert.ElementsMatch(t, created, got,
 		"the lineage MRNs and the created assets have drifted apart")
 }
@@ -85,7 +85,7 @@ func TestSolace_DestinationMatchingNoBranchStillGetsItsMRN(t *testing.T) {
 		created = append(created, *a.MRN)
 	}
 
-	assertChannelMRNsMatchCreatedAssets(t, s, "orders", channel, created)
+	assertChannelMRNsMatchCreatedAssets(t, s, doc, "orders", channel, created)
 }
 
 // A Solace binding with a real queue destination.
@@ -106,9 +106,9 @@ func TestSolace_QueueDestinationMatches(t *testing.T) {
 	for _, a := range assets {
 		created = append(created, *a.MRN)
 	}
-	assert.Equal(t, []string{"mrn://queue/solace/order-queue"}, created)
+	assert.Equal(t, []string{"mrn://asset/queue/solace/order-queue"}, created)
 
-	assertChannelMRNsMatchCreatedAssets(t, s, "orders", channel, created)
+	assertChannelMRNsMatchCreatedAssets(t, s, doc, "orders", channel, created)
 }
 
 // An IBM MQ binding with a Queue object whose ObjectName is empty reaches
@@ -131,7 +131,7 @@ func TestIBMMQ_EmptyQueueObjectNameStillGetsItsMRN(t *testing.T) {
 		created = append(created, *a.MRN)
 	}
 
-	assertChannelMRNsMatchCreatedAssets(t, s, "payments", channel, created)
+	assertChannelMRNsMatchCreatedAssets(t, s, doc, "payments", channel, created)
 }
 
 // An IBM MQ binding naming a real queue.
@@ -151,7 +151,7 @@ func TestIBMMQ_NamedQueueMatches(t *testing.T) {
 	for _, a := range assets {
 		created = append(created, *a.MRN)
 	}
-	assert.Equal(t, []string{"mrn://queue/ibmmq/pay.in"}, created)
+	assert.Equal(t, []string{"mrn://asset/queue/ibmmq/pay.in"}, created)
 
-	assertChannelMRNsMatchCreatedAssets(t, s, "payments", channel, created)
+	assertChannelMRNsMatchCreatedAssets(t, s, doc, "payments", channel, created)
 }

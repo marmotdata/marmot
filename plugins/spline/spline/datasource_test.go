@@ -11,13 +11,37 @@ import (
 // identity each URI resolves to, because an edge built from the wrong name
 // points at an asset that does not exist and the server drops it.
 
+func TestParseURI_HostIsTheServerTheURINames(t *testing.T) {
+	for uri, want := range map[string]string{
+		"jdbc:postgresql://PG.internal:6432/warehouse:public.orders":                    "pg.internal:6432",
+		"jdbc:postgresql://pg.internal/warehouse:public.orders":                         "pg.internal:5432",
+		"jdbc:mysql://mysql.internal/shop:customers":                                    "mysql.internal:3306",
+		"jdbc:sqlserver://sql.internal;databaseName=shop:sales.orders":                  "sql.internal:1433",
+		"jdbc:oracle:thin:@//oracle.internal:1521/ORCL:HR.EMPLOYEES":                    "oracle.internal:1521",
+		"jdbc:snowflake://acct.snowflakecomputing.com/?db=A&schema=B&table=C":           "",
+		"jdbc:redshift://cluster.eu-west-1.redshift.amazonaws.com:5439/dev:analytics.o": "cluster.eu-west-1.redshift.amazonaws.com:5439",
+	} {
+		ref, ok := parseDataSourceURI(uri)
+		require.True(t, ok, uri)
+		assert.Equal(t, want, ref.Host, uri)
+	}
+}
+
+func TestParseURI_ObjectStoresAndHiveHaveNoHost(t *testing.T) {
+	for _, uri := range []string{"s3://marmot-lake/raw", "hive://sales/orders", "delta:///data/orders"} {
+		ref, ok := parseDataSourceURI(uri)
+		require.True(t, ok, uri)
+		assert.Empty(t, ref.Host, uri)
+	}
+}
+
 func TestParseURI_PostgresTableAppendedWithAColon(t *testing.T) {
 	ref, ok := parseDataSourceURI("jdbc:postgresql://pg.internal:5432/warehouse:public.orders")
 	require.True(t, ok)
 
 	assert.Equal(t, "Table", ref.Type)
 	assert.Equal(t, "PostgreSQL", ref.Provider)
-	assert.Equal(t, "orders", ref.Name)
+	assert.Equal(t, []string{"warehouse", "public", "orders"}, ref.Path)
 }
 
 func TestParseURI_PostgresTableAsAQueryParameter(t *testing.T) {
@@ -25,16 +49,15 @@ func TestParseURI_PostgresTableAsAQueryParameter(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "PostgreSQL", ref.Provider)
-	assert.Equal(t, "orders", ref.Name)
+	assert.Equal(t, []string{"warehouse", "public", "orders"}, ref.Path)
 }
 
-func TestParseURI_PostgresDropsTheSchemaFromTheName(t *testing.T) {
-	// The PostgreSQL plugin names a table by its bare name, so the schema in
-	// the URI has to be dropped or the edge would dangle.
+func TestParseURI_PostgresKeepsTheSchemaInThePath(t *testing.T) {
+	// The PostgreSQL plugin names a table database.schema.table, so the schema in the URI is part of the path.
 	ref, ok := parseDataSourceURI("jdbc:postgresql://pg:5432/warehouse:reporting.orders")
 	require.True(t, ok)
 
-	assert.Equal(t, "orders", ref.Name)
+	assert.Equal(t, []string{"warehouse", "reporting", "orders"}, ref.Path)
 }
 
 func TestParseURI_MySQLBareTableName(t *testing.T) {
@@ -42,7 +65,7 @@ func TestParseURI_MySQLBareTableName(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "MySQL", ref.Provider)
-	assert.Equal(t, "customers", ref.Name)
+	assert.Equal(t, []string{"shop", "customers"}, ref.Path)
 }
 
 func TestParseURI_MariaDBBareTableName(t *testing.T) {
@@ -50,7 +73,7 @@ func TestParseURI_MariaDBBareTableName(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "MariaDB", ref.Provider)
-	assert.Equal(t, "customers", ref.Name)
+	assert.Equal(t, []string{"shop", "customers"}, ref.Path)
 }
 
 func TestParseURI_SQLServerUsesDatabaseSchemaTable(t *testing.T) {
@@ -58,14 +81,14 @@ func TestParseURI_SQLServerUsesDatabaseSchemaTable(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "SQL Server", ref.Provider)
-	assert.Equal(t, "shop.sales.orders", ref.Name)
+	assert.Equal(t, []string{"shop", "sales", "orders"}, ref.Path)
 }
 
 func TestParseURI_SQLServerDefaultsTheSchemaToDbo(t *testing.T) {
 	ref, ok := parseDataSourceURI("jdbc:sqlserver://sql.internal:1433;databaseName=shop;encrypt=true:orders")
 	require.True(t, ok)
 
-	assert.Equal(t, "shop.dbo.orders", ref.Name)
+	assert.Equal(t, []string{"shop", "dbo", "orders"}, ref.Path)
 }
 
 func TestParseURI_OracleThinDriverUsesSchemaTable(t *testing.T) {
@@ -73,7 +96,7 @@ func TestParseURI_OracleThinDriverUsesSchemaTable(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "Oracle", ref.Provider)
-	assert.Equal(t, "HR.EMPLOYEES", ref.Name)
+	assert.Equal(t, []string{"ORCL", "HR", "EMPLOYEES"}, ref.Path)
 }
 
 func TestParseURI_OracleWithoutASchemaIsSkipped(t *testing.T) {
@@ -88,14 +111,14 @@ func TestParseURI_RedshiftUsesDatabaseSchemaTable(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "Redshift", ref.Provider)
-	assert.Equal(t, "dev.analytics.orders", ref.Name)
+	assert.Equal(t, []string{"dev", "analytics", "orders"}, ref.Path)
 }
 
 func TestParseURI_RedshiftDefaultsTheSchemaToPublic(t *testing.T) {
 	ref, ok := parseDataSourceURI("jdbc:redshift://cluster.eu-west-1.redshift.amazonaws.com:5439/dev:orders")
 	require.True(t, ok)
 
-	assert.Equal(t, "dev.public.orders", ref.Name)
+	assert.Equal(t, []string{"dev", "public", "orders"}, ref.Path)
 }
 
 func TestParseURI_SnowflakeReadsTheDatabaseFromQueryParameters(t *testing.T) {
@@ -105,14 +128,14 @@ func TestParseURI_SnowflakeReadsTheDatabaseFromQueryParameters(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "Snowflake", ref.Provider)
-	assert.Equal(t, "ANALYTICS.PUBLIC.ORDERS", ref.Name)
+	assert.Equal(t, []string{"ANALYTICS", "PUBLIC", "ORDERS"}, ref.Path)
 }
 
 func TestParseURI_SnowflakeFullyQualifiedTableWins(t *testing.T) {
 	ref, ok := parseDataSourceURI("jdbc:snowflake://acct.snowflakecomputing.com/?db=IGNORED&table=ANALYTICS.SALES.ORDERS")
 	require.True(t, ok)
 
-	assert.Equal(t, "ANALYTICS.SALES.ORDERS", ref.Name)
+	assert.Equal(t, []string{"ANALYTICS", "SALES", "ORDERS"}, ref.Path)
 }
 
 func TestParseURI_UnknownJDBCEngineIsSkipped(t *testing.T) {
@@ -131,7 +154,7 @@ func TestParseURI_S3BucketIsTheAssetName(t *testing.T) {
 
 	assert.Equal(t, "Bucket", ref.Type)
 	assert.Equal(t, "S3", ref.Provider)
-	assert.Equal(t, "marmot-lake", ref.Name)
+	assert.Equal(t, []string{"marmot-lake"}, ref.Path)
 }
 
 func TestParseURI_S3AAndS3NResolveToTheSameBucket(t *testing.T) {
@@ -140,7 +163,7 @@ func TestParseURI_S3AAndS3NResolveToTheSameBucket(t *testing.T) {
 	n, ok := parseDataSourceURI("s3n://marmot-lake/reports/nightly")
 	require.True(t, ok)
 
-	assert.Equal(t, "marmot-lake", a.Name)
+	assert.Equal(t, []string{"marmot-lake"}, a.Path)
 	assert.Equal(t, a, n)
 }
 
@@ -150,7 +173,7 @@ func TestParseURI_GCSBucket(t *testing.T) {
 
 	assert.Equal(t, "Bucket", ref.Type)
 	assert.Equal(t, "GCS", ref.Provider)
-	assert.Equal(t, "marmot-lake", ref.Name)
+	assert.Equal(t, []string{"marmot-lake"}, ref.Path)
 }
 
 func TestParseURI_AzureContainerDropsTheStorageAccount(t *testing.T) {
@@ -159,7 +182,7 @@ func TestParseURI_AzureContainerDropsTheStorageAccount(t *testing.T) {
 
 	assert.Equal(t, "Container", ref.Type)
 	assert.Equal(t, "AzureBlob", ref.Provider)
-	assert.Equal(t, "lake", ref.Name)
+	assert.Equal(t, []string{"lake"}, ref.Path)
 }
 
 func TestParseURI_HiveURIWithASlash(t *testing.T) {
@@ -168,14 +191,14 @@ func TestParseURI_HiveURIWithASlash(t *testing.T) {
 
 	assert.Equal(t, "Table", ref.Type)
 	assert.Equal(t, "Hive", ref.Provider)
-	assert.Equal(t, "sales.orders", ref.Name)
+	assert.Equal(t, []string{"sales", "orders"}, ref.Path)
 }
 
 func TestParseURI_HiveURIWithADot(t *testing.T) {
 	ref, ok := parseDataSourceURI("hive://sales.orders")
 	require.True(t, ok)
 
-	assert.Equal(t, "sales.orders", ref.Name)
+	assert.Equal(t, []string{"sales", "orders"}, ref.Path)
 }
 
 func TestParseURI_BareDatabaseTableIsHive(t *testing.T) {
@@ -184,7 +207,7 @@ func TestParseURI_BareDatabaseTableIsHive(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "Hive", ref.Provider)
-	assert.Equal(t, "sales.orders", ref.Name)
+	assert.Equal(t, []string{"sales", "orders"}, ref.Path)
 }
 
 func TestParseURI_DeltaTableIsTheLastPathSegment(t *testing.T) {
@@ -193,7 +216,7 @@ func TestParseURI_DeltaTableIsTheLastPathSegment(t *testing.T) {
 
 	assert.Equal(t, "Table", ref.Type)
 	assert.Equal(t, "Delta Lake", ref.Provider)
-	assert.Equal(t, "orders", ref.Name)
+	assert.Equal(t, []string{"orders"}, ref.Path)
 }
 
 func TestParseURI_HDFSIsSkipped(t *testing.T) {

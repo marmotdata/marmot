@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/http"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createHTTPEndpoint(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *http.OperationBinding) pluginsdk.Asset {
@@ -22,7 +21,7 @@ func (s *Source) createHTTPEndpoint(doc *asyncapi3.Document, channelName string,
 		description = fmt.Sprintf("HTTP endpoint for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Endpoint", "HTTP", name)
+	mrnValue := s.brokerMRN(doc, channel, "Endpoint", "HTTP", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

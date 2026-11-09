@@ -2,6 +2,7 @@ package runs
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -187,7 +188,8 @@ func TestClaimServedSources_LinksTheLastRunsAssets(t *testing.T) {
 		_, err := repo.db.Exec(ctx, `INSERT INTO assets (id, name, mrn, type, providers, created_by) VALUES ($1, $2, $3, 'Table', ARRAY['DuckDB'], 'test')`,
 			uuid.NewString(), name, mrn)
 		require.NoError(t, err)
-		return mrn
+		// The database stores the kinded form of whatever legacy MRN a writer sends.
+		return strings.Replace(mrn, "mrn://", "mrn://asset/", 1)
 	}
 	run := func(pipeline string, checkpoints map[string]string) {
 		var id string

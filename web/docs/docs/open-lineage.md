@@ -15,6 +15,8 @@ For your own integrations, send lineage with the [lineage API](lineage.md#send-l
 
 Each event adds or updates the job and the datasets it read and wrote, links them with lineage and records the run with its status and timing. A dataset Marmot hasn't seen before is added as a stub, so lineage is complete without filling the catalog with undocumented assets.
 
+A dataset gets the [MRN](MRNs/index.md) the system's own plugin gives it, so the stub and the asset the plugin later finds are one asset. A namespace that's an address, such as `postgres://pg-eu:5432`, tells Marmot which zone the dataset belongs to; see [Point other plugins at the right zone](MRNs/zones.md#point-other-plugins-at-the-right-zone).
+
 Events map to these asset types:
 
 | Asset type | From |

@@ -31,11 +31,24 @@ func assetByName(t *testing.T, result *pluginsdk.DiscoveryResult, name string) p
 	t.Helper()
 
 	for _, asset := range result.Assets {
-		if asset.Name != nil && *asset.Name == name {
+		// Tasks are looked up by MRN because an op can share a name with an asset.
+		if asset.Type != "Task" && asset.Name != nil && *asset.Name == name {
 			return asset
 		}
 	}
 	t.Fatalf("no asset named %q in %d discovered assets", name, len(result.Assets))
+	return pluginsdk.Asset{}
+}
+
+func assetByMRN(t *testing.T, result *pluginsdk.DiscoveryResult, mrnValue string) pluginsdk.Asset {
+	t.Helper()
+
+	for _, asset := range result.Assets {
+		if asset.MRN != nil && *asset.MRN == mrnValue {
+			return asset
+		}
+	}
+	t.Fatalf("no asset with MRN %q in %d discovered assets", mrnValue, len(result.Assets))
 	return pluginsdk.Asset{}
 }
 
@@ -168,7 +181,7 @@ func TestDiscover_PipelineWithNoRunsHasNoRunSummary(t *testing.T) {
 func TestDiscover_CreatesATaskPerOp(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
-	extract := assetByName(t, result, "etl_job/extract")
+	extract := assetByMRN(t, result, "mrn://asset/task/dagster/etl_job.extract")
 	assert.Equal(t, "Task", extract.Type)
 	assert.Equal(t, "extract", extract.Metadata["op"])
 	assert.Equal(t, "extract", extract.Metadata["handle_id"])
@@ -180,7 +193,7 @@ func TestDiscover_CreatesATaskPerOp(t *testing.T) {
 func TestDiscover_TaskDescriptionComesFromTheOpDefinition(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
-	transform := assetByName(t, result, "etl_job/transform")
+	transform := assetByMRN(t, result, "mrn://asset/task/dagster/etl_job.transform")
 	require.NotNil(t, transform.Description)
 	assert.Equal(t, "Transform extracted records.", *transform.Description)
 }
@@ -189,8 +202,8 @@ func TestDiscover_PipelineContainsItsTasks(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/dagster/etl_job",
-		"mrn://task/dagster/etl_job-extract",
+		"mrn://asset/pipeline/dagster/etl_job",
+		"mrn://asset/task/dagster/etl_job.extract",
 		"CONTAINS"))
 }
 
@@ -200,12 +213,12 @@ func TestDiscover_TaskDependsOnTheOpFeedingItsInput(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://task/dagster/etl_job-extract",
-		"mrn://task/dagster/etl_job-transform",
+		"mrn://asset/task/dagster/etl_job.extract",
+		"mrn://asset/task/dagster/etl_job.transform",
 		"DEPENDS_ON"))
 	assert.False(t, hasEdge(result,
-		"mrn://task/dagster/etl_job-transform",
-		"mrn://task/dagster/etl_job-extract",
+		"mrn://asset/task/dagster/etl_job.transform",
+		"mrn://asset/task/dagster/etl_job.extract",
 		"DEPENDS_ON"))
 }
 
@@ -214,7 +227,7 @@ func TestDiscover_TaskWithNoInputsHasNoDependsOnEdge(t *testing.T) {
 
 	for _, edge := range result.Lineage {
 		if edge.Type == "DEPENDS_ON" {
-			assert.NotEqual(t, "mrn://task/dagster/etl_job-extract", edge.Target)
+			assert.NotEqual(t, "mrn://asset/task/dagster/etl_job.extract", edge.Target)
 		}
 	}
 }
@@ -304,12 +317,12 @@ func TestDiscover_DatasetFeedsItsDownstreamDataset(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://dataset/dagster/raw_orders",
-		"mrn://dataset/dagster/clean_orders",
+		"mrn://asset/dataset/dagster/raw_orders",
+		"mrn://asset/dataset/dagster/clean_orders",
 		"FEEDS"))
 	assert.True(t, hasEdge(result,
-		"mrn://dataset/dagster/clean_orders",
-		"mrn://dataset/dagster/order_metrics",
+		"mrn://asset/dataset/dagster/clean_orders",
+		"mrn://asset/dataset/dagster/order_metrics",
 		"FEEDS"))
 }
 
@@ -317,8 +330,8 @@ func TestDiscover_PipelineProducesTheDatasetsItMaterialises(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/dagster/orders_job",
-		"mrn://dataset/dagster/clean_orders",
+		"mrn://asset/pipeline/dagster/orders_job",
+		"mrn://asset/dataset/dagster/clean_orders",
 		"PRODUCES"))
 }
 
@@ -328,8 +341,8 @@ func TestDiscover_DatasetProducesTheWarehouseTableItWrites(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://dataset/dagster/clean_orders",
-		"mrn://table/duckdb/clean_orders",
+		"mrn://asset/dataset/dagster/clean_orders",
+		"mrn://asset/table/duckdb/analytics.staging.clean_orders",
 		"PRODUCES"))
 }
 
@@ -339,7 +352,7 @@ func TestDiscover_DatasetWithoutAWarehouseHasNoTableEdge(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 
 	for _, edge := range result.Lineage {
-		if edge.Source == "mrn://dataset/dagster/raw_orders" {
+		if edge.Source == "mrn://asset/dataset/dagster/raw_orders" {
 			assert.Equal(t, "FEEDS", edge.Type)
 		}
 	}
@@ -351,7 +364,7 @@ func TestDiscover_ConvertsRunsIntoRunHistory(t *testing.T) {
 	require.Len(t, result.RunHistory, 1)
 	history := result.RunHistory[0]
 
-	assert.Equal(t, "mrn://pipeline/dagster/etl_job", history.AssetMRN)
+	assert.Equal(t, "mrn://asset/pipeline/dagster/etl_job", history.AssetMRN)
 	require.Len(t, history.Runs, 2)
 
 	assert.Equal(t, "START", history.Runs[0].EventType)

@@ -28,7 +28,6 @@ import (
     "time"
 
     pluginsdk "github.com/marmotdata/plugin-sdk"
-    "github.com/marmotdata/plugin-sdk/mrn"
 )
 
 // Config for the HelloWorld plugin
@@ -82,7 +81,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 
 func createHelloAsset(config *Config) pluginsdk.Asset {
     name := "hello"
-    mrnValue := mrn.New("Example", "HelloWorld", name)
+    mrnValue := config.AssetMRN("Example", "HelloWorld", name)
     description := "Hello asset created by HelloWorld plugin"
 
     metadata := map[string]interface{}{
@@ -112,7 +111,7 @@ func createHelloAsset(config *Config) pluginsdk.Asset {
 
 func createWorldAsset(config *Config) pluginsdk.Asset {
     name := "world"
-    mrnValue := mrn.New("Example", "HelloWorld", name)
+    mrnValue := config.AssetMRN("Example", "HelloWorld", name)
     description := "World asset created by HelloWorld plugin"
 
     metadata := map[string]interface{}{
@@ -152,7 +151,7 @@ func main() {
     pluginsdk.Serve(&pluginsdk.ServeConfig{
         Meta: pluginsdk.Meta{
             ID:            "helloworld",
-            MarmotVersion: ">=0.12.0",
+            MarmotVersion: ">=0.13.0",
             Name:          "HelloWorld",
             Description:   "A simple plugin that creates hello and world assets with lineage",
             Icon:          "wave",
@@ -166,7 +165,7 @@ func main() {
 
 The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category and the configuration form rendered in the UI.
 
-`MarmotVersion` is the lowest Marmot release the plugin works with, as a semver constraint such as `">=0.12.0"`. Raise it when the plugin starts relying on something only a newer release provides. Marmot refuses to load a plugin that excludes it, and the plugin index only offers each version to the releases it supports. Plugins in the Marmot repository must set it, and CI fails without it; for your own plugins it's optional, and leaving it empty means every release. See [Plugin Updates](../Configure/plugin-updates.md).
+`MarmotVersion` is the lowest Marmot release the plugin works with, as a semver constraint such as `">=0.13.0"`. Raise it when the plugin starts relying on something only a newer release provides. Marmot refuses to load a plugin that excludes it, and the plugin index only offers each version to the releases it supports. Plugins in the Marmot repository must set it, and CI fails without it; for your own plugins it's optional, and leaving it empty means every release. See [Plugin Updates](../Configure/plugin-updates.md).
 
 ## 4. Install the plugin
 
@@ -280,7 +279,87 @@ Supported tags:
 
 The `default` tag pre-fills the UI form, but configs written by hand (a CLI ingest file, for example) skip the form. Call `pluginsdk.ApplyDefaults(config, rawConfig)` in `Validate` so the defaults apply either way: it sets every field with a `default` tag whose key is absent from the raw config. Tag values are parsed as JSON (`default:"true"`, `default:"30"`, `default:"[\"a\",\"b\"]"`); values that are not valid JSON apply verbatim to string fields (`default:"production"`).
 
-`BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
+`BaseConfig` adds the standard `tags`, `external_links`, `filter` and `zone` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config. `zone` goes into your assets' MRNs through `AssetMRN`; see [Name assets with MRNs](#name-assets-with-mrns).
+
+## Name assets with MRNs
+
+Every asset needs an [MRN](../MRNs/index.md) that no other asset has. Marmot treats two writes with the same MRN as the same asset, and fails a run that produces one MRN twice, so the MRN has to carry the asset's full path inside the system.
+
+### Your own assets
+
+Build the MRN of every asset your plugin discovers with `AssetMRN` on its config. Pass the levels of the system's own hierarchy, outermost first:
+
+```go
+mrnValue := s.config.AssetMRN("Table", "PostgreSQL", database, schema, table)
+// mrn://asset/table/postgresql/analytics.public.orders
+// or, with zone: prod-eu set on the pipeline,
+// mrn://asset/table/postgresql@prod-eu/analytics.public.orders
+```
+
+`AssetMRN` adds the pipeline's `zone`, so two systems of the same technology never share assets. Keep `Asset.Name` as the object's own name, such as `orders`: the MRN carries the database and schema. Use the same helper for lineage edges, documentation, statistics and `ParentMRN` that point at your own assets, so the strings match exactly. The [qualified names table](../MRNs/index.md#qualified-names) lists the levels each provider uses.
+
+`mrn.Asset` from `github.com/marmotdata/plugin-sdk/mrn` builds the same MRN without a zone, and `.WithZone` adds one:
+
+```go
+m := mrn.Asset("Table", "PostgreSQL", "analytics", "public", "orders").
+    WithZone("prod-eu")
+mrnValue := m.String()
+```
+
+With one level, the name is used as it is, so a Kafka topic `orders.v1` keeps its dots. With several, a level holding a dot is quoted, so `my.db` gives `"my.db".public.orders`. Parts are lowercased and normalised to Unicode NFC, `/` and whitespace become `-`, and an `@` in the provider or zone becomes `-`.
+
+### Assets another plugin owns
+
+A lineage target, a dbt source or a Kafka Connect sink belongs to another system's plugin. Name it the way that plugin does, with that provider's levels. When all you know is the address you were given, add it as a host hint with `.WithHost`, lowercase and with the port:
+
+```go
+target := mrn.Asset("Table", "PostgreSQL", "shop", "public", "orders").
+    WithHost("pg-eu:5432").String()
+```
+
+Marmot resolves the hint to the zone bound to that host and falls back to no zone, and never stores the hint itself. Don't use a host hint for your own assets. If your config can name the zone outright, as `catalog_map` does in the Trino plugin, prefer that over the hint.
+
+### Report the hosts you connect to
+
+A plugin that connects to a server over the network reports the host, port and zone in `ZoneBindings`, so other plugins' host hints for that server land in its zone:
+
+```go
+result.ZoneBindings = append(result.ZoneBindings,
+    pluginsdk.ZoneBinding{
+        Provider: "PostgreSQL",
+        Host:     "db.internal:5432",
+        Zone:     s.config.Zone,
+    })
+```
+
+Use the provider as it appears in your MRNs, the lowercased host and an explicit port. Cloud services and plugins that read local files leave it out.
+
+### Keep existing assets when names change
+
+If a new version of your plugin names an asset differently, list the MRNs earlier versions gave it in `PreviousMRNs`. Marmot moves the existing asset to the new MRN, keeping its id and everything people added to it, instead of creating a second asset and deleting the first as stale:
+
+```go
+asset.PreviousMRNs = []string{"mrn://table/postgresql/orders"}
+```
+
+Marmot already tries the older form built from the asset's type, provider and `Name`, and the same MRN without a zone, so list only names that differ from those.
+
+### Describe how your systems are told apart
+
+Two fields on `Meta` tell Marmot how your plugin's systems relate to others:
+
+- **`IdentityScope`** says what makes one system different from another of the same technology. Use `pluginsdk.IdentityScopeNetwork`, which is also what an empty value means, for servers reached over the network, such as PostgreSQL or Kafka. Use `pluginsdk.IdentityScopeAccount` for cloud services whose account or project is already in every name, such as BigQuery. Use `pluginsdk.IdentityScopeFile` for a file on the machine running the plugin, such as a DuckDB database; the CLI then gives each machine its own zone unless the config sets one.
+- **`Federates`** is `true` for a plugin that catalogs assets other systems own, such as Trino, OpenMetadata or dbt. When it and the system's own plugin describe the same asset, the owning plugin's description, schema and metadata win.
+
+```go
+Meta: pluginsdk.Meta{
+    ID:            "helloworld",
+    MarmotVersion: ">=0.13.0",
+    IdentityScope: pluginsdk.IdentityScopeNetwork,
+    Federates:     false,
+    // ...
+},
+```
 
 ## Column schema
 

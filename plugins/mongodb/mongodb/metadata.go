@@ -47,4 +47,3 @@ type MongoDBSchemaFields struct {
 	SampleValues string   `json:"sample_values" metadata:"sample_values" description:"Sample values from documents"`
 	Description  string   `json:"description" metadata:"description" description:"Field description from validation schema if available"`
 }
-

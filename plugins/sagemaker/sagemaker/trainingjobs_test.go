@@ -111,7 +111,7 @@ func TestDiscoverTrainingJobs_LinksToTheAWSConsole(t *testing.T) {
 func TestDiscoverTrainingJobs_LinksTheTrainingDataBucketToTheJob(t *testing.T) {
 	result := discoverWith(t, fullFake(), withTrainingJobs)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-data", "mrn://job/sagemaker/churn-train-2026-09-01", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-data", "mrn://asset/job/sagemaker/churn-train-2026-09-01", "FEEDS"))
 }
 
 func TestDiscoverTrainingJobs_LinksTheJobToTheModelItProduced(t *testing.T) {
@@ -119,7 +119,7 @@ func TestDiscoverTrainingJobs_LinksTheJobToTheModelItProduced(t *testing.T) {
 	// tarball the job wrote.
 	result := discoverWith(t, fullFake(), withTrainingJobs)
 
-	assert.True(t, hasEdge(result, "mrn://job/sagemaker/churn-train-2026-09-01", "mrn://model/sagemaker/churn-xgb", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/job/sagemaker/churn-train-2026-09-01", "mrn://asset/model/sagemaker/churn-xgb", "PRODUCES"))
 }
 
 func TestDiscoverTrainingJobs_SkipsTheModelEdgeWhenNoArtifactMatches(t *testing.T) {
@@ -128,7 +128,7 @@ func TestDiscoverTrainingJobs_SkipsTheModelEdgeWhenNoArtifactMatches(t *testing.
 
 	result := discoverWith(t, fake, withTrainingJobs)
 
-	assert.False(t, hasEdge(result, "mrn://job/sagemaker/churn-train-2026-09-01", "mrn://model/sagemaker/churn-xgb", "PRODUCES"))
+	assert.False(t, hasEdge(result, "mrn://asset/job/sagemaker/churn-train-2026-09-01", "mrn://asset/model/sagemaker/churn-xgb", "PRODUCES"))
 }
 
 func TestDiscoverTrainingJobs_EmitsAStartAndACompleteEvent(t *testing.T) {
@@ -137,7 +137,7 @@ func TestDiscoverTrainingJobs_EmitsAStartAndACompleteEvent(t *testing.T) {
 	require.Len(t, result.RunHistory, 1)
 	history := result.RunHistory[0]
 
-	assert.Equal(t, "mrn://job/sagemaker/churn-train-2026-09-01", history.AssetMRN)
+	assert.Equal(t, "mrn://asset/job/sagemaker/churn-train-2026-09-01", history.AssetMRN)
 	require.Len(t, history.Runs, 2)
 	assert.Equal(t, "START", history.Runs[0].EventType)
 	assert.Equal(t, "COMPLETE", history.Runs[1].EventType)

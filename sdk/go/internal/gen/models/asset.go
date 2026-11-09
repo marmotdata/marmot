@@ -52,11 +52,19 @@ type Asset struct {
 	// mrn
 	Mrn string `json:"mrn,omitempty"`
 
+	// MRNParts is the MRN split into kind, type, provider, zone and name, so clients never split the string themselves.
+	MrnParts struct {
+		MRNParts
+	} `json:"mrn_parts,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
 	// parent mrn
 	ParentMrn string `json:"parent_mrn,omitempty"`
+
+	// PreviousMRNs carries the MRNs a plugin gave this asset before; input only, like Terms.
+	PreviousMrns []string `json:"previous_mrns"`
 
 	// providers
 	Providers []string `json:"providers"`
@@ -100,6 +108,10 @@ func (m *Asset) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateExternalLinks(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMrnParts(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -173,6 +185,14 @@ func (m *Asset) validateExternalLinks(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Asset) validateMrnParts(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.MrnParts) { // not required
+		return nil
+	}
+
+	return nil
+}
+
 func (m *Asset) validateSources(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.Sources) { // not required
 		return nil
@@ -212,6 +232,10 @@ func (m *Asset) ContextValidate(ctx context.Context, formats strfmt.Registry) er
 	}
 
 	if err := m.contextValidateExternalLinks(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMrnParts(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -265,6 +289,11 @@ func (m *Asset) contextValidateExternalLinks(ctx context.Context, formats strfmt
 		}
 
 	}
+
+	return nil
+}
+
+func (m *Asset) contextValidateMrnParts(ctx context.Context, formats strfmt.Registry) error {
 
 	return nil
 }

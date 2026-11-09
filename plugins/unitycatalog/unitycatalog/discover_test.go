@@ -2,6 +2,7 @@ package unitycatalog
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -79,8 +80,8 @@ func TestDiscover_NamesTablesCatalogSchemaTable(t *testing.T) {
 
 	table := findAsset(result, "Table", "unity.default.numbers")
 	require.NotNil(t, table)
-	assert.Equal(t, "unity.default.numbers", *table.Name)
-	assert.Equal(t, "mrn://table/unity-catalog/unity.default.numbers", *table.MRN)
+	assert.Equal(t, "numbers", *table.Name)
+	assert.Equal(t, "mrn://asset/table/unity-catalog/unity.default.numbers", *table.MRN)
 	assert.Equal(t, "Table", table.Type)
 }
 
@@ -334,15 +335,15 @@ func TestDiscover_SkipsForeignKeysToUnknownParents(t *testing.T) {
 func TestDiscover_S3StorageLocationFeedsTheTable(t *testing.T) {
 	result := discover(t, sampleWorld(), nil)
 
-	assert.True(t, hasEdge(result, mrn.New("Bucket", "S3", "marmot-lake"), assetMRN("Table", "shop.sales.orders"), "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", assetMRN("Table", "shop.sales.customers"), "FEEDS"))
+	assert.True(t, hasEdge(result, mrn.Asset("Bucket", "S3", "marmot-lake").String(), assetMRN("Table", "shop.sales.orders"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", assetMRN("Table", "shop.sales.customers"), "FEEDS"))
 }
 
 func TestDiscover_GCSStorageLocationFeedsTheTable(t *testing.T) {
 	world := sampleWorld().withTable("shop", "sales", paymentsTableJSON)
 	result := discover(t, world, nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/gcs/marmot-gcs-lake", assetMRN("Table", "shop.sales.payments"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/gcs/marmot-gcs-lake", assetMRN("Table", "shop.sales.payments"), "FEEDS"))
 }
 
 func TestDiscover_AzureStorageLocationFeedsTheTable(t *testing.T) {
@@ -352,7 +353,7 @@ func TestDiscover_AzureStorageLocationFeedsTheTable(t *testing.T) {
 		withTable("c", "s", `{"name":"t","catalog_name":"c","schema_name":"s","table_type":"EXTERNAL","storage_location":"abfss://lake@acct.dfs.core.windows.net/t"}`)
 	result := discover(t, world, nil)
 
-	assert.True(t, hasEdge(result, "mrn://container/azureblob/lake", assetMRN("Table", "c.s.t"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/container/azureblob/lake", assetMRN("Table", "c.s.t"), "FEEDS"))
 }
 
 func TestDiscover_LocalStorageLocationHasNoFeedsEdge(t *testing.T) {
@@ -372,7 +373,7 @@ func TestDiscover_StorageLocationFeedsVolumesToo(t *testing.T) {
 		withVolume("c", "s", `{"name":"exports","catalog_name":"c","schema_name":"s","volume_type":"EXTERNAL","storage_location":"s3://marmot-lake/exports"}`)
 	result := discover(t, world, nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", assetMRN("Volume", "c.s.exports"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", assetMRN("Volume", "c.s.exports"), "FEEDS"))
 }
 
 func TestDiscover_EmitsColumnCountStatistics(t *testing.T) {
@@ -392,7 +393,7 @@ func TestDiscover_DiscoversVolumes(t *testing.T) {
 
 	volume := findAsset(result, "Volume", "unity.default.txt_files")
 	require.NotNil(t, volume)
-	assert.Equal(t, "unity.default.txt_files", *volume.Name)
+	assert.Equal(t, "txt_files", *volume.Name)
 	assert.Equal(t, "MANAGED", volume.Metadata["volume_type"])
 	assert.Equal(t, "file:///home/unitycatalog/etc/data/managed/unity/default/volumes/txt_files", volume.Metadata["storage_location"])
 	assert.Equal(t, "74695d77-d48b-4f8e-9894-54a3e110b1ae", volume.Metadata["volume_id"])
@@ -456,7 +457,7 @@ func TestDiscover_DiscoversModelsWithVersions(t *testing.T) {
 
 	model := findAsset(result, "Model", "ml.models.churn")
 	require.NotNil(t, model)
-	assert.Equal(t, "ml.models.churn", *model.Name)
+	assert.Equal(t, "churn", *model.Name)
 	assert.Equal(t, 2, model.Metadata["version_count"])
 	assert.Equal(t, 2, model.Metadata["latest_version"])
 	assert.Equal(t, map[string]string{"1": "PENDING_REGISTRATION", "2": "READY"}, model.Metadata["versions"])
@@ -603,16 +604,19 @@ func TestDiscover_InterpolatesTags(t *testing.T) {
 	assert.Equal(t, []string{"uc", "catalog:unity"}, table.Tags)
 }
 
-func TestDiscover_EveryAssetMRNAgreesWithItsOwnFields(t *testing.T) {
+func TestDiscover_EveryAssetMRNIsUniqueAndKinded(t *testing.T) {
 	world := sampleWorld().withTable("shop", "sales", paymentsTableJSON).withFunction("shop", "sales", netAmountFunctionJSON)
 	result := discover(t, world, nil)
 
 	require.NotEmpty(t, result.Assets)
+	seen := map[string]struct{}{}
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
 		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		require.Equal(t, []string{"Unity Catalog"}, a.Providers)
+		assert.True(t, strings.HasPrefix(*a.MRN, "mrn://asset/"), *a.MRN)
+		assert.NotContains(t, seen, *a.MRN)
+		seen[*a.MRN] = struct{}{}
 	}
 }
 

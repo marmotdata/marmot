@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.52.7
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.56.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.6
-	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
+	github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 )

@@ -282,7 +282,7 @@ func discoveredWithMRN(table tableInfo, view *viewInfo) discoveredObject {
 	if table.Kind != kindTable {
 		assetType = "View"
 	}
-	obj.mrn = assetMRN(assetType, table.Name)
+	obj.mrn = assetMRN(testSource().config, assetType, table.Name)
 	return obj
 }
 
@@ -296,7 +296,7 @@ func TestBuildAsset_ViewIsTypedByItsKindEvenWithoutViewDetails(t *testing.T) {
 	})
 
 	assert.Equal(t, "View", asset.Type)
-	assert.Equal(t, "mrn://view/questdb/recent_trades", *asset.MRN)
+	assert.Equal(t, "mrn://asset/view/questdb/recent_trades", *asset.MRN)
 	assert.Equal(t, false, asset.Metadata["materialized"])
 	assert.Nil(t, asset.Query)
 }
@@ -309,8 +309,8 @@ func TestViewLineage_MaterializedViewPointsAtItsBaseTable(t *testing.T) {
 	})
 
 	assert.Equal(t, []pluginsdk.LineageEdge{{
-		Source: "mrn://table/questdb/trades",
-		Target: "mrn://view/questdb/trades_1h",
+		Source: "mrn://asset/table/questdb/trades",
+		Target: "mrn://asset/view/questdb/trades_1h",
 		Type:   "VIEW_OF",
 	}}, edges)
 }
@@ -324,8 +324,8 @@ func TestViewLineage_PlainViewPointsAtEveryTableItReads(t *testing.T) {
 	})
 
 	assert.ElementsMatch(t, []pluginsdk.LineageEdge{
-		{Source: "mrn://table/questdb/trades", Target: "mrn://view/questdb/recent_trades", Type: "VIEW_OF"},
-		{Source: "mrn://table/questdb/venues", Target: "mrn://view/questdb/recent_trades", Type: "VIEW_OF"},
+		{Source: "mrn://asset/table/questdb/trades", Target: "mrn://asset/view/questdb/recent_trades", Type: "VIEW_OF"},
+		{Source: "mrn://asset/table/questdb/venues", Target: "mrn://asset/view/questdb/recent_trades", Type: "VIEW_OF"},
 	}, edges)
 }
 
@@ -338,7 +338,7 @@ func TestViewLineage_ResolvesNamesCaseInsensitively(t *testing.T) {
 	})
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://table/questdb/trades", edges[0].Source)
+	assert.Equal(t, "mrn://asset/table/questdb/trades", edges[0].Source)
 }
 
 func TestViewLineage_DropsEdgesToUndiscoveredObjects(t *testing.T) {
@@ -356,8 +356,8 @@ func TestViewLineage_ViewOnAViewLinksTheTwoViews(t *testing.T) {
 	})
 
 	assert.Equal(t, []pluginsdk.LineageEdge{{
-		Source: "mrn://view/questdb/base_view",
-		Target: "mrn://view/questdb/top_view",
+		Source: "mrn://asset/view/questdb/base_view",
+		Target: "mrn://asset/view/questdb/top_view",
 		Type:   "VIEW_OF",
 	}}, edges)
 }

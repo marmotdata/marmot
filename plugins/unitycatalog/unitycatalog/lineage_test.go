@@ -59,18 +59,18 @@ func TestResolveReference_KeepsAFullName(t *testing.T) {
 }
 
 func TestStorageContainerMRN_S3(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", storageContainerMRN("s3://marmot-lake/orders"))
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", storageContainerMRN("s3a://marmot-lake/"))
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", storageContainerMRN("s3://marmot-lake/orders"))
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", storageContainerMRN("s3a://marmot-lake/"))
 }
 
 func TestStorageContainerMRN_GCS(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/gcs/marmot-gcs-lake", storageContainerMRN("gs://marmot-gcs-lake/payments"))
+	assert.Equal(t, "mrn://asset/bucket/gcs/marmot-gcs-lake", storageContainerMRN("gs://marmot-gcs-lake/payments"))
 }
 
 func TestStorageContainerMRN_AzureBlob(t *testing.T) {
-	assert.Equal(t, "mrn://container/azureblob/lake",
+	assert.Equal(t, "mrn://asset/container/azureblob/lake",
 		storageContainerMRN("abfss://lake@acct.dfs.core.windows.net/payments"))
-	assert.Equal(t, "mrn://container/azureblob/lake",
+	assert.Equal(t, "mrn://asset/container/azureblob/lake",
 		storageContainerMRN("wasbs://lake@acct.blob.core.windows.net/payments"))
 }
 

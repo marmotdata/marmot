@@ -7,6 +7,7 @@
 	import { page } from '$app/state';
 	import { html } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import RunDrawer from '$components/runs/RunDrawer.svelte';
 	import {
 		BASE_FIELDS,
@@ -571,6 +572,9 @@
 					{/if}
 					<mm-description term={m.plugins_created_label()}
 						>{formatDateTime(pipeline.created_at)}</mm-description
+					>
+					<mm-description term={m.mrn_label()} mono
+						><MrnValue value={pipeline.mrn} /></mm-description
 					>
 				</mm-description-list>
 			</mm-section>

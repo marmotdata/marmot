@@ -64,7 +64,7 @@ func NewStore(db *pgxpool.Pool) *Store {
 // ResolveAsset finds an asset's id from its MRN, which is all the asset page's address carries.
 func (s *Store) ResolveAsset(ctx context.Context, mrn string) (string, error) {
 	var id string
-	err := s.db.QueryRow(ctx, `SELECT id FROM assets WHERE mrn = $1`, mrn).Scan(&id)
+	err := s.db.QueryRow(ctx, `SELECT id FROM assets WHERE mrn = marmot_resolve_asset_mrn($1)`, mrn).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrItemNotFound
 	}

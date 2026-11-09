@@ -18,7 +18,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "gluepipeline",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "AWS Glue Pipelines",
 		Description:   "Discover workflows, tasks and run history from AWS Glue",
 		Icon:          "glue",
@@ -171,7 +171,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 			for _, node := range nodes {
 				result.Assets = append(result.Assets, s.taskAsset(name, node, jobs))
 			}
-			result.Lineage = append(result.Lineage, workflowLineage(name, nodes, workflow.Graph)...)
+			result.Lineage = append(result.Lineage, s.workflowLineage(name, nodes, workflow.Graph)...)
 
 			if s.config.IncludeRunHistory {
 				runs, err := s.fetchWorkflowRuns(ctx, name)
@@ -179,7 +179,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 					log.Warn().Err(err).Str("workflow", name).Msg("Failed to read workflow runs")
 					continue
 				}
-				if history := workflowRunHistory(assetMRN("Pipeline", name), name, runs); len(history.Runs) > 0 {
+				if history := workflowRunHistory(s.assetMRN("Pipeline", name), name, runs); len(history.Runs) > 0 {
 					result.RunHistory = append(result.RunHistory, history)
 				}
 			}
@@ -193,7 +193,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 				log.Warn().Err(err).Str("job", jobName).Msg("Failed to read job runs")
 				continue
 			}
-			if history := jobRunHistory(assetMRN("Job", jobName), jobName, runs); len(history.Runs) > 0 {
+			if history := jobRunHistory(s.assetMRN("Job", jobName), jobName, runs); len(history.Runs) > 0 {
 				result.RunHistory = append(result.RunHistory, history)
 			}
 		}
@@ -210,7 +210,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 			if crawlerName == "" {
 				continue
 			}
-			result.Lineage = append(result.Lineage, crawlerLineage(crawler)...)
+			result.Lineage = append(result.Lineage, s.crawlerLineage(crawler)...)
 
 			if !s.config.IncludeRunHistory {
 				continue
@@ -220,7 +220,7 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 				log.Warn().Err(err).Str("crawler", crawlerName).Msg("Failed to read crawler runs")
 				continue
 			}
-			if history := crawlerRunHistory(assetMRN("Crawler", crawlerName), crawlerName, crawls); len(history.Runs) > 0 {
+			if history := crawlerRunHistory(s.assetMRN("Crawler", crawlerName), crawlerName, crawls); len(history.Runs) > 0 {
 				result.RunHistory = append(result.RunHistory, history)
 			}
 		}

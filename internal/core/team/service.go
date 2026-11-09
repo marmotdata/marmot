@@ -2,8 +2,10 @@ package team
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"regexp"
 	"strings"
 	"time"
@@ -12,6 +14,8 @@ import (
 )
 
 type Team struct {
+	// MRN is mrn://team/<slug>, derived from the name.
+	MRN           string                 `json:"mrn,omitempty"`
 	ID            string                 `json:"id"`
 	Name          string                 `json:"name"`
 	Description   string                 `json:"description"`
@@ -642,4 +646,12 @@ func (s *Service) CanUserAccessAsset(ctx context.Context, userID, assetID string
 
 func (s *Service) SearchOwners(ctx context.Context, query string, limit int) ([]*Owner, error) {
 	return s.repo.SearchOwners(ctx, query, limit)
+}
+
+// MarshalJSON adds the team's MRN, which follows its name, to every response that carries one.
+func (v Team) MarshalJSON() ([]byte, error) {
+	type plain Team
+	p := plain(v)
+	p.MRN = mrn.Team(v.Name).String()
+	return json.Marshal(p)
 }

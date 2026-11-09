@@ -32,7 +32,7 @@ const (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "athena",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "AWS Athena",
 		Description:   "Discover databases, tables, workgroups and saved queries from Amazon Athena",
 		Icon:          "athena",
@@ -240,7 +240,7 @@ func (s *Source) discoverCatalog(ctx context.Context, c catalogSummary, reader c
 
 		assets = append(assets, s.databaseAsset(c, db))
 		if s.config.DiscoverLineage {
-			lineage = append(lineage, edge(catalogMRN(c.Name), databaseMRN(db.Name), "CONTAINS"))
+			lineage = append(lineage, edge(s.catalogMRN(c.Name), s.databaseMRN(c.Name, db.Name), "CONTAINS"))
 		}
 
 		catalogTables, err := reader.tables(ctx, c.Name, db.Name)
@@ -262,7 +262,7 @@ func (s *Source) discoverCatalog(ctx context.Context, c catalogSummary, reader c
 			if !s.config.DiscoverLineage {
 				continue
 			}
-			lineage = append(lineage, edge(databaseMRN(db.Name), *asset.MRN, "CONTAINS"))
+			lineage = append(lineage, edge(s.databaseMRN(c.Name, db.Name), *asset.MRN, "CONTAINS"))
 
 			// The bucket is the storage the table reads, so the data flows
 			// from the bucket into the table, not the other way round.
@@ -303,7 +303,7 @@ func (s *Source) discoverWorkGroups(ctx context.Context, tables *tableIndex) ([]
 
 			if s.config.DiscoverLineage {
 				if bucket := s3Bucket(workGroupOutputLocation(wg)); bucket != "" {
-					lineage = append(lineage, edge(workGroupMRN(name), bucketMRN(bucket), "PRODUCES"))
+					lineage = append(lineage, edge(s.workGroupMRN(name), bucketMRN(bucket), "PRODUCES"))
 				}
 			}
 		}
@@ -331,7 +331,7 @@ func (s *Source) discoverWorkGroups(ctx context.Context, tables *tableIndex) ([]
 			}
 			// The workgroup asset has to exist for the edge to land.
 			if s.config.IncludeWorkGroups {
-				lineage = append(lineage, edge(workGroupMRN(name), *asset.MRN, "CONTAINS"))
+				lineage = append(lineage, edge(s.workGroupMRN(name), *asset.MRN, "CONTAINS"))
 			}
 			lineage = append(lineage, tables.queryEdges(deref(q.QueryString), deref(q.Database), *asset.MRN)...)
 		}
@@ -407,7 +407,7 @@ func (s *Source) catalogAsset(ctx context.Context, c catalogSummary) pluginsdk.A
 		metadata["parameters"] = c.Parameters
 	}
 
-	return s.asset(typeCatalog, providerAthena, c.Name, catalogMRN(c.Name), c.Description, metadata)
+	return s.asset(typeCatalog, providerAthena, c.Name, s.catalogMRN(c.Name), c.Description, metadata)
 }
 
 func (s *Source) databaseAsset(c catalogSummary, db catalogDatabase) pluginsdk.Asset {
@@ -419,7 +419,7 @@ func (s *Source) databaseAsset(c catalogSummary, db catalogDatabase) pluginsdk.A
 		facts["parameters"] = db.Parameters
 	}
 
-	return s.asset(typeDatabase, providerGlue, db.Name, databaseMRN(db.Name), db.Description, athenaFacts(facts))
+	return s.asset(typeDatabase, providerGlue, db.Name, s.databaseMRN(c.Name, db.Name), db.Description, athenaFacts(facts))
 }
 
 func (s *Source) tableAsset(c catalogSummary, database string, t catalogTable) pluginsdk.Asset {
@@ -454,7 +454,7 @@ func (s *Source) tableAsset(c catalogSummary, database string, t catalogTable) p
 	}
 
 	metadata := athenaFacts(facts)
-	asset := s.asset(assetType, providerGlue, t.Name, tableMRN(assetType, t.Name), comment, metadata)
+	asset := s.asset(assetType, providerGlue, t.Name, s.tableMRN(assetType, c.Name, database, t.Name), comment, metadata)
 
 	if s.config.IncludeColumns {
 		if columns := s.buildColumns(t); len(columns) > 0 {
@@ -551,7 +551,7 @@ func (s *Source) workGroupAsset(ctx context.Context, wg athenatypes.WorkGroup) p
 	url := workGroupConsoleURL(s.region, name)
 	putString(metadata, "url", url)
 
-	asset := s.asset(typeWorkGroup, providerAthena, name, workGroupMRN(name), description, metadata)
+	asset := s.asset(typeWorkGroup, providerAthena, name, s.workGroupMRN(name), description, metadata)
 	if url != "" {
 		asset.ExternalLinks = append(asset.ExternalLinks, pluginsdk.AssetExternalLink{
 			Name: "Open in Athena",
@@ -567,7 +567,7 @@ func (s *Source) savedQueryAsset(q athenatypes.NamedQuery, listedWorkGroup strin
 		workGroup = listedWorkGroup
 	}
 
-	name := savedQueryName(workGroup, deref(q.Name))
+	name := deref(q.Name)
 	description := deref(q.Description)
 
 	metadata := map[string]any{}
@@ -576,7 +576,8 @@ func (s *Source) savedQueryAsset(q athenatypes.NamedQuery, listedWorkGroup strin
 	putString(metadata, "workgroup", workGroup)
 	putString(metadata, "description", description)
 
-	asset := s.asset(typeSavedQuery, providerAthena, name, savedQueryMRN(workGroup, deref(q.Name)), description, metadata)
+	asset := s.asset(typeSavedQuery, providerAthena, name, s.savedQueryMRN(workGroup, name), description, metadata)
+	asset.PreviousMRNs = []string{previousSavedQueryMRN(workGroup, name)}
 
 	if sql := strings.TrimSpace(deref(q.QueryString)); sql != "" {
 		language := "SQL"

@@ -167,7 +167,7 @@ func TestE2E_DiscoverFailsAgainstAnUnknownCatalog(t *testing.T) {
 func TestE2E_DiscoversTheDatabaseAsset(t *testing.T) {
 	result := discoverOnce(t)
 
-	db := findAsset(t, result, "mrn://database/starrocks/shop")
+	db := findAsset(t, result, "mrn://asset/database/starrocks/shop")
 
 	assert.Equal(t, "Database", db.Type)
 	assert.Equal(t, []string{"StarRocks"}, db.Providers)
@@ -183,10 +183,10 @@ func TestE2E_DiscoversTheDatabaseAsset(t *testing.T) {
 func TestE2E_DiscoversADuplicateKeyTable(t *testing.T) {
 	result := discoverOnce(t)
 
-	events := findAsset(t, result, "mrn://table/starrocks/shop.events")
+	events := findAsset(t, result, "mrn://asset/table/starrocks/shop.events")
 
 	assert.Equal(t, "Table", events.Type)
-	assert.Equal(t, "shop.events", *events.Name)
+	assert.Equal(t, "events", *events.Name)
 	assert.Equal(t, "table", events.Metadata["object_type"])
 	assert.Equal(t, "StarRocks", events.Metadata["engine"])
 	assert.Equal(t, "DUPLICATE", events.Metadata["key_model"])
@@ -198,7 +198,7 @@ func TestE2E_DiscoversADuplicateKeyTable(t *testing.T) {
 func TestE2E_DiscoversAPrimaryKeyTable(t *testing.T) {
 	result := discoverOnce(t)
 
-	customers := findAsset(t, result, "mrn://table/starrocks/shop.customers")
+	customers := findAsset(t, result, "mrn://asset/table/starrocks/shop.customers")
 
 	assert.Equal(t, "PRIMARY", customers.Metadata["key_model"])
 	assert.Equal(t, "customer_id", customers.Metadata["key_columns"])
@@ -208,7 +208,7 @@ func TestE2E_DiscoversAPrimaryKeyTable(t *testing.T) {
 func TestE2E_DiscoversAnAggregateKeyTable(t *testing.T) {
 	result := discoverOnce(t)
 
-	stats := findAsset(t, result, "mrn://table/starrocks/shop.daily_stats")
+	stats := findAsset(t, result, "mrn://asset/table/starrocks/shop.daily_stats")
 
 	assert.Equal(t, "AGGREGATE", stats.Metadata["key_model"])
 	assert.Equal(t, "stat_date, country", stats.Metadata["key_columns"])
@@ -217,7 +217,7 @@ func TestE2E_DiscoversAnAggregateKeyTable(t *testing.T) {
 func TestE2E_DiscoversAUniqueKeyTable(t *testing.T) {
 	result := discoverOnce(t)
 
-	orders := findAsset(t, result, "mrn://table/starrocks/shop.orders")
+	orders := findAsset(t, result, "mrn://asset/table/starrocks/shop.orders")
 
 	assert.Equal(t, "UNIQUE", orders.Metadata["key_model"])
 	assert.Equal(t, "order_id, order_date", orders.Metadata["key_columns"])
@@ -227,7 +227,7 @@ func TestE2E_DiscoversAUniqueKeyTable(t *testing.T) {
 func TestE2E_ReportsRangePartitioning(t *testing.T) {
 	result := discoverOnce(t)
 
-	events := findAsset(t, result, "mrn://table/starrocks/shop.events")
+	events := findAsset(t, result, "mrn://asset/table/starrocks/shop.events")
 
 	assert.Equal(t, "RANGE", events.Metadata["partition_type"])
 	assert.Equal(t, "event_date", events.Metadata["partition_columns"])
@@ -237,7 +237,7 @@ func TestE2E_ReportsRangePartitioning(t *testing.T) {
 func TestE2E_ReportsHashDistribution(t *testing.T) {
 	result := discoverOnce(t)
 
-	events := findAsset(t, result, "mrn://table/starrocks/shop.events")
+	events := findAsset(t, result, "mrn://asset/table/starrocks/shop.events")
 
 	assert.Equal(t, "HASH", events.Metadata["distribution"])
 	assert.Equal(t, "event_id", events.Metadata["distribution_columns"])
@@ -248,7 +248,7 @@ func TestE2E_ReportsHashDistribution(t *testing.T) {
 func TestE2E_KeepsTheTableDDL(t *testing.T) {
 	result := discoverOnce(t)
 
-	events := findAsset(t, result, "mrn://table/starrocks/shop.events")
+	events := findAsset(t, result, "mrn://asset/table/starrocks/shop.events")
 
 	ddl, ok := events.Metadata["ddl"].(string)
 	require.True(t, ok)
@@ -259,7 +259,7 @@ func TestE2E_KeepsTheTableDDL(t *testing.T) {
 func TestE2E_ReportsPrimaryKeyColumns(t *testing.T) {
 	result := discoverOnce(t)
 
-	columns := columnsOf(t, findAsset(t, result, "mrn://table/starrocks/shop.customers"))
+	columns := columnsOf(t, findAsset(t, result, "mrn://asset/table/starrocks/shop.customers"))
 
 	require.Contains(t, columns, "customer_id")
 	assert.Equal(t, true, columns["customer_id"]["is_primary_key"])
@@ -271,7 +271,7 @@ func TestE2E_ReportsPrimaryKeyColumns(t *testing.T) {
 func TestE2E_ReportsSortingKeyColumnsForADuplicateKeyTable(t *testing.T) {
 	result := discoverOnce(t)
 
-	columns := columnsOf(t, findAsset(t, result, "mrn://table/starrocks/shop.events"))
+	columns := columnsOf(t, findAsset(t, result, "mrn://asset/table/starrocks/shop.events"))
 
 	require.Contains(t, columns, "event_date")
 	assert.Equal(t, true, columns["event_date"]["is_sorting_key"])
@@ -281,7 +281,7 @@ func TestE2E_ReportsSortingKeyColumnsForADuplicateKeyTable(t *testing.T) {
 func TestE2E_ReportsAggregationTypes(t *testing.T) {
 	result := discoverOnce(t)
 
-	columns := columnsOf(t, findAsset(t, result, "mrn://table/starrocks/shop.daily_stats"))
+	columns := columnsOf(t, findAsset(t, result, "mrn://asset/table/starrocks/shop.daily_stats"))
 
 	assert.Equal(t, "SUM", columns["order_total"]["aggregation_type"])
 	assert.Equal(t, "MAX", columns["max_order"]["aggregation_type"])
@@ -292,7 +292,7 @@ func TestE2E_ReportsAggregationTypes(t *testing.T) {
 func TestE2E_KeepsComplexColumnTypesVerbatim(t *testing.T) {
 	result := discoverOnce(t)
 
-	columns := columnsOf(t, findAsset(t, result, "mrn://table/starrocks/shop.events"))
+	columns := columnsOf(t, findAsset(t, result, "mrn://asset/table/starrocks/shop.events"))
 
 	assert.Equal(t, "array<int>", columns["tag_ids"]["data_type"])
 	assert.Equal(t, "json", columns["payload"]["data_type"])
@@ -302,7 +302,7 @@ func TestE2E_KeepsComplexColumnTypesVerbatim(t *testing.T) {
 func TestE2E_DiscoversAViewWithItsQuery(t *testing.T) {
 	result := discoverOnce(t)
 
-	view := findAsset(t, result, "mrn://view/starrocks/shop.daily_sales")
+	view := findAsset(t, result, "mrn://asset/view/starrocks/shop.daily_sales")
 
 	assert.Equal(t, "View", view.Type)
 	assert.Equal(t, "view", view.Metadata["object_type"])
@@ -317,7 +317,7 @@ func TestE2E_DiscoversAViewWithItsQuery(t *testing.T) {
 func TestE2E_DiscoversAMaterializedView(t *testing.T) {
 	result := discoverOnce(t)
 
-	mv := findAsset(t, result, "mrn://view/starrocks/shop.mv_sales")
+	mv := findAsset(t, result, "mrn://asset/view/starrocks/shop.mv_sales")
 
 	assert.Equal(t, "View", mv.Type)
 	assert.Equal(t, "materialized_view", mv.Metadata["object_type"])
@@ -334,42 +334,40 @@ func TestE2E_DiscoversAMaterializedView(t *testing.T) {
 func TestE2E_DatabaseContainsItsTablesAndViews(t *testing.T) {
 	result := discoverOnce(t)
 
-	db := "mrn://database/starrocks/shop"
+	db := "mrn://asset/database/starrocks/shop"
 
-	assert.True(t, hasEdge(result, db, "mrn://table/starrocks/shop.events", "CONTAINS"))
-	assert.True(t, hasEdge(result, db, "mrn://table/starrocks/shop.orders", "CONTAINS"))
-	assert.True(t, hasEdge(result, db, "mrn://view/starrocks/shop.daily_sales", "CONTAINS"))
-	assert.True(t, hasEdge(result, db, "mrn://view/starrocks/shop.mv_sales", "CONTAINS"))
+	assert.True(t, hasEdge(result, db, "mrn://asset/table/starrocks/shop.events", "CONTAINS"))
+	assert.True(t, hasEdge(result, db, "mrn://asset/table/starrocks/shop.orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, db, "mrn://asset/view/starrocks/shop.daily_sales", "CONTAINS"))
+	assert.True(t, hasEdge(result, db, "mrn://asset/view/starrocks/shop.mv_sales", "CONTAINS"))
 }
 
 func TestE2E_ViewOfPointsFromTheBaseTablesToTheView(t *testing.T) {
 	result := discoverOnce(t)
 
-	view := "mrn://view/starrocks/shop.daily_sales"
+	view := "mrn://asset/view/starrocks/shop.daily_sales"
 
-	assert.True(t, hasEdge(result, "mrn://table/starrocks/shop.orders", view, "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/starrocks/shop.customers", view, "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/starrocks/shop.orders", view, "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/starrocks/shop.customers", view, "VIEW_OF"))
 }
 
 func TestE2E_MaterializedViewPointsBackAtItsBaseTable(t *testing.T) {
 	result := discoverOnce(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/starrocks/shop.orders", "mrn://view/starrocks/shop.mv_sales", "VIEW_OF"))
+		"mrn://asset/table/starrocks/shop.orders", "mrn://asset/view/starrocks/shop.mv_sales", "VIEW_OF"))
 }
 
 func TestE2E_EveryAssetMRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name); an
-	// asset that disagrees is stored under a different MRN than the one
-	// its own lineage edges point at.
+	// Every MRN has to parse as an asset MRN of the StarRocks provider.
 	result := discoverOnce(t)
 
 	require.NotEmpty(t, result.Assets)
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.Equal(t, "starrocks", parsed.Provider)
 	}
 }
 
@@ -396,7 +394,7 @@ func TestE2E_ReportsColumnCountStatistics(t *testing.T) {
 	var value float64
 	var found bool
 	for _, s := range result.Statistics {
-		if s.AssetMRN == "mrn://table/starrocks/shop.events" && s.MetricName == "asset.column_count" {
+		if s.AssetMRN == "mrn://asset/table/starrocks/shop.events" && s.MetricName == "asset.column_count" {
 			value, found = s.Value, true
 		}
 	}
@@ -413,7 +411,7 @@ func TestE2E_ReportsRowCountAndSizeForTables(t *testing.T) {
 
 	metrics := map[string]bool{}
 	for _, s := range result.Statistics {
-		if s.AssetMRN == "mrn://table/starrocks/shop.orders" {
+		if s.AssetMRN == "mrn://asset/table/starrocks/shop.orders" {
 			metrics[s.MetricName] = true
 		}
 	}
@@ -426,7 +424,7 @@ func TestE2E_APlainViewHasNoRowCount(t *testing.T) {
 	result := discoverOnce(t)
 
 	for _, s := range result.Statistics {
-		if s.AssetMRN == "mrn://view/starrocks/shop.daily_sales" {
+		if s.AssetMRN == "mrn://asset/view/starrocks/shop.daily_sales" {
 			assert.Equal(t, "asset.column_count", s.MetricName)
 		}
 	}
@@ -469,7 +467,7 @@ func TestE2E_IncludeColumnsFalseDropsSchema(t *testing.T) {
 	result, err := bin.Discover(t.Context(), config)
 	require.NoError(t, err)
 
-	events := findAsset(t, result, "mrn://table/starrocks/shop.events")
+	events := findAsset(t, result, "mrn://asset/table/starrocks/shop.events")
 	assert.NotContains(t, events.Schema, "columns")
 }
 

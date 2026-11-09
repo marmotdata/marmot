@@ -14,7 +14,6 @@ import (
 	icetable "github.com/apache/iceberg-go/table"
 	"github.com/apache/iceberg-go/view"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -83,7 +82,6 @@ func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetab
 func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 	tableName := catalog.TableNameFromIdent(ident)
-	fullName := strings.Join(ident, ".")
 	meta := tbl.Metadata()
 
 	// The namespace this table belongs to, written as its own key rather
@@ -137,18 +135,19 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 		metadata["property."+k] = v
 	}
 
-	mrnValue := mrn.New("Table", "Iceberg", fullName)
+	mrnValue, previous := s.assetMRN("Table", ident)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
-		Name:        &tableName,
-		MRN:         &mrnValue,
-		Type:        "Table",
-		Providers:   []string{"Iceberg"},
-		Description: description,
-		Schema:      schemaMap,
-		Metadata:    metadata,
-		Tags:        processedTags,
+		Name:         &tableName,
+		MRN:          &mrnValue,
+		PreviousMRNs: previous,
+		Type:         "Table",
+		Providers:    []string{"Iceberg"},
+		Description:  description,
+		Schema:       schemaMap,
+		Metadata:     metadata,
+		Tags:         processedTags,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),
@@ -161,7 +160,6 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 	viewName := catalog.TableNameFromIdent(ident)
-	fullName := strings.Join(ident, ".")
 	meta := v.Metadata()
 
 	metadata["namespace"] = namespacePath(ident)
@@ -194,12 +192,13 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) plugin
 		metadata["property."+k] = v
 	}
 
-	mrnValue := mrn.New("View", "Iceberg", fullName)
+	mrnValue, previous := s.assetMRN("View", ident)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
 		Name:          &viewName,
 		MRN:           &mrnValue,
+		PreviousMRNs:  previous,
 		Type:          "View",
 		Providers:     []string{"Iceberg"},
 		Description:   description,

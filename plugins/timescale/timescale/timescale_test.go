@@ -418,23 +418,23 @@ func TestReferencedObjects_ReturnsNothingForATableDefinition(t *testing.T) {
 
 func TestViewLineage_LinksAPlainViewToItsTables(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "customers", Kind: kindTable},
-		{Schema: "public", Name: "conditions", Kind: kindTable},
-		{Schema: "public", Name: "customer_readings", Kind: kindView,
+		{Database: "shop", Schema: "public", Name: "customers", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "customer_readings", Kind: kindView,
 			Definition: "SELECT c.name FROM customers c JOIN conditions co ON co.customer_id = c.id"},
 	}
 
-	edges := viewLineage(objects, nil)
+	edges := viewLineage(&Config{}, objects, nil)
 
 	require.Len(t, edges, 2)
 	assert.Contains(t, edges, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/conditions",
-		Target: "mrn://view/postgresql/customer_readings",
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
 		Type:   "VIEW_OF",
 	})
 	assert.Contains(t, edges, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/customers",
-		Target: "mrn://view/postgresql/customer_readings",
+		Source: "mrn://asset/table/postgresql/shop.public.customers",
+		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
 		Type:   "VIEW_OF",
 	})
 }
@@ -445,60 +445,60 @@ func TestViewLineage_LinksAPlainViewToItsTables(t *testing.T) {
 // source, which is why the edge is taken from there.
 func TestViewLineage_LinksAnAggregateToItsSourceHypertable(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "conditions", Kind: kindTable},
-		{Schema: "public", Name: "conditions_daily", Kind: kindView,
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "conditions_daily", Kind: kindView,
 			Definition: "SELECT bucket, device_id, avg_temp FROM _timescaledb_internal._materialized_hypertable_2"},
 	}
 	ts := &timescaleInfo{aggregates: map[string]*aggregate{
 		"public.conditions_daily": sampleAggregate(),
 	}}
 
-	edges := viewLineage(objects, ts)
+	edges := viewLineage(&Config{}, objects, ts)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/conditions",
-		Target: "mrn://view/postgresql/conditions_daily",
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/view/postgresql/shop.public.conditions_daily",
 		Type:   "VIEW_OF",
 	}, edges[0])
 }
 
 func TestViewLineage_NeverPointsAtTheMaterializationHypertable(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "conditions", Kind: kindTable},
-		{Schema: "public", Name: "conditions_daily", Kind: kindView,
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "conditions_daily", Kind: kindView,
 			Definition: "SELECT bucket FROM _timescaledb_internal._materialized_hypertable_2"},
 	}
 	ts := &timescaleInfo{aggregates: map[string]*aggregate{
 		"public.conditions_daily": sampleAggregate(),
 	}}
 
-	for _, edge := range viewLineage(objects, ts) {
+	for _, edge := range viewLineage(&Config{}, objects, ts) {
 		assert.NotContains(t, edge.Source, "materialized_hypertable")
 	}
 }
 
 func TestViewLineage_SkipsTables(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "customers", Kind: kindTable},
-		{Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "customers", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
 	}
 
-	assert.Empty(t, viewLineage(objects, nil))
+	assert.Empty(t, viewLineage(&Config{}, objects, nil))
 }
 
 func TestViewLineage_SkipsAViewOverAnUndiscoveredTable(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "report", Kind: kindView, Definition: "SELECT * FROM archived_orders"},
+		{Database: "shop", Schema: "public", Name: "report", Kind: kindView, Definition: "SELECT * FROM archived_orders"},
 	}
 
-	assert.Empty(t, viewLineage(objects, nil))
+	assert.Empty(t, viewLineage(&Config{}, objects, nil))
 }
 
 func TestViewLineage_EmitsEachEdgeOnce(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "conditions", Kind: kindTable},
-		{Schema: "public", Name: "conditions_daily", Kind: kindView, Definition: "SELECT * FROM conditions"},
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "conditions_daily", Kind: kindView, Definition: "SELECT * FROM conditions"},
 	}
 	ts := &timescaleInfo{aggregates: map[string]*aggregate{
 		"public.conditions_daily": {
@@ -510,62 +510,62 @@ func TestViewLineage_EmitsEachEdgeOnce(t *testing.T) {
 
 	// The catalog names conditions as the source and the definition mentions
 	// it too, which must not produce the edge twice.
-	assert.Len(t, viewLineage(objects, ts), 1)
+	assert.Len(t, viewLineage(&Config{}, objects, ts), 1)
 }
 
 func TestViewLineage_LinksAViewToAnotherView(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "conditions_daily", Kind: kindView, Definition: "SELECT * FROM conditions"},
-		{Schema: "public", Name: "conditions_weekly", Kind: kindView, Definition: "SELECT * FROM conditions_daily"},
+		{Database: "shop", Schema: "public", Name: "conditions_daily", Kind: kindView, Definition: "SELECT * FROM conditions"},
+		{Database: "shop", Schema: "public", Name: "conditions_weekly", Kind: kindView, Definition: "SELECT * FROM conditions_daily"},
 	}
 
-	edges := viewLineage(objects, nil)
+	edges := viewLineage(&Config{}, objects, nil)
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://view/postgresql/conditions_daily", edges[0].Source)
-	assert.Equal(t, "mrn://view/postgresql/conditions_weekly", edges[0].Target)
+	assert.Equal(t, "mrn://asset/view/postgresql/shop.public.conditions_daily", edges[0].Source)
+	assert.Equal(t, "mrn://asset/view/postgresql/shop.public.conditions_weekly", edges[0].Target)
 }
 
 func TestViewLineage_SkipsASelfReference(t *testing.T) {
 	objects := []object{
-		{Schema: "public", Name: "loop", Kind: kindView, Definition: "SELECT * FROM loop"},
+		{Database: "shop", Schema: "public", Name: "loop", Kind: kindView, Definition: "SELECT * FROM loop"},
 	}
 
-	assert.Empty(t, viewLineage(objects, nil))
+	assert.Empty(t, viewLineage(&Config{}, objects, nil))
 }
 
 // Statistics assembly. A hypertable's parent table holds no rows of its own.
 
 func TestCollectStatistics_UsesTheTimescaleRowCountForAHypertable(t *testing.T) {
-	objects := []object{{Schema: "public", Name: "conditions", Kind: kindTable, RowEstimate: 0, SizeBytes: 8192}}
+	objects := []object{{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable, RowEstimate: 0, SizeBytes: 8192}}
 	ts := &timescaleInfo{
 		hypertables: map[string]*hypertable{"public.conditions": sampleHypertable()},
 		sizes:       map[string]objectSize{"public.conditions": {Rows: ptrInt64(145), Bytes: ptrInt64(303104)}},
 	}
 
-	statistics := statisticsByName(buildStatistics(objects, ts, nil))
+	statistics := statisticsByName(buildStatistics(&Config{}, objects, ts, nil))
 
 	assert.Equal(t, float64(145), statistics["asset.row_count"])
 	assert.Equal(t, float64(303104), statistics["asset.size_bytes"])
 }
 
 func TestCollectStatistics_EmitsAChunkCountForAHypertable(t *testing.T) {
-	objects := []object{{Schema: "public", Name: "conditions", Kind: kindTable}}
+	objects := []object{{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable}}
 	ts := &timescaleInfo{
 		hypertables: map[string]*hypertable{"public.conditions": sampleHypertable()},
 		sizes:       map[string]objectSize{},
 	}
 
-	statistics := statisticsByName(buildStatistics(objects, ts, nil))
+	statistics := statisticsByName(buildStatistics(&Config{}, objects, ts, nil))
 
 	assert.Equal(t, float64(12), statistics["asset.chunk_count"])
 }
 
 func TestCollectStatistics_KeepsThePostgreSQLNumbersForAPlainTable(t *testing.T) {
-	objects := []object{{Schema: "public", Name: "customers", Kind: kindTable, RowEstimate: 3, SizeBytes: 16384}}
+	objects := []object{{Database: "shop", Schema: "public", Name: "customers", Kind: kindTable, RowEstimate: 3, SizeBytes: 16384}}
 	ts := &timescaleInfo{hypertables: map[string]*hypertable{}, sizes: map[string]objectSize{}}
 
-	statistics := statisticsByName(buildStatistics(objects, ts, nil))
+	statistics := statisticsByName(buildStatistics(&Config{}, objects, ts, nil))
 
 	assert.Equal(t, float64(3), statistics["asset.row_count"])
 	assert.Equal(t, float64(16384), statistics["asset.size_bytes"])
@@ -574,17 +574,17 @@ func TestCollectStatistics_KeepsThePostgreSQLNumbersForAPlainTable(t *testing.T)
 }
 
 func TestCollectStatistics_EmitsAColumnCount(t *testing.T) {
-	objects := []object{{Schema: "public", Name: "customers", Kind: kindTable}}
+	objects := []object{{Database: "shop", Schema: "public", Name: "customers", Kind: kindTable}}
 
-	statistics := statisticsByName(buildStatistics(objects, nil, map[string]int64{"public.customers": 4}))
+	statistics := statisticsByName(buildStatistics(&Config{}, objects, nil, map[string]int64{"public.customers": 4}))
 
 	assert.Equal(t, float64(4), statistics["asset.column_count"])
 }
 
 func TestCollectStatistics_WorksWithoutTheTimescaleCatalog(t *testing.T) {
-	objects := []object{{Schema: "public", Name: "customers", Kind: kindTable, RowEstimate: 3}}
+	objects := []object{{Database: "shop", Schema: "public", Name: "customers", Kind: kindTable, RowEstimate: 3}}
 
-	statistics := statisticsByName(buildStatistics(objects, nil, nil))
+	statistics := statisticsByName(buildStatistics(&Config{}, objects, nil, nil))
 
 	assert.Equal(t, float64(3), statistics["asset.row_count"])
 }

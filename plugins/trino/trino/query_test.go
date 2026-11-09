@@ -1,6 +1,7 @@
 package trino
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -116,4 +117,31 @@ func TestQueryConnsKeepOneConnectionPerConfig(t *testing.T) {
 
 	q.conns["b"].lastUsed = time.Now().Add(-connIdleTTL - time.Second)
 	assert.Nil(t, q.get("b"), "an idle connection is closed and forgotten")
+}
+
+// The query path must file a referenced table where discovery does, so grants written against catalog assets bind. The view lookup fails on the cancelled context and falls back to a table.
+func TestTableMRNMatchesDiscovery(t *testing.T) {
+	db, err := sql.Open("trino", "http://user@127.0.0.1:1")
+	require.NoError(t, err)
+	defer db.Close()
+
+	cfg := mappedConfig()
+	connectors := map[string]string{"pg": "postgresql", "lake": "hive", "mem": "memory"}
+	s := &Source{config: cfg}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	for _, tc := range []struct{ catalog, schema, table string }{
+		{"pg", "public", "products"},
+		{"lake", "sales", "orders"},
+		{"mem", "default", "scratch"},
+	} {
+		got := tableMRN(ctx, db, cfg, connectors, tc.catalog, tc.schema, tc.table)
+		want := s.createTableAsset(tc.catalog, tc.schema, tc.table, "BASE TABLE", connectors[tc.catalog])
+		assert.Equal(t, *want.MRN, got, tc.catalog)
+	}
+
+	assert.Equal(t, "mrn://asset/table/postgresql@prod-eu/shop.public.products", tableMRN(ctx, db, cfg, connectors, "pg", "public", "products"))
+	assert.Equal(t, "mrn://asset/table/trino/mem.default.scratch", tableMRN(ctx, db, cfg, connectors, "mem", "default", "scratch"))
 }

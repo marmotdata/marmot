@@ -7,7 +7,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -29,7 +28,7 @@ func (d *Discoverer) assetName(parts ...string) string {
 }
 
 func (d *Discoverer) assetMRN(assetType string, parts ...string) string {
-	return mrn.New(assetType, "Kubernetes", d.assetName(parts...))
+	return d.config.AssetMRN(assetType, "Kubernetes", d.assetName(parts...))
 }
 
 // newAsset builds an asset with the shared name, MRN, tag, and source
@@ -43,7 +42,7 @@ func (d *Discoverer) newAsset(assetType, name string, metadata map[string]interf
 		}
 	}
 
-	mrnValue := mrn.New(assetType, "Kubernetes", name)
+	mrnValue := d.config.AssetMRN(assetType, "Kubernetes", name)
 	tags := pluginsdk.InterpolateTags(d.config.Tags, metadata)
 
 	return pluginsdk.Asset{
@@ -63,7 +62,7 @@ func (d *Discoverer) newAsset(assetType, name string, metadata map[string]interf
 }
 
 func (d *Discoverer) clusterMRN() string {
-	return mrn.New("Cluster", "Kubernetes", d.config.ClusterName)
+	return d.config.AssetMRN("Cluster", "Kubernetes", d.config.ClusterName)
 }
 
 func (d *Discoverer) createClusterAsset() pluginsdk.Asset {

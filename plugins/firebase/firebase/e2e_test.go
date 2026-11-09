@@ -324,18 +324,18 @@ func TestE2E_EmitsContainsEdges(t *testing.T) {
 	result := discoverFromEmulator(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://database/firebase/firestore-(default)",
-		Target: "mrn://collection/firebase/firestore-(default)-orders",
+		Source: "mrn://asset/database/firebase/firestore-(default)",
+		Target: "mrn://asset/collection/firebase/firestore-(default)-orders",
 		Type:   "CONTAINS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://database/firebase/firestore-(default)",
-		Target: "mrn://collection/firebase/firestore-(default)-customers",
+		Source: "mrn://asset/database/firebase/firestore-(default)",
+		Target: "mrn://asset/collection/firebase/firestore-(default)-customers",
 		Type:   "CONTAINS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://collection/firebase/firestore-(default)-orders",
-		Target: "mrn://collection/firebase/firestore-(default)-orders-lines",
+		Source: "mrn://asset/collection/firebase/firestore-(default)-orders",
+		Target: "mrn://asset/collection/firebase/firestore-(default)-orders-lines",
 		Type:   "CONTAINS",
 	})
 }
@@ -351,9 +351,9 @@ func TestE2E_EmitsAColumnCountPerCollection(t *testing.T) {
 
 	// total, quantity, paid, placed_at, tags, address, customer, blob,
 	// location, note, cancelled_at.
-	assert.Equal(t, float64(11), byMRN["mrn://collection/firebase/firestore-(default)-orders"])
-	assert.Equal(t, float64(2), byMRN["mrn://collection/firebase/firestore-(default)-customers"])
-	assert.Equal(t, float64(3), byMRN["mrn://collection/firebase/firestore-(default)-orders-lines"])
+	assert.Equal(t, float64(11), byMRN["mrn://asset/collection/firebase/firestore-(default)-orders"])
+	assert.Equal(t, float64(2), byMRN["mrn://asset/collection/firebase/firestore-(default)-customers"])
+	assert.Equal(t, float64(3), byMRN["mrn://asset/collection/firebase/firestore-(default)-orders-lines"])
 }
 
 func TestE2E_StopsAtTheConfiguredDepth(t *testing.T) {

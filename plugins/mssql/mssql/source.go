@@ -6,6 +6,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +20,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "mssql",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Microsoft SQL Server",
 		Description:   "Discover databases, tables, views and routines from Microsoft SQL Server instances",
 		Icon:          "sql-server",
@@ -114,11 +116,17 @@ type discovery struct {
 	lineage    []pluginsdk.LineageEdge
 	statistics []pluginsdk.Statistic
 
-	// objectNames holds the qualified name of every table and view found so
-	// far, keyed by its lowercased form. Foreign key and view reference edges
-	// are only emitted when both ends are in here, because the server drops
-	// edges pointing at an MRN that does not exist.
-	objectNames map[string]string
+	// objects holds every table and view found so far, keyed by its lowercased qualified name. Foreign key and view reference edges are only emitted when both ends are in here, because the server drops edges pointing at an MRN that does not exist.
+	objects map[string]objectRef
+}
+
+// objectRef locates a discovered table or view and records its asset type, so an edge is built with the MRN the object actually has.
+type objectRef struct {
+	Database, Schema, Name, Type string
+}
+
+func (r objectRef) mrn(cfg *Config) string {
+	return assetMRN(cfg, r.Type, r.Database, r.Schema, r.Name)
 }
 
 // Discover discovers SQL Server databases, tables, views and routines.
@@ -161,7 +169,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		log.Warn().Msg("No databases matched the configuration")
 	}
 
-	result := &discovery{objectNames: make(map[string]string)}
+	result := &discovery{objects: make(map[string]objectRef)}
 
 	for _, database := range databases {
 		if err := s.discoverDatabase(ctx, database, server, result); err != nil {
@@ -176,10 +184,24 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("SQL Server discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     result.assets,
-		Lineage:    result.lineage,
-		Statistics: result.statistics,
+		Assets:       result.assets,
+		Lineage:      result.lineage,
+		Statistics:   result.statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{s.zoneBinding()},
 	}, nil
+}
+
+// zoneBinding tells Marmot which zone the connected server is.
+func (s *Source) zoneBinding() pluginsdk.ZoneBinding {
+	port := s.config.Port
+	if port == 0 {
+		port = 1433
+	}
+	return pluginsdk.ZoneBinding{
+		Provider: providerName,
+		Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(port))),
+		Zone:     s.config.Zone,
+	}
 }
 
 // selectDatabases narrows the instance's databases to the ones to discover.
@@ -301,7 +323,9 @@ func (s *Source) discoverDatabase(ctx context.Context, database databaseInfo, se
 			primaryKeys)
 
 		objectAssets = append(objectAssets, asset)
-		result.objectNames[strings.ToLower(*asset.Name)] = *asset.Name
+		result.objects[strings.ToLower(qualifiedName(database.Name, object.Schema, object.Name))] = objectRef{
+			Database: database.Name, Schema: object.Schema, Name: object.Name, Type: assetType,
+		}
 	}
 
 	var routineAssets []pluginsdk.Asset
@@ -333,11 +357,11 @@ func (s *Source) discoverDatabase(ctx context.Context, database databaseInfo, se
 	}
 
 	if s.config.DiscoverForeignKeys {
-		result.lineage = append(result.lineage, s.foreignKeyEdges(dbCtx, database.Name, excludedSchemas, result.objectNames)...)
+		result.lineage = append(result.lineage, s.foreignKeyEdges(dbCtx, database.Name, excludedSchemas, result.objects)...)
 	}
 
 	if s.config.IncludeViews {
-		result.lineage = append(result.lineage, viewOfEdges(database.Name, objectAssets, viewDefinitions, result.objectNames)...)
+		result.lineage = append(result.lineage, viewOfEdges(s.config, database.Name, objectAssets, viewDefinitions, result.objects)...)
 	}
 
 	if s.config.IncludeStatistics {
@@ -349,7 +373,7 @@ func (s *Source) discoverDatabase(ctx context.Context, database databaseInfo, se
 
 func (s *Source) databaseAsset(database databaseInfo, server serverInfo, schemaCount, tableCount, viewCount int) pluginsdk.Asset {
 	name := database.Name
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	metadata := map[string]any{
 		"host":         s.config.Host,
@@ -388,8 +412,8 @@ func (s *Source) databaseAsset(database databaseInfo, server serverInfo, schemaC
 }
 
 func (s *Source) objectAsset(database databaseInfo, object objectInfo, assetType, schemaComment, definition string, columns []columnInfo, primaryKeys map[string]bool) pluginsdk.Asset {
-	name := qualifiedName(database.Name, object.Schema, object.Name)
-	mrnValue := assetMRN(assetType, name)
+	name := object.Name
+	mrnValue := assetMRN(s.config, assetType, database.Name, object.Schema, object.Name)
 
 	metadata := map[string]any{
 		"host":        s.config.Host,
@@ -405,13 +429,14 @@ func (s *Source) objectAsset(database databaseInfo, object objectInfo, assetType
 	setIfNotEmpty(metadata, "schema_comment", schemaComment)
 
 	asset := pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{providerName},
-		Metadata:  metadata,
-		Schema:    make(map[string]string),
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         assetType,
+		PreviousMRNs: previousMRNs(mrnValue, previousMRN(assetType, database.Name, object.Schema, object.Name)),
+		Providers:    []string{providerName},
+		Metadata:     metadata,
+		Schema:       make(map[string]string),
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       providerName,
 			LastSyncAt: time.Now(),
@@ -434,7 +459,7 @@ func (s *Source) objectAsset(database databaseInfo, object objectInfo, assetType
 
 	if len(columns) > 0 {
 		if err := pluginsdk.SetColumns(&asset, buildColumns(object.Schema, object.Name, columns, primaryKeys)); err != nil {
-			log.Warn().Err(err).Str("object", name).Msg("Failed to set columns")
+			log.Warn().Err(err).Str("object", qualifiedName(database.Name, object.Schema, object.Name)).Msg("Failed to set columns")
 		}
 	}
 
@@ -442,8 +467,8 @@ func (s *Source) objectAsset(database databaseInfo, object objectInfo, assetType
 }
 
 func (s *Source) routineAsset(database databaseInfo, routine routineInfo) pluginsdk.Asset {
-	name := qualifiedName(database.Name, routine.Schema, routine.Name)
-	mrnValue := assetMRN("Function", name)
+	name := routine.Name
+	mrnValue := assetMRN(s.config, "Function", database.Name, routine.Schema, routine.Name)
 
 	metadata := map[string]any{
 		"host":        s.config.Host,
@@ -457,12 +482,13 @@ func (s *Source) routineAsset(database databaseInfo, routine routineInfo) plugin
 	}
 
 	asset := pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      "Function",
-		Providers: []string{providerName},
-		Metadata:  metadata,
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         "Function",
+		PreviousMRNs: previousMRNs(mrnValue, previousMRN("Function", database.Name, routine.Schema, routine.Name)),
+		Providers:    []string{providerName},
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       providerName,
 			LastSyncAt: time.Now(),
@@ -547,7 +573,7 @@ func buildColumns(schemaName, objectName string, columns []columnInfo, primaryKe
 // referencing table to the referenced one. Self references and references to
 // objects this run did not discover are dropped, the latter because the server
 // discards edges whose endpoint does not exist.
-func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, excludedSchemas map[string]bool, objectNames map[string]string) []pluginsdk.LineageEdge {
+func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, excludedSchemas map[string]bool, objects map[string]objectRef) []pluginsdk.LineageEdge {
 	keys, err := s.queryForeignKeys(ctx)
 	if err != nil {
 		log.Warn().Err(err).Str("database", databaseName).Msg("Failed to discover foreign key relationships")
@@ -562,14 +588,14 @@ func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, exclu
 			continue
 		}
 
-		source, sourceFound := objectNames[strings.ToLower(qualifiedName(databaseName, key.Schema, key.Table))]
-		target, targetFound := objectNames[strings.ToLower(qualifiedName(databaseName, key.TargetSchema, key.TargetTable))]
+		source, sourceFound := objects[strings.ToLower(qualifiedName(databaseName, key.Schema, key.Table))]
+		target, targetFound := objects[strings.ToLower(qualifiedName(databaseName, key.TargetSchema, key.TargetTable))]
 		if !sourceFound || !targetFound {
 			continue
 		}
 
-		sourceMRN := assetMRN("Table", source)
-		targetMRN := assetMRN("Table", target)
+		sourceMRN := source.mrn(s.config)
+		targetMRN := target.mrn(s.config)
 		if sourceMRN == targetMRN {
 			continue
 		}
@@ -583,8 +609,8 @@ func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, exclu
 		seen[edgeKey] = true
 
 		log.Debug().
-			Str("source", source).
-			Str("target", target).
+			Str("source", qualifiedName(source.Database, source.Schema, source.Name)).
+			Str("target", qualifiedName(target.Database, target.Schema, target.Name)).
 			Str("constraint", key.Name).
 			Str("on_delete", key.DeleteAction).
 			Str("on_update", key.UpdateAction).
@@ -603,7 +629,7 @@ func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, exclu
 // viewOfEdges links each view to the objects its definition reads, pointing
 // from the base object to the view. Only references that resolve to something
 // discovered in this run become edges.
-func viewOfEdges(databaseName string, objectAssets []pluginsdk.Asset, viewDefinitions map[string]string, objectNames map[string]string) []pluginsdk.LineageEdge {
+func viewOfEdges(cfg *Config, databaseName string, objectAssets []pluginsdk.Asset, viewDefinitions map[string]string, objects map[string]objectRef) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 	seen := make(map[string]bool)
 
@@ -620,17 +646,15 @@ func viewOfEdges(databaseName string, objectAssets []pluginsdk.Asset, viewDefini
 		}
 
 		for _, reference := range extractViewReferences(definition, databaseName, schemaName) {
-			base, found := objectNames[strings.ToLower(reference)]
+			base, found := objects[strings.ToLower(reference)]
 			if !found {
 				continue
 			}
-			if strings.EqualFold(base, *asset.Name) {
+			sourceMRN := base.mrn(cfg)
+			if sourceMRN == *asset.MRN {
 				continue
 			}
 
-			// The base object may be a table or another view, and only one of
-			// the two MRNs exists.
-			sourceMRN := assetMRN(baseAssetType(base, objectAssets), base)
 			edgeKey := sourceMRN + ":" + *asset.MRN
 			if seen[edgeKey] {
 				continue
@@ -638,8 +662,8 @@ func viewOfEdges(databaseName string, objectAssets []pluginsdk.Asset, viewDefini
 			seen[edgeKey] = true
 
 			log.Debug().
-				Str("base", base).
-				Str("view", *asset.Name).
+				Str("base", reference).
+				Str("view", qualifiedName(databaseName, schemaName, viewName)).
 				Msg("Found view reference")
 
 			edges = append(edges, pluginsdk.LineageEdge{
@@ -653,23 +677,14 @@ func viewOfEdges(databaseName string, objectAssets []pluginsdk.Asset, viewDefini
 	return edges
 }
 
-// baseAssetType reports whether a discovered object is a Table or a View, so
-// the edge is built with the MRN that object actually has.
-func baseAssetType(name string, objectAssets []pluginsdk.Asset) string {
-	for _, asset := range objectAssets {
-		if asset.Name != nil && strings.EqualFold(*asset.Name, name) {
-			return asset.Type
-		}
-	}
-	return "Table"
-}
-
 // tableStatistics emits row counts and sizes for tables, and a column count
 // for every object whose columns were read.
 func (s *Source) tableStatistics(ctx context.Context, databaseName string, objectAssets []pluginsdk.Asset, columnsByObject map[string][]columnInfo) []pluginsdk.Statistic {
 	byName := make(map[string]pluginsdk.Asset, len(objectAssets))
 	for _, asset := range objectAssets {
-		byName[strings.ToLower(*asset.Name)] = asset
+		schemaName, _ := asset.Metadata["schema"].(string)
+		objectName, _ := asset.Metadata["table_name"].(string)
+		byName[strings.ToLower(qualifiedName(databaseName, schemaName, objectName))] = asset
 	}
 
 	var statistics []pluginsdk.Statistic
@@ -826,4 +841,12 @@ func setIfNotEmpty(metadata map[string]any, key, value string) {
 	if value != "" {
 		metadata[key] = value
 	}
+}
+
+// previousMRNs lists the MRN earlier releases gave an asset, or nothing when it is unchanged.
+func previousMRNs(current, previous string) []string {
+	if previous == current {
+		return nil
+	}
+	return []string{previous}
 }

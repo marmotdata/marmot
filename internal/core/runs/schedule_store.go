@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"strings"
 	"time"
 
@@ -39,6 +40,8 @@ var (
 )
 
 type Schedule struct {
+	// MRN is mrn://pipeline/<name>, derived from the name.
+	MRN            string                 `json:"mrn,omitempty"`
 	ID             string                 `json:"id"`
 	Name           string                 `json:"name"`
 	PluginID       string                 `json:"plugin_id"`
@@ -1390,7 +1393,7 @@ func (r *SchedulePostgresRepository) LinkAssetsByMRN(ctx context.Context, schedu
 		INSERT INTO asset_schedules (asset_id, schedule_id)
 		SELECT a.id, $1::uuid
 		FROM assets a
-		WHERE a.mrn = ANY($2)
+		WHERE a.mrn IN (SELECT marmot_resolve_asset_mrn(m) FROM unnest($2::text[]) AS m)
 		ON CONFLICT (asset_id, schedule_id) DO UPDATE SET updated_at = NOW()`
 
 	_, err := r.db.Exec(ctx, query, scheduleID, assetMRNs)
@@ -1441,4 +1444,12 @@ func (r *SchedulePostgresRepository) GetScheduleForAsset(ctx context.Context, as
 	}
 
 	return schedule, nil
+}
+
+// MarshalJSON adds the pipeline's MRN, which follows its name, to every response that carries one.
+func (v Schedule) MarshalJSON() ([]byte, error) {
+	type plain Schedule
+	p := plain(v)
+	p.MRN = mrn.Pipeline(v.Name).String()
+	return json.Marshal(p)
 }

@@ -9,72 +9,65 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Oracle objects are addressed SCHEMA.OBJECT: the schema is what an Oracle
-// user calls the database, and the same table name in two schemas must stay
-// two assets. mrn.New lowercases the whole MRN; the asset Name keeps the
-// case Oracle stores, which is upper case unless the object was quoted.
+// Oracle objects are addressed SERVICE.SCHEMA.OBJECT: the schema is what an Oracle user calls the database, and the same table name in two schemas must stay two assets. MRNs are lowercased; the asset Name keeps the case Oracle stores, which is upper case unless the object was quoted.
 
-func TestTableMRN_IsSchemaQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/oracle/hr.employees", assetMRN("Table", objectName("HR", "EMPLOYEES")))
+func testConfig() *Config {
+	return &Config{Host: "localhost", Port: 1521, ServiceName: "FREEPDB1"}
 }
 
-func TestDatabaseMRN_IsTheSchemaName(t *testing.T) {
-	assert.Equal(t, "mrn://database/oracle/hr", assetMRN("Database", "HR"))
+func TestTableMRN_IsQualifiedByServiceAndSchema(t *testing.T) {
+	cfg := testConfig()
+
+	assert.Equal(t, "mrn://asset/table/oracle/freepdb1.hr.employees", assetMRN(cfg, "Table", cfg.serviceID(), "HR", "EMPLOYEES"))
+	assert.Equal(t, "mrn://asset/view/oracle/freepdb1.hr.emp_details", assetMRN(cfg, "View", cfg.serviceID(), "HR", "EMP_DETAILS"))
+	assert.Equal(t, "mrn://asset/function/oracle/freepdb1.hr.raise_salary", assetMRN(cfg, "Function", cfg.serviceID(), "HR", "RAISE_SALARY"))
 }
 
-func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/oracle/hr.emp_details", assetMRN("View", objectName("HR", "EMP_DETAILS")))
+func TestTableMRN_SameNameInTwoSchemasStaysTwoAssets(t *testing.T) {
+	cfg := testConfig()
+
+	assert.NotEqual(t,
+		assetMRN(cfg, "Table", cfg.serviceID(), "HR", "AUDIT_LOG"),
+		assetMRN(cfg, "Table", cfg.serviceID(), "SALES", "AUDIT_LOG"))
 }
 
-func TestFunctionMRN_IsSchemaQualified(t *testing.T) {
-	assert.Equal(t, "mrn://function/oracle/hr.raise_salary", assetMRN("Function", objectName("HR", "RAISE_SALARY")))
+func TestServiceID_FallsBackToTheSID(t *testing.T) {
+	assert.Equal(t, "ORCL", (&Config{SID: "ORCL"}).serviceID())
+	assert.Equal(t, "FREEPDB1", (&Config{SID: "ORCL", ServiceName: "FREEPDB1"}).serviceID())
 }
 
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI.
-	original := assetMRN("Table", objectName("HR", "EMPLOYEES"))
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := testConfig()
+	cfg.Zone = "prod-eu"
 
-	parsed, err := mrn.Parse(original)
+	got := assetMRN(cfg, "Table", cfg.serviceID(), "HR", "EMPLOYEES")
+	assert.Equal(t, "mrn://asset/table/oracle@prod-eu/freepdb1.hr.employees", got)
+
+	parsed, err := mrn.ParseMRN(got)
 	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestTableMRN_AgreesWithTheTrinoConnectorMap(t *testing.T) {
-	// plugins/trino names an Oracle table reached through its connector
-	// schema + "." + table under the Oracle provider. The two must agree or
-	// the same table shows up twice.
-	trinoName := func(_, schema, table string) string { return schema + "." + table }
-
-	assert.Equal(t, mrn.New("Table", "Oracle", trinoName("oracle", "HR", "EMPLOYEES")),
-		assetMRN("Table", objectName("HR", "EMPLOYEES")))
+	assert.Equal(t, "prod-eu", parsed.Zone)
 }
 
 func newTestDiscovery() *discovery {
 	return &discovery{
-		source:  &Source{config: &Config{Host: "localhost", Port: 1521, ServiceName: "FREEPDB1"}},
+		source:  &Source{config: testConfig()},
 		info:    serverInfo{Version: "Oracle Database 23ai", Container: "FREEPDB1", BlockSize: 8192},
 		objects: make(map[objectRef]string),
 		edges:   make(map[string]struct{}),
 	}
 }
 
-func TestDatabaseAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so the
-	// MRN must be exactly mrn.New over the asset's own fields.
+func TestDatabaseAsset_IsTheSchemaUnderTheService(t *testing.T) {
 	a := newTestDiscovery().databaseAsset(schemaRow{Name: "HR"}, 2, 1, 1)
 
 	require.NotNil(t, a.MRN)
 	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-	assert.Equal(t, "mrn://database/oracle/hr", *a.MRN)
+	assert.Equal(t, "mrn://asset/database/oracle/freepdb1.hr", *a.MRN)
 	assert.Equal(t, "HR", *a.Name, "the name people read is the schema's own name")
+	assert.Equal(t, []string{"mrn://asset/database/oracle/hr"}, a.PreviousMRNs)
 }
 
-func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
+func TestTableAsset_NameIsTheObjectsOwnName(t *testing.T) {
 	d := newTestDiscovery()
 	table := tableRow{Owner: "HR", Name: "EMPLOYEES", Tablespace: sql.NullString{String: "USERS", Valid: true}}
 
@@ -82,37 +75,25 @@ func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 
 	require.NotNil(t, a.MRN)
 	require.NotNil(t, a.Name)
-	assert.Equal(t, "HR.EMPLOYEES", *a.Name)
+	assert.Equal(t, "EMPLOYEES", *a.Name)
 	assert.Equal(t, []string{"Oracle"}, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-	assert.Equal(t, "mrn://table/oracle/hr.employees", *a.MRN)
+	assert.Equal(t, "mrn://asset/table/oracle/freepdb1.hr.employees", *a.MRN)
+	assert.Equal(t, []string{"mrn://asset/table/oracle/hr.employees"}, a.PreviousMRNs)
 }
 
-func TestFunctionAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
+func TestFunctionAsset_NameIsTheRoutinesOwnName(t *testing.T) {
 	a := newTestDiscovery().procedureAsset(procedureRow{Owner: "HR", Name: "RAISE_SALARY", Type: "PROCEDURE", Status: "VALID"})
 
 	require.NotNil(t, a.MRN)
-	require.NotNil(t, a.Name)
 	assert.Equal(t, "Function", a.Type)
-	assert.Equal(t, "HR.RAISE_SALARY", *a.Name)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-}
-
-func TestDatabaseAsset_IsNotAPrefixOfTheTablesItHolds(t *testing.T) {
-	// The container's MRN is not a prefix of its contents: the Contents tree
-	// is built from the CONTAINS edges Discover emits, not by matching MRN
-	// prefixes.
-	db := newTestDiscovery().databaseAsset(schemaRow{Name: "HR"}, 1, 0, 0)
-	table := assetMRN("Table", objectName("HR", "EMPLOYEES"))
-
-	assert.Equal(t, "mrn://database/oracle/hr", *db.MRN)
-	assert.Equal(t, "mrn://table/oracle/hr.employees", table)
-	assert.False(t, len(table) > len(*db.MRN) && table[:len(*db.MRN)] == *db.MRN)
+	assert.Equal(t, "RAISE_SALARY", *a.Name)
+	assert.Equal(t, "mrn://asset/function/oracle/freepdb1.hr.raise_salary", *a.MRN)
+	assert.Equal(t, []string{"mrn://asset/function/oracle/hr.raise_salary"}, a.PreviousMRNs)
 }
 
 func TestQuotedObjectName_KeepsItsCaseInTheNameButNotTheMRN(t *testing.T) {
-	name := objectName("HR", "MixedCase")
+	cfg := testConfig()
 
-	assert.Equal(t, "HR.MixedCase", name)
-	assert.Equal(t, "mrn://table/oracle/hr.mixedcase", assetMRN("Table", name))
+	assert.Equal(t, "HR.MixedCase", objectName("HR", "MixedCase"))
+	assert.Equal(t, "mrn://asset/table/oracle/freepdb1.hr.mixedcase", assetMRN(cfg, "Table", cfg.serviceID(), "HR", "MixedCase"))
 }

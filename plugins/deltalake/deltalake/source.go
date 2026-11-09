@@ -16,7 +16,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "deltalake",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Delta Lake",
 		Description:   "Discover tables from Delta Lake transaction logs on local filesystems",
 		Icon:          "deltalake",

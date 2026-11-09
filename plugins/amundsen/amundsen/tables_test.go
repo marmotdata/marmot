@@ -14,7 +14,7 @@ func TestDiscoverTables_ProjectsPostgresOntoThePostgreSQLPlugin(t *testing.T) {
 
 	asset := assetNamed(t, c, "Table", "orders")
 	assert.Equal(t, []string{"PostgreSQL"}, asset.Providers)
-	assert.Equal(t, "mrn://table/postgresql/orders", *asset.MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql/prod.public.orders", *asset.MRN)
 }
 
 func TestDiscoverTables_ProjectsHiveOntoASchemaQualifiedName(t *testing.T) {
@@ -22,7 +22,7 @@ func TestDiscoverTables_ProjectsHiveOntoASchemaQualifiedName(t *testing.T) {
 
 	asset := assetNamed(t, c, "Table", "sales.orders")
 	assert.Equal(t, []string{"Hive"}, asset.Providers)
-	assert.Equal(t, "mrn://table/hive/sales.orders", *asset.MRN)
+	assert.Equal(t, "mrn://asset/table/hive/sales.orders", *asset.MRN)
 }
 
 func TestDiscoverTables_TakesTheDescriptionFromTheDescriptionNode(t *testing.T) {
@@ -118,7 +118,7 @@ func TestDiscoverTables_AViewBadgeAlsoMakesItAView(t *testing.T) {
 
 	c := discover(t, testConfig(), f)
 
-	assert.Equal(t, "mrn://view/hive/sales.orders", *assetNamed(t, c, "View", "sales.orders").MRN)
+	assert.Equal(t, "mrn://asset/view/hive/sales.orders", *assetNamed(t, c, "View", "sales.orders").MRN)
 }
 
 func TestDiscoverTables_MissingIsViewMeansATable(t *testing.T) {
@@ -291,10 +291,7 @@ func TestDiscoverTables_RecordsAmundsenAsTheSource(t *testing.T) {
 	assert.Equal(t, "Amundsen", sources[0].Name)
 }
 
-func TestDiscoverTables_TwoTablesProjectingOntoOneMRNBecomeOneAsset(t *testing.T) {
-	// A Postgres table's Marmot name is its bare name, so public.orders
-	// and staging.orders collide. Matching the native plugin matters
-	// more than telling them apart, so the first one wins.
+func TestDiscoverTables_SameTableNameInTwoSchemasIsTwoAssets(t *testing.T) {
 	staging := ordersRow()
 	staging["schema"] = "staging"
 	staging["key"] = "postgres://prod.staging/orders"
@@ -304,8 +301,28 @@ func TestDiscoverTables_TwoTablesProjectingOntoOneMRNBecomeOneAsset(t *testing.T
 
 	c := discover(t, testConfig(), f)
 
+	require.Len(t, c.assets, 2)
+	assert.NotEqual(t, *c.assets[0].MRN, *c.assets[1].MRN)
+}
+
+func TestDiscoverTables_TwoTablesProjectingOntoOneMRNBecomeOneAsset(t *testing.T) {
+	// MySQL names a table database.table and has no use for Amundsen's cluster, so the same table under two clusters collides. The first one wins.
+	gold := ordersRow()
+	gold["database"] = "mysql"
+	gold["cluster"] = "gold"
+	gold["key"] = "mysql://gold.public/orders"
+	silver := ordersRow()
+	silver["database"] = "mysql"
+	silver["cluster"] = "silver"
+	silver["key"] = "mysql://silver.public/orders"
+
+	f := newFakeReader()
+	f.rows[tableQuery] = []map[string]any{gold, silver}
+
+	c := discover(t, testConfig(), f)
+
 	assert.Len(t, c.assets, 1)
-	assert.Equal(t, "public", provenanceOf(t, c.assets[0])["schema"])
+	assert.Equal(t, "mrn://asset/table/mysql/public.orders", *c.assets[0].MRN)
 }
 
 func TestDiscoverTables_ATableWithNoNameIsSkipped(t *testing.T) {
@@ -335,7 +352,7 @@ func TestDiscoverTables_AFailedQueryIsFatal(t *testing.T) {
 func TestDiscoverTableLineage_UpstreamFeedsDownstream(t *testing.T) {
 	c := discover(t, testConfig(), seededGraph())
 
-	assert.True(t, hasEdge(c, "mrn://table/postgresql/customers", "mrn://table/postgresql/orders", "FEEDS"))
+	assert.True(t, hasEdge(c, "mrn://asset/table/postgresql/prod.public.customers", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS"))
 }
 
 func TestDiscoverTableLineage_IsRecordedOnlyOnce(t *testing.T) {
@@ -351,7 +368,7 @@ func TestDiscoverTableLineage_IsRecordedOnlyOnce(t *testing.T) {
 
 	edges := 0
 	for _, edge := range c.lineage {
-		if edge.Source == "mrn://table/postgresql/customers" {
+		if edge.Source == "mrn://asset/table/postgresql/prod.public.customers" {
 			edges++
 		}
 	}
@@ -369,7 +386,7 @@ func TestDiscoverTableLineage_ResolvesATableOutsideTheRunFromItsKey(t *testing.T
 
 	c := discover(t, testConfig(), f)
 
-	assert.True(t, hasEdge(c, "mrn://table/snowflake/analytics.public.raw_orders", "mrn://table/postgresql/orders", "FEEDS"))
+	assert.True(t, hasEdge(c, "mrn://asset/table/snowflake/analytics.public.raw_orders", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS"))
 }
 
 func TestDiscoverTableLineage_SkipsAnUnreadableKey(t *testing.T) {
@@ -380,7 +397,7 @@ func TestDiscoverTableLineage_SkipsAnUnreadableKey(t *testing.T) {
 
 	c := discover(t, testConfig(), f)
 
-	assert.False(t, hasEdge(c, "", "mrn://table/postgresql/orders", "FEEDS"))
+	assert.False(t, hasEdge(c, "", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS"))
 	for _, edge := range c.lineage {
 		assert.NotEmpty(t, edge.Source)
 	}

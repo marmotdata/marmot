@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/pulsar"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *pulsar.ChannelBinding) pluginsdk.Asset {
@@ -22,7 +21,7 @@ func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, 
 		description = fmt.Sprintf("Pulsar topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "Pulsar", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "Pulsar", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

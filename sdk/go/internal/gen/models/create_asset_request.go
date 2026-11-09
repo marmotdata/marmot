@@ -31,6 +31,9 @@ type CreateAssetRequest struct {
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
+	// MRN sets the asset's identity explicitly, for example mrn://asset/table/postgresql@prod-eu/analytics.public.orders. Without it the MRN is built from type, the first provider, zone and name.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	// Required: true
 	Name *string `json:"name"`
@@ -60,6 +63,9 @@ type CreateAssetRequest struct {
 
 	// UserDescription is the people-written description, kept apart from the source's own.
 	UserDescription string `json:"user_description,omitempty"`
+
+	// Zone tells apart two systems of the same provider when the MRN is built from the name; ignored when MRN is set.
+	Zone string `json:"zone,omitempty"`
 }
 
 // Validate validates this create asset request

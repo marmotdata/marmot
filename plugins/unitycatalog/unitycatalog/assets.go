@@ -30,7 +30,7 @@ func (d *discovery) catalogAsset(catalog catalogInfo, schemaCount, tableCount in
 	setTime(metadata, "created_at", catalog.CreatedAt)
 	setTime(metadata, "updated_at", catalog.UpdatedAt)
 
-	return d.newAsset("Catalog", catalog.Name, catalog.Comment, metadata)
+	return d.newAsset("Catalog", []string{catalog.Name}, catalog.Comment, metadata)
 }
 
 func (d *discovery) tableAsset(table tableInfo) pluginsdk.Asset {
@@ -69,7 +69,7 @@ func (d *discovery) tableAsset(table tableInfo) pluginsdk.Asset {
 		metadata["foreign_keys"] = foreignKeys
 	}
 
-	asset := d.newAsset(assetType, name, table.Comment, metadata)
+	asset := d.newAsset(assetType, []string{table.CatalogName, table.SchemaName, table.Name}, table.Comment, metadata)
 
 	if assetType == "View" && table.ViewDefinition != "" {
 		query := table.ViewDefinition
@@ -88,8 +88,6 @@ func (d *discovery) tableAsset(table tableInfo) pluginsdk.Asset {
 }
 
 func (d *discovery) volumeAsset(volume volumeInfo) pluginsdk.Asset {
-	name := fullName(volume.CatalogName, volume.SchemaName, volume.Name)
-
 	metadata := map[string]any{
 		"catalog":     volume.CatalogName,
 		"schema":      volume.SchemaName,
@@ -103,12 +101,10 @@ func (d *discovery) volumeAsset(volume volumeInfo) pluginsdk.Asset {
 	setTime(metadata, "created_at", volume.CreatedAt)
 	setTime(metadata, "updated_at", volume.UpdatedAt)
 
-	return d.newAsset("Volume", name, volume.Comment, metadata)
+	return d.newAsset("Volume", []string{volume.CatalogName, volume.SchemaName, volume.Name}, volume.Comment, metadata)
 }
 
 func (d *discovery) functionAsset(function functionInfo) pluginsdk.Asset {
-	name := fullName(function.CatalogName, function.SchemaName, function.Name)
-
 	metadata := map[string]any{
 		"catalog":       function.CatalogName,
 		"schema":        function.SchemaName,
@@ -132,7 +128,7 @@ func (d *discovery) functionAsset(function functionInfo) pluginsdk.Asset {
 	setTime(metadata, "created_at", function.CreatedAt)
 	setTime(metadata, "updated_at", function.UpdatedAt)
 
-	asset := d.newAsset("Function", name, function.Comment, metadata)
+	asset := d.newAsset("Function", []string{function.CatalogName, function.SchemaName, function.Name}, function.Comment, metadata)
 
 	if function.RoutineDefinition != "" {
 		query := function.RoutineDefinition
@@ -145,8 +141,6 @@ func (d *discovery) functionAsset(function functionInfo) pluginsdk.Asset {
 }
 
 func (d *discovery) modelAsset(model registeredModelInfo, versions []modelVersionInfo) pluginsdk.Asset {
-	name := fullName(model.CatalogName, model.SchemaName, model.Name)
-
 	metadata := map[string]any{
 		"catalog":       model.CatalogName,
 		"schema":        model.SchemaName,
@@ -173,12 +167,14 @@ func (d *discovery) modelAsset(model registeredModelInfo, versions []modelVersio
 		metadata["versions"] = statuses
 	}
 
-	return d.newAsset("Model", name, model.Comment, metadata)
+	return d.newAsset("Model", []string{model.CatalogName, model.SchemaName, model.Name}, model.Comment, metadata)
 }
 
 // newAsset fills in the fields every asset shares.
-func (d *discovery) newAsset(assetType, name, comment string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+// The path is the object's full hierarchy and its last level is the asset's own name.
+func (d *discovery) newAsset(assetType string, path []string, comment string, metadata map[string]any) pluginsdk.Asset {
+	mrnValue := d.assetMRN(assetType, path...)
+	name := path[len(path)-1]
 
 	var description *string
 	if comment != "" {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -111,7 +112,8 @@ func discoverE2E(t *testing.T) *pluginsdk.DiscoveryResult {
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i := range result.Assets {
 		a := &result.Assets[i]
-		if a.Type == assetType && a.Name != nil && *a.Name == name {
+		// A table's name is its own; the dotted path the tests spell is the end of its MRN.
+		if a.Type == assetType && a.MRN != nil && strings.HasSuffix(*a.MRN, "/"+name) {
 			return a
 		}
 	}
@@ -170,7 +172,7 @@ func TestE2E_DiscoverCatalogs(t *testing.T) {
 
 	memory := findAsset(result, "Catalog", "memory")
 	require.NotNil(t, memory)
-	assert.Equal(t, "mrn://catalog/presto/memory", *memory.MRN)
+	assert.Equal(t, "mrn://asset/catalog/presto/memory", *memory.MRN)
 	assert.Equal(t, []string{"Presto"}, memory.Providers)
 	assert.Equal(t, "memory", memory.Metadata["connector_name"])
 	assert.NotEmpty(t, memory.Metadata["presto_version"])
@@ -195,7 +197,7 @@ func TestE2E_DiscoverTablesWithColumns(t *testing.T) {
 
 	orders := findAsset(result, "Table", "memory.shop.orders")
 	require.NotNil(t, orders)
-	assert.Equal(t, "mrn://table/presto/memory.shop.orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", *orders.MRN)
 	assert.Equal(t, []string{"Presto"}, orders.Providers)
 	assert.Equal(t, "memory", orders.Metadata["catalog"])
 	assert.Equal(t, "shop", orders.Metadata["schema"])
@@ -240,43 +242,43 @@ func TestE2E_ViewCarriesItsDefinitionAndLineage(t *testing.T) {
 
 	view := findAsset(result, "View", "memory.shop.big_orders")
 	require.NotNil(t, view)
-	assert.Equal(t, "mrn://view/presto/memory.shop.big_orders", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.big_orders", *view.MRN)
 	assert.Equal(t, "VIEW", view.Metadata["table_type"])
 	require.NotNil(t, view.Query)
 	assert.Contains(t, *view.Query, "memory.shop.orders")
 	require.NotNil(t, view.QueryLanguage)
 	assert.Equal(t, "SQL", *view.QueryLanguage)
 
-	assert.True(t, findEdge(result, "VIEW_OF", "mrn://table/presto/memory.shop.orders", "mrn://view/presto/memory.shop.big_orders"),
+	assert.True(t, findEdge(result, "VIEW_OF", "mrn://asset/table/presto/memory.shop.orders", "mrn://asset/view/presto/memory.shop.big_orders"),
 		"expected orders -> big_orders VIEW_OF edge")
 }
 
 func TestE2E_CatalogContainsItsTables(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, findEdge(result, "CONTAINS", "mrn://catalog/presto/memory", "mrn://table/presto/memory.shop.orders"))
-	assert.True(t, findEdge(result, "CONTAINS", "mrn://catalog/presto/memory", "mrn://view/presto/memory.shop.big_orders"))
-	assert.True(t, findEdge(result, "CONTAINS", "mrn://catalog/presto/tpch", "mrn://table/presto/tpch.tiny.nation"))
+	assert.True(t, findEdge(result, "CONTAINS", "mrn://asset/catalog/presto/memory", "mrn://asset/table/presto/memory.shop.orders"))
+	assert.True(t, findEdge(result, "CONTAINS", "mrn://asset/catalog/presto/memory", "mrn://asset/view/presto/memory.shop.big_orders"))
+	assert.True(t, findEdge(result, "CONTAINS", "mrn://asset/catalog/presto/tpch", "mrn://asset/table/presto/tpch.tiny.nation"))
 }
 
 func TestE2E_Statistics(t *testing.T) {
 	result := discoverE2E(t)
 
-	columnCount, ok := findStatistic(result, "mrn://table/presto/memory.shop.orders", "asset.column_count")
+	columnCount, ok := findStatistic(result, "mrn://asset/table/presto/memory.shop.orders", "asset.column_count")
 	require.True(t, ok)
 	assert.Equal(t, 9.0, columnCount)
 
-	viewColumnCount, ok := findStatistic(result, "mrn://view/presto/memory.shop.big_orders", "asset.column_count")
+	viewColumnCount, ok := findStatistic(result, "mrn://asset/view/presto/memory.shop.big_orders", "asset.column_count")
 	require.True(t, ok)
 	assert.Equal(t, 9.0, viewColumnCount)
 
 	// SHOW STATS knows tpch row counts; the memory connector reports
 	// none, so memory tables carry no row_count rather than zero.
-	rowCount, ok := findStatistic(result, "mrn://table/presto/tpch.tiny.nation", "asset.row_count")
+	rowCount, ok := findStatistic(result, "mrn://asset/table/presto/tpch.tiny.nation", "asset.row_count")
 	require.True(t, ok, "expected a row count for tpch.tiny.nation")
 	assert.Equal(t, 25.0, rowCount)
 
-	_, ok = findStatistic(result, "mrn://table/presto/memory.shop.orders", "asset.row_count")
+	_, ok = findStatistic(result, "mrn://asset/table/presto/memory.shop.orders", "asset.row_count")
 	assert.False(t, ok)
 }
 

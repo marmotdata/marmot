@@ -64,6 +64,7 @@ export interface ConnectionTestResponse {
 
 export interface Pipeline {
 	id: string;
+	mrn: string;
 	name: string;
 	plugin_id: string;
 	config: ConfigObject;

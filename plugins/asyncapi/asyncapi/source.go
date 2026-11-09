@@ -30,7 +30,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/spec"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/filesource"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"
 )
@@ -39,7 +38,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "asyncapi",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		Federates:     true,
 		Name:          "AsyncAPI",
 		Description:   "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
 		Icon:          "asyncapi",
@@ -215,7 +215,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 				}
 
 				edgeType := s.determineEdgeType(op.Action)
-				channelAssetMRNs := s.getChannelAssetMRNs(channelName, channel)
+				channelAssetMRNs := s.getChannelAssetMRNs(doc, channelName, channel)
 
 				for _, targetMRN := range channelAssetMRNs {
 					if edgeType == "PRODUCES" {
@@ -260,7 +260,7 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) pluginsdk.Asset {
 		description = fmt.Sprintf("AsyncAPI service: %s", serviceName)
 	}
 
-	mrnValue := mrn.New("Service", "AsyncAPI", serviceName)
+	mrnValue := s.config.AssetMRN("Service", "AsyncAPI", serviceName)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -513,7 +513,7 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 		description = fmt.Sprintf("Channel: %s", channelName)
 	}
 
-	mrnValue := mrn.New("Channel", "AsyncAPI", name)
+	mrnValue := s.channelMRN(doc, name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -596,7 +596,7 @@ func (s *Source) attachMessageSchemas(doc *asyncapi3.Document, channel *asyncapi
 	}
 }
 
-func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Channel) []string {
+func (s *Source) getChannelAssetMRNs(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel) []string {
 	var mrns []string
 
 	if len(channel.Bindings) == 0 {
@@ -604,7 +604,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Channel", "AsyncAPI", name))
+		mrns = append(mrns, s.channelMRN(doc, name))
 		return mrns
 	}
 
@@ -614,17 +614,17 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil && binding.Topic != "" {
 			name = binding.Topic
 		}
-		mrns = append(mrns, mrn.New("Topic", "Kafka", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "Kafka", name))
 	}
 
 	if channel.HasBinding("amqp") {
 		binding, _ := asyncapi.ParseBindings[amqp.ChannelBinding](channel.Bindings, "amqp")
 		if binding != nil {
 			if binding.Exchange != nil && binding.Exchange.Name != "" {
-				mrns = append(mrns, mrn.New("Exchange", "AMQP", binding.Exchange.Name))
+				mrns = append(mrns, s.brokerMRN(doc, channel, "Exchange", "AMQP", binding.Exchange.Name))
 			}
 			if binding.Queue != nil && binding.Queue.Name != "" {
-				mrns = append(mrns, mrn.New("Queue", "AMQP", binding.Queue.Name))
+				mrns = append(mrns, s.brokerMRN(doc, channel, "Queue", "AMQP", binding.Queue.Name))
 			}
 		}
 	}
@@ -635,7 +635,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil && binding.Name != "" {
 			name = binding.Name
 		}
-		mrns = append(mrns, mrn.New("Topic", "SNS", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "SNS", name))
 	}
 
 	if channel.HasBinding("sqs") {
@@ -644,7 +644,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil && binding.Queue != nil && binding.Queue.Name != "" {
 			name = binding.Queue.Name
 		}
-		mrns = append(mrns, mrn.New("Queue", "SQS", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Queue", "SQS", name))
 	}
 
 	if channel.HasBinding("googlepubsub") {
@@ -653,7 +653,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil && binding.Topic != "" {
 			name = binding.Topic
 		}
-		mrns = append(mrns, mrn.New("Topic", "GooglePubSub", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "GooglePubSub", name))
 	}
 
 	if channel.HasBinding("mqtt") {
@@ -661,7 +661,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Topic", "MQTT", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "MQTT", name))
 	}
 
 	if channel.HasBinding("nats") {
@@ -669,7 +669,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Subject", "NATS", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Subject", "NATS", name))
 	}
 
 	if channel.HasBinding("pulsar") {
@@ -677,7 +677,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Topic", "Pulsar", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "Pulsar", name))
 	}
 
 	if channel.HasBinding("solace") {
@@ -686,7 +686,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil {
 			for _, dest := range binding.Destinations {
 				if dest.Queue != nil && dest.Queue.Name != "" {
-					mrns = append(mrns, mrn.New("Queue", "Solace", dest.Queue.Name))
+					mrns = append(mrns, s.brokerMRN(doc, channel, "Queue", "Solace", dest.Queue.Name))
 				}
 				// Topic destinations use channel address as identifier
 				if dest.DestinationType == "topic" && dest.Topic != nil {
@@ -694,7 +694,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 					if channel.Address != "" {
 						name = channel.Address
 					}
-					mrns = append(mrns, mrn.New("Topic", "Solace", name))
+					mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "Solace", name))
 				}
 			}
 		}
@@ -708,7 +708,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 			if channel.Address != "" {
 				name = channel.Address
 			}
-			mrns = append(mrns, mrn.New("Topic", "Solace", name))
+			mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "Solace", name))
 		}
 	}
 
@@ -717,14 +717,14 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil {
 			before := len(mrns)
 			if binding.Queue != nil && binding.Queue.ObjectName != "" {
-				mrns = append(mrns, mrn.New("Queue", "IBMMQ", binding.Queue.ObjectName))
+				mrns = append(mrns, s.brokerMRN(doc, channel, "Queue", "IBMMQ", binding.Queue.ObjectName))
 			}
 			if binding.Topic != nil && (binding.Topic.String != "" || binding.Topic.ObjectName != "") {
 				name := binding.Topic.String
 				if name == "" {
 					name = binding.Topic.ObjectName
 				}
-				mrns = append(mrns, mrn.New("Topic", "IBMMQ", name))
+				mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "IBMMQ", name))
 			}
 			// createIBMMQAssets falls back on "produced nothing", not on
 			// "both bindings absent": a Queue with an empty ObjectName also
@@ -735,9 +735,9 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 					name = channel.Address
 				}
 				if binding.DestinationType == "topic" {
-					mrns = append(mrns, mrn.New("Topic", "IBMMQ", name))
+					mrns = append(mrns, s.brokerMRN(doc, channel, "Topic", "IBMMQ", name))
 				} else {
-					mrns = append(mrns, mrn.New("Queue", "IBMMQ", name))
+					mrns = append(mrns, s.brokerMRN(doc, channel, "Queue", "IBMMQ", name))
 				}
 			}
 		}
@@ -755,7 +755,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if binding != nil && binding.DestinationType == "topic" {
 			assetType = "Topic"
 		}
-		mrns = append(mrns, mrn.New(assetType, "JMS", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, assetType, "JMS", name))
 	}
 
 	if channel.HasBinding("ws") {
@@ -763,7 +763,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Channel", "WebSocket", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Channel", "WebSocket", name))
 	}
 
 	if channel.HasBinding("anypointmq") {
@@ -782,7 +782,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 				assetType = "FIFOQueue"
 			}
 		}
-		mrns = append(mrns, mrn.New(assetType, "AnypointMQ", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, assetType, "AnypointMQ", name))
 	}
 
 	if channel.HasBinding("http") {
@@ -790,7 +790,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 		if channel.Address != "" {
 			name = channel.Address
 		}
-		mrns = append(mrns, mrn.New("Endpoint", "HTTP", name))
+		mrns = append(mrns, s.brokerMRN(doc, channel, "Endpoint", "HTTP", name))
 	}
 
 	return mrns

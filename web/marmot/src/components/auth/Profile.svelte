@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
 	import { locales } from '$lib/paraglide/runtime';
@@ -38,6 +39,7 @@
 	}
 
 	interface User {
+		mrn?: string;
 		name: string;
 		username?: string;
 		job_title?: string;
@@ -256,6 +258,9 @@
 					{/if}
 					{#if idpName}
 						<mm-description term={m.account_signs_in_with()}>{idpName}</mm-description>
+					{/if}
+					{#if user?.mrn}
+						<mm-description term={m.mrn_label()} mono><MrnValue value={user.mrn} /></mm-description>
 					{/if}
 				</mm-description-list>
 				{#if permissions.length}

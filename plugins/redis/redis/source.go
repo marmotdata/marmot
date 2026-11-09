@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "redis",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Redis",
 		Description:   "Discover databases from Redis instances",
 		Icon:          "redis",
@@ -157,6 +158,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: "Redis",
+			Host:     strings.ToLower(net.JoinHostPort(host, strconv.Itoa(port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -262,18 +268,20 @@ func (s *Source) createDatabaseAsset(host string, port int, dbName string, keysp
 		}
 	}
 
-	resourceName := fmt.Sprintf("%s:%d-%s", host, port, dbName)
-	mrnValue := mrn.New("Database", "Redis", resourceName)
+	// A Redis server has no name of its own, so the zone option is what tells two servers apart; earlier releases put host:port into the name instead.
+	mrnValue := s.config.AssetMRN("Database", "Redis", dbName)
+	previousMRN := mrn.New("Database", "Redis", fmt.Sprintf("%s:%d-%s", host, port, dbName))
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
-		Name:      &dbName,
-		MRN:       &mrnValue,
-		Type:      "Database",
-		Providers: []string{"Redis"},
-		Metadata:  metadata,
-		Tags:      processedTags,
+		Name:         &dbName,
+		MRN:          &mrnValue,
+		Type:         "Database",
+		Providers:    []string{"Redis"},
+		PreviousMRNs: []string{previousMRN},
+		Metadata:     metadata,
+		Tags:         processedTags,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "Redis",
 			LastSyncAt: time.Now(),

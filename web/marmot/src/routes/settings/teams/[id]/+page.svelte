@@ -20,6 +20,7 @@
 	import { notificationTypeLabels, providerLabels, type TeamWebhook } from '$lib/teams/webhooks';
 	import type { OwnerResult, TeamMemberRow, TeamRow } from '$lib/teams/types';
 	import type { Asset } from '$lib/assets/types';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import Tags from '$components/shared/Tags.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import TeamMemberPicker from '$components/team/TeamMemberPicker.svelte';
@@ -565,6 +566,9 @@
 								>
 								<mm-description term={m.teams_updated()}
 									>{formatDate(team.updated_at)}</mm-description
+								>
+								<mm-description term={m.mrn_label()} mono
+									><MrnValue value={team.mrn} /></mm-description
 								>
 							</mm-description-list>
 						</mm-section>

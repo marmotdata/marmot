@@ -148,3 +148,22 @@ db1:keys=50,expires=5,avg_ttl=2000
 		assert.Empty(t, result)
 	})
 }
+
+func TestDatabaseAsset_MRNIsTheDatabaseNumberUnderTheZone(t *testing.T) {
+	s := &Source{config: &Config{Host: "Cache.internal", Port: 6379}}
+
+	a := s.createDatabaseAsset("Cache.internal", 6379, "db0", nil, nil, nil, nil, nil)
+
+	require.NotNil(t, a.MRN)
+	assert.Equal(t, "db0", *a.Name)
+	assert.Equal(t, "mrn://asset/database/redis/db0", *a.MRN)
+	assert.Equal(t, []string{"mrn://asset/database/redis/cache.internal:6379-db0"}, a.PreviousMRNs)
+}
+
+func TestDatabaseAsset_MRNCarriesTheZone(t *testing.T) {
+	s := &Source{config: &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "sessions"}, Host: "cache.internal", Port: 6379}}
+
+	a := s.createDatabaseAsset("cache.internal", 6379, "db1", nil, nil, nil, nil, nil)
+
+	assert.Equal(t, "mrn://asset/database/redis@sessions/db1", *a.MRN)
+}

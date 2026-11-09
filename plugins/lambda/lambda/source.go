@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,7 +17,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "lambda",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS Lambda",
 		Description:   "Discover Lambda functions from AWS accounts",
 		Icon:          "lambda",
@@ -231,7 +231,7 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 		metadata["last_update_status"] = string(fn.LastUpdateStatus)
 	}
 
-	mrnValue := mrn.New("Function", "Lambda", functionName)
+	mrnValue := s.functionMRN(functionName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -249,4 +249,9 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 			Priority:   1,
 		}},
 	}, nil
+}
+
+// functionMRN is the single place a Lambda function MRN is built. The account is the zone, so the path is the function name alone.
+func (s *Source) functionMRN(name string) string {
+	return s.config.AssetMRN("Function", "Lambda", name)
 }

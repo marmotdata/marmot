@@ -31,7 +31,7 @@ func TestLineage_TurnsOpenMetadataEdgesIntoMarmotLineage(t *testing.T) {
 	result := discover(t, lineageFixture(), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/postgresql/raw_orders", "mrn://table/postgresql/orders", "DEPENDS_ON"))
+		"mrn://asset/table/postgresql/shop.public.raw_orders", "mrn://asset/table/postgresql/shop.public.orders", "DEPENDS_ON"))
 }
 
 func TestLineage_DeduplicatesEdgesSeenFromBothEnds(t *testing.T) {
@@ -71,7 +71,7 @@ func TestLineage_CarriesThePipelineThatMovedTheData(t *testing.T) {
 		}
 	}
 	require.NotNil(t, found)
-	assert.Equal(t, "mrn://pipeline/airflow/orders_etl", found.JobMRN)
+	assert.Equal(t, "mrn://asset/pipeline/airflow/orders_etl", found.JobMRN)
 }
 
 func TestLineage_IgnoresEdgesToEntitiesThatWereNotImported(t *testing.T) {
@@ -109,7 +109,7 @@ func TestRunHistory_TurnsPipelineExecutionsIntoEvents(t *testing.T) {
 
 	require.Len(t, result.RunHistory, 1)
 	history := result.RunHistory[0]
-	assert.Equal(t, "mrn://pipeline/airflow/orders_etl", history.AssetMRN)
+	assert.Equal(t, "mrn://asset/pipeline/airflow/orders_etl", history.AssetMRN)
 
 	require.Len(t, history.Runs, 2, "an execution produces a start and a terminal event")
 	assert.Equal(t, "START", history.Runs[0].EventType)

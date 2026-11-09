@@ -1,6 +1,7 @@
 package unitycatalog
 
 import (
+	"strings"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -9,92 +10,79 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Every object below a catalog is named by its three-part name, so the
-// same table name in two schemas stays two assets. The provider has a
-// space in it, which mrn.New lowercases but keeps.
+// assetMRN builds the default-zone MRN of a dotted Unity Catalog name, split into its levels.
+func assetMRN(assetType, name string) string {
+	d := &discovery{config: &Config{}}
+	return d.assetMRN(assetType, strings.Split(name, ".")...)
+}
 
 func TestCatalogMRN_IsTheCatalogName(t *testing.T) {
-	assert.Equal(t, "mrn://catalog/unity-catalog/unity", assetMRN("Catalog", "unity"))
+	assert.Equal(t, "mrn://asset/catalog/unity-catalog/unity", assetMRN("Catalog", "unity"))
 }
 
-func TestTableMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://table/unity-catalog/unity.default.numbers", assetMRN("Table", "unity.default.numbers"))
+func TestObjectMRNs_AreTheThreePartName(t *testing.T) {
+	assert.Equal(t, "mrn://asset/table/unity-catalog/unity.default.numbers", assetMRN("Table", "unity.default.numbers"))
+	assert.Equal(t, "mrn://asset/view/unity-catalog/shop.sales.big_orders", assetMRN("View", "shop.sales.big_orders"))
+	assert.Equal(t, "mrn://asset/volume/unity-catalog/unity.default.txt_files", assetMRN("Volume", "unity.default.txt_files"))
+	assert.Equal(t, "mrn://asset/function/unity-catalog/unity.default.sum", assetMRN("Function", "unity.default.sum"))
+	assert.Equal(t, "mrn://asset/model/unity-catalog/ml.models.churn", assetMRN("Model", "ml.models.churn"))
 }
 
-func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/unity-catalog/shop.sales.big_orders", assetMRN("View", "shop.sales.big_orders"))
+func TestTableMRN_SameNameInTwoSchemasDiffers(t *testing.T) {
+	assert.NotEqual(t, assetMRN("Table", "shop.sales.orders"), assetMRN("Table", "shop.archive.orders"))
 }
 
-func TestVolumeMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://volume/unity-catalog/unity.default.txt_files", assetMRN("Volume", "unity.default.txt_files"))
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod-eu"
+	d := &discovery{config: cfg}
+
+	a := d.tableAsset(tableInfo{CatalogName: "shop", SchemaName: "sales", Name: "orders"})
+
+	assert.Equal(t, "mrn://asset/table/unity-catalog@prod-eu/shop.sales.orders", *a.MRN)
 }
 
-func TestFunctionMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://function/unity-catalog/unity.default.sum", assetMRN("Function", "unity.default.sum"))
-}
-
-func TestModelMRN_IsTheThreePartName(t *testing.T) {
-	assert.Equal(t, "mrn://model/unity-catalog/ml.models.churn", assetMRN("Model", "ml.models.churn"))
-}
-
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so it has to survive byte-identical.
+func TestTableMRN_IsStableUnderRoundTrip(t *testing.T) {
 	original := assetMRN("Table", "unity.default.numbers")
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, "unity-catalog", parsed.Provider)
+	assert.Equal(t, []string{"unity", "default", "numbers"}, parsed.Path())
+	assert.Equal(t, original, mrn.Asset(parsed.Type, parsed.Provider, parsed.Path()...).String())
 }
 
-func TestCatalogMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Catalog", "unity")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, "unity-catalog", parsed.Service)
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestAssets_MRNAgreesWithOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name); the MRN
-	// the plugin sets has to be exactly that.
+func TestAssets_NameIsTheObjectsOwnName(t *testing.T) {
 	d := &discovery{config: &Config{}}
 
-	assets := []pluginsdk.Asset{
-		d.catalogAsset(catalogInfo{Name: "unity"}, 1, 2),
-		d.tableAsset(tableInfo{CatalogName: "unity", SchemaName: "default", Name: "numbers", TableType: "EXTERNAL"}),
-		d.tableAsset(tableInfo{CatalogName: "shop", SchemaName: "sales", Name: "big_orders", TableType: "VIEW"}),
-		d.volumeAsset(volumeInfo{CatalogName: "unity", SchemaName: "default", Name: "txt_files"}),
-		d.functionAsset(functionInfo{CatalogName: "unity", SchemaName: "default", Name: "sum"}),
-		d.modelAsset(registeredModelInfo{CatalogName: "ml", SchemaName: "models", Name: "churn"}, nil),
+	assets := map[string]pluginsdk.Asset{
+		"unity":   d.catalogAsset(catalogInfo{Name: "unity"}, 1, 2),
+		"numbers": d.tableAsset(tableInfo{CatalogName: "unity", SchemaName: "default", Name: "numbers", TableType: "EXTERNAL"}),
+		"txt":     d.volumeAsset(volumeInfo{CatalogName: "unity", SchemaName: "default", Name: "txt"}),
+		"sum":     d.functionAsset(functionInfo{CatalogName: "unity", SchemaName: "default", Name: "sum"}),
+		"churn":   d.modelAsset(registeredModelInfo{CatalogName: "ml", SchemaName: "models", Name: "churn"}, nil),
 	}
 
-	for _, a := range assets {
+	for name, a := range assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-		assert.Equal(t, "Unity Catalog", a.Providers[0])
+		assert.Equal(t, name, *a.Name)
+		assert.Equal(t, []string{"Unity Catalog"}, a.Providers)
+		assert.Empty(t, a.PreviousMRNs, "the dotted name is the MRN earlier releases produced")
 	}
-}
-
-func TestTableMRN_MatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
-	// The OpenMetadata plugin projects a UnityCatalog service onto the
-	// same provider and the same catalog.schema.table name, so a table
-	// reached through either route lands on one asset.
-	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders",
-		mrn.New("Table", "Unity Catalog", "shop.sales.orders"))
-	assert.Equal(t, assetMRN("Table", "shop.sales.orders"),
-		mrn.New("Table", "Unity Catalog", "shop.sales.orders"))
 }
 
 func TestStorageEdgeMRNs_MatchTheStoragePlugins(t *testing.T) {
-	// FEEDS edges start at assets the S3, GCS and Azure Blob plugins own,
-	// so they have to be spelled exactly the way those plugins spell them.
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", mrn.New("Bucket", "S3", "marmot-lake"))
-	assert.Equal(t, "mrn://bucket/gcs/marmot-gcs-lake", mrn.New("Bucket", "GCS", "marmot-gcs-lake"))
-	assert.Equal(t, "mrn://container/azureblob/lake", mrn.New("Container", "AzureBlob", "lake"))
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", storageContainerMRN("s3://marmot-lake/tables/x"))
+	assert.Equal(t, "mrn://asset/bucket/gcs/marmot-gcs-lake", storageContainerMRN("gs://marmot-gcs-lake/x"))
+	assert.Equal(t, "mrn://asset/container/azureblob/lake", storageContainerMRN("abfss://lake@acct.dfs.core.windows.net/x"))
+}
+
+func TestZoneBindings(t *testing.T) {
+	cfg := &Config{Host: "http://UC.internal:8080"}
+	cfg.Zone = "prod"
+
+	assert.Equal(t,
+		[]pluginsdk.ZoneBinding{{Provider: "Unity Catalog", Host: "uc.internal:8080", Zone: "prod"}},
+		(&Source{config: cfg}).zoneBindings())
 }

@@ -9,3 +9,9 @@ Log in with a user that can read dashboards, charts, datasets and databases. The
 ## Table lineage
 
 A dataset is linked to a table only for backends Marmot has a naming rule for: PostgreSQL, MySQL, MariaDB, BigQuery, ClickHouse, SQLite, DuckDB, Athena (as Glue), Snowflake, Redshift, SQL Server, CockroachDB, Oracle, Druid, Trino and Databricks. The edge appears in Marmot once that database has been ingested with its own plugin.
+
+## Naming
+
+Dashboards, charts and databases are named by their titles, and a dataset by its schema and table, for example `mrn://asset/data-model-object/superset/public.orders`. Set `zone` when you catalogue more than one Superset.
+
+Tables a dataset reads belong to the database's own plugin, so they use its name, such as `<database>.<schema>.<table>` for PostgreSQL. The database connection's host and port are passed on as a hint so Marmot picks the right zone.

@@ -7,6 +7,7 @@ import type {
 	LineageGraphNode
 } from '@marmotdata/elements/classes/lineage-canvas.js';
 import type { Asset } from '$lib/assets/types';
+import { discoverPath, mrnShortName } from '$lib/mrn';
 import type { LineageEdge, LineageResponse } from '$lib/lineage/types';
 
 const KINDS = new Set<LineageEdgeKind>([
@@ -52,12 +53,9 @@ export function providerOf(asset: Pick<Asset, 'providers'> | null | undefined): 
 	return asset?.providers?.[0] ?? '';
 }
 
-/** The Discover route for an asset, from its MRN (`mrn://type/service/full.name`). */
+/** The Discover route for an asset, from its MRN. */
 export function assetHref(asset: Pick<Asset, 'mrn' | 'type'> | null | undefined): string {
-	if (!asset?.mrn || !asset.type) return '';
-	const parts = asset.mrn.replace('mrn://', '').split('/');
-	if (parts.length < 3) return '';
-	return `/discover/${asset.type.toLowerCase()}/${parts[1]}/${encodeURIComponent(parts.slice(2).join('/'))}`;
+	return discoverPath(asset?.mrn) ?? '';
 }
 
 interface BuildOptions {
@@ -81,7 +79,7 @@ export function buildGraph(
 		nodes.set(n.id, {
 			id: n.id,
 			mrn: n.asset?.mrn || n.id,
-			name: n.asset?.name || n.id.split('/').pop() || n.id,
+			name: n.asset?.name || mrnShortName(n.id) || n.id,
 			type: (n.asset?.type || n.type || '').toLowerCase(),
 			provider: providerOf(n.asset),
 			...(n.asset?.is_stub

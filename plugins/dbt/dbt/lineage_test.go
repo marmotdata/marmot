@@ -84,7 +84,7 @@ func TestModelLineage_SourceEdgeKeptWhenSourcesAreDiscovered(t *testing.T) {
 	for _, e := range lineages {
 		if e.Type == "DEPENDS_ON" {
 			dependsOn++
-			assert.Equal(t, "mrn://table/postgres/analytics.raw.orders", e.Source)
+			assert.Equal(t, "mrn://asset/table/postgresql/analytics.raw.orders", e.Source)
 		}
 	}
 	assert.Equal(t, 1, dependsOn)
@@ -105,20 +105,7 @@ func TestModelLineage_SourceEdgeDroppedWhenSourcesAreNotDiscovered(t *testing.T)
 	}
 }
 
-// The CREATES edge must point at the same MRN the model's own asset is
-// given, so the edge is not silently dropped.
-//
-// Note what that MRN is NOT: it is not the one plugins/postgresql emits.
-// dbt's Postgres adapter calls the provider "Postgres" while
-// plugins/postgresql calls it "PostgreSQL", and dbt names the table
-// database.schema.table while the plugin uses the bare name. A dbt model
-// and the physical table it materializes are therefore two separate
-// assets, which is what both published plugins do today.
-//
-// That divergence is pinned here rather than fixed. Converging the two
-// changes the name an asset is identified by, so it renames every existing
-// dbt or Postgres asset and needs a migration to move them, plus a plugin
-// release that reaches users before the server expecting the new names.
+// The CREATES edge must point at the same MRN the model's own asset is given, so the edge is not silently dropped. It is also the MRN plugins/postgresql emits for the table, because the adapter uses the provider string and the database.schema.table path that plugin uses.
 func TestModelLineage_CreatesEdgeMatchesTheModelsOwnAsset(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 
@@ -132,8 +119,69 @@ func TestModelLineage_CreatesEdgeMatchesTheModelsOwnAsset(t *testing.T) {
 		}
 	}
 	require.Len(t, creates, 1)
-	assert.Equal(t, "mrn://table/postgres/analytics.marts.orders_summary", creates[0])
+	assert.Equal(t, "mrn://asset/table/postgresql/analytics.marts.orders_summary", creates[0])
 
 	// The edge and the asset agree, which is the property that matters.
 	assertLineageOnlyReferencesDiscoveredAssets(t, all, lineages)
+}
+
+func TestModelMRN_IsDatabaseSchemaAndName(t *testing.T) {
+	s := sourceWith(manifestWithModelOnSource(), true)
+
+	assets, _ := s.discoverModels()
+
+	var model pluginsdk.Asset
+	for _, a := range assets {
+		if a.Type == "Model" {
+			model = a
+		}
+	}
+	require.NotNil(t, model.MRN)
+	assert.Equal(t, "mrn://asset/model/dbt/analytics.marts.orders_summary", *model.MRN)
+	assert.Equal(t, "orders_summary", *model.Name)
+}
+
+func TestModelMRN_SameModelNameInDifferentSchemasDiffers(t *testing.T) {
+	s := sourceWith(manifestWithModelOnSource(), true)
+
+	assert.NotEqual(t, s.modelMRN("analytics", "marts", "orders"), s.modelMRN("analytics", "staging", "orders"))
+}
+
+func TestModelMRN_CarriesTheZone(t *testing.T) {
+	s := sourceWith(manifestWithModelOnSource(), true)
+	s.config.Zone = "shop"
+
+	assert.Equal(t, "mrn://asset/model/dbt@shop/analytics.marts.orders", s.modelMRN("analytics", "marts", "orders"))
+}
+
+func TestTargetZoneAppliesToWarehouseTablesButNotToModels(t *testing.T) {
+	s := sourceWith(manifestWithModelOnSource(), true)
+	s.config.TargetZone = "prod-pg"
+
+	modelAssets, lineages := s.discoverModels()
+	all := append(modelAssets, s.discoverSources()...)
+
+	assertLineageOnlyReferencesDiscoveredAssets(t, all, lineages)
+	for _, e := range lineages {
+		switch e.Type {
+		case "DEPENDS_ON":
+			assert.Equal(t, "mrn://asset/table/postgresql@prod-pg/analytics.raw.orders", e.Source)
+			assert.Equal(t, "mrn://asset/model/dbt/analytics.marts.orders_summary", e.Target)
+		case "CREATES":
+			assert.Equal(t, "mrn://asset/table/postgresql@prod-pg/analytics.marts.orders_summary", e.Target)
+		}
+	}
+}
+
+func TestWarehouseAssetsListTheirOldMRN(t *testing.T) {
+	s := sourceWith(manifestWithModelOnSource(), true)
+
+	for _, a := range s.discoverSources() {
+		assert.Equal(t, []string{"mrn://asset/table/postgres/analytics.raw.orders"}, a.PreviousMRNs)
+	}
+}
+
+func TestWarehousePath_MySQLDropsTheDatabase(t *testing.T) {
+	assert.Equal(t, []string{"shop", "orders"}, warehousePath(GetAdapter("mysql"), "def", "shop", "orders"))
+	assert.Equal(t, []string{"analytics", "marts", "orders"}, warehousePath(GetAdapter("postgres"), "analytics", "marts", "orders"))
 }

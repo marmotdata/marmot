@@ -57,7 +57,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "bigtable",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Google Bigtable",
 		Description:   "Discover instances, tables and column families from Google Cloud Bigtable",
 		Icon:          "bigtable",
@@ -272,7 +272,7 @@ func (s *Source) instanceAsset(instance instanceDetail, tableCount, backups int)
 	}
 
 	name := instance.ID
-	mrnValue := assetMRN("Instance", name)
+	mrnValue := assetMRN(s.config, "Instance", name)
 
 	return pluginsdk.Asset{
 		Name:      &name,
@@ -346,8 +346,8 @@ func (s *Source) tableAsset(ctx context.Context, adminClient *bt.AdminClient, da
 		}
 	}
 
-	name := tableName(instance.ID, table)
-	mrnValue := assetMRN("Table", name)
+	name := table
+	mrnValue := assetMRN(s.config, "Table", instance.ID, table)
 
 	asset := pluginsdk.Asset{
 		Name:          &name,
@@ -364,6 +364,11 @@ func (s *Source) tableAsset(ctx context.Context, adminClient *bt.AdminClient, da
 			Properties: metadata,
 			Priority:   1,
 		}},
+	}
+
+	// Earlier releases named the asset instance.table and had no instance, so the old MRN only differs once an instance is set.
+	if previous := mrn.New("Table", provider, tableName(instance.ID, table)); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
 	}
 
 	if err := pluginsdk.SetColumns(&asset, columns); err != nil {
@@ -478,18 +483,14 @@ func (s *Source) FetchSampleData(ctx context.Context, rawConfig pluginsdk.RawCon
 // sampleDataRows is how many rows an asset preview shows.
 const sampleDataRows = 20
 
-// tableName is the identity a Bigtable table is addressed by. Table names
-// are only unique within an instance, so the instance goes in front, the
-// same shape an OpenMetadata import of a Bigtable service produces.
+// tableName is the instance.table form earlier releases used as an asset name, kept to build the previous MRN of an asset.
 func tableName(instanceID, table string) string {
 	return instanceID + "." + table
 }
 
-// assetMRN is the single place a Bigtable MRN is built. The asset pass and
-// the lineage pass both go through it so the two can never drift into
-// addressing the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Bigtable MRN is built. The asset pass and the lineage pass both go through it so the two can never drift into addressing the same object differently. Table names are only unique within an instance, so the path is instance, table, the same shape an OpenMetadata import of a Bigtable service produces.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }
 
 // consoleURL is the Google Cloud Console page for a table. An emulator has

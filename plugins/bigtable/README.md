@@ -1,6 +1,6 @@
 The Bigtable plugin discovers instances, tables and column families from Google Cloud Bigtable.
 
-Tables are named `<instance>.<table>`, because a table name is only unique within an instance. Each instance holds its tables through CONTAINS lineage.
+Tables are identified in their MRN by `<instance>.<table>`, because a table name is only unique within an instance. The Marmot `instance` option is separate from the Bigtable instance and tells apart two projects that use the same Bigtable instance id. Each instance holds its tables through CONTAINS lineage.
 
 ## Columns
 

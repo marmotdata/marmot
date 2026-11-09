@@ -286,8 +286,8 @@ func TestDiscover_KinesisSourceFeedsTheStream(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://stream/kinesis/orders",
-		Target: "mrn://deliverystream/firehose/orders-to-s3",
+		Source: "mrn://asset/stream/kinesis/orders",
+		Target: "mrn://asset/deliverystream/firehose/orders-to-s3",
 		Type:   "FEEDS",
 	})
 }
@@ -300,8 +300,8 @@ func TestDiscover_MSKTopicFeedsTheStream(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://topic/kafka/events",
-		Target: "mrn://deliverystream/firehose/events-from-msk",
+		Source: "mrn://asset/topic/kafka/events",
+		Target: "mrn://asset/deliverystream/firehose/events-from-msk",
 		Type:   "FEEDS",
 	})
 }
@@ -314,13 +314,13 @@ func TestDiscover_StreamProducesIntoTheBucketAndTheGlueTable(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/orders-to-s3",
-		Target: "mrn://bucket/s3/marmot-lake",
+		Source: "mrn://asset/deliverystream/firehose/orders-to-s3",
+		Target: "mrn://asset/bucket/s3/marmot-lake",
 		Type:   "PRODUCES",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/orders-to-s3",
-		Target: "mrn://table/glue/orders",
+		Source: "mrn://asset/deliverystream/firehose/orders-to-s3",
+		Target: "mrn://asset/table/glue/shop.orders",
 		Type:   "PRODUCES",
 	})
 }
@@ -333,8 +333,8 @@ func TestDiscover_StreamProducesIntoTheRedshiftTable(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/clicks-to-redshift",
-		Target: "mrn://table/redshift/analytics.public.clicks",
+		Source: "mrn://asset/deliverystream/firehose/clicks-to-redshift",
+		Target: "mrn://asset/table/redshift@host=cluster.abc.us-east-1.redshift.amazonaws.com:5439/analytics.public.clicks",
 		Type:   "PRODUCES",
 	})
 }
@@ -347,8 +347,8 @@ func TestDiscover_StreamProducesIntoTheOpenSearchIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/logs-to-opensearch",
-		Target: "mrn://table/opensearch/orders-index",
+		Source: "mrn://asset/deliverystream/firehose/logs-to-opensearch",
+		Target: "mrn://asset/table/opensearch/orders-index",
 		Type:   "PRODUCES",
 	})
 }

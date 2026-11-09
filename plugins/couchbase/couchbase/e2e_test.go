@@ -23,10 +23,10 @@ import (
 // them.
 
 const (
-	bucketMRN    = "mrn://bucket/couchbase/shop"
-	ordersMRN    = "mrn://collection/couchbase/shop.sales.orders"
-	customersMRN = "mrn://collection/couchbase/shop.sales.customers"
-	defaultMRN   = "mrn://collection/couchbase/shop._default._default"
+	bucketMRN    = "mrn://asset/bucket/couchbase/shop"
+	ordersMRN    = "mrn://asset/collection/couchbase/shop.sales.orders"
+	customersMRN = "mrn://asset/collection/couchbase/shop.sales.customers"
+	defaultMRN   = "mrn://asset/collection/couchbase/shop._default._default"
 )
 
 func e2eConfig(t *testing.T) pluginsdk.RawConfig {
@@ -179,7 +179,7 @@ func TestE2E_DiscoverCollectionWithPrimaryIndex(t *testing.T) {
 	orders := findAsset(t, result, ordersMRN)
 	assert.Equal(t, "Collection", orders.Type)
 	assert.Equal(t, []string{"Couchbase"}, orders.Providers)
-	assert.Equal(t, "shop.sales.orders", *orders.Name)
+	assert.Equal(t, "orders", *orders.Name)
 
 	assert.Equal(t, "shop", orders.Metadata["bucket"])
 	assert.Equal(t, "sales", orders.Metadata["scope"])
@@ -253,7 +253,7 @@ func TestE2E_DiscoverCollectionWithoutAnyIndex(t *testing.T) {
 	result := discover(t)
 
 	products := findAsset(t, result, defaultMRN)
-	assert.Equal(t, "shop._default._default", *products.Name)
+	assert.Equal(t, "_default", *products.Name)
 	assert.EqualValues(t, 0, products.Metadata["index_count"])
 	assert.Equal(t, false, products.Metadata["primary_index"])
 	assert.NotContains(t, products.Metadata, "indexes")
@@ -285,14 +285,14 @@ func TestE2E_DiscoverLinksBucketToCollections(t *testing.T) {
 	assert.Len(t, result.Lineage, 3)
 }
 
-func TestE2E_DiscoverEveryMRNAgreesWithItsOwnFields(t *testing.T) {
+func TestE2E_DiscoverEveryMRNIsAnAssetMRNOfTheProvider(t *testing.T) {
 	result := discover(t)
 
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.Equal(t, "couchbase", parsed.Provider)
 	}
 }
 

@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"path"
+	"strings"
 	"time"
 
 	_ "github.com/duckdb/duckdb-go/v2"
@@ -33,7 +35,8 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "duckdb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeFile,
 		Name:          "DuckDB",
 		Description:   "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
 		Icon:          "duckdb",
@@ -58,6 +61,9 @@ func Meta() pluginsdk.Meta {
 type Source struct {
 	config *Config
 	db     *sql.DB
+
+	// database is DuckDB's catalog name for the file being discovered, taken from the configured path before a remote file is swapped for its local copy.
+	database string
 
 	// query caches the connections ExecuteQuery and PlanQuery open, one per source config, independently of the config Discover last validated.
 	query queryConns
@@ -108,6 +114,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	defer cleanup()
 
 	origPath := s.config.Path
+	s.database = databaseName(origPath)
 	s.config.Path = localPath
 	defer func() { s.config.Path = origPath }()
 
@@ -260,7 +267,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset,
 			"object_type": tableType,
 		}
 
-		mrnValue := assetMRN(assetType, schemaName, tableName)
+		mrnValue := s.tableMRN(assetType, schemaName, tableName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		a := pluginsdk.Asset{
@@ -277,6 +284,8 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset,
 				Properties: metadata,
 				Priority:   1,
 			}},
+			// Earlier releases left the database out of the MRN.
+			PreviousMRNs: []string{mrn.New(assetType, "DuckDB", assetName(schemaName, tableName))},
 		}
 
 		schemaTables = append(schemaTables, struct {
@@ -475,8 +484,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEd
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
 
-		sourceMRN := assetMRN("Table", sourceSchema, sourceTable)
-		targetMRN := assetMRN("Table", targetSchema, targetTable)
+		sourceMRN := s.tableMRN("Table", sourceSchema, sourceTable)
+		targetMRN := s.tableMRN("Table", targetSchema, targetTable)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -563,16 +572,25 @@ func (s *Source) collectTableStatistics(ctx context.Context, assets []pluginsdk.
 	return statistics
 }
 
-// assetName is how this catalog addresses a table: one file holds many
-// schemas, each able to hold the same table name. The name shown in the UI
-// stays the table's own name; only the MRN carries the schema.
+// assetName is the schema.table form earlier releases used in MRNs, kept to build the previous MRN of an asset.
 func assetName(schema, table string) string {
 	return fmt.Sprintf("%s.%s", schema, table)
 }
 
-// assetMRN is the single place a DuckDB MRN is built. The asset pass and
-// the foreign key pass both go through it so the two can never drift into
-// addressing the same table differently.
-func assetMRN(assetType, schema, table string) string {
-	return mrn.New(assetType, "DuckDB", assetName(schema, table))
+// databaseName is DuckDB's catalog name for a database file: the file name without its directory, query string or extension. A path may be a local file, an S3 key or a Git URL, and the same file always gives the same name.
+func databaseName(filePath string) string {
+	if i := strings.IndexByte(filePath, '?'); i >= 0 {
+		filePath = filePath[:i]
+	}
+	base := path.Base(strings.ReplaceAll(filePath, `\`, "/"))
+	return strings.TrimSuffix(base, path.Ext(base))
+}
+
+// assetMRN is the single place a DuckDB MRN is built. The asset pass, the foreign key pass and the query planner all go through it so they can never drift into addressing the same table differently. The path runs database, schema, table.
+func assetMRN(cfg *Config, database, assetType, schema, table string) string {
+	return cfg.AssetMRN(assetType, "DuckDB", database, schema, table)
+}
+
+func (s *Source) tableMRN(assetType, schema, table string) string {
+	return assetMRN(s.config, s.database, assetType, schema, table)
 }

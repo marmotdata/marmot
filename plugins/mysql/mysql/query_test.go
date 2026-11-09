@@ -289,7 +289,7 @@ func TestQuery_Integration(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: "SELECT * FROM orders"})
 		require.NoError(t, err)
 		require.NotNil(t, plan)
-		assert.Equal(t, []string{"mrn://table/mysql/orders"}, plan.ReferencedMRNs)
+		assert.Equal(t, []string{"mrn://asset/table/mysql/" + testDB + ".orders"}, plan.ReferencedMRNs)
 		assert.False(t, plan.Incomplete)
 	})
 
@@ -297,14 +297,14 @@ func TestQuery_Integration(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: "SELECT * FROM order_summary"})
 		require.NoError(t, err)
 		require.NotNil(t, plan)
-		assert.ElementsMatch(t, []string{"mrn://table/mysql/orders", "mrn://table/mysql/customers"}, plan.ReferencedMRNs)
+		assert.ElementsMatch(t, []string{"mrn://asset/table/mysql/" + testDB + ".orders", "mrn://asset/table/mysql/" + testDB + ".customers"}, plan.ReferencedMRNs)
 	})
 
 	t.Run("aliased tables resolve to their real names, not the alias", func(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: "SELECT o.id, c.name FROM orders o JOIN customers c ON o.customer_id = c.id"})
 		require.NoError(t, err)
 		require.NotNil(t, plan)
-		assert.ElementsMatch(t, []string{"mrn://table/mysql/orders", "mrn://table/mysql/customers"}, plan.ReferencedMRNs)
+		assert.ElementsMatch(t, []string{"mrn://asset/table/mysql/" + testDB + ".orders", "mrn://asset/table/mysql/" + testDB + ".customers"}, plan.ReferencedMRNs)
 	})
 
 	t.Run("a stored function marks the plan incomplete", func(t *testing.T) {
@@ -378,8 +378,8 @@ func TestQuery_Integration(t *testing.T) {
 			if plan.Incomplete {
 				return
 			}
-			assert.Contains(t, plan.ReferencedMRNs, "mrn://table/mysql/secret", statement)
-			assert.NotContains(t, plan.ReferencedMRNs, "mrn://table/mysql/public_t", statement)
+			assert.Contains(t, plan.ReferencedMRNs, "mrn://asset/table/mysql/"+testDB+".secret", statement)
+			assert.NotContains(t, plan.ReferencedMRNs, "mrn://asset/table/mysql/"+testDB+".public_t", statement)
 		})
 	}
 

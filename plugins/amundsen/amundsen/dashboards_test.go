@@ -13,7 +13,7 @@ func TestDiscoverDashboards_NamesADashboardByItsGroup(t *testing.T) {
 	c := discover(t, testConfig(), seededGraph())
 
 	asset := assetNamed(t, c, "Dashboard", "finance/revenue")
-	assert.Equal(t, "mrn://dashboard/superset/finance-revenue", *asset.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/superset/finance-revenue", *asset.MRN)
 }
 
 func TestDiscoverDashboards_ProviderComesFromTheProduct(t *testing.T) {
@@ -118,7 +118,7 @@ func TestDiscoverCharts_AreNamedByGroupDashboardAndChart(t *testing.T) {
 	c := discover(t, testConfig(), seededGraph())
 
 	asset := assetNamed(t, c, "Chart", "finance/revenue/Revenue by region")
-	assert.Equal(t, "mrn://chart/superset/finance-revenue-revenue-by-region", *asset.MRN)
+	assert.Equal(t, "mrn://asset/chart/superset/finance-revenue.revenue-by-region", *asset.MRN)
 	assert.Equal(t, []string{"Superset"}, asset.Providers)
 }
 
@@ -152,7 +152,7 @@ func TestDiscoverCharts_FallBackToTheirIDWhenUnnamed(t *testing.T) {
 
 	c := discover(t, testConfig(), f)
 
-	assert.Equal(t, "mrn://chart/superset/finance-revenue-c9", *assetNamed(t, c, "Chart", "finance/revenue/c9").MRN)
+	assert.Equal(t, "mrn://asset/chart/superset/finance-revenue.c9", *assetNamed(t, c, "Chart", "finance/revenue/c9").MRN)
 }
 
 func TestDiscoverCharts_ADashboardWithNoChartsMintsNone(t *testing.T) {
@@ -174,7 +174,7 @@ func TestDiscoverCharts_ADashboardWithNoChartsMintsNone(t *testing.T) {
 func TestDiscoverDashboardLineage_TableFeedsDashboard(t *testing.T) {
 	c := discover(t, testConfig(), seededGraph())
 
-	assert.True(t, hasEdge(c, "mrn://table/postgresql/orders", "mrn://dashboard/superset/finance-revenue", "FEEDS"))
+	assert.True(t, hasEdge(c, "mrn://asset/table/postgresql/prod.public.orders", "mrn://asset/dashboard/superset/finance-revenue", "FEEDS"))
 }
 
 func TestDiscoverDashboardLineage_IgnoresADashboardThisRunDidNotImport(t *testing.T) {
@@ -186,7 +186,7 @@ func TestDiscoverDashboardLineage_IgnoresADashboardThisRunDidNotImport(t *testin
 	c := discover(t, testConfig(), f)
 
 	for _, edge := range c.lineage {
-		assert.NotEqual(t, "mrn://dashboard/mode/ops-uptime", edge.Target)
+		assert.NotEqual(t, "mrn://asset/dashboard/mode/ops-uptime", edge.Target)
 	}
 }
 
@@ -203,7 +203,7 @@ func TestDiscoverDashboardLineage_IsRecordedOnlyOnce(t *testing.T) {
 
 	edges := 0
 	for _, edge := range c.lineage {
-		if edge.Target == "mrn://dashboard/superset/finance-revenue" {
+		if edge.Target == "mrn://asset/dashboard/superset/finance-revenue" {
 			edges++
 		}
 	}

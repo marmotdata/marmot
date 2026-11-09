@@ -1,6 +1,7 @@
 package kafkaconnect_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -56,6 +57,10 @@ func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *plugi
 		if a.Type == assetType && a.Name != nil && *a.Name == name {
 			return a
 		}
+		// A task is looked up as <connector>.<task name> because its own name is only task-N.
+		if a.Type == "Task" && assetType == "Task" && a.Name != nil && fmt.Sprint(a.Metadata["connector"])+"."+*a.Name == name {
+			return a
+		}
 	}
 	return nil
 }
@@ -105,7 +110,7 @@ func TestE2E_DiscoversBothConnectorsAsPipelines(t *testing.T) {
 	source := findAsset(result, "Pipeline", sourceConnector)
 	require.NotNil(t, source)
 	assert.Equal(t, []string{"Kafka Connect"}, source.Providers)
-	assert.Equal(t, "mrn://pipeline/kafka-connect/orders-file-source", *source.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/kafka-connect/orders-file-source", *source.MRN)
 	assert.Equal(t, "source", source.Metadata["connector_type"])
 	assert.Equal(t, "RUNNING", source.Metadata["state"])
 	assert.Equal(t, "org.apache.kafka.connect.file.FileStreamSourceConnector", source.Metadata["connector_class"])
@@ -128,8 +133,8 @@ func TestE2E_DiscoversTasksUnderTheirPipelines(t *testing.T) {
 		assert.Equal(t, "RUNNING", task.Metadata["state"])
 		assert.Equal(t, connector, task.Metadata["connector"])
 		assert.True(t, hasEdge(result,
-			"mrn://pipeline/kafka-connect/"+connector,
-			"mrn://task/kafka-connect/"+connector+".task-0",
+			"mrn://asset/pipeline/kafka-connect/"+connector,
+			"mrn://asset/task/kafka-connect/"+connector+".task-0",
 			"CONTAINS"), connector)
 	}
 }
@@ -140,7 +145,7 @@ func TestE2E_DiscoversTheSharedTopic(t *testing.T) {
 	asset := findAsset(result, "Topic", topic)
 	require.NotNil(t, asset)
 	assert.Equal(t, []string{"Kafka"}, asset.Providers)
-	assert.Equal(t, "mrn://topic/kafka/orders-events", *asset.MRN)
+	assert.Equal(t, "mrn://asset/topic/kafka/orders-events", *asset.MRN)
 	assert.Contains(t, asset.Metadata["producers"], sourceConnector)
 	assert.Contains(t, asset.Metadata["consumers"], sinkConnector)
 }
@@ -149,12 +154,12 @@ func TestE2E_LinksSourceToTopicAndTopicToSink(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/kafka-connect/orders-file-source",
-		"mrn://topic/kafka/orders-events",
+		"mrn://asset/pipeline/kafka-connect/orders-file-source",
+		"mrn://asset/topic/kafka/orders-events",
 		"PRODUCES"))
 	assert.True(t, hasEdge(result,
-		"mrn://topic/kafka/orders-events",
-		"mrn://pipeline/kafka-connect/orders-file-sink",
+		"mrn://asset/topic/kafka/orders-events",
+		"mrn://asset/pipeline/kafka-connect/orders-file-sink",
 		"FEEDS"))
 }
 

@@ -16,7 +16,6 @@ import (
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,6 +49,8 @@ type CreateAssetInput struct {
 	// Empty means the source has nothing to say about terms, which is
 	// not the same as saying the asset has none.
 	Terms []string `json:"terms,omitempty"`
+	// PreviousMRNs are MRNs earlier versions of the plugin gave this asset; an existing asset under one of them moves to the new MRN instead of being replaced.
+	PreviousMRNs []string `json:"previous_mrns,omitempty"`
 }
 
 // GlossaryTermInput is one business term a run discovered. Identity is
@@ -78,7 +79,11 @@ type ProcessAssetsResponse struct {
 	Lineage              []LineageResult       `json:"lineage"`
 	Documentation        []DocumentationResult `json:"documentation"`
 	StaleEntitiesRemoved []string              `json:"stale_entities_removed,omitempty"`
-	Glossary             *GlossaryResult       `json:"glossary,omitempty"`
+	// StaleContributionsWithdrawn are assets this run no longer found but another writer still describes, so they were kept.
+	StaleContributionsWithdrawn []string        `json:"stale_contributions_withdrawn,omitempty"`
+	Glossary                    *GlossaryResult `json:"glossary,omitempty"`
+	// Warnings are identity problems the run worked around, such as an old asset several new ones could be.
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 type AssetResult struct {
@@ -89,6 +94,8 @@ type AssetResult struct {
 	Asset    interface{} `json:"asset"`
 	Status   string      `json:"status"`
 	Error    string      `json:"error,omitempty"`
+	// MovedFrom is the MRN the asset had before this run gave it a new one.
+	MovedFrom string `json:"moved_from,omitempty"`
 }
 
 type LineageResult struct {
@@ -146,6 +153,9 @@ type DestroyRunResponse struct {
 
 type Service interface {
 	StartRun(ctx context.Context, pipelineName, sourceName, createdBy string, config plugin.RawPluginConfig) (*plugin.Run, error)
+	// StartRunAs starts a run that belongs to owner: "schedule:<id>" for a scheduled run, "<principal type>:<id>" for a CLI or API run.
+	StartRunAs(ctx context.Context, pipelineName, sourceName, createdBy, owner string, config plugin.RawPluginConfig) (*plugin.Run, error)
+	RecordZoneBindings(ctx context.Context, bindings []asset.ZoneBinding) error
 	CompleteRun(ctx context.Context, runID string, status plugin.RunStatus, summary *plugin.RunSummary, errorMessage string) error
 	ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
 	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, terms []GlossaryTermInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
@@ -214,6 +224,10 @@ func (s *service) ListRunsWithFilters(ctx context.Context, pipelines, statuses [
 }
 
 func (s *service) StartRun(ctx context.Context, pipelineName, sourceName, createdBy string, config plugin.RawPluginConfig) (*plugin.Run, error) {
+	return s.StartRunAs(ctx, pipelineName, sourceName, createdBy, "", config)
+}
+
+func (s *service) StartRunAs(ctx context.Context, pipelineName, sourceName, createdBy, owner string, config plugin.RawPluginConfig) (*plugin.Run, error) {
 	if pipelineName == "" || sourceName == "" || createdBy == "" {
 		return nil, fmt.Errorf("%w: pipeline_name, source_name, and created_by are required", ErrInvalidInput)
 	}
@@ -230,6 +244,7 @@ func (s *service) StartRun(ctx context.Context, pipelineName, sourceName, create
 		StartedAt:    now,
 		Config:       config,
 		CreatedBy:    createdBy,
+		Owner:        owner,
 	}
 
 	if err := s.repo.Create(ctx, run); err != nil {
@@ -285,10 +300,15 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	// stale-entity removal, so a transient database error that came back
 	// as an empty map would quietly re-create the whole catalog alongside
 	// the rows already in it.
-	lastCheckpoints, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName)
+	lastCheckpoints, baselineOwner, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName, run.Owner)
 	if err != nil {
 		return nil, fmt.Errorf("getting last run checkpoints: %w", err)
 	}
+	writer := WriterKey(pipelineName, sourceName, run.Owner)
+	role := writerRole(sourceName)
+	// The first run of an owner takes over an earlier baseline: the same person's runs before they set a zone, or the runs from before runs had owners. That baseline may hold what someone else's run found, so this run adopts it without treating anything in it as stale.
+	inheritedBaseline := baselineOwner != run.Owner && len(lastCheckpoints) > 0
+	legacyWriter := WriterKey(pipelineName, sourceName, baselineOwner)
 
 	response := &ProcessAssetsResponse{
 		Assets:        make([]AssetResult, 0, len(assets)),
@@ -300,41 +320,57 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	// linked to its terms the moment it is written.
 	termIDsByName := s.syncGlossary(ctx, sourceName, terms, response)
 
-	// Indexed by position so that currentMRNs[i] always belongs to assets[i],
-	// which the loop below relies on.
-	currentMRNs := make([]string, len(assets))
-	for i, ast := range assets {
-		if ast.MRN != nil && *ast.MRN != "" {
-			currentMRNs[i] = *ast.MRN
-			continue
-		}
-		currentMRNs[i] = mrn.New(ast.Type, ast.Providers[0], ast.Name)
-	}
-
-	existingAssets, err := s.assetService.GetByMRNs(ctx, currentMRNs)
+	identities, unresolved, err := s.resolveAssetIdentities(ctx, assets, response)
 	if err != nil {
-		return nil, fmt.Errorf("fetching existing assets: %w", err)
+		return nil, err
 	}
 
-	for i, ast := range assets {
-		assetMRN := currentMRNs[i]
-		assetHash := s.hashAsset(ast)
+	// Checkpoints name assets by the MRN they had when written, which may be a legacy MRN or one the asset has since moved from, so they are compared by the asset's MRN today.
+	assetCheckpoints, err := s.currentAssetCheckpoints(ctx, lastCheckpoints)
+	if err != nil {
+		return nil, err
+	}
 
-		assetError := ""
+	currentMRNs := make([]string, 0, len(assets))
+	for i, ast := range assets {
+		id := identities[i]
+		assetMRN := id.mrn
+		assetHash := s.hashAsset(ast)
+		assetError := id.err
 		status := StatusCreated
-		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted && existingAssets[assetMRN] != nil {
+		existingAsset := id.existing
+
+		if assetError != "" {
+			status = StatusFailed
+		} else if checkpoint, exists := assetCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted && existingAsset != nil {
 			if len(checkpoint.SourceFields) > 0 && checkpoint.SourceFields[0] == assetHash {
 				status = StatusUnchanged
 			} else {
 				status = StatusUpdated
 			}
+		} else if existingAsset != nil {
+			status = StatusUpdated
 		}
 
 		// The asset's own id, needed to attach glossary terms. Each
 		// branch below already knows it, so nothing is looked up twice.
 		assetID := ""
+		if existingAsset != nil {
+			assetID = existingAsset.ID
+		}
+		fields := contributionFields(ast)
 
-		if status == StatusCreated {
+		switch status {
+		case StatusUnchanged:
+			// Nothing new to say, but a writer that has never contributed to this asset, such as an owner inheriting the baseline from before owners existed, still has to be recorded as one.
+			touched, err := s.assetService.TouchContribution(ctx, assetID, writer)
+			if err == nil && !touched {
+				_, err = s.assetService.Contribute(ctx, assetID, writer, role, fields, true)
+			}
+			if err != nil {
+				log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to record the run's contribution")
+			}
+		case StatusCreated:
 			createInput := asset.CreateInput{
 				Name:          &ast.Name,
 				MRN:           &assetMRN,
@@ -349,6 +385,8 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				QueryLanguage: ast.QueryLanguage,
 				Sources:       ast.Sources,
 				CreatedBy:     run.CreatedBy,
+				Writer:        writer,
+				Role:          role,
 			}
 			created, err := s.assetService.Create(ctx, createInput)
 			if created != nil {
@@ -359,8 +397,11 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			// never seen it: another source discovered the same thing
 			// first. That is how a catalog imported from elsewhere hands
 			// over to the native plugin for the same technology, so the
-			// second source adopts the asset rather than failing on it.
-			if errors.Is(err, asset.ErrAlreadyExists) {
+			// second source adds its contribution rather than failing.
+			var exists *asset.ExistsError
+			if errors.As(err, &exists) && exists.Asset != nil {
+				existingAsset = exists.Asset
+				assetID = existingAsset.ID
 				status = StatusUpdated
 				err = nil
 			}
@@ -373,66 +414,48 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		}
 
 		if status == StatusUpdated {
-			updateInput := asset.UpdateInput{
-				Name:             &ast.Name,
-				Type:             ast.Type,
-				Providers:        ast.Providers,
-				Description:      ast.Description,
-				Metadata:         ast.Metadata,
-				Schema:           convertSchemaToStringMap(ast.Schema),
-				Tags:             ast.Tags,
-				ExternalLinks:    convertToAssetExternalLinks(ast.ExternalLinks),
-				Query:            ast.Query,
-				QueryLanguage:    ast.QueryLanguage,
-				Sources:          ast.Sources,
-				SkipNotification: true,
-			}
-			// Not cached when another writer created the asset after the fetch above.
-			existingAsset := existingAssets[assetMRN]
-			var err error
-			if existingAsset == nil {
-				existingAsset, err = s.assetService.GetByMRN(ctx, assetMRN)
-			}
-			if err != nil {
-				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get existing asset for update")
+			if _, err := s.assetService.Contribute(ctx, assetID, writer, role, fields, true); err != nil {
+				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to update asset")
 				assetError = err.Error()
 				status = StatusFailed
-			} else {
-				assetID = existingAsset.ID
-				if _, err := s.assetService.Update(ctx, existingAsset.ID, updateInput); err != nil {
-					log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to update asset")
-					assetError = err.Error()
-					status = StatusFailed
+			} else if len(ast.Sources) > 0 {
+				if _, err := s.assetService.Update(ctx, assetID, asset.UpdateInput{Sources: ast.Sources, SkipNotification: true}); err != nil {
+					log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to record the asset's sources")
 				}
 			}
 		}
 
-		if status != StatusFailed && len(ast.Terms) > 0 {
-			// An unchanged asset was never fetched, but a term the source
-			// added since the last run still has to reach it.
-			if assetID == "" {
-				existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
-				if err != nil {
-					log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get asset for glossary terms")
-				} else {
-					assetID = existingAsset.ID
-				}
+		if status != StatusFailed && inheritedBaseline && assetID != "" && writer != legacyWriter {
+			// This owner now speaks for the asset, so the contribution recorded by the baseline's owner is withdrawn. Another owner who also saw the asset keeps it alive with their own contribution.
+			if _, err := s.assetService.Withdraw(ctx, assetID, legacyWriter); err != nil {
+				log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to hand over the pre-owner contribution")
 			}
-			if assetID != "" && s.linkTerms(ctx, assetID, ast.Terms, termIDsByName, sourceName) && response.Glossary != nil {
+		}
+
+		if status != StatusFailed && len(ast.Terms) > 0 && assetID != "" {
+			if s.linkTerms(ctx, assetID, ast.Terms, termIDsByName, sourceName) && response.Glossary != nil {
 				response.Glossary.AssetsLinked++
 			}
 		}
 
 		result := AssetResult{
-			Name:     ast.Name,
-			Type:     ast.Type,
-			Provider: ast.Providers[0],
-			MRN:      assetMRN,
-			Status:   status,
-			Asset:    ast,
-			Error:    assetError,
+			Name:      ast.Name,
+			Type:      ast.Type,
+			Provider:  firstProvider(ast.Providers),
+			MRN:       assetMRN,
+			Status:    status,
+			Asset:     ast,
+			Error:     assetError,
+			MovedFrom: id.movedFrom,
 		}
 		response.Assets = append(response.Assets, result)
+
+		if assetMRN == "" {
+			continue
+		}
+		if status != StatusFailed {
+			currentMRNs = append(currentMRNs, assetMRN)
+		}
 
 		entity := &RunEntity{
 			ID:         uuid.New().String(),
@@ -447,44 +470,26 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", assetMRN).Msg("Failed to add run entity")
 		}
 
-		if err := s.AddCheckpoint(ctx, runID, "asset", assetMRN, result.Status, []string{assetHash}); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", assetMRN).Msg("Failed to add checkpoint")
-		}
-	}
-
-	staleEntities := s.GetStaleEntities(ctx, lastCheckpoints, currentMRNs)
-	for _, staleMRN := range staleEntities {
-		if err := s.assetService.DeleteByMRN(ctx, staleMRN); err != nil {
-			if errors.Is(err, asset.ErrAssetNotFound) {
-				log.Debug().Str("asset_mrn", staleMRN).Msg("Stale asset already deleted")
-			} else {
-				log.Error().Err(err).Str("asset_mrn", staleMRN).Msg("Failed to delete stale asset")
+		if status != StatusFailed {
+			if err := s.AddCheckpoint(ctx, runID, "asset", assetMRN, result.Status, []string{assetHash}); err != nil {
+				log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", assetMRN).Msg("Failed to add checkpoint")
 			}
 		}
-
-		entity := &RunEntity{
-			ID:         uuid.New().String(),
-			RunID:      runID,
-			EntityType: "asset",
-			EntityMRN:  staleMRN,
-			Status:     StatusDeleted,
-			CreatedAt:  time.Now(),
-		}
-		if err := s.repo.AddRunEntity(ctx, run.ID, entity); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", staleMRN).Msg("Failed to add deleted run entity")
-		}
-
-		if err := s.AddCheckpoint(ctx, runID, "asset", staleMRN, StatusDeleted, []string{}); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", staleMRN).Msg("Failed to add deleted checkpoint")
-		}
 	}
-	response.StaleEntitiesRemoved = staleEntities
+
+	if !inheritedBaseline {
+		s.removeStale(ctx, run, runID, writer, assetCheckpoints, currentMRNs, unresolved, response)
+	}
 
 	for _, lin := range lineage {
-		lineageMRN := mrn.New("lineage", strings.ToLower(lin.Type), fmt.Sprintf("%s->%s", lin.Source, lin.Target))
+		refs, err := s.assetService.ResolveMRNs(ctx, []string{lin.Source, lin.Target})
+		if err != nil {
+			return nil, fmt.Errorf("resolving lineage MRNs: %w", err)
+		}
+		lineageKey := lineageCheckpointKey(lin.Type, refs[0], refs[1])
 
 		status := StatusCreated
-		if checkpoint, exists := lastCheckpoints[lineageMRN]; exists && checkpoint.Operation != StatusDeleted {
+		if checkpoint, exists := lastCheckpoints[lineageKey]; exists && checkpoint.Operation != StatusDeleted {
 			status = StatusUpdated
 		}
 
@@ -495,14 +500,14 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		// alone used to be taken as proof the edge was already there, so
 		// the edge was never written again under that pipeline name.
 		// Writing an edge that exists returns the existing one.
-		if _, err := s.lineageService.CreateDeclaredLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN, pipelineName, lin.ColumnLineage); err != nil {
-			log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
+		if _, err := s.lineageService.CreateDeclaredLineage(ctx, refs[0], refs[1], lin.Type, lin.JobMRN, pipelineName, lin.ColumnLineage); err != nil {
+			log.Error().Err(err).Str("source", refs[0]).Str("target", refs[1]).Str("type", lin.Type).Msg("Failed to create lineage")
 			status = StatusFailed
 		}
 
 		result := LineageResult{
-			Source: lin.Source,
-			Target: lin.Target,
+			Source: refs[0],
+			Target: refs[1],
 			Type:   lin.Type,
 			Status: status,
 		}
@@ -512,30 +517,34 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			ID:         uuid.New().String(),
 			RunID:      runID,
 			EntityType: "lineage",
-			EntityMRN:  lineageMRN,
-			EntityName: fmt.Sprintf("%s -> %s", lin.Source, lin.Target),
+			EntityMRN:  lineageKey,
+			EntityName: fmt.Sprintf("%s -> %s", refs[0], refs[1]),
 			Status:     result.Status,
 			CreatedAt:  time.Now(),
 		}
 		if err := s.repo.AddRunEntity(ctx, run.ID, entity); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", lineageMRN).Msg("Failed to add lineage run entity")
+			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", lineageKey).Msg("Failed to add lineage run entity")
 		}
 
-		if err := s.AddCheckpoint(ctx, runID, "lineage", lineageMRN, result.Status, []string{"source", "target", "type"}); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", lineageMRN).Msg("Failed to add lineage checkpoint")
+		if err := s.AddCheckpoint(ctx, runID, "lineage", lineageKey, result.Status, []string{"source", "target", "type"}); err != nil {
+			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", lineageKey).Msg("Failed to add lineage checkpoint")
 		}
 	}
 
 	for _, doc := range docs {
-		docMRN := mrn.New("documentation", strings.ToLower(doc.Type), doc.AssetMRN)
+		docAsset := doc.AssetMRN
+		if resolved, err := s.assetService.ResolveMRN(ctx, doc.AssetMRN); err == nil && resolved != "" {
+			docAsset = resolved
+		}
+		docKey := documentationCheckpointKey(doc.Type, docAsset)
 
 		status := StatusCreated
-		if checkpoint, exists := lastCheckpoints[docMRN]; exists && checkpoint.Operation != StatusDeleted {
+		if checkpoint, exists := lastCheckpoints[docKey]; exists && checkpoint.Operation != StatusDeleted {
 			status = StatusUpdated
 		}
 
 		result := DocumentationResult{
-			AssetMRN: doc.AssetMRN,
+			AssetMRN: docAsset,
 			Type:     doc.Type,
 			Status:   status,
 		}
@@ -545,17 +554,17 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			ID:         uuid.New().String(),
 			RunID:      runID,
 			EntityType: "documentation",
-			EntityMRN:  docMRN,
-			EntityName: fmt.Sprintf("%s (%s)", doc.AssetMRN, doc.Type),
+			EntityMRN:  docKey,
+			EntityName: fmt.Sprintf("%s (%s)", docAsset, doc.Type),
 			Status:     result.Status,
 			CreatedAt:  time.Now(),
 		}
 		if err := s.repo.AddRunEntity(ctx, run.ID, entity); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", docMRN).Msg("Failed to add documentation run entity")
+			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", docKey).Msg("Failed to add documentation run entity")
 		}
 
-		if err := s.AddCheckpoint(ctx, runID, "documentation", docMRN, result.Status, []string{"asset_mrn", "type"}); err != nil {
-			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", docMRN).Msg("Failed to add documentation checkpoint")
+		if err := s.AddCheckpoint(ctx, runID, "documentation", docKey, result.Status, []string{"asset_mrn", "type"}); err != nil {
+			log.Error().Err(err).Str("run_id", runID).Str("entity_mrn", docKey).Msg("Failed to add documentation checkpoint")
 		}
 	}
 
@@ -651,6 +660,18 @@ func (s *service) processStatistics(ctx context.Context, statistics []StatisticI
 	metricsToRecord := make([]metrics.Metric, 0, len(statistics))
 	now := time.Now()
 
+	refs := make([]string, len(statistics))
+	for i, stat := range statistics {
+		refs[i] = stat.AssetMRN
+	}
+	if resolved, err := s.assetService.ResolveMRNs(ctx, refs); err == nil {
+		for i := range statistics {
+			if resolved[i] != "" {
+				statistics[i].AssetMRN = resolved[i]
+			}
+		}
+	}
+
 	for _, stat := range statistics {
 		metricsToRecord = append(metricsToRecord, metrics.Metric{
 			Name:  stat.MetricName,
@@ -719,9 +740,11 @@ func (s *service) GetLastRunCheckpoints(ctx context.Context, pipelineName, sourc
 		return nil, fmt.Errorf("%w: pipeline_name and source_name are required", ErrInvalidInput)
 	}
 
-	return s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName)
+	checkpoints, _, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName, "")
+	return checkpoints, err
 }
 
+// DestroyPipeline removes everything a pipeline put in the catalog, under every source and every owner. Its contributions are withdrawn from the assets it described, so an asset another writer also describes stays, and one only this pipeline described is deleted.
 func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*DestroyRunResponse, error) {
 	if pipelineName == "" {
 		return nil, fmt.Errorf("%w: pipeline_name is required", ErrInvalidInput)
@@ -734,41 +757,15 @@ func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*De
 
 	sourceNames := make(map[string]bool)
 	for _, run := range allRuns {
-		sourceNames[run.SourceName] = true
-	}
-
-	allCurrentEntities := make(map[string]*plugin.RunCheckpoint)
-	for sourceName := range sourceNames {
-		checkpoints, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName)
-		if err != nil {
-			log.Warn().Err(err).Str("pipeline", pipelineName).Str("source", sourceName).Msg("Failed to get checkpoints for source, skipping")
-			continue
-		}
-
-		for mrn, checkpoint := range checkpoints {
-			if checkpoint.Operation != StatusDeleted {
-				allCurrentEntities[mrn] = checkpoint
-			}
+		if run.SourceName != "destroy" {
+			sourceNames[run.SourceName] = true
 		}
 	}
 
-	response := &DestroyRunResponse{
-		AssetsDeleted:        0,
-		LineageDeleted:       0,
-		DocumentationDeleted: 0,
-		DeletedEntityMRNs:    make([]string, 0, len(allCurrentEntities)),
-	}
-
-	if len(allCurrentEntities) == 0 {
-		log.Info().Str("pipeline", pipelineName).Msg("No entities found to delete for pipeline")
-		return response, nil
-	}
-
-	log.Info().Str("pipeline", pipelineName).Int("entity_count", len(allCurrentEntities)).Msg("Starting pipeline destruction")
+	response := &DestroyRunResponse{DeletedEntityMRNs: []string{}}
 
 	destroyRunID := uuid.New().String()
 	now := time.Now()
-
 	destroyRun := &plugin.Run{
 		ID:           uuid.New().String(),
 		PipelineName: pipelineName,
@@ -779,88 +776,76 @@ func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*De
 		Config:       plugin.RawPluginConfig{"operation": "destroy_pipeline"},
 		CreatedBy:    "system",
 	}
-
 	if err := s.repo.Create(ctx, destroyRun); err != nil {
 		return nil, fmt.Errorf("creating destroy run: %w", err)
 	}
-
-	for entityMRN, checkpoint := range allCurrentEntities {
-		switch checkpoint.EntityType {
-		case "asset":
-			if err := s.assetService.DeleteByMRN(ctx, entityMRN); err != nil {
-				log.Error().Err(err).Str("entity_mrn", entityMRN).Msg("Failed to delete asset")
-				entity := &RunEntity{
-					ID:           uuid.New().String(),
-					RunID:        destroyRunID,
-					EntityType:   checkpoint.EntityType,
-					EntityMRN:    entityMRN,
-					Status:       StatusFailed,
-					ErrorMessage: fmt.Sprintf("Failed to delete asset: %v", err),
-					CreatedAt:    time.Now(),
-				}
-				if err := s.repo.AddRunEntity(ctx, destroyRun.ID, entity); err != nil {
-					log.Error().Err(err).Str("destroy_run_id", destroyRunID).Str("entity_mrn", entityMRN).Msg("Failed to track failed deletion")
-				}
-				continue
-			}
-			response.AssetsDeleted++
-		case "lineage":
-			parsedMRN, err := mrn.Parse(entityMRN)
-			if err != nil {
-				log.Error().Err(err).Str("entity_mrn", entityMRN).Msg("Failed to parse lineage MRN")
-				continue
-			}
-
-			parts := strings.Split(parsedMRN.Name, "->")
-			if len(parts) != 2 {
-				log.Error().Str("entity_mrn", entityMRN).Str("parsed_name", parsedMRN.Name).Msg("Invalid lineage MRN format")
-				continue
-			}
-
-			sourceAsset, err := s.assetService.GetByMRN(ctx, parts[0])
-			if err != nil {
-				log.Error().Err(err).Str("source_mrn", parts[0]).Msg("Failed to get source asset for lineage deletion")
-				continue
-			}
-
-			lineageResp, err := s.lineageService.GetAssetLineage(ctx, sourceAsset.ID, 1000, "downstream")
-			if err != nil {
-				log.Error().Err(err).Str("source_asset_id", sourceAsset.ID).Msg("Failed to get lineage for deletion")
-				continue
-			}
-
-			var edgeToDelete *lineage.LineageEdge
-			for _, edge := range lineageResp.Edges {
-				if edge.Source == parts[0] && edge.Target == parts[1] {
-					edgeToDelete = &edge
-					break
-				}
-			}
-
-			if edgeToDelete != nil {
-				if err := s.lineageService.DeleteDirectLineage(ctx, edgeToDelete.ID); err != nil {
-					log.Error().Err(err).Str("edge_id", edgeToDelete.ID).Msg("Failed to delete lineage edge")
-					continue
-				}
-			}
-			response.LineageDeleted++
-		case "documentation":
-			response.DocumentationDeleted++
-		}
-
-		response.DeletedEntityMRNs = append(response.DeletedEntityMRNs, entityMRN)
-
-		entity := &RunEntity{
-			ID:         uuid.New().String(),
-			RunID:      destroyRunID,
-			EntityType: checkpoint.EntityType,
-			EntityMRN:  entityMRN,
-			Status:     StatusDeleted,
-			CreatedAt:  time.Now(),
-		}
-
+	track := func(entityType, entityMRN, status, message string) {
+		entity := &RunEntity{ID: uuid.New().String(), RunID: destroyRunID, EntityType: entityType, EntityMRN: entityMRN, Status: status, ErrorMessage: message, CreatedAt: time.Now()}
 		if err := s.repo.AddRunEntity(ctx, destroyRun.ID, entity); err != nil {
 			log.Error().Err(err).Str("destroy_run_id", destroyRunID).Str("entity_mrn", entityMRN).Msg("Failed to track entity deletion")
+		}
+	}
+
+	// Edges and documentation are found through the checkpoints of every owner's latest run.
+	for sourceName := range sourceNames {
+		owners, err := s.repo.ListOwners(ctx, pipelineName, sourceName)
+		if err != nil {
+			log.Warn().Err(err).Str("pipeline", pipelineName).Str("source", sourceName).Msg("Failed to list run owners, skipping")
+			continue
+		}
+		for _, owner := range owners {
+			checkpoints, baselineOwner, err := s.repo.GetLastRunCheckpoints(ctx, pipelineName, sourceName, owner)
+			if err != nil || baselineOwner != owner {
+				continue
+			}
+			for key, checkpoint := range checkpoints {
+				if checkpoint.Operation == StatusDeleted {
+					continue
+				}
+				switch checkpoint.EntityType {
+				case "lineage":
+					if s.deleteCheckpointedEdge(ctx, key) {
+						response.LineageDeleted++
+						response.DeletedEntityMRNs = append(response.DeletedEntityMRNs, key)
+						track("lineage", key, StatusDeleted, "")
+					}
+				case "documentation":
+					response.DocumentationDeleted++
+				}
+			}
+		}
+	}
+
+	assetIDs, err := s.assetService.AssetIDsByWriter(ctx, writerPrefix(pipelineName)+"*")
+	if err != nil {
+		return nil, fmt.Errorf("listing the pipeline's assets: %w", err)
+	}
+	for _, assetID := range assetIDs {
+		a, err := s.assetService.Get(ctx, assetID)
+		if err != nil {
+			continue
+		}
+		contribs, err := s.assetService.Contributions(ctx, assetID)
+		if err != nil {
+			continue
+		}
+		deleted := false
+		for _, c := range contribs {
+			if !strings.HasPrefix(c.Writer, writerPrefix(pipelineName)) {
+				continue
+			}
+			gone, err := s.assetService.Withdraw(ctx, assetID, c.Writer)
+			if err != nil {
+				log.Error().Err(err).Str("asset_id", assetID).Msg("Failed to withdraw the pipeline's contribution")
+				track("asset", *a.MRN, StatusFailed, err.Error())
+				break
+			}
+			deleted = deleted || gone
+		}
+		if deleted {
+			response.AssetsDeleted++
+			response.DeletedEntityMRNs = append(response.DeletedEntityMRNs, *a.MRN)
+			track("asset", *a.MRN, StatusDeleted, "")
 		}
 	}
 
@@ -880,7 +865,6 @@ func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*De
 		TotalEntities:      len(response.DeletedEntityMRNs),
 		DurationSeconds:    int(completedAt.Sub(now).Seconds()),
 	}
-
 	if err := s.repo.Update(ctx, destroyRun); err != nil {
 		log.Error().Err(err).Str("destroy_run_id", destroyRunID).Msg("Failed to complete destroy run")
 	}
@@ -890,11 +874,40 @@ func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*De
 		Int("assets_deleted", response.AssetsDeleted).
 		Int("lineage_deleted", response.LineageDeleted).
 		Int("documentation_deleted", response.DocumentationDeleted).
-		Int("total_deleted", len(response.DeletedEntityMRNs)).
 		Dur("duration", completedAt.Sub(now)).
 		Msg("Pipeline destruction completed")
 
 	return response, nil
+}
+
+// deleteCheckpointedEdge deletes the edge a lineage checkpoint names. Keys from before kinded MRNs mangled the MRNs inside them beyond recovery and are skipped.
+func (s *service) deleteCheckpointedEdge(ctx context.Context, key string) bool {
+	lineageType, source, target, ok := parseLineageCheckpointKey(key)
+	if !ok {
+		return false
+	}
+	sourceAsset, err := s.assetService.GetByMRN(ctx, source)
+	if err != nil {
+		return false
+	}
+	resolved, err := s.assetService.ResolveMRNs(ctx, []string{source, target})
+	if err != nil {
+		return false
+	}
+	lineageResp, err := s.lineageService.GetAssetLineage(ctx, sourceAsset.ID, 1000, "downstream")
+	if err != nil {
+		return false
+	}
+	for _, edge := range lineageResp.Edges {
+		if edge.Source == resolved[0] && edge.Target == resolved[1] && strings.EqualFold(edge.Type, lineageType) {
+			if err := s.lineageService.DeleteDirectLineage(ctx, edge.ID); err != nil {
+				log.Error().Err(err).Str("edge_id", edge.ID).Msg("Failed to delete lineage edge")
+				return false
+			}
+			return true
+		}
+	}
+	return false
 }
 
 func (s *service) GetStaleEntities(ctx context.Context, lastCheckpoints map[string]*plugin.RunCheckpoint, currentEntityMRNs []string) []string {

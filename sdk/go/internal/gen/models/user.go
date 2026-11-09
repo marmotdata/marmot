@@ -36,6 +36,9 @@ type User struct {
 	// LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.
 	LastSeenAt string `json:"last_seen_at,omitempty"`
 
+	// MRN is mrn://user/<username>, derived from the name.
+	Mrn string `json:"mrn,omitempty"`
+
 	// must change password
 	MustChangePassword bool `json:"must_change_password,omitempty"`
 

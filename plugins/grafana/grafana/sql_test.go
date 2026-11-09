@@ -10,12 +10,12 @@ import (
 // datasourceMap pins, per Grafana data source type, the provider and
 // name shape of the Marmot plugin that catalogues the same tables.
 
-func TestDatasourceMap_PostgreSQLIsBareTableName(t *testing.T) {
+func TestDatasourceMap_PostgreSQLIsDatabaseTable(t *testing.T) {
 	src, ok := datasourceMap["grafana-postgresql-datasource"]
 	require.True(t, ok)
 
 	assert.Equal(t, "PostgreSQL", src.Provider)
-	assert.Equal(t, "orders", src.tableName("shop", "public", "orders"))
+	assert.Equal(t, []string{"shop", "public", "orders"}, src.tablePath("shop", "public", "orders"))
 }
 
 func TestDatasourceMap_OlderGrafanaCallsPostgreSQLPostgres(t *testing.T) {
@@ -23,15 +23,15 @@ func TestDatasourceMap_OlderGrafanaCallsPostgreSQLPostgres(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "PostgreSQL", src.Provider)
-	assert.Equal(t, "orders", src.tableName("shop", "public", "orders"))
+	assert.Equal(t, []string{"shop", "public", "orders"}, src.tablePath("shop", "public", "orders"))
 }
 
-func TestDatasourceMap_MySQLIsBareTableName(t *testing.T) {
+func TestDatasourceMap_MySQLIsDatabaseTable(t *testing.T) {
 	src, ok := datasourceMap["mysql"]
 	require.True(t, ok)
 
 	assert.Equal(t, "MySQL", src.Provider)
-	assert.Equal(t, "orders", src.tableName("shop", "", "orders"))
+	assert.Equal(t, []string{"shop", "orders"}, src.tablePath("shop", "", "orders"))
 }
 
 func TestDatasourceMap_SQLServerIsDatabaseSchemaTable(t *testing.T) {
@@ -39,23 +39,23 @@ func TestDatasourceMap_SQLServerIsDatabaseSchemaTable(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "SQL Server", src.Provider)
-	assert.Equal(t, "sales.dbo.orders", src.tableName("sales", "dbo", "orders"))
+	assert.Equal(t, []string{"sales", "dbo", "orders"}, src.tablePath("sales", "dbo", "orders"))
 }
 
-func TestDatasourceMap_ClickHouseIsBareTableName(t *testing.T) {
+func TestDatasourceMap_ClickHouseIsDatabaseTable(t *testing.T) {
 	src, ok := datasourceMap["grafana-clickhouse-datasource"]
 	require.True(t, ok)
 
 	assert.Equal(t, "ClickHouse", src.Provider)
-	assert.Equal(t, "events", src.tableName("default", "default", "events"))
+	assert.Equal(t, []string{"default", "events"}, src.tablePath("default", "default", "events"))
 }
 
-func TestDatasourceMap_CommunityClickHouseIsBareTableName(t *testing.T) {
+func TestDatasourceMap_CommunityClickHouseIsDatabaseTable(t *testing.T) {
 	src, ok := datasourceMap["vertamedia-clickhouse-datasource"]
 	require.True(t, ok)
 
 	assert.Equal(t, "ClickHouse", src.Provider)
-	assert.Equal(t, "events", src.tableName("default", "default", "events"))
+	assert.Equal(t, []string{"default", "events"}, src.tablePath("default", "default", "events"))
 }
 
 func TestDatasourceMap_HasExactlyTheSQLSources(t *testing.T) {
@@ -64,12 +64,12 @@ func TestDatasourceMap_HasExactlyTheSQLSources(t *testing.T) {
 	assert.NotContains(t, datasourceMap, "elasticsearch")
 }
 
-func TestSQLServerName_DefaultsTheSchemaToDbo(t *testing.T) {
-	assert.Equal(t, "sales.dbo.orders", sqlServerName("sales", "", "orders"))
+func TestSQLServerPath_DefaultsTheSchemaToDbo(t *testing.T) {
+	assert.Equal(t, []string{"sales", "dbo", "orders"}, sqlServerPath("sales", "", "orders"))
 }
 
-func TestSQLServerName_NeedsADatabase(t *testing.T) {
-	assert.Equal(t, "", sqlServerName("", "dbo", "orders"))
+func TestSQLServerPath_NeedsADatabase(t *testing.T) {
+	assert.Empty(t, sqlServerPath("", "dbo", "orders"))
 }
 
 // extractTables
@@ -219,29 +219,29 @@ func TestExtractTables_EmptyQuery(t *testing.T) {
 func TestSQLTableMRNs_NamesPostgreSQLTablesBare(t *testing.T) {
 	sql := "SELECT * FROM public.orders o JOIN public.customers c ON c.id = o.customer_id"
 
-	assert.Equal(t, []string{"mrn://table/postgresql/orders", "mrn://table/postgresql/customers"},
-		sqlTableMRNs("grafana-postgresql-datasource", "shop", sql))
+	assert.Equal(t, []string{"mrn://asset/table/postgresql/shop.public.orders", "mrn://asset/table/postgresql/shop.public.customers"},
+		sqlTableMRNs("grafana-postgresql-datasource", "shop", "", sql))
 }
 
 func TestSQLTableMRNs_UsesTheDataSourcesDatabaseForSQLServer(t *testing.T) {
-	assert.Equal(t, []string{"mrn://table/sql-server/sales.dbo.orders"},
-		sqlTableMRNs("mssql", "sales", "SELECT * FROM orders"))
+	assert.Equal(t, []string{"mrn://asset/table/sql-server/sales.dbo.orders"},
+		sqlTableMRNs("mssql", "sales", "", "SELECT * FROM orders"))
 }
 
 func TestSQLTableMRNs_QueryDatabaseWinsOverTheDataSourcesForSQLServer(t *testing.T) {
-	assert.Equal(t, []string{"mrn://table/sql-server/archive.dbo.orders"},
-		sqlTableMRNs("mssql", "sales", "SELECT * FROM archive.dbo.orders"))
+	assert.Equal(t, []string{"mrn://asset/table/sql-server/archive.dbo.orders"},
+		sqlTableMRNs("mssql", "sales", "", "SELECT * FROM archive.dbo.orders"))
 }
 
 func TestSQLTableMRNs_SQLServerWithoutADatabaseYieldsNothing(t *testing.T) {
-	assert.Empty(t, sqlTableMRNs("mssql", "", "SELECT * FROM orders"))
+	assert.Empty(t, sqlTableMRNs("mssql", "", "", "SELECT * FROM orders"))
 }
 
 func TestSQLTableMRNs_NonSQLDataSourceYieldsNothing(t *testing.T) {
-	assert.Empty(t, sqlTableMRNs("prometheus", "", "SELECT * FROM orders"))
-	assert.Empty(t, sqlTableMRNs("", "", "SELECT * FROM orders"))
+	assert.Empty(t, sqlTableMRNs("prometheus", "", "", "SELECT * FROM orders"))
+	assert.Empty(t, sqlTableMRNs("", "", "", "SELECT * FROM orders"))
 }
 
 func TestSQLTableMRNs_TemplateVariableYieldsNothing(t *testing.T) {
-	assert.Empty(t, sqlTableMRNs("grafana-postgresql-datasource", "shop", "SELECT * FROM ${table}"))
+	assert.Empty(t, sqlTableMRNs("grafana-postgresql-datasource", "shop", "", "SELECT * FROM ${table}"))
 }

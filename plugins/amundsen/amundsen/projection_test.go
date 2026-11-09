@@ -130,7 +130,7 @@ func TestProjection_ElasticsearchIndexIsBare(t *testing.T) {
 func TestProjection_AthenaIsCataloguedAsGlue(t *testing.T) {
 	// An Athena table is a Glue Data Catalog table. plugins/glue sets
 	// Name to the bare table, so its assets land on
-	// mrn://table/glue/<table>.
+	// mrn://asset/table/glue/<table>.
 	p := projectionFor("athena")
 
 	assert.Equal(t, "Glue", p.Provider)

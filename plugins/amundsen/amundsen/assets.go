@@ -59,13 +59,10 @@ func newCollector(config *Config) *collector {
 // description, tags, the Amundsen source record and any links the run
 // was configured with.
 //
-// Name and MRN are the same string on purpose: both have to match what
-// the technology's own plugin produces, or the two runs stop merging
-// onto one asset. provider is used unslugged for the same reason, so a
-// provider with a space, such as "Delta Lake", lands that space in the
-// MRN, which is where the technology's own plugin lands too.
-func (c *collector) newAsset(assetType, provider, name, description string, tags []string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, provider, name)
+// The MRN has to match what the technology's own plugin produces, or the two runs stop merging onto one asset. provider is used unslugged for the same reason, so a provider with a space, such as "Delta Lake", lands that space in the MRN, which is where the technology's own plugin lands too.
+func (c *collector) newAsset(assetType, provider string, id identity, description string, tags []string, metadata map[string]any) pluginsdk.Asset {
+	name := id.Name
+	mrnValue := assetMRN(assetType, provider, id.Path...)
 
 	if metadata == nil {
 		metadata = make(map[string]any)
@@ -87,6 +84,10 @@ func (c *collector) newAsset(assetType, provider, name, description string, tags
 		}},
 	}
 
+	if old := mrn.New(assetType, provider, id.Legacy); old != mrnValue {
+		asset.PreviousMRNs = []string{old}
+	}
+
 	if c.config.IncludeDescriptions && description != "" {
 		asset.Description = &description
 	}
@@ -101,11 +102,7 @@ func (c *collector) newAsset(assetType, provider, name, description string, tags
 // add records an asset and the Amundsen key it came from, so the lineage
 // passes can find it.
 //
-// Two Amundsen entries can land on one MRN: naming an asset the way a
-// native Marmot plugin would means dropping the levels that plugin does
-// not use, so a Postgres public.orders and staging.orders both become
-// orders. Keeping the first and reporting the rest is the same outcome
-// the native plugin reaches, and is what the OpenMetadata import does.
+// Two Amundsen entries can land on one MRN when the technology's plugin does not use a level Amundsen has, such as the cluster of a MySQL table. Keeping the first and reporting the rest is the same outcome the native plugin reaches.
 func (c *collector) add(key string, asset pluginsdk.Asset) bool {
 	if _, seen := c.seenMRN[*asset.MRN]; seen {
 		log.Debug().Str("mrn", *asset.MRN).Str("key", key).Msg("Skipping an Amundsen entry that projects onto an MRN already discovered")
@@ -146,11 +143,21 @@ func (c *collector) stat(assetMRN, metric string, value float64) {
 	c.statistics = append(c.statistics, pluginsdk.Statistic{AssetMRN: assetMRN, MetricName: metric, Value: value})
 }
 
-// assetMRN is the single place an Amundsen MRN is built. Every pass goes
-// through it, including the lineage ones, so they can never drift into
-// addressing the same table differently.
-func assetMRN(assetType, provider, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place an Amundsen MRN is built. Every pass goes through it, including the lineage ones, so they can never drift into addressing the same table differently. Amundsen holds no address for the systems it describes, so every MRN has no zone.
+func assetMRN(assetType, provider string, path ...string) string {
+	return mrn.Asset(assetType, provider, path...).String()
+}
+
+// identity is what names one asset: its own name, the levels its MRN is built from and the single string earlier releases built the MRN from.
+type identity struct {
+	Name   string
+	Path   []string
+	Legacy string
+}
+
+// flatIdent names an asset by one level.
+func flatIdent(name string) identity {
+	return identity{Name: name, Path: []string{name}, Legacy: name}
 }
 
 // putIf writes a metadata key only when the value carries information,

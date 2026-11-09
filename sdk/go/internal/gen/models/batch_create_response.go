@@ -27,8 +27,14 @@ type BatchCreateResponse struct {
 	// lineage
 	Lineage []*LineageResult `json:"lineage"`
 
+	// StaleContributionsWithdrawn are assets the run no longer found that another writer still describes, so they were kept.
+	StaleContributionsWithdrawn []string `json:"stale_contributions_withdrawn"`
+
 	// stale entities removed
 	StaleEntitiesRemoved []string `json:"stale_entities_removed"`
+
+	// Warnings are identity problems the run worked around.
+	Warnings []string `json:"warnings"`
 }
 
 // Validate validates this batch create response

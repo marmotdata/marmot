@@ -10,8 +10,16 @@ import (
 // Each resolver is exercised with the config a real deployment of that
 // connector carries, trimmed to the keys the resolver reads.
 
-func table(provider, name string) dataset {
-	return dataset{Type: "Table", Provider: provider, Name: name}
+func table(provider string, path ...string) dataset {
+	return dataset{Type: "Table", Provider: provider, Path: path}
+}
+
+func tableAt(provider, host string, path ...string) dataset {
+	return dataset{Type: "Table", Provider: provider, Path: path, Host: host}
+}
+
+func collection(host string, path ...string) dataset {
+	return dataset{Type: "Collection", Provider: "MongoDB", Path: path, Host: host}
 }
 
 func mustResolve(t *testing.T, class string) resolver {
@@ -50,7 +58,7 @@ func TestResolverFor_FileStreamConnectorsHaveNoResolver(t *testing.T) {
 
 // Debezium PostgreSQL
 
-func TestDebeziumPostgres_NamesTablesBare(t *testing.T) {
+func TestDebeziumPostgres_NamesTablesDatabaseSchemaTable(t *testing.T) {
 	r := mustResolve(t, "io.debezium.connector.postgresql.PostgresConnector")
 	cfg := connectorConfig{
 		"database.dbname":    "shop",
@@ -58,7 +66,30 @@ func TestDebeziumPostgres_NamesTablesBare(t *testing.T) {
 		"table.include.list": "public.orders,inventory.items",
 	}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders"), table("PostgreSQL", "items")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("PostgreSQL", "shop", "public", "orders"), table("PostgreSQL", "shop", "inventory", "items")}, r.sources(cfg))
+}
+
+func TestDebeziumPostgres_TheHostAndPortComeFromTheConnector(t *testing.T) {
+	r := mustResolve(t, "io.debezium.connector.postgresql.PostgresConnector")
+	cfg := connectorConfig{"database.hostname": "PG.internal", "database.port": "6432", "database.dbname": "shop", "table.include.list": "public.orders"}
+
+	assert.Equal(t, []dataset{tableAt("PostgreSQL", "pg.internal:6432", "shop", "public", "orders")}, r.sources(cfg))
+}
+
+func TestDebeziumPostgres_TheHostGetsTheDefaultPort(t *testing.T) {
+	r := mustResolve(t, "io.debezium.connector.postgresql.PostgresConnector")
+	cfg := connectorConfig{"database.hostname": "pg.internal", "database.dbname": "shop", "table.include.list": "public.orders"}
+
+	assert.Equal(t, []dataset{tableAt("PostgreSQL", "pg.internal:5432", "shop", "public", "orders")}, r.sources(cfg))
+}
+
+func TestDebeziumPostgres_SameTableInTwoSchemasIsTwoDatasets(t *testing.T) {
+	r := mustResolve(t, "io.debezium.connector.postgresql.PostgresConnector")
+	cfg := connectorConfig{"database.dbname": "shop", "table.include.list": "public.orders,archive.orders"}
+
+	got := r.sources(cfg)
+	require.Len(t, got, 2)
+	assert.NotEqual(t, got[0].Path, got[1].Path)
 }
 
 func TestDebeziumPostgres_NamesTopicsPrefixSchemaTable(t *testing.T) {
@@ -70,50 +101,50 @@ func TestDebeziumPostgres_NamesTopicsPrefixSchemaTable(t *testing.T) {
 
 func TestDebeziumPostgres_AcceptsDebezium1Keys(t *testing.T) {
 	r := mustResolve(t, "io.debezium.connector.postgresql.PostgresConnector")
-	cfg := connectorConfig{"database.server.name": "shop", "table.whitelist": "public.orders"}
+	cfg := connectorConfig{"database.server.name": "shop", "database.dbname": "shop", "table.whitelist": "public.orders"}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("PostgreSQL", "shop", "public", "orders")}, r.sources(cfg))
 	assert.Equal(t, []string{"shop.public.orders"}, r.topics(cfg))
 }
 
 func TestDebeziumPostgres_UnescapesDotsInIncludeEntries(t *testing.T) {
 	r := mustResolve(t, "PostgresCdcSource")
-	cfg := connectorConfig{"topic.prefix": "shop", "table.include.list": `public\.orders`}
+	cfg := connectorConfig{"topic.prefix": "shop", "database.dbname": "shop", "table.include.list": `public\.orders`}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("PostgreSQL", "shop", "public", "orders")}, r.sources(cfg))
 	assert.Equal(t, []string{"shop.public.orders"}, r.topics(cfg))
 }
 
 func TestDebeziumPostgres_SkipsPatternEntries(t *testing.T) {
 	r := mustResolve(t, "PostgresCdcSourceV2")
-	cfg := connectorConfig{"topic.prefix": "shop", "table.include.list": "public.*,public.orders"}
+	cfg := connectorConfig{"topic.prefix": "shop", "database.dbname": "shop", "table.include.list": "public.*,public.orders"}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("PostgreSQL", "shop", "public", "orders")}, r.sources(cfg))
 	assert.Equal(t, []string{"shop.public.orders"}, r.topics(cfg))
 }
 
 func TestDebeziumPostgres_NoPrefixMeansNoTopics(t *testing.T) {
 	r := mustResolve(t, "PostgresSourceConnector")
-	cfg := connectorConfig{"table.include.list": "public.orders"}
+	cfg := connectorConfig{"database.dbname": "shop", "table.include.list": "public.orders"}
 
 	assert.Empty(t, r.topics(cfg))
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("PostgreSQL", "shop", "public", "orders")}, r.sources(cfg))
 }
 
 // Debezium MySQL
 
-func TestDebeziumMySQL_NamesTablesBareAndTopicsPrefixDbTable(t *testing.T) {
+func TestDebeziumMySQL_NamesTablesDatabaseTableAndTopicsPrefixDbTable(t *testing.T) {
 	r := mustResolve(t, "io.debezium.connector.mysql.MySqlConnector")
-	cfg := connectorConfig{"topic.prefix": "mysql1", "table.include.list": "shop.orders,shop.customers"}
+	cfg := connectorConfig{"topic.prefix": "mysql1", "database.hostname": "my.internal", "table.include.list": "shop.orders,shop.customers"}
 
-	assert.Equal(t, []dataset{table("MySQL", "orders"), table("MySQL", "customers")}, r.sources(cfg))
+	assert.Equal(t, []dataset{tableAt("MySQL", "my.internal:3306", "shop", "orders"), tableAt("MySQL", "my.internal:3306", "shop", "customers")}, r.sources(cfg))
 	assert.Equal(t, []string{"mysql1.shop.orders", "mysql1.shop.customers"}, r.topics(cfg))
 }
 
 func TestDebeziumMySQL_ConfluentCloudAliases(t *testing.T) {
 	for _, class := range []string{"MySqlCdcSource", "MySqlCdcSourceV2"} {
 		r := mustResolve(t, class)
-		assert.Equal(t, []dataset{table("MySQL", "orders")},
+		assert.Equal(t, []dataset{table("MySQL", "shop", "orders")},
 			r.sources(connectorConfig{"table.include.list": "shop.orders"}), class)
 	}
 }
@@ -128,7 +159,7 @@ func TestDebeziumSQLServer_NamesTablesDatabaseSchemaTable(t *testing.T) {
 		"table.include.list": "dbo.orders,sales.invoices",
 	}
 
-	assert.Equal(t, []dataset{table("SQL Server", "shop.dbo.orders"), table("SQL Server", "shop.sales.invoices")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("SQL Server", "shop", "dbo", "orders"), table("SQL Server", "shop", "sales", "invoices")}, r.sources(cfg))
 }
 
 func TestDebeziumSQLServer_NamesTopicsPrefixDbSchemaTable(t *testing.T) {
@@ -142,7 +173,7 @@ func TestDebeziumSQLServer_FallsBackToDebezium1DatabaseKey(t *testing.T) {
 	r := mustResolve(t, "SqlServerCdcSourceV2")
 	cfg := connectorConfig{"database.server.name": "mssql1", "database.dbname": "shop", "table.include.list": "dbo.orders"}
 
-	assert.Equal(t, []dataset{table("SQL Server", "shop.dbo.orders")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("SQL Server", "shop", "dbo", "orders")}, r.sources(cfg))
 	assert.Equal(t, []string{"mssql1.shop.dbo.orders"}, r.topics(cfg))
 }
 
@@ -156,42 +187,46 @@ func TestDebeziumSQLServer_NoDatabaseMeansNoDataset(t *testing.T) {
 
 // Debezium MongoDB
 
-func TestDebeziumMongoDB_NamesCollectionsBare(t *testing.T) {
+func TestDebeziumMongoDB_NamesCollectionsDatabaseCollection(t *testing.T) {
 	r := mustResolve(t, "io.debezium.connector.mongodb.MongoDbConnector")
 	cfg := connectorConfig{"topic.prefix": "mongo1", "collection.include.list": "shop.orders,shop.carts"}
 
-	assert.Equal(t, []dataset{
-		{Type: "Collection", Provider: "MongoDB", Name: "orders"},
-		{Type: "Collection", Provider: "MongoDB", Name: "carts"},
-	}, r.sources(cfg))
+	assert.Equal(t, []dataset{collection("", "shop", "orders"), collection("", "shop", "carts")}, r.sources(cfg))
 	assert.Equal(t, []string{"mongo1.shop.orders", "mongo1.shop.carts"}, r.topics(cfg))
+}
+
+func TestDebeziumMongoDB_TheHostComesFromTheConnectionString(t *testing.T) {
+	r := mustResolve(t, "io.debezium.connector.mongodb.MongoDbConnector")
+	cfg := connectorConfig{"mongodb.connection.string": "mongodb://user:pw@Mongo-1:27018,mongo-2:27018/?replicaSet=rs0", "collection.include.list": "shop.orders"}
+
+	assert.Equal(t, []dataset{collection("mongo-1:27018", "shop", "orders")}, r.sources(cfg))
 }
 
 func TestDebeziumMongoDB_ConfluentCloudAlias(t *testing.T) {
 	r := mustResolve(t, "MongoDbCdcSource")
-	assert.Equal(t, []dataset{{Type: "Collection", Provider: "MongoDB", Name: "orders"}},
+	assert.Equal(t, []dataset{collection("", "shop", "orders")},
 		r.sources(connectorConfig{"collection.include.list": "shop.orders"}))
 }
 
 // Debezium Oracle
 
-func TestDebeziumOracle_NamesTablesSchemaTable(t *testing.T) {
+func TestDebeziumOracle_NamesTablesServiceSchemaTable(t *testing.T) {
 	r := mustResolve(t, "io.debezium.connector.oracle.OracleConnector")
-	cfg := connectorConfig{"topic.prefix": "ora1", "table.include.list": "SHOP.ORDERS,SHOP.CUSTOMERS"}
+	cfg := connectorConfig{"topic.prefix": "ora1", "database.dbname": "ORCLCDB", "database.hostname": "ora", "table.include.list": "SHOP.ORDERS,SHOP.CUSTOMERS"}
 
-	assert.Equal(t, []dataset{table("Oracle", "SHOP.ORDERS"), table("Oracle", "SHOP.CUSTOMERS")}, r.sources(cfg))
+	assert.Equal(t, []dataset{tableAt("Oracle", "ora:1521", "ORCLCDB", "SHOP", "ORDERS"), tableAt("Oracle", "ora:1521", "ORCLCDB", "SHOP", "CUSTOMERS")}, r.sources(cfg))
 	assert.Equal(t, []string{"ora1.SHOP.ORDERS", "ora1.SHOP.CUSTOMERS"}, r.topics(cfg))
 }
 
 func TestDebeziumOracle_ConfluentCloudAlias(t *testing.T) {
 	r := mustResolve(t, "OracleCdcSource")
-	assert.Equal(t, []dataset{table("Oracle", "SHOP.ORDERS")},
-		r.sources(connectorConfig{"table.include.list": "SHOP.ORDERS"}))
+	assert.Equal(t, []dataset{table("Oracle", "ORCLCDB", "SHOP", "ORDERS")},
+		r.sources(connectorConfig{"database.dbname": "ORCLCDB", "table.include.list": "SHOP.ORDERS"}))
 }
 
 // Confluent JDBC source
 
-func TestJDBCSource_PostgresTablesAreBare(t *testing.T) {
+func TestJDBCSource_PostgresTablesAreDatabaseSchemaTable(t *testing.T) {
 	r := mustResolve(t, "io.confluent.connect.jdbc.JdbcSourceConnector")
 	cfg := connectorConfig{
 		"connection.url":  "jdbc:postgresql://db:5432/shop?sslmode=require",
@@ -199,18 +234,18 @@ func TestJDBCSource_PostgresTablesAreBare(t *testing.T) {
 		"topic.prefix":    "pg-",
 	}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders"), table("PostgreSQL", "customers")}, r.sources(cfg))
+	assert.Equal(t, []dataset{tableAt("PostgreSQL", "db:5432", "shop", "public", "orders"), tableAt("PostgreSQL", "db:5432", "shop", "public", "customers")}, r.sources(cfg))
 	assert.Equal(t, []string{"pg-orders", "pg-customers"}, r.topics(cfg))
 }
 
-func TestJDBCSource_MySQLAndMariaDBTablesAreBare(t *testing.T) {
+func TestJDBCSource_MySQLAndMariaDBTablesAreDatabaseTable(t *testing.T) {
 	r := mustResolve(t, "JdbcSourceConnector")
 
 	mysql := connectorConfig{"connection.url": "jdbc:mysql://db:3306/shop", "table.whitelist": "orders"}
-	assert.Equal(t, []dataset{table("MySQL", "orders")}, r.sources(mysql))
+	assert.Equal(t, []dataset{tableAt("MySQL", "db:3306", "shop", "orders")}, r.sources(mysql))
 
 	mariadb := connectorConfig{"connection.url": "jdbc:mariadb://db:3306/shop", "table.whitelist": "orders"}
-	assert.Equal(t, []dataset{table("MariaDB", "orders")}, r.sources(mariadb))
+	assert.Equal(t, []dataset{tableAt("MariaDB", "db:3306", "shop", "orders")}, r.sources(mariadb))
 }
 
 func TestJDBCSource_SQLServerTablesAreDatabaseSchemaTable(t *testing.T) {
@@ -220,10 +255,10 @@ func TestJDBCSource_SQLServerTablesAreDatabaseSchemaTable(t *testing.T) {
 		"table.whitelist": "orders,sales.invoices",
 	}
 
-	assert.Equal(t, []dataset{table("SQL Server", "shop.dbo.orders"), table("SQL Server", "shop.sales.invoices")}, r.sources(cfg))
+	assert.Equal(t, []dataset{tableAt("SQL Server", "db:1433", "shop", "dbo", "orders"), tableAt("SQL Server", "db:1433", "shop", "sales", "invoices")}, r.sources(cfg))
 }
 
-func TestJDBCSource_OracleTablesAreSchemaTable(t *testing.T) {
+func TestJDBCSource_OracleTablesAreServiceSchemaTable(t *testing.T) {
 	r := mustResolve(t, "JdbcSourceConnector")
 	cfg := connectorConfig{
 		"connection.url":  "jdbc:oracle:thin:@//db:1521/ORCLPDB1",
@@ -231,7 +266,7 @@ func TestJDBCSource_OracleTablesAreSchemaTable(t *testing.T) {
 		"table.whitelist": "ORDERS,HR.EMPLOYEES",
 	}
 
-	assert.Equal(t, []dataset{table("Oracle", "SHOP.ORDERS"), table("Oracle", "HR.EMPLOYEES")}, r.sources(cfg))
+	assert.Equal(t, []dataset{tableAt("Oracle", "db:1521", "ORCLPDB1", "SHOP", "ORDERS"), tableAt("Oracle", "db:1521", "ORCLPDB1", "HR", "EMPLOYEES")}, r.sources(cfg))
 }
 
 func TestJDBCSource_SnowflakeTablesAreDatabaseSchemaTable(t *testing.T) {
@@ -241,7 +276,7 @@ func TestJDBCSource_SnowflakeTablesAreDatabaseSchemaTable(t *testing.T) {
 		"table.whitelist": "ORDERS,FINANCE.INVOICES",
 	}
 
-	assert.Equal(t, []dataset{table("Snowflake", "SHOP.SALES.ORDERS"), table("Snowflake", "SHOP.FINANCE.INVOICES")}, r.sources(cfg))
+	assert.Equal(t, []dataset{table("Snowflake", "SHOP", "SALES", "ORDERS"), table("Snowflake", "SHOP", "FINANCE", "INVOICES")}, r.sources(cfg))
 }
 
 func TestJDBCSource_RedshiftTablesAreDatabaseSchemaTable(t *testing.T) {
@@ -251,7 +286,22 @@ func TestJDBCSource_RedshiftTablesAreDatabaseSchemaTable(t *testing.T) {
 		"table.whitelist": "orders,analytics.sessions",
 	}
 
-	assert.Equal(t, []dataset{table("Redshift", "dev.public.orders"), table("Redshift", "dev.analytics.sessions")}, r.sources(cfg))
+	host := "cluster.abc.eu-west-1.redshift.amazonaws.com:5439"
+	assert.Equal(t, []dataset{tableAt("Redshift", host, "dev", "public", "orders"), tableAt("Redshift", host, "dev", "analytics", "sessions")}, r.sources(cfg))
+}
+
+func TestJDBCSource_OracleSIDForm(t *testing.T) {
+	r := mustResolve(t, "JdbcSourceConnector")
+	cfg := connectorConfig{"connection.url": "jdbc:oracle:thin:@Ora.internal:1522:XE", "connection.user": "shop", "table.whitelist": "ORDERS"}
+
+	assert.Equal(t, []dataset{tableAt("Oracle", "ora.internal:1522", "XE", "SHOP", "ORDERS")}, r.sources(cfg))
+}
+
+func TestJDBCSource_SQLServerInstanceNameIsDroppedFromTheHost(t *testing.T) {
+	r := mustResolve(t, "JdbcSourceConnector")
+	cfg := connectorConfig{"connection.url": `jdbc:sqlserver://db\SQLEXPRESS;databaseName=shop`, "table.whitelist": "orders"}
+
+	assert.Equal(t, []dataset{tableAt("SQL Server", "db:1433", "shop", "dbo", "orders")}, r.sources(cfg))
 }
 
 func TestJDBCSource_QueryModeHasNoDatasetAndTopicIsThePrefix(t *testing.T) {
@@ -279,7 +329,7 @@ func TestJDBCSink_DefaultsTheTableToTheTopic(t *testing.T) {
 	r := mustResolve(t, "io.confluent.connect.jdbc.JdbcSinkConnector")
 	cfg := connectorConfig{"connection.url": "jdbc:postgresql://db:5432/warehouse"}
 
-	assert.Equal(t, []dataset{table("PostgreSQL", "orders"), table("PostgreSQL", "payments")},
+	assert.Equal(t, []dataset{tableAt("PostgreSQL", "db:5432", "warehouse", "public", "orders"), tableAt("PostgreSQL", "db:5432", "warehouse", "public", "payments")},
 		r.targets(cfg, []string{"orders", "payments"}))
 }
 
@@ -287,7 +337,7 @@ func TestJDBCSink_SubstitutesTheTopicIntoTableNameFormat(t *testing.T) {
 	r := mustResolve(t, "JdbcSinkConnector")
 	cfg := connectorConfig{"connection.url": "jdbc:mysql://db:3306/warehouse", "table.name.format": "kafka_${topic}"}
 
-	assert.Equal(t, []dataset{table("MySQL", "kafka_orders")}, r.targets(cfg, []string{"orders"}))
+	assert.Equal(t, []dataset{tableAt("MySQL", "db:3306", "warehouse", "kafka_orders")}, r.targets(cfg, []string{"orders"}))
 }
 
 func TestJDBCSink_SchemaQualifiedFormatOnSQLServer(t *testing.T) {
@@ -297,7 +347,7 @@ func TestJDBCSink_SchemaQualifiedFormatOnSQLServer(t *testing.T) {
 		"table.name.format": "staging.${topic}",
 	}
 
-	assert.Equal(t, []dataset{table("SQL Server", "warehouse.staging.orders")}, r.targets(cfg, []string{"orders"}))
+	assert.Equal(t, []dataset{tableAt("SQL Server", "db:1433", "warehouse", "staging", "orders")}, r.targets(cfg, []string{"orders"}))
 }
 
 func TestJDBCSink_NoConnectionURLMeansNoTargets(t *testing.T) {
@@ -311,7 +361,7 @@ func TestS3Sink_EveryTopicLandsInTheOneBucket(t *testing.T) {
 	r := mustResolve(t, "io.confluent.connect.s3.S3SinkConnector")
 	cfg := connectorConfig{"s3.bucket.name": "data-lake", "s3.region": "eu-west-1", "topics.dir": "raw"}
 
-	assert.Equal(t, []dataset{{Type: "Bucket", Provider: "S3", Name: "data-lake"}}, r.targets(cfg, []string{"orders", "payments"}))
+	assert.Equal(t, []dataset{{Type: "Bucket", Provider: "S3", Path: []string{"data-lake"}}}, r.targets(cfg, []string{"orders", "payments"}))
 }
 
 func TestS3Sink_NoBucketMeansNoTarget(t *testing.T) {
@@ -323,14 +373,14 @@ func TestGCSSink_TargetsTheBucket(t *testing.T) {
 	r := mustResolve(t, "io.confluent.connect.gcs.GcsSinkConnector")
 	cfg := connectorConfig{"gcs.bucket.name": "acme-lake"}
 
-	assert.Equal(t, []dataset{{Type: "Bucket", Provider: "GCS", Name: "acme-lake"}}, r.targets(cfg, []string{"orders"}))
+	assert.Equal(t, []dataset{{Type: "Bucket", Provider: "GCS", Path: []string{"acme-lake"}}}, r.targets(cfg, []string{"orders"}))
 }
 
 func TestAzureBlobSink_TargetsTheContainer(t *testing.T) {
 	r := mustResolve(t, "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector")
 	cfg := connectorConfig{"azblob.container.name": "raw", "azblob.account.name": "acme"}
 
-	assert.Equal(t, []dataset{{Type: "Container", Provider: "AzureBlob", Name: "raw"}}, r.targets(cfg, []string{"orders"}))
+	assert.Equal(t, []dataset{{Type: "Container", Provider: "AzureBlob", Path: []string{"raw"}}}, r.targets(cfg, []string{"orders"}))
 }
 
 // Snowflake sink
@@ -343,7 +393,7 @@ func TestSnowflakeSink_UsesTheTopicToTableMap(t *testing.T) {
 		"snowflake.topic2table.map": "orders:ORDERS_RAW,payments:PAYMENTS_RAW",
 	}
 
-	assert.Equal(t, []dataset{table("Snowflake", "SHOP.RAW.ORDERS_RAW"), table("Snowflake", "SHOP.RAW.PAYMENTS_RAW")},
+	assert.Equal(t, []dataset{table("Snowflake", "SHOP", "RAW", "ORDERS_RAW"), table("Snowflake", "SHOP", "RAW", "PAYMENTS_RAW")},
 		r.targets(cfg, []string{"orders", "payments"}))
 }
 
@@ -351,7 +401,7 @@ func TestSnowflakeSink_DefaultsTheTableToTheTopic(t *testing.T) {
 	r := mustResolve(t, "SnowflakeSinkConnector")
 	cfg := connectorConfig{"snowflake.database.name": "SHOP", "snowflake.schema.name": "RAW"}
 
-	assert.Equal(t, []dataset{table("Snowflake", "SHOP.RAW.orders")}, r.targets(cfg, []string{"orders"}))
+	assert.Equal(t, []dataset{table("Snowflake", "SHOP", "RAW", "orders")}, r.targets(cfg, []string{"orders"}))
 }
 
 func TestSnowflakeSink_NoDatabaseMeansNoTargets(t *testing.T) {
@@ -365,21 +415,27 @@ func TestBigQuerySink_DefaultsTheTableToTheTopic(t *testing.T) {
 	r := mustResolve(t, "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector")
 	cfg := connectorConfig{"project": "acme", "defaultDataset": "raw"}
 
-	assert.Equal(t, []dataset{table("BigQuery", "orders-events")}, r.targets(cfg, []string{"orders-events"}))
+	assert.Equal(t, []dataset{table("BigQuery", "acme", "raw", "orders-events")}, r.targets(cfg, []string{"orders-events"}))
 }
 
 func TestBigQuerySink_SanitisesTheTopicWhenAsked(t *testing.T) {
 	r := mustResolve(t, "BigQuerySinkConnector")
-	cfg := connectorConfig{"sanitizeTopics": "true"}
+	cfg := connectorConfig{"project": "acme", "defaultDataset": "raw", "sanitizeTopics": "true"}
 
-	assert.Equal(t, []dataset{table("BigQuery", "orders_events_v2")}, r.targets(cfg, []string{"orders-events.v2"}))
+	assert.Equal(t, []dataset{table("BigQuery", "acme", "raw", "orders_events_v2")}, r.targets(cfg, []string{"orders-events.v2"}))
 }
 
 func TestBigQuerySink_UsesTheTopicToTableMap(t *testing.T) {
 	r := mustResolve(t, "BigQuerySinkConnector")
-	cfg := connectorConfig{"topic2TableMap": "orders-events:orders", "sanitizeTopics": "true"}
+	cfg := connectorConfig{"project": "acme", "defaultDataset": "raw", "topic2TableMap": "orders-events:orders", "sanitizeTopics": "true"}
 
-	assert.Equal(t, []dataset{table("BigQuery", "orders")}, r.targets(cfg, []string{"orders-events"}))
+	assert.Equal(t, []dataset{table("BigQuery", "acme", "raw", "orders")}, r.targets(cfg, []string{"orders-events"}))
+}
+
+func TestBigQuerySink_WithoutAProjectAndDatasetHasNoTarget(t *testing.T) {
+	r := mustResolve(t, "BigQuerySinkConnector")
+
+	assert.Empty(t, r.targets(connectorConfig{"project": "acme"}, []string{"orders"}))
 }
 
 // Elasticsearch sink
@@ -390,13 +446,20 @@ func TestElasticsearchSink_IndexIsTheTopicCataloguedAsATable(t *testing.T) {
 	assert.Equal(t, []dataset{table("Elasticsearch", "orders")}, r.targets(connectorConfig{}, []string{"orders"}))
 }
 
+func TestElasticsearchSink_TheHostComesFromTheConnectionURL(t *testing.T) {
+	r := mustResolve(t, "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector")
+	cfg := connectorConfig{"connection.url": "http://Search.internal:9201,http://search-2:9201"}
+
+	assert.Equal(t, []dataset{tableAt("Elasticsearch", "search.internal:9201", "orders")}, r.targets(cfg, []string{"orders"}))
+}
+
 // MongoDB connectors
 
 func TestMongoSink_TargetsTheConfiguredCollection(t *testing.T) {
 	r := mustResolve(t, "com.mongodb.kafka.connect.MongoSinkConnector")
 	cfg := connectorConfig{"database": "shop", "collection": "orders_raw"}
 
-	assert.Equal(t, []dataset{{Type: "Collection", Provider: "MongoDB", Name: "orders_raw"}},
+	assert.Equal(t, []dataset{collection("", "shop", "orders_raw")},
 		r.targets(cfg, []string{"orders", "payments"}))
 }
 
@@ -404,17 +467,14 @@ func TestMongoSink_DefaultsTheCollectionToTheTopic(t *testing.T) {
 	r := mustResolve(t, "MongoSinkConnector")
 	cfg := connectorConfig{"database": "shop"}
 
-	assert.Equal(t, []dataset{
-		{Type: "Collection", Provider: "MongoDB", Name: "orders"},
-		{Type: "Collection", Provider: "MongoDB", Name: "payments"},
-	}, r.targets(cfg, []string{"orders", "payments"}))
+	assert.Equal(t, []dataset{collection("", "shop", "orders"), collection("", "shop", "payments")}, r.targets(cfg, []string{"orders", "payments"}))
 }
 
 func TestMongoSource_ReadsTheCollectionAndNamesItsTopic(t *testing.T) {
 	r := mustResolve(t, "com.mongodb.kafka.connect.MongoSourceConnector")
 	cfg := connectorConfig{"database": "shop", "collection": "orders", "topic.prefix": "mongo"}
 
-	assert.Equal(t, []dataset{{Type: "Collection", Provider: "MongoDB", Name: "orders"}}, r.sources(cfg))
+	assert.Equal(t, []dataset{collection("", "shop", "orders")}, r.sources(cfg))
 	assert.Equal(t, []string{"mongo.shop.orders"}, r.topics(cfg))
 }
 

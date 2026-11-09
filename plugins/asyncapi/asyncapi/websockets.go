@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/websockets"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *websockets.ChannelBinding) pluginsdk.Asset {
@@ -22,7 +21,7 @@ func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName str
 		description = fmt.Sprintf("WebSocket channel: %s", channelName)
 	}
 
-	mrnValue := mrn.New("Channel", "WebSocket", name)
+	mrnValue := s.brokerMRN(doc, channel, "Channel", "WebSocket", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

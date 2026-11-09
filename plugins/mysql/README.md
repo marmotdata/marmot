@@ -1,4 +1,6 @@
 The MySQL plugin discovers databases and tables from MySQL instances. It captures column information, row counts, and foreign key relationships for lineage.
+Tables and views are identified in their MRN by `database.table`, for example `mrn://asset/table/mysql/shop.orders`. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone.
+
 
 ## Required Permissions
 

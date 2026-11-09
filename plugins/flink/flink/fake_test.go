@@ -244,5 +244,15 @@ func pipelineMRN(name string) string {
 }
 
 func taskMRN(name string) string {
-	return mrn.New("Task", provider, name)
+	pipeline, vertex, _ := strings.Cut(name, "/")
+	return mrn.Asset("Task", provider, pipeline, vertex).String()
+}
+
+func hasAssetMRN(result *pluginsdk.DiscoveryResult, mrnValue string) bool {
+	for _, asset := range result.Assets {
+		if asset.MRN != nil && *asset.MRN == mrnValue {
+			return true
+		}
+	}
+	return false
 }

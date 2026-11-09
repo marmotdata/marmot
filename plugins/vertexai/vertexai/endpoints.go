@@ -44,7 +44,7 @@ func (s *Source) endpointAssets(items []scanned[*aiplatform.GoogleCloudAiplatfor
 					Msg("Deployed model was not discovered in this run")
 				continue
 			}
-			edges.add(assetMRN("Model", model), *asset.MRN, "FEEDS")
+			edges.add(s.config.AssetMRN("Model", provider, model), *asset.MRN, "FEEDS")
 		}
 	}
 

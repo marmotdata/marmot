@@ -27,11 +27,11 @@ import (
 // The fixture is created by the tests themselves and is idempotent.
 
 const (
-	ordersMRN         = "mrn://table/cockroachdb/shop.public.orders"
-	customersMRN      = "mrn://table/cockroachdb/shop.public.customers"
-	customerTotalsMRN = "mrn://view/cockroachdb/shop.public.customer_totals"
-	orderSummaryMRN   = "mrn://view/cockroachdb/shop.public.order_summary"
-	shopMRN           = "mrn://database/cockroachdb/shop"
+	ordersMRN         = "mrn://asset/table/cockroachdb/shop.public.orders"
+	customersMRN      = "mrn://asset/table/cockroachdb/shop.public.customers"
+	customerTotalsMRN = "mrn://asset/view/cockroachdb/shop.public.customer_totals"
+	orderSummaryMRN   = "mrn://asset/view/cockroachdb/shop.public.order_summary"
+	shopMRN           = "mrn://asset/database/cockroachdb/shop"
 )
 
 var seedStatements = []string{
@@ -297,8 +297,8 @@ func TestE2E_DiscoversEveryDatabaseExceptSystem(t *testing.T) {
 	assert.Equal(t, "root", shop.Metadata["owner"])
 	assert.Contains(t, shop.Metadata["server_version"], "CockroachDB")
 
-	assert.NotNil(t, findAsset(result, "mrn://database/cockroachdb/analytics"))
-	assert.Nil(t, findAsset(result, "mrn://database/cockroachdb/system"), "system is excluded by default")
+	assert.NotNil(t, findAsset(result, "mrn://asset/database/cockroachdb/analytics"))
+	assert.Nil(t, findAsset(result, "mrn://asset/database/cockroachdb/system"), "system is excluded by default")
 }
 
 func TestE2E_TableNamesAreFullyQualified(t *testing.T) {
@@ -306,17 +306,17 @@ func TestE2E_TableNamesAreFullyQualified(t *testing.T) {
 
 	orders := findAsset(result, ordersMRN)
 	require.NotNil(t, orders)
-	assert.Equal(t, "shop.public.orders", *orders.Name)
+	assert.Equal(t, "orders", *orders.Name)
 	assert.Equal(t, "Table", orders.Type)
 	assert.Equal(t, "shop", orders.Metadata["database"])
 	assert.Equal(t, "public", orders.Metadata["schema"])
 	assert.Equal(t, "orders", orders.Metadata["table_name"])
 
-	regions := findAsset(result, "mrn://table/cockroachdb/shop.sales.regions")
+	regions := findAsset(result, "mrn://asset/table/cockroachdb/shop.sales.regions")
 	require.NotNil(t, regions, "a table in a second schema")
 	assert.Equal(t, "sales", regions.Metadata["schema"])
 
-	assert.NotNil(t, findAsset(result, "mrn://table/cockroachdb/analytics.public.page_views"), "a table in a second database")
+	assert.NotNil(t, findAsset(result, "mrn://asset/table/cockroachdb/analytics.public.page_views"), "a table in a second database")
 }
 
 func TestE2E_DatabaseContainsItsTablesAndViews(t *testing.T) {
@@ -325,8 +325,8 @@ func TestE2E_DatabaseContainsItsTablesAndViews(t *testing.T) {
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{Source: shopMRN, Target: ordersMRN, Type: "CONTAINS"})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{Source: shopMRN, Target: customerTotalsMRN, Type: "CONTAINS"})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://database/cockroachdb/analytics",
-		Target: "mrn://table/cockroachdb/analytics.public.page_views",
+		Source: "mrn://asset/database/cockroachdb/analytics",
+		Target: "mrn://asset/table/cockroachdb/analytics.public.page_views",
 		Type:   "CONTAINS",
 	})
 }
@@ -343,7 +343,7 @@ func TestE2E_TableCommentBecomesTheDescription(t *testing.T) {
 func TestE2E_HiddenRowIDIsExcluded(t *testing.T) {
 	result := discoverAll(t)
 
-	auditLog := findAsset(result, "mrn://table/cockroachdb/shop.public.audit_log")
+	auditLog := findAsset(result, "mrn://asset/table/cockroachdb/shop.public.audit_log")
 	require.NotNil(t, auditLog)
 
 	columns := columnsOf(t, auditLog)
@@ -356,7 +356,7 @@ func TestE2E_HiddenRowIDIsExcluded(t *testing.T) {
 func TestE2E_HiddenShardColumnIsExcluded(t *testing.T) {
 	result := discoverAll(t)
 
-	events := findAsset(result, "mrn://table/cockroachdb/shop.public.events")
+	events := findAsset(result, "mrn://asset/table/cockroachdb/shop.public.events")
 	require.NotNil(t, events)
 
 	columns := columnsOf(t, events)
@@ -444,7 +444,7 @@ func TestE2E_MaterializedViewIsFlagged(t *testing.T) {
 func TestE2E_PartitionedTableListsItsPartitionColumns(t *testing.T) {
 	result := discoverAll(t)
 
-	shipments := findAsset(result, "mrn://table/cockroachdb/shop.public.shipments")
+	shipments := findAsset(result, "mrn://asset/table/cockroachdb/shop.public.shipments")
 	require.NotNil(t, shipments)
 	assert.Equal(t, true, shipments.Metadata["partitioned"])
 	assert.Equal(t, "region", shipments.Metadata["partition_columns"])
@@ -489,8 +489,8 @@ func TestE2E_SingleDatabaseConfigDiscoversOnlyThatDatabase(t *testing.T) {
 	result, err := buildBinary(t).Discover(t.Context(), config)
 	require.NoError(t, err)
 
-	assert.NotNil(t, findAsset(result, "mrn://database/cockroachdb/analytics"))
-	assert.NotNil(t, findAsset(result, "mrn://table/cockroachdb/analytics.public.page_views"))
+	assert.NotNil(t, findAsset(result, "mrn://asset/database/cockroachdb/analytics"))
+	assert.NotNil(t, findAsset(result, "mrn://asset/table/cockroachdb/analytics.public.page_views"))
 	assert.Nil(t, findAsset(result, shopMRN))
 	assert.Nil(t, findAsset(result, ordersMRN))
 }

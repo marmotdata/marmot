@@ -4,23 +4,20 @@ import (
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func ptr(s string) *string { return &s }
 
-// collection and view mirror collection.go, which names both by the bare
-// object name so the MRN matches what the server derives from Name. The
-// database is not part of the identity; see mrn_test.go for why.
+// collection and view mirror collection.go, which names both by the database and the object name, so the same collection name in two databases stays two assets.
 func collection(name string) pluginsdk.Asset {
-	m := mrn.New("Collection", "MongoDB", name)
+	m := assetMRN(&Config{}, "Collection", "shop", name)
 	return pluginsdk.Asset{Name: ptr(name), MRN: &m, Type: "Collection"}
 }
 
 func view(name, viewOn string) pluginsdk.Asset {
-	m := mrn.New("View", "MongoDB", name)
+	m := assetMRN(&Config{}, "View", "shop", name)
 	return pluginsdk.Asset{
 		Name:     ptr(name),
 		MRN:      &m,
@@ -30,7 +27,7 @@ func view(name, viewOn string) pluginsdk.Asset {
 }
 
 func database(name string) pluginsdk.Asset {
-	m := mrn.New("Database", "MongoDB", name)
+	m := assetMRN(&Config{}, "Database", name)
 	return pluginsdk.Asset{Name: ptr(name), MRN: &m, Type: "Database"}
 }
 
@@ -108,7 +105,7 @@ func TestBuildCollectionLineage_ViewOnViewUsesTheViewMRN(t *testing.T) {
 			source = e.Source
 		}
 	}
-	assert.Equal(t, "mrn://view/mongodb/recent_orders", source,
+	assert.Equal(t, "mrn://asset/view/mongodb/shop.recent_orders", source,
 		"the source is itself a view, so the edge must use the View MRN")
 	assertLineageOnlyReferencesDiscoveredAssets(t, append(colls, db), edges)
 }

@@ -36,11 +36,21 @@ type PluginInfo struct {
 	// features
 	Features []string `json:"features"`
 
+	// Federates is true for a plugin that catalogues assets other systems own, such as Trino, OpenMetadata or dbt, so that when it and the system's own plugin describe the same asset the owner's description, schema and metadata win.
+	Federates bool `json:"federates,omitempty"`
+
 	// icon
 	Icon string `json:"icon,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
+
+	// IdentityScope says how the systems this plugin reads are told apart,
+	// which decides the zone used when the config sets none. See the
+	// IdentityScope constants; empty is IdentityScopeNetwork.
+	IdentityScope struct {
+		PluginsdkIdentityScope
+	} `json:"identity_scope,omitempty"`
 
 	// marmot version
 	MarmotVersion string `json:"marmot_version,omitempty"`
@@ -73,6 +83,10 @@ func (m *PluginInfo) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateConfigSpec(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateIdentityScope(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -142,6 +156,14 @@ func (m *PluginInfo) validateConfigSpec(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *PluginInfo) validateIdentityScope(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.IdentityScope) { // not required
+		return nil
+	}
+
+	return nil
+}
+
 // ContextValidate validate this plugin info based on the context it is used
 func (m *PluginInfo) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
@@ -151,6 +173,10 @@ func (m *PluginInfo) ContextValidate(ctx context.Context, formats strfmt.Registr
 	}
 
 	if err := m.contextValidateConfigSpec(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateIdentityScope(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -214,6 +240,11 @@ func (m *PluginInfo) contextValidateConfigSpec(ctx context.Context, formats strf
 		}
 
 	}
+
+	return nil
+}
+
+func (m *PluginInfo) contextValidateIdentityScope(ctx context.Context, formats strfmt.Registry) error {
 
 	return nil
 }

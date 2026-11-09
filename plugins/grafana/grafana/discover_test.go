@@ -23,7 +23,7 @@ func TestDiscover_NamesADashboardByItsFolderAndTitle(t *testing.T) {
 	dash := findAsset(result, "Dashboard", "Sales/Orders overview")
 	require.NotNil(t, dash)
 	assert.Equal(t, []string{"Grafana"}, dash.Providers)
-	assert.Equal(t, "mrn://dashboard/grafana/sales-orders-overview", *dash.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/grafana/sales-orders-overview", *dash.MRN)
 }
 
 func TestDiscover_NamesAGeneralFolderDashboardByItsTitleAlone(t *testing.T) {
@@ -214,7 +214,7 @@ func TestDiscover_UsesTheDefaultDataSourceWhenAPanelNamesNone(t *testing.T) {
 	chart := findAsset(result, "Chart", "Ops home/Customer totals")
 	require.NotNil(t, chart)
 	assert.Equal(t, "Shop", chart.Metadata["datasource"])
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/shop", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/shop", *chart.MRN, "FEEDS"))
 }
 
 func TestDiscover_ResolvesStringDataSourceReferencesByName(t *testing.T) {
@@ -229,7 +229,7 @@ func TestDiscover_ResolvesStringDataSourceReferencesByName(t *testing.T) {
 	require.NotNil(t, chart)
 	assert.Equal(t, "Shop", chart.Metadata["datasource"])
 	assert.Equal(t, shopUID, chart.Metadata["datasource_uid"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.orders", *chart.MRN, "FEEDS"))
 }
 
 func TestDiscover_ATargetsDataSourceOverridesThePanels(t *testing.T) {
@@ -246,9 +246,9 @@ func TestDiscover_ATargetsDataSourceOverridesThePanels(t *testing.T) {
 	chart := findAsset(result, "Chart", "Mixed/Both")
 	require.NotNil(t, chart)
 	assert.Equal(t, "Shop", chart.Metadata["datasource"], "the first resolvable target stands in for the mixed panel")
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/shop", *chart.MRN, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/testdata", *chart.MRN, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/shop", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/testdata", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.orders", *chart.MRN, "FEEDS"))
 	assert.Nil(t, chart.Query, "one SQL and one non-SQL target record no query")
 }
 
@@ -271,7 +271,7 @@ func TestDiscover_ResolvesLibraryPanels(t *testing.T) {
 	assert.Equal(t, int64(4), chart.Metadata["panel_id"], "the id is the dashboard's, not the library's")
 	assert.Equal(t, "barchart", chart.Metadata["panel_type"])
 	assert.Equal(t, "Shop", chart.Metadata["datasource"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.customers", *chart.MRN, "FEEDS"))
 }
 
 func TestDiscover_SkipsALibraryPanelItCannotRead(t *testing.T) {
@@ -306,7 +306,7 @@ func TestDiscover_CreatesADataSourcePerGrafanaDataSource(t *testing.T) {
 
 	shop := findAsset(result, "DataSource", "Shop")
 	require.NotNil(t, shop)
-	assert.Equal(t, "mrn://datasource/grafana/shop", *shop.MRN)
+	assert.Equal(t, "mrn://asset/datasource/grafana/shop", *shop.MRN)
 	assert.Equal(t, shopUID, shop.Metadata["uid"])
 	assert.Equal(t, int64(1), shop.Metadata["id"])
 	assert.Equal(t, "grafana-postgresql-datasource", shop.Metadata["type"])
@@ -358,7 +358,7 @@ func TestDiscover_ReadsTheDatabaseFromJSONDataWhenTheFieldIsEmpty(t *testing.T) 
 
 	chart := findAsset(result, "Chart", "MSSQL/Orders")
 	require.NotNil(t, chart)
-	assert.True(t, hasEdge(result, "mrn://table/sql-server/sales.dbo.orders", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/sql-server/sales.dbo.orders", *chart.MRN, "FEEDS"))
 }
 
 // Lineage
@@ -366,38 +366,38 @@ func TestDiscover_ReadsTheDatabaseFromJSONDataWhenTheFieldIsEmpty(t *testing.T) 
 func TestDiscover_ADashboardContainsItsCharts(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	dash := "mrn://dashboard/grafana/sales-orders-overview"
-	assert.True(t, hasEdge(result, dash, "mrn://chart/grafana/sales-orders-overview-revenue", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://chart/grafana/sales-orders-overview-top-customers", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://chart/grafana/sales-orders-overview-random", "CONTAINS"))
+	dash := "mrn://asset/dashboard/grafana/sales-orders-overview"
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/grafana/sales-orders-overview-revenue", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/grafana/sales-orders-overview-top-customers", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/grafana/sales-orders-overview-random", "CONTAINS"))
 }
 
 func TestDiscover_ADataSourceFeedsTheChartsThatQueryIt(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/shop", "mrn://chart/grafana/sales-orders-overview-revenue", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/testdata", "mrn://chart/grafana/sales-orders-overview-random", "FEEDS"))
-	assert.False(t, hasEdge(result, "mrn://datasource/grafana/testdata", "mrn://chart/grafana/sales-orders-overview-revenue", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/shop", "mrn://asset/chart/grafana/sales-orders-overview-revenue", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/testdata", "mrn://asset/chart/grafana/sales-orders-overview-random", "FEEDS"))
+	assert.False(t, hasEdge(result, "mrn://asset/datasource/grafana/testdata", "mrn://asset/chart/grafana/sales-orders-overview-revenue", "FEEDS"))
 }
 
 func TestDiscover_ATableFeedsTheChartAndTheDashboardThatReadIt(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	revenue := "mrn://chart/grafana/sales-orders-overview-revenue"
-	dash := "mrn://dashboard/grafana/sales-orders-overview"
+	revenue := "mrn://asset/chart/grafana/sales-orders-overview-revenue"
+	dash := "mrn://asset/dashboard/grafana/sales-orders-overview"
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", revenue, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", revenue, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", dash, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", dash, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://chart/grafana/sales-orders-overview-top-customers", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.orders", revenue, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.customers", revenue, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.orders", dash, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.customers", dash, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.customers", "mrn://asset/chart/grafana/sales-orders-overview-top-customers", "FEEDS"))
 }
 
 func TestDiscover_ATemplateVariableProducesNoTableEdge(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	chart := "mrn://chart/grafana/ops-home-customer-totals"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customer_totals", chart, "FEEDS"))
+	chart := "mrn://asset/chart/grafana/ops-home-customer-totals"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.customer_totals", chart, "FEEDS"))
 	for _, edge := range result.Lineage {
 		assert.NotContains(t, edge.Source, "$")
 		assert.NotContains(t, edge.Source, "customer}")
@@ -409,7 +409,7 @@ func TestDiscover_NonSQLDataSourcesProduceNoTableEdges(t *testing.T) {
 
 	for _, edge := range result.Lineage {
 		if strings.HasSuffix(edge.Target, "sales-orders-overview-random") {
-			assert.False(t, strings.HasPrefix(edge.Source, "mrn://table/"), edge.Source)
+			assert.False(t, strings.HasPrefix(edge.Source, "mrn://asset/table/"), edge.Source)
 		}
 	}
 }
@@ -440,7 +440,7 @@ func TestDiscover_EveryEdgeTouchesAnEmittedAssetOrANativeTable(t *testing.T) {
 
 	for _, edge := range result.Lineage {
 		assert.True(t, known[edge.Target], "edge target %q is not an emitted asset", edge.Target)
-		if !strings.HasPrefix(edge.Source, "mrn://table/") {
+		if !strings.HasPrefix(edge.Source, "mrn://asset/table/") {
 			assert.True(t, known[edge.Source], "edge source %q is not an emitted asset", edge.Source)
 		}
 	}
@@ -457,7 +457,7 @@ func TestDiscover_IncludePanelsOffKeepsDashboardsAndTheirTableEdges(t *testing.T
 	dash := findAsset(result, "Dashboard", "Sales/Orders overview")
 	require.NotNil(t, dash)
 	assert.Equal(t, 3, dash.Metadata["panel_count"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", *dash.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-grafana-pg:5432/shop.public.orders", *dash.MRN, "FEEDS"))
 }
 
 func TestDiscover_IncludeDatasourcesOffDropsTheAssetsAndTheirEdges(t *testing.T) {
@@ -479,10 +479,10 @@ func TestDiscover_DiscoverLineageOffDropsTableEdgesOnly(t *testing.T) {
 	result := discover(t, seeded(), pluginsdk.RawConfig{"discover_lineage": false})
 
 	for _, edge := range result.Lineage {
-		assert.False(t, strings.HasPrefix(edge.Source, "mrn://table/"), edge.Source)
+		assert.False(t, strings.HasPrefix(edge.Source, "mrn://asset/table/"), edge.Source)
 	}
-	assert.True(t, hasEdge(result, "mrn://dashboard/grafana/sales-orders-overview", "mrn://chart/grafana/sales-orders-overview-revenue", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/shop", "mrn://chart/grafana/sales-orders-overview-revenue", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/grafana/sales-orders-overview", "mrn://asset/chart/grafana/sales-orders-overview-revenue", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/shop", "mrn://asset/chart/grafana/sales-orders-overview-revenue", "FEEDS"))
 }
 
 // Resilience
@@ -517,8 +517,9 @@ func TestDiscover_SurvivesDataSourcesTheTokenMayNotList(t *testing.T) {
 	assert.NotContains(t, chart.Metadata, "datasource", "the name is unknown without the listing")
 	assert.Equal(t, "grafana-postgresql-datasource", chart.Metadata["datasource_type"], "the reference still carries the type")
 	assert.Equal(t, shopUID, chart.Metadata["datasource_uid"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", *chart.MRN, "FEEDS"),
-		"SQL lineage only needs the type, which the reference carries")
+	for _, edge := range result.Lineage {
+		assert.NotContains(t, edge.Source, "mrn://asset/table/", "without the listing there is no database to put first in the table path")
+	}
 }
 
 func TestDiscover_FailsOnAWrongToken(t *testing.T) {

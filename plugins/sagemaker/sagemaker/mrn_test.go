@@ -1,6 +1,7 @@
 package sagemaker
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -11,84 +12,65 @@ import (
 // Every SageMaker resource has an account-unique name, so an asset's name is
 // that name unqualified and its MRN is built from the name alone.
 
+func mrnFor(zone, assetType, name string) string {
+	cfg := &Config{}
+	cfg.Zone = zone
+	return cfg.AssetMRN(assetType, provider, name)
+}
+
 func TestModelMRN_IsTheModelName(t *testing.T) {
-	assert.Equal(t, "mrn://model/sagemaker/churn-xgb", assetMRN("Model", "churn-xgb"))
+	assert.Equal(t, "mrn://asset/model/sagemaker/churn-xgb", mrnFor("", "Model", "churn-xgb"))
 }
 
 func TestEndpointMRN_IsTheEndpointName(t *testing.T) {
-	assert.Equal(t, "mrn://endpoint/sagemaker/churn-prod", assetMRN("Endpoint", "churn-prod"))
+	assert.Equal(t, "mrn://asset/endpoint/sagemaker/churn-prod", mrnFor("", "Endpoint", "churn-prod"))
 }
 
 func TestFeatureGroupMRN_IsADatasetNamedAfterTheGroup(t *testing.T) {
-	assert.Equal(t, "mrn://dataset/sagemaker/customer-features", assetMRN("Dataset", "customer-features"))
+	assert.Equal(t, "mrn://asset/dataset/sagemaker/customer-features", mrnFor("", "Dataset", "customer-features"))
 }
 
 func TestTrainingJobMRN_IsAJobNamedAfterTheTrainingJob(t *testing.T) {
-	assert.Equal(t, "mrn://job/sagemaker/churn-train-2026-09-01", assetMRN("Job", "churn-train-2026-09-01"))
+	assert.Equal(t, "mrn://asset/job/sagemaker/churn-train-2026-09-01", mrnFor("", "Job", "churn-train-2026-09-01"))
 }
 
-func TestModelPackageGroupMRN_SharesTheModelNamespace(t *testing.T) {
-	// A registry group is filed as a Model, so a group named the same as a
-	// deployed model resolves to the same asset.
-	assert.Equal(t, assetMRN("Model", "churn-registry"), "mrn://model/sagemaker/churn-registry")
+func TestMRN_CarriesTheZone(t *testing.T) {
+	assert.Equal(t, "mrn://asset/model/sagemaker@prod-eu/churn-xgb", mrnFor("prod-eu", "Model", "churn-xgb"))
 }
 
 func TestS3BucketMRN_MatchesWhatTheS3PluginProduces(t *testing.T) {
-	// Lineage into S3 has to use the S3 plugin's own identity, or the
-	// server drops the edge.
-	assert.Equal(t, "mrn://bucket/s3/ml-artifacts", mrn.New("Bucket", "S3", "ml-artifacts"))
+	assert.Equal(t, "mrn://asset/bucket/s3/ml-artifacts", mrn.Asset("Bucket", "S3", "ml-artifacts").String())
 }
 
 func TestGlueTableMRN_MatchesWhatTheGluePluginProduces(t *testing.T) {
-	// The Glue plugin names a table asset with the bare table name.
-	assert.Equal(t, "mrn://table/glue/customer_features", mrn.New("Table", "Glue", bareTableName("sagemaker_featurestore.customer_features")))
+	// The Glue plugin names a table asset database.table.
+	assert.Equal(t, "mrn://asset/table/glue/sagemaker_featurestore.customer_features", glueTableMRN("sagemaker_featurestore.customer_features"))
 }
 
-func TestModelMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so an MRN has to survive that unchanged
-	// or the asset becomes unreachable from the UI.
-	original := assetMRN("Model", "churn-xgb")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestJobMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Job", "churn-train-2026-09-01")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestEveryAssetMRN_MatchesTheServersDerivation(t *testing.T) {
-	// The server rebuilds identity from an asset's type, first provider and
-	// name, so any MRN that disagrees would create a second, orphaned asset.
+func TestEveryAssetMRN_IsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discoverWith(t, fullFake(), withTrainingJobs)
 	require.NotEmpty(t, result.Assets)
 
 	for _, a := range result.Assets {
-		require.NotNil(t, a.Name)
 		require.NotNil(t, a.MRN)
-		require.NotEmpty(t, a.Providers)
-
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy)
+		assert.Equal(t, strings.ToLower(a.Type), parsed.Type)
+		assert.Equal(t, strings.ToLower(a.Providers[0]), parsed.Provider)
+		assert.Empty(t, a.PreviousMRNs)
 	}
 }
 
-func TestEveryLineageEndpoint_IsAnMRNTheServerCanParse(t *testing.T) {
+func TestEveryLineageEndpoint_IsAKindedMRN(t *testing.T) {
 	result := discoverWith(t, fullFake(), withTrainingJobs)
 	require.NotEmpty(t, result.Lineage)
 
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err, endpoint)
-			assert.Equal(t, endpoint, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+			assert.False(t, parsed.Legacy, endpoint)
 		}
 	}
 }

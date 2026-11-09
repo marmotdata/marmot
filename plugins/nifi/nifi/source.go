@@ -6,6 +6,7 @@ package nifi
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -55,7 +56,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "nifi",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache NiFi",
 		Description:   "Discover process groups, processors and data flow lineage from Apache NiFi",
 		Icon:          "nifi",
@@ -148,22 +149,29 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("NiFi discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  d.assets,
-		Lineage: d.lineage,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
-// assetMRN is the single place a NiFi MRN is built, so pipelines, tasks
-// and every edge between them address an asset the same way. The name
-// is the path from the root group, which is what keeps two processors
-// called "LogAttribute" in different groups apart.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// nativeMRN addresses an asset another plugin owns (a bucket, topic or table) by that plugin's provider and naming table, so the edge lands on the asset it catalogued rather than on a NiFi-flavoured duplicate. host is the address the processor was configured with, empty when it names none.
+func nativeMRN(assetType, nativeProvider, host string, path ...string) string {
+	return mrn.Asset(assetType, nativeProvider, path...).WithHost(host).String()
 }
 
-// nativeMRN addresses an asset another plugin owns (a bucket, topic or
-// table) by that plugin's provider and name shape, so the edge lands on
-// the asset it catalogued rather than on a NiFi-flavoured duplicate.
-func nativeMRN(assetType, nativeProvider, name string) string {
-	return mrn.New(assetType, nativeProvider, name)
+// zoneBindings tells Marmot which zone the NiFi server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

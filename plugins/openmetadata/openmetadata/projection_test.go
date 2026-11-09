@@ -86,7 +86,7 @@ func TestProjection_GlueTableMatchesTheGluePlugin(t *testing.T) {
 
 func TestProjection_AthenaIsCataloguedAsGlue(t *testing.T) {
 	// An Athena table is a Glue Data Catalog table. plugins/glue sets Name
-	// to the bare table, so its assets land on mrn://table/glue/<table>.
+	// to the bare table, so its assets land on mrn://asset/table/glue/<table>.
 	p := projectionFor("Athena")
 
 	assert.Equal(t, "Glue", p.Provider)
@@ -122,7 +122,7 @@ func TestProjection_BigtableTablesLiveInAnInstance(t *testing.T) {
 
 	assert.Equal(t, "Instance", p.TableGroupType)
 	assert.Equal(t, "prod.events", p.TableName("my-project", "prod", "events"),
-		"two instances can hold the same table name, so the instance is part of the identity")
+		"two instances can hold the same table name, so the zone is part of the identity")
 }
 
 // addTableGroup names a container asset by its own bare level and has no
@@ -215,7 +215,7 @@ func TestProjection_UnityCatalogTableMatchesTheUnityCatalogPlugin(t *testing.T) 
 
 	assert.Equal(t, "shop.sales.orders", p.TableName("shop", "sales", "orders"))
 	assert.Equal(t, "Catalog", p.TableGroupType)
-	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders",
+	assert.Equal(t, "mrn://asset/table/unity-catalog/shop.sales.orders",
 		mrn.New("Table", p.Provider, p.TableName("shop", "sales", "orders")))
 }
 
@@ -432,7 +432,7 @@ func TestProjection_ProvidersWithASpaceKeepItInTheMRN(t *testing.T) {
 	}, spaced)
 
 	// And the space really does reach the MRN, unslugged.
-	assert.Equal(t, "mrn://table/delta-lake/orders",
+	assert.Equal(t, "mrn://asset/table/delta-lake/orders",
 		mrn.New("Table", projectionFor("DeltaLake").Provider, "orders"))
 }
 

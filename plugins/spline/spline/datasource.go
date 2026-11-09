@@ -12,7 +12,10 @@ import (
 type dataSourceRef struct {
 	Type     string
 	Provider string
-	Name     string
+	// Path is the asset's full hierarchy in the owning system, outermost first.
+	Path []string
+	// Host is the host:port the URI names, when it names one. The owning plugin's zone is unknown here, so the host only hints at which of its zones this is.
+	Host string
 }
 
 // objectStoreSchemes maps a bucket-like URI scheme to the provider and asset
@@ -57,7 +60,7 @@ func parseDataSourceURI(uri string) (dataSourceRef, bool) {
 		if at := strings.Index(bucket, "@"); at > 0 {
 			bucket = bucket[:at]
 		}
-		ref.Name = bucket
+		ref.Path = []string{bucket}
 		return ref, true
 	}
 
@@ -65,14 +68,13 @@ func parseDataSourceURI(uri string) (dataSourceRef, bool) {
 	case "hive":
 		return hiveRef(stripAuthoritySlashes(rest))
 	case "delta":
-		// A Delta table is addressed by its bare name, matching the Delta Lake
-		// plugin, and the name is the last segment of the table's path.
+		// The Delta Lake plugin names a table after its directory, which is the last segment of the table's path.
 		path := strings.Trim(stripAuthoritySlashes(rest), "/")
 		if path == "" {
 			return dataSourceRef{}, false
 		}
 		segments := strings.Split(path, "/")
-		return dataSourceRef{Type: "Table", Provider: "Delta Lake", Name: segments[len(segments)-1]}, true
+		return dataSourceRef{Type: "Table", Provider: "Delta Lake", Path: []string{segments[len(segments)-1]}}, true
 	}
 
 	// hdfs, file, dbfs and anything else: Marmot has no asset to point at.
@@ -97,11 +99,12 @@ func hiveRef(path string) (dataSourceRef, bool) {
 		return dataSourceRef{}, false
 	}
 
-	name := segments[len(segments)-1]
+	// A bare table name is in Spark's default database.
+	database, table := "default", segments[len(segments)-1]
 	if len(segments) >= 2 {
-		name = segments[len(segments)-2] + "." + name
+		database = segments[len(segments)-2]
 	}
-	return dataSourceRef{Type: "Table", Provider: "Hive", Name: name}, true
+	return dataSourceRef{Type: "Table", Provider: "Hive", Path: []string{database, table}}, true
 }
 
 // jdbcEngine describes how one JDBC engine's table identity is spelled by the
@@ -110,27 +113,35 @@ type jdbcEngine struct {
 	Provider string
 	// DefaultSchema is used when the URI names a table without a schema.
 	DefaultSchema string
-	// Name builds the asset name from the database, schema and table.
-	Name func(database, schema, table string) string
+	// DefaultPort is the port the engine listens on when the URI names none. It is zero for engines whose host says nothing about which server it is, such as Snowflake accounts, so no host hint is made.
+	DefaultPort string
+	// Path builds the asset's path from the database, schema and table.
+	Path func(database, schema, table string) []string
 }
 
-func bareTable(_, _, table string) string        { return table }
-func schemaTable(_, schema, table string) string { return schema + "." + table }
-func dbSchemaTable(database, schema, table string) string {
-	return database + "." + schema + "." + table
+// databaseTable is for engines where a schema qualifier names a database, so it replaces the one in the URL.
+func databaseTable(database, schema, table string) []string {
+	if schema != "" {
+		database = schema
+	}
+	return []string{database, table}
+}
+
+func databaseSchemaTable(database, schema, table string) []string {
+	return []string{database, schema, table}
 }
 
 // jdbcEngines maps a JDBC sub-protocol to the identity its Marmot plugin uses.
 // Engines missing from this map produce no lineage edge, because guessing the
 // name shape would create an edge that points at nothing.
 var jdbcEngines = map[string]jdbcEngine{
-	"postgresql": {Provider: "PostgreSQL", DefaultSchema: "public", Name: bareTable},
-	"mysql":      {Provider: "MySQL", Name: bareTable},
-	"mariadb":    {Provider: "MariaDB", Name: bareTable},
-	"sqlserver":  {Provider: "SQL Server", DefaultSchema: "dbo", Name: dbSchemaTable},
-	"oracle":     {Provider: "Oracle", Name: schemaTable},
-	"redshift":   {Provider: "Redshift", DefaultSchema: "public", Name: dbSchemaTable},
-	"snowflake":  {Provider: "Snowflake", DefaultSchema: "public", Name: dbSchemaTable},
+	"postgresql": {Provider: "PostgreSQL", DefaultSchema: "public", DefaultPort: "5432", Path: databaseSchemaTable},
+	"mysql":      {Provider: "MySQL", DefaultPort: "3306", Path: databaseTable},
+	"mariadb":    {Provider: "MariaDB", DefaultPort: "3306", Path: databaseTable},
+	"sqlserver":  {Provider: "SQL Server", DefaultSchema: "dbo", DefaultPort: "1433", Path: databaseSchemaTable},
+	"oracle":     {Provider: "Oracle", DefaultPort: "1521", Path: databaseSchemaTable},
+	"redshift":   {Provider: "Redshift", DefaultSchema: "public", DefaultPort: "5439", Path: databaseSchemaTable},
+	"snowflake":  {Provider: "Snowflake", DefaultSchema: "public", Path: databaseSchemaTable},
 }
 
 // parseJDBCURI resolves the part of a JDBC URI after "jdbc:". Spline appends
@@ -202,14 +213,16 @@ func parseJDBCURI(rest string) (dataSourceRef, bool) {
 		schema = engine.DefaultSchema
 	}
 
-	name := engine.Name(database, schema, table)
-	// A name with an empty part would not match the owning plugin's asset, so
+	levels := engine.Path(database, schema, table)
+	// A path with an empty level would not match the owning plugin's asset, so
 	// it is better to emit nothing than an edge that dangles.
-	if name == "" || strings.HasPrefix(name, ".") || strings.Contains(name, "..") {
-		return dataSourceRef{}, false
+	for _, level := range levels {
+		if level == "" {
+			return dataSourceRef{}, false
+		}
 	}
 
-	return dataSourceRef{Type: "Table", Provider: engine.Provider, Name: name}, true
+	return dataSourceRef{Type: "Table", Provider: engine.Provider, Path: levels, Host: jdbcHost(authority, engine.DefaultPort)}, true
 }
 
 // splitQualifier splits "table", "schema.table" or "db.schema.table".
@@ -278,4 +291,24 @@ func authorityOf(rest string) string {
 // "//sales/orders" and "/sales/orders" are read the same way.
 func stripAuthoritySlashes(rest string) string {
 	return strings.TrimPrefix(strings.TrimPrefix(rest, "//"), "/")
+}
+
+// jdbcHost returns the first host:port of a JDBC authority, lowercased and with the engine's default port when none is given. It is empty when the engine has no default port to fall back on.
+func jdbcHost(authority, defaultPort string) string {
+	if defaultPort == "" {
+		return ""
+	}
+	authority, _, _ = strings.Cut(authority, ";")
+	authority, _, _ = strings.Cut(authority, ",")
+	if at := strings.LastIndex(authority, "@"); at >= 0 {
+		authority = authority[at+1:]
+	}
+	host, port, found := strings.Cut(strings.ToLower(strings.TrimSpace(authority)), ":")
+	if host == "" || strings.ContainsAny(host, "[]") {
+		return ""
+	}
+	if !found || port == "" {
+		port = defaultPort
+	}
+	return host + ":" + port
 }

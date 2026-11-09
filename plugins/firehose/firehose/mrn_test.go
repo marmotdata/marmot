@@ -14,19 +14,25 @@ import (
 // the identity and nothing has to be folded into it.
 
 func TestDeliveryStreamMRN_IsTheBareStreamName(t *testing.T) {
-	assert.Equal(t, "mrn://deliverystream/firehose/orders-to-s3", assetMRN(assetType, "orders-to-s3"))
+	s := &Source{config: &Config{}}
+	assert.Equal(t, "mrn://asset/deliverystream/firehose/orders-to-s3", s.assetMRN(assetType, "orders-to-s3"))
 }
 
-func TestDeliveryStreamMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so an MRN has to survive that unchanged
-	// or the asset becomes unreachable from the UI.
-	original := assetMRN(assetType, "orders-to-s3")
+func TestDeliveryStreamMRN_CarriesTheZone(t *testing.T) {
+	s := &Source{config: &Config{}}
+	s.config.Zone = "prod-eu"
+	assert.Equal(t, "mrn://asset/deliverystream/firehose@prod-eu/orders-to-s3", s.assetMRN(assetType, "orders-to-s3"))
+}
 
-	parsed, err := mrn.Parse(original)
+func TestDeliveryStreamMRN_IsStableUnderParseAndFormat(t *testing.T) {
+	s := &Source{config: &Config{}}
+	s.config.Zone = "prod-eu"
+	original := s.assetMRN(assetType, "orders-to-s3")
+
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, parsed.String())
 }
 
 // Every lineage endpoint belongs to another plugin. These are the exact
@@ -34,27 +40,27 @@ func TestDeliveryStreamMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
 // and the server drops it.
 
 func TestKinesisSourceMRN_MatchesTheKinesisPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://stream/kinesis/orders", mrn.New("Stream", "Kinesis", "orders"))
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders", mrn.Asset("Stream", "Kinesis", "orders").String())
 }
 
 func TestKafkaSourceMRN_MatchesTheKafkaPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://topic/kafka/events", mrn.New("Topic", "Kafka", "events"))
+	assert.Equal(t, "mrn://asset/topic/kafka/events", mrn.Asset("Topic", "Kafka", "events").String())
 }
 
 func TestS3DestinationMRN_MatchesTheS3Plugin(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", mrn.New("Bucket", "S3", "marmot-lake"))
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", mrn.Asset("Bucket", "S3", "marmot-lake").String())
 }
 
 func TestRedshiftDestinationMRN_MatchesTheRedshiftNameShape(t *testing.T) {
-	assert.Equal(t, "mrn://table/redshift/analytics.public.orders", mrn.New("Table", "Redshift", "analytics.public.orders"))
+	assert.Equal(t, "mrn://asset/table/redshift/analytics.public.orders", mrn.Asset("Table", "Redshift", "analytics", "public", "orders").String())
 }
 
 func TestOpenSearchDestinationMRN_MatchesTheOpenSearchPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://table/opensearch/orders-index", mrn.New("Table", "OpenSearch", "orders-index"))
+	assert.Equal(t, "mrn://asset/table/opensearch/orders-index", mrn.Asset("Table", "OpenSearch", "orders-index").String())
 }
 
 func TestGlueDestinationMRN_MatchesTheGluePlugin(t *testing.T) {
-	assert.Equal(t, "mrn://table/glue/orders", mrn.New("Table", "Glue", "orders"))
+	assert.Equal(t, "mrn://asset/table/glue/shop.orders", mrn.Asset("Table", "Glue", "shop", "orders").String())
 }
 
 // The server rebuilds identity from an asset's own Type, first provider
@@ -75,7 +81,7 @@ func TestEveryAssetMRN_MatchesItsOwnTypeProviderAndName(t *testing.T) {
 		require.NotNil(t, asset.MRN)
 		require.Len(t, asset.Providers, 1)
 
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+		assert.Equal(t, mrn.Asset(asset.Type, asset.Providers[0], *asset.Name).String(), *asset.MRN)
 	}
 }
 
@@ -94,9 +100,9 @@ func TestEveryLineageEndpoint_IsAWellFormedMRN(t *testing.T) {
 
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err, endpoint)
-			assert.Equal(t, endpoint, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+			assert.Equal(t, endpoint, parsed.String())
 		}
 	}
 }
@@ -116,6 +122,6 @@ func TestDeliveryStreamMRN_SurvivesASanitisedName(t *testing.T) {
 	require.Len(t, result.Assets, 1)
 
 	asset := result.Assets[0]
-	assert.Equal(t, "mrn://deliverystream/firehose/orders-to-s3", *asset.MRN)
-	assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+	assert.Equal(t, "mrn://asset/deliverystream/firehose/orders-to-s3", *asset.MRN)
+	assert.Equal(t, mrn.Asset(asset.Type, asset.Providers[0], *asset.Name).String(), *asset.MRN)
 }

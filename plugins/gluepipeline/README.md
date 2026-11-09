@@ -2,6 +2,8 @@ The Glue Pipelines plugin discovers AWS Glue workflows as Pipeline assets, their
 
 It shares the `Glue` provider with the Glue plugin, so a workflow step links to the job or crawler asset that plugin already created rather than a copy of it. This plugin creates no Job, Crawler, Database or Bucket assets, only the lineage edges and the run history that point at them.
 
+A workflow is `mrn://asset/pipeline/glue/<workflow>` and a step is `mrn://asset/task/glue/<workflow>.<step>`. The `zone` option becomes part of every MRN, so set the same `zone` on this plugin and on the Glue plugin when you run more than one AWS account. The name is one you choose, not a cloud availability zone.
+
 ## Required Permissions
 
 <Collapsible

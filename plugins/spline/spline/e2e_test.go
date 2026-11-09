@@ -265,17 +265,17 @@ func TestE2E_DiscoverRecordsTheFailure(t *testing.T) {
 func TestE2E_DiscoverLinksPostgresTablesToThePipeline(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, e2eHasEdge(result, "mrn://table/postgresql/orders", "mrn://pipeline/spline/daily-etl", "FEEDS"))
-	assert.True(t, e2eHasEdge(result, "mrn://table/postgresql/customers", "mrn://pipeline/spline/daily-etl", "FEEDS"))
-	assert.True(t, e2eHasEdge(result, "mrn://pipeline/spline/daily-etl", "mrn://table/postgresql/order_summary", "PRODUCES"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.orders", "mrn://asset/pipeline/spline/daily-etl", "FEEDS"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.customers", "mrn://asset/pipeline/spline/daily-etl", "FEEDS"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/pipeline/spline/daily-etl", "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary", "PRODUCES"))
 }
 
 func TestE2E_DiscoverLinksAnS3BucketAndAHiveTable(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, e2eHasEdge(result, "mrn://bucket/s3/marmot-lake", "mrn://pipeline/spline/events-loader", "FEEDS"))
-	assert.True(t, e2eHasEdge(result, "mrn://pipeline/spline/events-loader", "mrn://table/hive/sales.orders", "PRODUCES"))
-	assert.True(t, e2eHasEdge(result, "mrn://pipeline/spline/nightly-report", "mrn://bucket/s3/marmot-lake", "PRODUCES"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/pipeline/spline/events-loader", "FEEDS"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/pipeline/spline/events-loader", "mrn://asset/table/hive/sales.orders", "PRODUCES"))
+	assert.True(t, e2eHasEdge(result, "mrn://asset/pipeline/spline/nightly-report", "mrn://asset/bucket/s3/marmot-lake", "PRODUCES"))
 }
 
 func TestE2E_DiscoverReturnsRunHistoryIncludingTheFailure(t *testing.T) {
@@ -286,14 +286,14 @@ func TestE2E_DiscoverReturnsRunHistoryIncludingTheFailure(t *testing.T) {
 		byMRN[history.AssetMRN] = history
 	}
 
-	daily := byMRN["mrn://pipeline/spline/daily-etl"]
+	daily := byMRN["mrn://asset/pipeline/spline/daily-etl"]
 	require.Len(t, daily.Runs, 2)
 	assert.Equal(t, "spline", daily.Runs[0].JobNamespace)
 	assert.Equal(t, "daily-etl", daily.Runs[0].JobName)
 	assert.Equal(t, "COMPLETE", daily.Runs[0].EventType)
 	assert.EqualValues(t, 9500, daily.Runs[0].RunFacets["duration_ms"])
 
-	night := byMRN["mrn://pipeline/spline/nightly-report"]
+	night := byMRN["mrn://asset/pipeline/spline/nightly-report"]
 	require.Len(t, night.Runs, 1)
 	assert.Equal(t, "FAIL", night.Runs[0].EventType)
 }
@@ -310,7 +310,7 @@ func TestE2E_DiscoverReturnsColumnLineageOnTheOutput(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal([]byte(encoded), &lineage))
 
-	entries := lineage["mrn://table/postgresql/order_summary"]
+	entries := lineage["mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"]
 	require.NotEmpty(t, entries)
 	assert.Equal(t, "revenue", entries[0].ToColumn)
 	assert.Equal(t, []string{"order_id", "total"}, entries[0].FromColumns)

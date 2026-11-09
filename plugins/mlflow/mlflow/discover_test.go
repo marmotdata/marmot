@@ -218,9 +218,9 @@ func TestDiscover_SkipsDeletedExperiments(t *testing.T) {
 func TestDiscover_LinksTheExperimentToTheModelsItProduced(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://experiment/mlflow/churn", "mrn://model/mlflow/churn-predictor", "PRODUCES"))
-	assert.True(t, hasEdge(result, "mrn://experiment/mlflow/fraud", "mrn://model/mlflow/fraud-detector", "PRODUCES"))
-	assert.True(t, hasEdge(result, "mrn://experiment/mlflow/fraud", "mrn://model/mlflow/fraud-lm-reg", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/experiment/mlflow/churn", "mrn://asset/model/mlflow/churn-predictor", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/experiment/mlflow/fraud", "mrn://asset/model/mlflow/fraud-detector", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/experiment/mlflow/fraud", "mrn://asset/model/mlflow/fraud-lm-reg", "PRODUCES"))
 }
 
 func TestDiscover_IncludeExperimentsFalseDropsExperimentsButKeepsTheName(t *testing.T) {
@@ -264,21 +264,21 @@ func TestDiscover_DatasetColumnsComeFromTheLoggedSchema(t *testing.T) {
 func TestDiscover_LinksDatasetsToTheModelsTheyFeed(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://dataset/mlflow/customers", "mrn://model/mlflow/churn-predictor", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://dataset/mlflow/transactions", "mrn://model/mlflow/fraud-detector", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/mlflow/customers", "mrn://asset/model/mlflow/churn-predictor", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/mlflow/transactions", "mrn://asset/model/mlflow/fraud-detector", "FEEDS"))
 }
 
 func TestDiscover_LinksAnS3BucketToTheDatasetReadFromIt(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-data", "mrn://dataset/mlflow/customers", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-data", "mrn://asset/dataset/mlflow/customers", "FEEDS"))
 	assert.Nil(t, findAsset(result, "Bucket", "ml-data"), "the bucket belongs to the S3 plugin")
 }
 
 func TestDiscover_LinksAGCSBucketToTheDatasetReadFromIt(t *testing.T) {
 	result := discover(t, seeded(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/gcs/fraud-data", "mrn://dataset/mlflow/transactions", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/gcs/fraud-data", "mrn://asset/dataset/mlflow/transactions", "FEEDS"))
 	assert.Nil(t, findAsset(result, "Bucket", "fraud-data"))
 }
 
@@ -299,9 +299,9 @@ func TestDiscover_SharesOneDatasetBetweenModelsAndMergesItsContexts(t *testing.T
 	transactions := findAsset(result, "Dataset", "transactions")
 	require.NotNil(t, transactions)
 	assert.Equal(t, "eval, training", transactions.Metadata["context"])
-	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://model/mlflow/fraud-detector", "FEEDS"))
-	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://model/mlflow/fraud-lm-reg", "FEEDS"))
-	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://model/mlflow/fraud-eval", "FEEDS"))
+	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://asset/model/mlflow/fraud-detector", "FEEDS"))
+	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://asset/model/mlflow/fraud-lm-reg", "FEEDS"))
+	assert.True(t, hasEdge(result, *transactions.MRN, "mrn://asset/model/mlflow/fraud-eval", "FEEDS"))
 }
 
 func TestDiscover_IncludeDatasetsFalseDropsDatasetsAndTheirEdges(t *testing.T) {
@@ -379,7 +379,7 @@ func TestDiscover_KeepsAModelWhoseRunIsGone(t *testing.T) {
 	assert.Equal(t, "runs:/"+churnRunID+"/model", churn.Metadata["artifact_uri"],
 		"without the run, the version source is the best location known")
 	assert.NotContains(t, churn.Metadata, "hyperparameters")
-	assert.False(t, hasEdge(result, "mrn://experiment/mlflow/churn", *churn.MRN, "PRODUCES"))
+	assert.False(t, hasEdge(result, "mrn://asset/experiment/mlflow/churn", *churn.MRN, "PRODUCES"))
 }
 
 func TestDiscover_KeepsAModelWithoutVersions(t *testing.T) {

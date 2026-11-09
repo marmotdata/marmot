@@ -9,3 +9,5 @@ The tracking server is contacted anonymously unless `username` and `password` (M
 ## Model Signatures
 
 Features are read from the run's `mlflow.log-model.history` tag. When the run has none, the plugin reads the MLmodel file of the logged model (MLflow 3, `models:/` sources) or of the run's artifacts, which needs a tracking server that stores or proxies its own artifacts (`--serve-artifacts`). A model whose signature cannot be found is still discovered, without features.
+
+Set `zone` when you catalogue more than one tracking server. It becomes part of every MRN, for example `mrn://asset/model/mlflow@prod/churn-predictor`.

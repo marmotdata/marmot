@@ -5,6 +5,8 @@ package cockroachdb
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -67,7 +69,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "cockroachdb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "CockroachDB",
 		Description:   "Discover databases, tables, views and foreign key relationships from CockroachDB clusters",
 		Icon:          "cockroachdb",
@@ -190,6 +192,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -235,7 +242,7 @@ func (s *Source) databaseAsset(db database, serverVersion string) pluginsdk.Asse
 	}
 
 	name := db.Name
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	return pluginsdk.Asset{
 		Name:      &name,
@@ -290,9 +297,10 @@ func (s *Source) relationAsset(dbName string, r relation, details relationDetail
 		metadata["estimated_row_count"] = *details.rowCount
 	}
 
-	name := qualifiedName(dbName, r.Schema, r.Name)
+	name := r.Name
 	assetType := r.assetType()
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := assetMRN(s.config, assetType, dbName, r.Schema, r.Name)
+	previous := mrn.New(assetType, provider, qualifiedName(dbName, r.Schema, r.Name))
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -310,6 +318,11 @@ func (s *Source) relationAsset(dbName string, r relation, details relationDetail
 		}},
 	}
 
+	// Earlier releases named the asset database.schema.table and had no zone, so the old MRN only differs once a zone is set.
+	if previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
+	}
+
 	if r.Comment != "" {
 		comment := r.Comment
 		asset.Description = &comment
@@ -317,7 +330,7 @@ func (s *Source) relationAsset(dbName string, r relation, details relationDetail
 
 	if details.columns != nil {
 		if err := pluginsdk.SetColumns(&asset, details.columns); err != nil {
-			log.Warn().Err(err).Str("table", name).Msg("Failed to set columns")
+			log.Warn().Err(err).Str("table", qualifiedName(dbName, r.Schema, r.Name)).Msg("Failed to set columns")
 		}
 	}
 
@@ -331,16 +344,12 @@ func (s *Source) relationAsset(dbName string, r relation, details relationDetail
 	return asset
 }
 
-// qualifiedName is the Name of a table or view: database.schema.table. One
-// cluster holds many databases and a connection can address any of them, so
-// the database is part of the identity. This is the shape the OpenMetadata
-// plugin projects Cockroach tables onto.
+// qualifiedName is the database.schema.table form earlier releases used as an asset name, kept to build the previous MRN and for log messages.
 func qualifiedName(database, schema, table string) string {
 	return database + "." + schema + "." + table
 }
 
-// assetMRN is the single place a CockroachDB MRN is built, so the asset pass
-// and every lineage pass address an object the same way.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a CockroachDB MRN is built, so the asset pass and every lineage pass address an object the same way. The path runs from the database down.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }

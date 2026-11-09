@@ -25,7 +25,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "amundsen",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Amundsen",
 		Description:   "Import tables, columns, owners, usage, dashboards and lineage from an Amundsen metadata graph",
 		// iconloader.ts has no amundsen entry, so this borrows the
@@ -34,6 +34,7 @@ func Meta() pluginsdk.Meta {
 		Category:   "catalog",
 		Status:     "experimental",
 		Features:   []string{"Assets", "Lineage"},
+		Federates:  true,
 		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(AmundsenTableFields{}, "Table",

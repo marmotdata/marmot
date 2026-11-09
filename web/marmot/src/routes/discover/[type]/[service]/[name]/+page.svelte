@@ -6,6 +6,7 @@
 	import { getAssetQueryPreview } from '$lib/dataquery/api';
 	import type { Asset, AssetTabCounts, EnrichedExternalLink } from '$lib/assets/types';
 	import { setCrumbs, BladeSlot } from '$lib/mm';
+	import { discoverPath, zoneOf, type DiscoverPath, parseMRN, providerSegment } from '$lib/mrn';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import AssetMetadata from '$components/asset/AssetMetadata.svelte';
 	import Lineage from '$components/lineage/Lineage.svelte';
@@ -196,12 +197,29 @@
 		return `?${new URLSearchParams([...kept, ['tab', id]]).toString()}`;
 	}
 
+	// A legacy or moved MRN resolves to the asset, so the address bar moves to the asset's current page and old bookmarks stay tidy.
+	function canonicalise(found: Asset) {
+		const parsed = parseMRN(found.mrn);
+		if (!parsed || parsed.kind !== 'asset') return;
+		const same =
+			parsed.type === assetType &&
+			providerSegment(parsed) === assetService &&
+			parsed.name === assetName;
+		const path = discoverPath(found.mrn);
+		if (same || !path) return;
+		goto(resolve(`${path}${$page.url.search}${$page.url.hash}` as DiscoverPath), {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
+	}
+
 	async function fetchAsset() {
 		try {
 			loading = true;
 			error = null;
 			const response = await fetchApi(
-				`/assets/lookup/${assetType}/${assetService}/${encodeURIComponent(assetName)}`
+				`/assets/lookup/${encodeURIComponent(assetType)}/${encodeURIComponent(assetService)}/${encodeURIComponent(assetName)}`
 			);
 			if (!response.ok) {
 				throw new Error(m.discover_asset_fetch_error());
@@ -209,6 +227,7 @@
 			const data = await response.json();
 			enrichedLinks = data.enriched_external_links || [];
 			asset = data;
+			canonicalise(data);
 		} catch (err) {
 			console.error('Error fetching asset:', err);
 			error = err instanceof Error ? err.message : m.discover_asset_load_error();
@@ -384,6 +403,8 @@
 	let caption = $derived.by(() => {
 		if (!asset) return '';
 		const parts: string[] = [];
+		const zone = zoneOf(asset);
+		if (zone) parts.push(m.asset_page_caption_zone({ zone }));
 		if (asset.row_count != null) {
 			parts.push(
 				m.asset_size_rows({ count: asset.row_count, formatted: formatNumber(asset.row_count) })

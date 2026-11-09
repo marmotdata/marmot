@@ -114,13 +114,13 @@ func TestDiscoverFeatureGroups_LinksTheGroupToItsGlueTable(t *testing.T) {
 	// The Glue plugin names its table assets with the bare table name.
 	result := discoverWith(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://dataset/sagemaker/customer-features", "mrn://table/glue/customer_features", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/sagemaker/customer-features", "mrn://asset/table/glue/sagemaker_featurestore.customer_features", "PRODUCES"))
 }
 
 func TestDiscoverFeatureGroups_LinksTheGroupToItsOfflineStoreBucket(t *testing.T) {
 	result := discoverWith(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://dataset/sagemaker/customer-features", "mrn://bucket/s3/ml-features", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/sagemaker/customer-features", "mrn://asset/bucket/s3/ml-features", "PRODUCES"))
 }
 
 func TestDiscoverFeatureGroups_HasNoConsoleLink(t *testing.T) {

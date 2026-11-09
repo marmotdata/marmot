@@ -26,6 +26,10 @@ func (s *startOnlyRuns) StartRun(_ context.Context, pipelineName, sourceName, _ 
 	return &plugin.Run{RunID: "run-1", PipelineName: pipelineName, SourceName: sourceName}, nil
 }
 
+func (s *startOnlyRuns) StartRunAs(ctx context.Context, pipelineName, sourceName, createdBy, _ string, config plugin.RawPluginConfig) (*plugin.Run, error) {
+	return s.StartRun(ctx, pipelineName, sourceName, createdBy, config)
+}
+
 // A CLI run brings its own plugin, so it starts while Marmot is still loading its own rather than being turned away with a 503.
 func TestStartRun_DoesNotWaitForServerPlugins(t *testing.T) {
 	if plugin.GetLoadState().Ready() {

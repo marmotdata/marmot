@@ -5,11 +5,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -18,7 +19,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "nats",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "NATS",
 		Description:   "Discover JetStream streams from NATS servers",
 		Icon:          "nats",
@@ -114,7 +115,17 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 
 	return &pluginsdk.DiscoveryResult{
 		Assets: assets,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: "NATS",
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
+}
+
+// streamMRN is the single place a NATS stream MRN is built.
+func (s *Source) streamMRN(stream string) string {
+	return s.config.AssetMRN("Stream", "NATS", stream)
 }
 
 func (s *Source) connect() (*nats.Conn, error) {
@@ -171,7 +182,7 @@ func (s *Source) createStreamAsset(info *jetstream.StreamInfo) pluginsdk.Asset {
 	metadata["port"] = s.config.Port
 
 	streamName := info.Config.Name
-	mrnValue := mrn.New("Stream", "NATS", streamName)
+	mrnValue := s.streamMRN(streamName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 

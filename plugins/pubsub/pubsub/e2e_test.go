@@ -284,8 +284,8 @@ func TestE2E_TopicFeedsItsSubscriptions(t *testing.T) {
 
 	for _, id := range []string{"orders-sub", "orders-push", "orders-bq", "orders-gcs"} {
 		assert.True(t, e2eHasEdge(result.Lineage,
-			"mrn://topic/googlepubsub/orders",
-			"mrn://subscription/googlepubsub/"+id,
+			"mrn://asset/topic/googlepubsub/orders",
+			"mrn://asset/subscription/googlepubsub/"+id,
 			"FEEDS"), "expected orders to feed %s", id)
 	}
 }
@@ -294,8 +294,8 @@ func TestE2E_SubscriptionProducesItsBigQueryTable(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, e2eHasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-bq",
-		"mrn://table/bigquery/orders_raw",
+		"mrn://asset/subscription/googlepubsub/orders-bq",
+		"mrn://asset/table/bigquery/marmot-e2e.analytics.orders_raw",
 		"PRODUCES"))
 }
 
@@ -303,8 +303,8 @@ func TestE2E_SubscriptionProducesItsCloudStorageBucket(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, e2eHasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-gcs",
-		"mrn://bucket/gcs/order-archive",
+		"mrn://asset/subscription/googlepubsub/orders-gcs",
+		"mrn://asset/bucket/gcs/order-archive",
 		"PRODUCES"))
 }
 
@@ -312,8 +312,8 @@ func TestE2E_SubscriptionFeedsItsDeadLetterTopic(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, e2eHasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-sub",
-		"mrn://topic/googlepubsub/orders-dlq",
+		"mrn://asset/subscription/googlepubsub/orders-sub",
+		"mrn://asset/topic/googlepubsub/orders-dlq",
 		"FEEDS"))
 }
 
@@ -325,8 +325,8 @@ func TestE2E_KinesisIngestionStreamFeedsTheTopic(t *testing.T) {
 
 	assert.Equal(t, "aws_kinesis", e2eAssets(t, result)["orders-from-kinesis"].Metadata["ingestion_source"])
 	assert.True(t, e2eHasEdge(result.Lineage,
-		"mrn://stream/kinesis/orders-stream",
-		"mrn://topic/googlepubsub/orders-from-kinesis",
+		"mrn://asset/stream/kinesis/orders-stream",
+		"mrn://asset/topic/googlepubsub/orders-from-kinesis",
 		"FEEDS"))
 }
 
@@ -371,8 +371,8 @@ func TestE2E_DiscoverWithSubscriptionsDisabledReturnsTopicsOnly(t *testing.T) {
 	// Only subscription edges go away; a topic's ingestion source is not a
 	// subscription and still shows up.
 	for _, e := range result.Lineage {
-		assert.NotContains(t, e.Target, "mrn://subscription/")
-		assert.NotContains(t, e.Source, "mrn://subscription/")
+		assert.NotContains(t, e.Target, "mrn://asset/subscription/")
+		assert.NotContains(t, e.Source, "mrn://asset/subscription/")
 	}
 }
 

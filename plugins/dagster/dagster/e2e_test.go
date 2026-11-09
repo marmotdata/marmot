@@ -50,7 +50,8 @@ func findAsset(t *testing.T, result *pluginsdk.DiscoveryResult, name string) plu
 	t.Helper()
 
 	for _, asset := range result.Assets {
-		if asset.Name != nil && *asset.Name == name {
+		// Tasks are looked up by MRN because an op can share a name with an asset.
+		if asset.Type != "Task" && asset.Name != nil && *asset.Name == name {
 			return asset
 		}
 	}
@@ -102,7 +103,7 @@ func TestE2E_DiscoversBothJobsAsPipelines(t *testing.T) {
 	etl := findAsset(t, result, "etl_job")
 	assert.Equal(t, "Pipeline", etl.Type)
 	assert.Equal(t, []string{"Dagster"}, etl.Providers)
-	assert.Equal(t, "mrn://pipeline/dagster/etl_job", *etl.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/dagster/etl_job", *etl.MRN)
 
 	orders := findAsset(t, result, "orders_job")
 	assert.Equal(t, "Pipeline", orders.Type)
@@ -138,8 +139,8 @@ func TestE2E_PipelineCarriesItsCronScheduleAndSensor(t *testing.T) {
 func TestE2E_DiscoversTheOpsOfTheOpJob(t *testing.T) {
 	result := discoverE2E(t)
 
-	for _, name := range []string{"etl_job/extract", "etl_job/transform", "etl_job/load"} {
-		task := findAsset(t, result, name)
+	for _, name := range []string{"extract", "transform", "load"} {
+		task := assetByMRN(t, result, "mrn://asset/task/dagster/etl_job."+name)
 		assert.Equal(t, "Task", task.Type)
 	}
 }
@@ -148,8 +149,8 @@ func TestE2E_PipelineContainsItsTasks(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, containsEdge(result,
-		"mrn://pipeline/dagster/etl_job",
-		"mrn://task/dagster/etl_job-extract",
+		"mrn://asset/pipeline/dagster/etl_job",
+		"mrn://asset/task/dagster/etl_job.extract",
 		"CONTAINS"))
 }
 
@@ -157,12 +158,12 @@ func TestE2E_TasksDependOnTheOpFeedingThem(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, containsEdge(result,
-		"mrn://task/dagster/etl_job-extract",
-		"mrn://task/dagster/etl_job-transform",
+		"mrn://asset/task/dagster/etl_job.extract",
+		"mrn://asset/task/dagster/etl_job.transform",
 		"DEPENDS_ON"))
 	assert.True(t, containsEdge(result,
-		"mrn://task/dagster/etl_job-extract",
-		"mrn://task/dagster/etl_job-load",
+		"mrn://asset/task/dagster/etl_job.extract",
+		"mrn://asset/task/dagster/etl_job.load",
 		"DEPENDS_ON"))
 }
 
@@ -172,7 +173,7 @@ func TestE2E_DiscoversTheThreeSoftwareDefinedAssets(t *testing.T) {
 	for _, name := range []string{"raw_orders", "clean_orders", "order_metrics"} {
 		dataset := findAsset(t, result, name)
 		assert.Equal(t, "Dataset", dataset.Type)
-		assert.Equal(t, "mrn://dataset/dagster/"+name, *dataset.MRN)
+		assert.Equal(t, "mrn://asset/dataset/dagster/"+name, *dataset.MRN)
 	}
 }
 
@@ -180,12 +181,12 @@ func TestE2E_DatasetsFeedTheirDownstreamAssets(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, containsEdge(result,
-		"mrn://dataset/dagster/raw_orders",
-		"mrn://dataset/dagster/clean_orders",
+		"mrn://asset/dataset/dagster/raw_orders",
+		"mrn://asset/dataset/dagster/clean_orders",
 		"FEEDS"))
 	assert.True(t, containsEdge(result,
-		"mrn://dataset/dagster/clean_orders",
-		"mrn://dataset/dagster/order_metrics",
+		"mrn://asset/dataset/dagster/clean_orders",
+		"mrn://asset/dataset/dagster/order_metrics",
 		"FEEDS"))
 }
 
@@ -193,8 +194,8 @@ func TestE2E_AssetJobProducesItsDatasets(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, containsEdge(result,
-		"mrn://pipeline/dagster/orders_job",
-		"mrn://dataset/dagster/clean_orders",
+		"mrn://asset/pipeline/dagster/orders_job",
+		"mrn://asset/dataset/dagster/clean_orders",
 		"PRODUCES"))
 }
 
@@ -202,8 +203,8 @@ func TestE2E_DatasetProducesTheWarehouseTableItNames(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, containsEdge(result,
-		"mrn://dataset/dagster/clean_orders",
-		"mrn://table/duckdb/clean_orders",
+		"mrn://asset/dataset/dagster/clean_orders",
+		"mrn://asset/table/duckdb/analytics.staging.clean_orders",
 		"PRODUCES"))
 }
 
@@ -243,7 +244,7 @@ func TestE2E_CollectsRunHistoryForTheJobsThatRan(t *testing.T) {
 
 	var etlHistory *pluginsdk.AssetRunHistory
 	for i, history := range result.RunHistory {
-		if history.AssetMRN == "mrn://pipeline/dagster/etl_job" {
+		if history.AssetMRN == "mrn://asset/pipeline/dagster/etl_job" {
 			etlHistory = &result.RunHistory[i]
 		}
 	}
@@ -308,4 +309,16 @@ func TestE2E_EveryAssetMRNMatchesItsOwnIdentity(t *testing.T) {
 		require.Len(t, asset.Providers, 1)
 		assert.Equal(t, "Dagster", asset.Providers[0])
 	}
+}
+
+func assetByMRN(t *testing.T, result *pluginsdk.DiscoveryResult, mrnValue string) pluginsdk.Asset {
+	t.Helper()
+
+	for _, asset := range result.Assets {
+		if asset.MRN != nil && *asset.MRN == mrnValue {
+			return asset
+		}
+	}
+	t.Fatalf("no asset with MRN %q among %d discovered assets", mrnValue, len(result.Assets))
+	return pluginsdk.Asset{}
 }

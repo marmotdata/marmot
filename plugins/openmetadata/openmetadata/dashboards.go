@@ -46,7 +46,7 @@ func (c *collector) discoverDashboards(ctx context.Context, client *client) erro
 		metadata := map[string]interface{}{}
 		putIf(metadata, "chart_type", ch.ChartType)
 
-		asset := c.newAsset(ch.entityBase, "chart", "Chart", p, c.mrnName(name, ch.FullyQualifiedName), metadata)
+		asset := c.newAsset(ch.entityBase, "chart", "Chart", p, c.ident(name, ch.FullyQualifiedName), metadata)
 		c.add(ch.ID, asset)
 		chartMRNs[ch.ID] = *asset.MRN
 	}
@@ -66,7 +66,7 @@ func (c *collector) discoverDashboards(ctx context.Context, client *client) erro
 		putIf(metadata, "data_model_type", dm.DataModelType)
 		putIf(metadata, "project", dm.Project)
 
-		asset := c.newAsset(dm.entityBase, "dashboardDataModel", "Data Model Object", p, c.mrnName(name, dm.FullyQualifiedName), metadata)
+		asset := c.newAsset(dm.entityBase, "dashboardDataModel", "Data Model Object", p, c.ident(name, dm.FullyQualifiedName), metadata)
 		if c.config.IncludeColumns {
 			setColumns(&asset, dm.Columns)
 		}
@@ -96,7 +96,7 @@ func (c *collector) discoverDashboards(ctx context.Context, client *client) erro
 		putIf(metadata, "project", d.Project)
 		putIf(metadata, "chart_count", len(d.Charts))
 
-		asset := c.newAsset(d.entityBase, "dashboard", "Dashboard", p, c.mrnName(name, d.FullyQualifiedName), metadata)
+		asset := c.newAsset(d.entityBase, "dashboard", "Dashboard", p, c.ident(name, d.FullyQualifiedName), metadata)
 		c.add(d.ID, asset)
 		discovered++
 

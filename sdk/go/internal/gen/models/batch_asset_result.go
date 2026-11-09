@@ -20,6 +20,9 @@ type BatchAssetResult struct {
 	// error
 	Error string `json:"error,omitempty"`
 
+	// MovedFrom is the MRN the asset had before this run gave it a new one.
+	MovedFrom string `json:"moved_from,omitempty"`
+
 	// mrn
 	Mrn string `json:"mrn,omitempty"`
 

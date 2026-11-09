@@ -1,6 +1,6 @@
 The Confluent Cloud plugin discovers Kafka topics from Confluent Cloud clusters. It uses the same discovery engine as the Kafka plugin with defaults tuned for Confluent Cloud.
 
-Because it is the same engine, topics are catalogued under the Kafka provider and addressed as `mrn://topic/kafka/<topic>`, not under a Confluent provider. Running Kafka, Redpanda and Confluent Cloud against clusters that share a topic name will therefore land them on one asset.
+Because it is the same engine, topics are catalogued under the Kafka provider and addressed as `mrn://asset/topic/kafka@<zone>/<topic>`, not under a Confluent provider. Set `zone` to tell clusters apart (a name you choose, not a cloud availability zone); clusters left without a zone that share a topic name will land on one asset.
 
 ## Connection
 

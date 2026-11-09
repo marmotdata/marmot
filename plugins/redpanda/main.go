@@ -16,7 +16,7 @@ func main() {
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
 		Meta: pluginsdk.Meta{
 			ID:            "redpanda",
-			MarmotVersion: ">=0.12.0",
+			MarmotVersion: ">=0.13.0",
 			Name:          "Redpanda",
 			Description:   "Discover topics from Redpanda clusters",
 			Icon:          "redpanda",

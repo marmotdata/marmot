@@ -2,7 +2,7 @@ The TimescaleDB plugin discovers databases, tables, views, hypertables and conti
 
 ## Relationship to the PostgreSQL plugin
 
-TimescaleDB is a PostgreSQL extension, so a TimescaleDB server is a PostgreSQL server. Assets are filed under the `PostgreSQL` provider by their bare object name, which is byte for byte the identity the PostgreSQL plugin produces. Running both plugins against the same instance updates one set of assets rather than creating two. This plugin is the PostgreSQL plugin plus hypertable knowledge.
+TimescaleDB is a PostgreSQL extension, so a TimescaleDB server is a PostgreSQL server. Assets are filed under the `PostgreSQL` provider as `database.schema.object`, which is byte for byte the identity the PostgreSQL plugin produces. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone. Running both plugins against the same server updates one set of assets rather than creating two. This plugin is the PostgreSQL plugin plus hypertable knowledge.
 
 Objects in the `_timescaledb_internal`, `_timescaledb_catalog`, `_timescaledb_config`, `_timescaledb_cache`, `timescaledb_information` and `timescaledb_experimental` schemas are skipped. They hold chunk tables, materialization hypertables and catalog views, and one busy hypertable puts thousands of chunks there.
 

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -178,7 +177,7 @@ func TestDiscover_CataloguesAPhysicalDatasetWithItsColumns(t *testing.T) {
 	ds := findAsset(result, "Data Model Object", "public.orders")
 	require.NotNil(t, ds)
 	assert.Equal(t, "Data Model Object", ds.Type)
-	assert.Equal(t, "public.orders", *ds.Name, "a dataset is named schema.table")
+	assert.Equal(t, "orders", *ds.Name, "a dataset is named by its table")
 	assert.Equal(t, 1, ds.Metadata["id"])
 	assert.Equal(t, "physical", ds.Metadata["kind"])
 	assert.Equal(t, "Shop", ds.Metadata["database"])
@@ -230,7 +229,7 @@ func TestDiscover_UsesTheDatasetListingWhenTheDetailFails(t *testing.T) {
 	require.NotNil(t, ds, "one broken detail must not drop the dataset")
 	assert.Equal(t, "postgresql", ds.Metadata["backend"], "the backend still comes from the database listing")
 	assert.NotContains(t, ds.Schema, "columns")
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", *ds.MRN, "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.orders", *ds.MRN, "FEEDS"),
 		"table lineage still works from the listing")
 }
 
@@ -275,8 +274,8 @@ func TestDiscover_SurvivesAMissingConnectionEndpoint(t *testing.T) {
 	db := findAsset(result, "DataSource", "Shop")
 	require.NotNil(t, db)
 	assert.NotContains(t, db.Metadata, "host")
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
-		"a bare-named backend needs no connection details for table lineage")
+	// Without the connection there is no database for the table's path, so the table end can only be the partial schema.table.
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/public.orders", "mrn://asset/data-model-object/superset/public.orders", "FEEDS"))
 }
 
 func TestDiscover_LinksADashboardToItsCharts(t *testing.T) {
@@ -320,7 +319,7 @@ func TestDiscover_LinksADatabaseToItsDatasets(t *testing.T) {
 func TestDiscover_LinksAPhysicalDatasetToThePostgresTableItReads(t *testing.T) {
 	result := discover(t, shop(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.orders", "mrn://asset/data-model-object/superset/public.orders", "FEEDS"),
 		"the table end is the MRN the PostgreSQL plugin gives the table")
 }
 
@@ -328,8 +327,8 @@ func TestDiscover_LinksAVirtualDatasetToTheTablesItsSQLReads(t *testing.T) {
 	result := discover(t, shop(), nil)
 
 	totals := assetMRN("Data Model Object", "public.order_totals")
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", totals, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", totals, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.orders", totals, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.customers", totals, "FEEDS"))
 }
 
 func TestDiscover_QualifiesTablesTheWayTheOwningPluginDoes(t *testing.T) {
@@ -340,7 +339,7 @@ func TestDiscover_QualifiesTablesTheWayTheOwningPluginDoes(t *testing.T) {
 			connectionEntry(2, "Warehouse", "snowflake", "snowflake", "snowflake://user:XXXXXXXXXX@acct/SALES/PUBLIC?warehouse=wh", "", 0, "SALES")).
 		withDataset(datasetEntry(5, "PUBLIC", "ORDERS", "physical", "", 2, "Warehouse"), "snowflake"), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/snowflake/sales.public.orders", assetMRN("Data Model Object", "PUBLIC.ORDERS"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/snowflake/sales.public.orders", assetMRN("Data Model Object", "PUBLIC.ORDERS"), "FEEDS"))
 }
 
 func TestDiscover_TakesTheDatabaseFromTheURIWhenParametersLackIt(t *testing.T) {
@@ -351,7 +350,7 @@ func TestDiscover_TakesTheDatabaseFromTheURIWhenParametersLackIt(t *testing.T) {
 		withDatabase(databaseEntry(2, "Warehouse", "snowflake"), conn).
 		withDataset(datasetEntry(5, "PUBLIC", "ORDERS", "physical", "", 2, "Warehouse"), "snowflake"), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/snowflake/sales.public.orders", assetMRN("Data Model Object", "PUBLIC.ORDERS"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/snowflake/sales.public.orders", assetMRN("Data Model Object", "PUBLIC.ORDERS"), "FEEDS"))
 }
 
 func TestDiscover_EmitsNoTableEdgeForABackendWithoutANamingRule(t *testing.T) {
@@ -361,7 +360,7 @@ func TestDiscover_EmitsNoTableEdgeForABackendWithoutANamingRule(t *testing.T) {
 
 	require.NotNil(t, findAsset(result, "Data Model Object", "dw.facts"))
 	for _, edge := range result.Lineage {
-		assert.False(t, strings.HasPrefix(edge.Source, "mrn://table/"), "unexpected table edge %+v", edge)
+		assert.False(t, strings.HasPrefix(edge.Source, "mrn://asset/table/"), "unexpected table edge %+v", edge)
 	}
 }
 
@@ -382,7 +381,7 @@ func TestDiscover_SkipsDatasetsWhenConfigured(t *testing.T) {
 	assert.NotNil(t, findAsset(result, "Chart", "Orders by Status"))
 	assert.True(t, hasEdge(result, assetMRN("Dashboard", "Shop Overview"), assetMRN("Chart", "Orders by Status"), "CONTAINS"))
 	for _, edge := range result.Lineage {
-		assert.NotEqual(t, "mrn://table/postgresql/orders", edge.Source, "no table edge without the dataset it points at")
+		assert.NotEqual(t, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.orders", edge.Source, "no table edge without the dataset it points at")
 	}
 }
 
@@ -390,7 +389,7 @@ func TestDiscover_SkipsDatabasesWhenConfiguredButStillLinksTables(t *testing.T) 
 	result := discover(t, shop(), pluginsdk.RawConfig{"include_databases": false})
 
 	assert.Nil(t, findAsset(result, "DataSource", "Shop"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", assetMRN("Data Model Object", "public.orders"), "FEEDS"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=marmot-test-superset-pg:5432/shop.public.orders", assetMRN("Data Model Object", "public.orders"), "FEEDS"),
 		"the connection is still read for the backend even when it is not an asset")
 }
 
@@ -439,27 +438,6 @@ func TestDiscover_SendsTheBearerTokenOnEveryCall(t *testing.T) {
 	}
 }
 
-// Marmot keeps the MRN a plugin declares and the UI rebuilds every link
-// by splitting it back into type, service and name, which /assets/lookup
-// feeds through mrn.New again. The MRN has to survive that unchanged or
-// the asset exists but its page 404s.
-func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
-	result := discover(t, shop(), nil)
-	require.NotEmpty(t, result.Assets)
-
-	for _, asset := range result.Assets {
-		require.NotNil(t, asset.MRN)
-		require.NotNil(t, asset.Name)
-		require.NotEmpty(t, asset.Providers)
-
-		parsed, err := mrn.Parse(*asset.MRN)
-		require.NoError(t, err)
-		assert.Equal(t, *asset.MRN, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-		assert.Equal(t, *asset.MRN, mrn.New(asset.Type, asset.Providers[0], *asset.Name),
-			"the MRN must be what the server derives from the asset's own fields")
-	}
-}
-
 // Every edge must end on an asset this run emitted or on a table another
 // plugin catalogues; the server drops anything else.
 func TestDiscover_LineagePointsAtRealAssets(t *testing.T) {
@@ -472,7 +450,7 @@ func TestDiscover_LineagePointsAtRealAssets(t *testing.T) {
 	}
 
 	for _, edge := range result.Lineage {
-		assert.True(t, known[edge.Source] || strings.HasPrefix(edge.Source, "mrn://table/"),
+		assert.True(t, known[edge.Source] || strings.HasPrefix(edge.Source, "mrn://asset/table/"),
 			"edge source %q is neither an emitted asset nor a native table", edge.Source)
 		assert.True(t, known[edge.Target], "edge target %q is not an emitted asset", edge.Target)
 	}

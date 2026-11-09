@@ -424,7 +424,7 @@ func TestCreateDAGAsset(t *testing.T) {
 	assert.Equal(t, "Pipeline", asset.Type)
 	assert.Contains(t, asset.Providers, "Airflow")
 	assert.Equal(t, "Test DAG description", *asset.Description)
-	assert.Contains(t, *asset.MRN, "mrn://pipeline/airflow/test_dag")
+	assert.Contains(t, *asset.MRN, "mrn://asset/pipeline/airflow/test_dag")
 
 	// Check metadata
 	assert.Equal(t, "test_dag", asset.Metadata["dag_id"])
@@ -456,10 +456,10 @@ func TestCreateTaskAsset(t *testing.T) {
 
 	asset := s.createTaskAsset("my_dag", task)
 
-	assert.Equal(t, "my_dag.extract_data", *asset.Name)
+	assert.Equal(t, "extract_data", *asset.Name)
 	assert.Equal(t, "Task", asset.Type)
 	assert.Contains(t, asset.Providers, "Airflow")
-	assert.Contains(t, *asset.MRN, "mrn://task/airflow/my_dag.extract_data")
+	assert.Contains(t, *asset.MRN, "mrn://asset/task/airflow/my_dag.extract_data")
 
 	// Check metadata
 	assert.Equal(t, "extract_data", asset.Metadata["task_id"])
@@ -501,7 +501,7 @@ func TestCreateDatasetAsset(t *testing.T) {
 	assert.Equal(t, "my-bucket", *asset.Name)
 	assert.Equal(t, "Bucket", asset.Type)
 	assert.Contains(t, asset.Providers, "S3")
-	assert.Contains(t, *asset.MRN, "mrn://bucket/s3/my-bucket")
+	assert.Contains(t, *asset.MRN, "mrn://asset/bucket/s3/my-bucket")
 
 	// Check metadata
 	assert.Equal(t, "s3://my-bucket/path/to/data.parquet", asset.Metadata["uri"])
@@ -532,7 +532,7 @@ func TestCreateDatasetAsset_Kafka(t *testing.T) {
 	assert.Equal(t, "user-events", *asset.Name)
 	assert.Equal(t, "Topic", asset.Type)
 	assert.Contains(t, asset.Providers, "Kafka")
-	assert.Contains(t, *asset.MRN, "mrn://topic/kafka/user-events")
+	assert.Equal(t, "mrn://asset/topic/kafka@host=redpanda:9092/user-events", *asset.MRN)
 }
 
 func TestParseDatasetURI(t *testing.T) {
@@ -540,50 +540,100 @@ func TestParseDatasetURI(t *testing.T) {
 		uri          string
 		wantProvider string
 		wantType     string
-		wantName     string
+		wantPath     []string
+		wantHost     string
 	}{
-		{"s3://bucket/path/file.parquet", "S3", "Bucket", "bucket"},
-		{"s3a://bucket/data", "S3", "Bucket", "bucket"},
-		{"s3://raw-data/events/", "S3", "Bucket", "raw-data"},
-		{"gs://gcs-bucket/data", "GCS", "Bucket", "gcs-bucket"},
-		{"kafka://broker/topic-name", "Kafka", "Topic", "topic-name"},
-		{"kafka://localhost:9092/events", "Kafka", "Topic", "events"},
-		// The relational schemes keep the whole URI path. This does NOT
-		// match how plugins/postgresql, plugins/mysql or plugins/bigquery
-		// name the same table, so an Airflow dataset and the real table
-		// stay separate assets and a lineage edge between them is dropped.
-		// It is a known gap, pinned here rather than fixed: reshaping
-		// these renames every Airflow-discovered table and needs a
-		// migration to move the rows already in the catalog.
-		{"postgresql://host:5432/db/public/users", "PostgreSQL", "Table", "host:5432/db/public/users"},
-		{"postgresql://host/db/schema/table", "PostgreSQL", "Table", "host/db/schema/table"},
-		{"mysql://host/db/table", "MySQL", "Table", "host/db/table"},
-		{"bigquery://project/dataset/table", "BigQuery", "Table", "project/dataset/table"},
-		{"snowflake://account/db/schema/table", "Snowflake", "Table", "account/db/schema/table"},
-		{"http://api.example.com/data", "HTTP", "Endpoint", "http://api.example.com/data"},
-		{"file:///path/to/file.csv", "File", "File", "/path/to/file.csv"},
-		{"custom://some/path", "Custom", "Dataset", "some/path"},
-		{"no-scheme-uri", "Airflow", "Dataset", "no-scheme-uri"},
+		{"s3://bucket/path/file.parquet", "S3", "Bucket", []string{"bucket"}, ""},
+		{"s3a://bucket/data", "S3", "Bucket", []string{"bucket"}, ""},
+		{"s3://raw-data/events/", "S3", "Bucket", []string{"raw-data"}, ""},
+		{"gs://gcs-bucket/data", "GCS", "Bucket", []string{"gcs-bucket"}, ""},
+		{"kafka://broker/topic-name", "Kafka", "Topic", []string{"topic-name"}, "broker:9092"},
+		{"kafka://Localhost:9093/events", "Kafka", "Topic", []string{"events"}, "localhost:9093"},
+		{"postgresql://host:5432/db/public/users", "PostgreSQL", "Table", []string{"db", "public", "users"}, "host:5432"},
+		{"postgres://host/db/schema/table", "PostgreSQL", "Table", []string{"db", "schema", "table"}, "host:5432"},
+		{"postgres://host:6432/db/table", "PostgreSQL", "Table", []string{"db", "public", "table"}, "host:6432"},
+		{"mysql://host/db/table", "MySQL", "Table", []string{"db", "table"}, "host:3306"},
+		{"redshift://cluster:5439/dev/public/orders", "Redshift", "Table", []string{"dev", "public", "orders"}, "cluster:5439"},
+		{"bigquery://project/dataset/table", "BigQuery", "Table", []string{"project", "dataset", "table"}, ""},
+		{"bigquery:project.dataset.table", "BigQuery", "Table", []string{"project", "dataset", "table"}, ""},
+		{"snowflake://account/db/schema/table", "Snowflake", "Table", []string{"db", "schema", "table"}, ""},
+		{"http://api.example.com/data", "HTTP", "Endpoint", []string{"http://api.example.com/data"}, ""},
+		{"file:///path/to/file.csv", "File", "File", []string{"path", "to", "file.csv"}, ""},
+		{"custom://some/path", "Custom", "Dataset", []string{"some", "path"}, ""},
+		{"no-scheme-uri", "Airflow", "Dataset", []string{"no-scheme-uri"}, ""},
+		// Too few levels to name a table the way its plugin does, so the dataset stays an Airflow one.
+		{"postgres://host/table", "Airflow", "Dataset", []string{"postgres://host/table"}, ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.uri, func(t *testing.T) {
-			provider, assetType, name := parseDatasetURI(tt.uri)
-			assert.Equal(t, tt.wantProvider, provider)
-			assert.Equal(t, tt.wantType, assetType)
-			assert.Equal(t, tt.wantName, name)
+			ref := parseDatasetURI(tt.uri)
+			assert.Equal(t, tt.wantProvider, ref.Provider)
+			assert.Equal(t, tt.wantType, ref.Type)
+			assert.Equal(t, tt.wantPath, ref.Path)
+			assert.Equal(t, tt.wantHost, ref.Host)
 		})
 	}
 }
 
-// A URI whose scheme is empty used to index scheme[:1] and panic, taking
-// the whole discovery run down.
+func TestDatasetMRN_FollowsTheOwningPluginsNaming(t *testing.T) {
+	s := &Source{config: &Config{}}
+
+	assert.Equal(t, "mrn://asset/table/postgresql@host=db:5432/shop.public.orders", s.datasetMRN(parseDatasetURI("postgres://db:5432/shop/public/orders")))
+	assert.Equal(t, "mrn://asset/table/mysql@host=db:3306/shop.orders", s.datasetMRN(parseDatasetURI("mysql://db/shop/orders")))
+	assert.Equal(t, "mrn://asset/table/bigquery/proj.ds.tbl", s.datasetMRN(parseDatasetURI("bigquery://proj/ds/tbl")))
+	assert.Equal(t, "mrn://asset/bucket/s3/lake", s.datasetMRN(parseDatasetURI("s3://lake/raw/2024/")))
+	assert.Equal(t, "mrn://asset/topic/kafka@host=broker:9092/events", s.datasetMRN(parseDatasetURI("kafka://broker/events")))
+}
+
+func TestDatasetMRN_SameTableNameInTwoSchemasDiffers(t *testing.T) {
+	s := &Source{config: &Config{}}
+
+	assert.NotEqual(t,
+		s.datasetMRN(parseDatasetURI("postgres://db/shop/public/orders")),
+		s.datasetMRN(parseDatasetURI("postgres://db/shop/archive/orders")))
+}
+
+func TestDatasetMRN_OnlyAnAirflowOwnedDatasetTakesTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod"
+	s := &Source{config: cfg}
+
+	assert.Equal(t, "mrn://asset/dataset/airflow@prod/no-scheme-uri", s.datasetMRN(parseDatasetURI("no-scheme-uri")))
+	assert.Equal(t, "mrn://asset/bucket/s3/lake", s.datasetMRN(parseDatasetURI("s3://lake/x")))
+}
+
+func TestDatasetAsset_KeepsItsOldMRN(t *testing.T) {
+	s := &Source{config: &Config{}}
+
+	asset := s.createDatasetAsset(Dataset{URI: "postgres://db/shop/public/orders"})
+
+	assert.Equal(t, "orders", *asset.Name)
+	assert.Equal(t, []string{"mrn://asset/table/postgresql/db-shop-public-orders"}, asset.PreviousMRNs)
+}
+
+func TestMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod"
+	s := &Source{config: cfg}
+
+	assert.Equal(t, "mrn://asset/pipeline/airflow@prod/etl", s.dagMRN("etl"))
+	assert.Equal(t, "mrn://asset/task/airflow@prod/etl.load", s.taskMRN("etl", "load"))
+}
+
+func TestTaskMRN_SameTaskIDInTwoDAGsDiffers(t *testing.T) {
+	s := &Source{config: &Config{}}
+
+	assert.NotEqual(t, s.taskMRN("a", "load"), s.taskMRN("b", "load"))
+}
+
+// A URI whose scheme is empty used to index scheme[:1] and panic, taking the whole discovery run down.
 func TestParseDatasetURI_EmptySchemeDoesNotPanic(t *testing.T) {
 	assert.NotPanics(t, func() {
-		provider, assetType, name := parseDatasetURI("://host/db/table")
-		assert.Equal(t, "Airflow", provider)
-		assert.Equal(t, "Dataset", assetType)
-		assert.Equal(t, "://host/db/table", name)
+		ref := parseDatasetURI("://host/db/table")
+		assert.Equal(t, "Airflow", ref.Provider)
+		assert.Equal(t, "Dataset", ref.Type)
+		assert.Equal(t, []string{"://host/db/table"}, ref.Path)
 	})
 }
 
@@ -753,5 +803,5 @@ func TestDiscover_ProducesEdgeStartsAtTheProducingTask(t *testing.T) {
 			produces = append(produces, e.Source)
 		}
 	}
-	assert.Equal(t, []string{"mrn://task/airflow/etl.load"}, produces)
+	assert.Equal(t, []string{"mrn://asset/task/airflow/etl.load"}, produces)
 }

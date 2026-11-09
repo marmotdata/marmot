@@ -5,6 +5,8 @@ package metabase
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -51,7 +53,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "metabase",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Metabase",
 		Description:   "Discover dashboards, charts and models from Metabase, with lineage from the tables they read",
 		Icon:          "metabase",
@@ -128,8 +130,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Metabase discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  c.assets,
-		Lineage: c.edges,
+		Assets:       c.assets,
+		Lineage:      c.edges,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -266,8 +269,9 @@ func (c *collector) dashboardAsset(ctx context.Context, d dashboard) pluginsdk.A
 		d.OrderedCards = detail.OrderedCards
 	}
 
-	name := c.assetName(d.CollectionID, d.Name)
-	mrnValue := assetMRN("Dashboard", name)
+	legacy := c.assetName(d.CollectionID, d.Name)
+	name := d.Name
+	mrnValue := c.config.AssetMRN("Dashboard", provider, c.assetPath(d.CollectionID, d.Name)...)
 	url := fmt.Sprintf("%s/dashboard/%d-%s", c.config.Host, d.ID, slug(d.Name))
 
 	metadata := map[string]any{
@@ -291,7 +295,7 @@ func (c *collector) dashboardAsset(ctx context.Context, d dashboard) pluginsdk.A
 		}
 	}
 
-	asset := c.newAsset("Dashboard", name, mrnValue, url, metadata)
+	asset := c.newAsset("Dashboard", name, mrnValue, mrn.New("Dashboard", provider, legacy), url, metadata)
 	if desc := strings.TrimSpace(d.Description); desc != "" {
 		asset.Description = &desc
 	}
@@ -320,8 +324,9 @@ func (c *collector) cardAsset(card card) pluginsdk.Asset {
 		}
 	}
 
-	name := c.assetName(card.CollectionID, card.Name)
-	mrnValue := assetMRN(assetType, name)
+	legacy := c.assetName(card.CollectionID, card.Name)
+	name := card.Name
+	mrnValue := c.config.AssetMRN(assetType, provider, c.assetPath(card.CollectionID, card.Name)...)
 	url := fmt.Sprintf("%s/%s/%d-%s", c.config.Host, page, card.ID, slug(card.Name))
 
 	metadata := map[string]any{
@@ -343,7 +348,7 @@ func (c *collector) cardAsset(card card) pluginsdk.Asset {
 	putIf(metadata, "created_at", card.CreatedAt)
 	putIf(metadata, "updated_at", card.UpdatedAt)
 
-	asset := c.newAsset(assetType, name, mrnValue, url, metadata)
+	asset := c.newAsset(assetType, name, mrnValue, mrn.New(assetType, provider, legacy), url, metadata)
 	if desc := strings.TrimSpace(card.Description); desc != "" {
 		asset.Description = &desc
 	}
@@ -355,15 +360,20 @@ func (c *collector) cardAsset(card card) pluginsdk.Asset {
 	return asset
 }
 
-func (c *collector) newAsset(assetType, name, mrnValue, url string, metadata map[string]any) pluginsdk.Asset {
+func (c *collector) newAsset(assetType, name, mrnValue, previous, url string, metadata map[string]any) pluginsdk.Asset {
+	var previousMRNs []string
+	if previous != mrnValue {
+		previousMRNs = []string{previous}
+	}
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Schema:    map[string]string{},
-		Tags:      pluginsdk.InterpolateTags(c.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		PreviousMRNs: previousMRNs,
+		Type:         assetType,
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Schema:       map[string]string{},
+		Tags:         pluginsdk.InterpolateTags(c.config.Tags, metadata),
 		ExternalLinks: []pluginsdk.AssetExternalLink{{
 			Name: "Open in Metabase",
 			URL:  url,
@@ -438,7 +448,7 @@ func (c *collector) cardSources(ctx context.Context, card card) ([]string, []int
 				if t, ok := index.resolve(ref); ok {
 					tables = append(tables, t)
 				} else {
-					log.Debug().Int("card_id", card.ID).Str("table", join(ref.Schema, ref.Name)).Msg("Table in native query not found in Metabase metadata")
+					log.Debug().Int("card_id", card.ID).Str("table", strings.Join(levels(ref.Schema, ref.Name), ".")).Msg("Table in native query not found in Metabase metadata")
 				}
 			}
 		}
@@ -523,6 +533,15 @@ func (idx *tableIndex) resolve(ref tableRef) (table, bool) {
 		}
 	}
 	return table{}, false
+}
+
+// assetPath is the levels of an item's MRN: the collections holding it from the root down, then its own name.
+func (c *collector) assetPath(id collectionID, name string) []string {
+	var path []string
+	if p := c.collectionPath(id); p != "" {
+		path = strings.Split(p, "/")
+	}
+	return append(path, name)
 }
 
 // assetName qualifies a dashboard or card name with the path of the
@@ -636,8 +655,18 @@ func slug(name string) string {
 	}, strings.ToLower(name))
 }
 
-// assetMRN is the single place a Metabase MRN is built, so assets and
-// the edges between them can never drift apart.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// zoneBindings tells Marmot which zone the Metabase server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

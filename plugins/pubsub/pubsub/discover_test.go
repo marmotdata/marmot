@@ -186,8 +186,8 @@ func TestDiscover_DeadLetterPolicyIsSkippedWhenDisabled(t *testing.T) {
 
 	assert.NotContains(t, metadata, "dead_letter_topic")
 	assert.False(t, hasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-sub",
-		"mrn://topic/googlepubsub/orders-dlq",
+		"mrn://asset/subscription/googlepubsub/orders-sub",
+		"mrn://asset/topic/googlepubsub/orders-dlq",
 		"FEEDS"))
 }
 
@@ -211,8 +211,8 @@ func TestDiscover_TopicFeedsItsSubscriptions(t *testing.T) {
 	result := discoverFake(t, newTestSource(fake), fake)
 
 	assert.True(t, hasEdge(result.Lineage,
-		"mrn://topic/googlepubsub/orders",
-		"mrn://subscription/googlepubsub/orders-sub",
+		"mrn://asset/topic/googlepubsub/orders",
+		"mrn://asset/subscription/googlepubsub/orders-sub",
 		"FEEDS"))
 }
 
@@ -221,8 +221,8 @@ func TestDiscover_BigQuerySubscriptionProducesTheBigQueryTable(t *testing.T) {
 	result := discoverFake(t, newTestSource(fake), fake)
 
 	assert.True(t, hasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-bq",
-		"mrn://table/bigquery/orders_raw",
+		"mrn://asset/subscription/googlepubsub/orders-bq",
+		"mrn://asset/table/bigquery/test-project.analytics.orders_raw",
 		"PRODUCES"))
 }
 
@@ -231,8 +231,8 @@ func TestDiscover_CloudStorageSubscriptionProducesTheBucket(t *testing.T) {
 	result := discoverFake(t, newTestSource(fake), fake)
 
 	assert.True(t, hasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-gcs",
-		"mrn://bucket/gcs/order-archive",
+		"mrn://asset/subscription/googlepubsub/orders-gcs",
+		"mrn://asset/bucket/gcs/order-archive",
 		"PRODUCES"))
 }
 
@@ -241,8 +241,8 @@ func TestDiscover_SubscriptionFeedsItsDeadLetterTopic(t *testing.T) {
 	result := discoverFake(t, newTestSource(fake), fake)
 
 	assert.True(t, hasEdge(result.Lineage,
-		"mrn://subscription/googlepubsub/orders-sub",
-		"mrn://topic/googlepubsub/orders-dlq",
+		"mrn://asset/subscription/googlepubsub/orders-sub",
+		"mrn://asset/topic/googlepubsub/orders-dlq",
 		"FEEDS"))
 }
 
@@ -255,8 +255,8 @@ func TestDiscover_KinesisIngestionStreamFeedsTheTopic(t *testing.T) {
 
 	assert.Equal(t, "aws_kinesis", assetsByName(result.Assets)["orders"].Metadata["ingestion_source"])
 	assert.True(t, hasEdge(result.Lineage,
-		"mrn://stream/kinesis/orders-stream",
-		"mrn://topic/googlepubsub/orders",
+		"mrn://asset/stream/kinesis/orders-stream",
+		"mrn://asset/topic/googlepubsub/orders",
 		"FEEDS"))
 }
 

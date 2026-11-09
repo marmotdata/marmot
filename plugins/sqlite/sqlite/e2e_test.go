@@ -101,8 +101,8 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 	var foundFK bool
 	for _, e := range result.Lineage {
 		if e.Type == "FOREIGN_KEY" &&
-			e.Source == "mrn://table/sqlite/orders" &&
-			e.Target == "mrn://table/sqlite/users" {
+			e.Source == "mrn://asset/table/sqlite/test.orders" &&
+			e.Target == "mrn://asset/table/sqlite/test.users" {
 			foundFK = true
 		}
 	}
@@ -122,7 +122,7 @@ func TestE2E_QueryOverTheWire(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotNil(t, plan)
-	assert.Equal(t, []string{"mrn://table/sqlite/users"}, plan.ReferencedMRNs)
+	assert.Equal(t, []string{"mrn://asset/table/sqlite/test.users"}, plan.ReferencedMRNs)
 
 	require.Len(t, chunks, 1)
 	require.Equal(t, []pluginsdk.QueryColumn{

@@ -143,7 +143,7 @@ func (c *client) get(ctx context.Context, path string, out any) error {
 	return nil
 }
 
-// version returns the NiFi release the instance runs.
+// version returns the NiFi release the zone runs.
 func (c *client) version(ctx context.Context) (string, error) {
 	var resp aboutEntity
 	if err := c.get(ctx, "/flow/about", &resp); err != nil {

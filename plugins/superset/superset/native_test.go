@@ -11,73 +11,73 @@ import (
 // either side silently disconnects Superset from the tables it reads.
 
 func TestBackendMap_Postgres(t *testing.T) {
-	assert.Equal(t, "mrn://table/postgresql/orders", nativeTableMRN("postgresql", "shop", "public", "orders"))
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.orders", nativeTableMRN("postgresql", "", "shop", "public", "orders"))
 }
 
 func TestBackendMap_MySQL(t *testing.T) {
-	assert.Equal(t, "mrn://table/mysql/orders", nativeTableMRN("mysql", "shop", "shop", "orders"))
+	assert.Equal(t, "mrn://asset/table/mysql/shop.orders", nativeTableMRN("mysql", "", "shop", "shop", "orders"))
 }
 
 func TestBackendMap_MariaDB(t *testing.T) {
-	assert.Equal(t, "mrn://table/mariadb/orders", nativeTableMRN("mariadb", "shop", "shop", "orders"))
+	assert.Equal(t, "mrn://asset/table/mariadb/shop.orders", nativeTableMRN("mariadb", "", "shop", "shop", "orders"))
 }
 
 func TestBackendMap_BigQuery(t *testing.T) {
-	assert.Equal(t, "mrn://table/bigquery/events", nativeTableMRN("bigquery", "my-project", "analytics", "events"))
+	assert.Equal(t, "mrn://asset/table/bigquery/my-project.analytics.events", nativeTableMRN("bigquery", "", "my-project", "analytics", "events"))
 }
 
 func TestBackendMap_ClickHouse(t *testing.T) {
-	assert.Equal(t, "mrn://table/clickhouse/hits", nativeTableMRN("clickhouse", "default", "default", "hits"))
+	assert.Equal(t, "mrn://asset/table/clickhouse/default.hits", nativeTableMRN("clickhouse", "", "default", "default", "hits"))
 }
 
 func TestBackendMap_ClickHouseConnect(t *testing.T) {
 	// The clickhouse-connect dialect reports itself as clickhousedb.
-	assert.Equal(t, "mrn://table/clickhouse/hits", nativeTableMRN("clickhousedb", "default", "default", "hits"))
+	assert.Equal(t, "mrn://asset/table/clickhouse/default.hits", nativeTableMRN("clickhousedb", "", "default", "default", "hits"))
 }
 
 func TestBackendMap_SQLite(t *testing.T) {
-	assert.Equal(t, "mrn://table/sqlite/orders", nativeTableMRN("sqlite", "", "main", "orders"))
+	assert.Equal(t, "mrn://asset/table/sqlite/main.orders", nativeTableMRN("sqlite", "", "", "main", "orders"))
 }
 
 func TestBackendMap_DuckDB(t *testing.T) {
-	assert.Equal(t, "mrn://table/duckdb/orders", nativeTableMRN("duckdb", "", "main", "orders"))
+	assert.Equal(t, "mrn://asset/table/duckdb/main.orders", nativeTableMRN("duckdb", "", "", "main", "orders"))
 }
 
 func TestBackendMap_AthenaIsCataloguedAsGlue(t *testing.T) {
-	assert.Equal(t, "mrn://table/glue/orders", nativeTableMRN("awsathena", "awsdatacatalog", "sales", "orders"))
-	assert.Equal(t, "mrn://table/glue/orders", nativeTableMRN("athena", "awsdatacatalog", "sales", "orders"))
+	assert.Equal(t, "mrn://asset/table/glue/sales.orders", nativeTableMRN("awsathena", "", "awsdatacatalog", "sales", "orders"))
+	assert.Equal(t, "mrn://asset/table/glue/sales.orders", nativeTableMRN("athena", "", "awsdatacatalog", "sales", "orders"))
 }
 
 func TestBackendMap_SnowflakeIsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/snowflake/sales.public.orders", nativeTableMRN("snowflake", "SALES", "PUBLIC", "ORDERS"))
+	assert.Equal(t, "mrn://asset/table/snowflake/sales.public.orders", nativeTableMRN("snowflake", "", "SALES", "PUBLIC", "ORDERS"))
 }
 
 func TestBackendMap_RedshiftIsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/redshift/dev.public.orders", nativeTableMRN("redshift", "dev", "public", "orders"))
+	assert.Equal(t, "mrn://asset/table/redshift/dev.public.orders", nativeTableMRN("redshift", "", "dev", "public", "orders"))
 }
 
 func TestBackendMap_SQLServerIsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
+	assert.Equal(t, "mrn://asset/table/sql-server/shop.dbo.orders", nativeTableMRN("mssql", "", "shop", "dbo", "orders"))
 }
 
 func TestBackendMap_CockroachDBIsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/cockroachdb/shop.public.orders", nativeTableMRN("cockroachdb", "shop", "public", "orders"))
+	assert.Equal(t, "mrn://asset/table/cockroachdb/shop.public.orders", nativeTableMRN("cockroachdb", "", "shop", "public", "orders"))
 }
 
 func TestBackendMap_OracleIsSchemaQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/oracle/hr.employees", nativeTableMRN("oracle", "ORCL", "HR", "EMPLOYEES"))
+	assert.Equal(t, "mrn://asset/table/oracle/orcl.hr.employees", nativeTableMRN("oracle", "", "ORCL", "HR", "EMPLOYEES"))
 }
 
 func TestBackendMap_DruidIsSchemaQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/druid/druid.wikipedia", nativeTableMRN("druid", "", "druid", "wikipedia"))
+	assert.Equal(t, "mrn://asset/table/druid/druid.wikipedia", nativeTableMRN("druid", "", "", "druid", "wikipedia"))
 }
 
 func TestBackendMap_TrinoIsCatalogQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/trino/hive.default.orders", nativeTableMRN("trino", "hive", "default", "orders"))
+	assert.Equal(t, "mrn://asset/table/trino/hive.default.orders", nativeTableMRN("trino", "", "hive", "default", "orders"))
 }
 
 func TestBackendMap_DatabricksIsCatalogQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/databricks/main.sales.orders", nativeTableMRN("databricks", "main", "sales", "orders"))
+	assert.Equal(t, "mrn://asset/table/databricks/main.sales.orders", nativeTableMRN("databricks", "", "main", "sales", "orders"))
 }
 
 func TestBackendMap_CoversExactlyTheBackendsPinnedAbove(t *testing.T) {
@@ -86,19 +86,19 @@ func TestBackendMap_CoversExactlyTheBackendsPinnedAbove(t *testing.T) {
 }
 
 func TestNativeTableMRN_UnknownBackendYieldsNothing(t *testing.T) {
-	assert.Equal(t, "", nativeTableMRN("teradatasql", "dw", "dw", "facts"))
+	assert.Equal(t, "", nativeTableMRN("teradatasql", "", "dw", "dw", "facts"))
 }
 
 func TestNativeTableMRN_IsCaseInsensitiveOnTheBackend(t *testing.T) {
-	assert.Equal(t, "mrn://table/postgresql/orders", nativeTableMRN("PostgreSQL", "shop", "public", "orders"))
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.orders", nativeTableMRN("PostgreSQL", "", "shop", "public", "orders"))
 }
 
 func TestNativeTableMRN_NeedsATable(t *testing.T) {
-	assert.Equal(t, "", nativeTableMRN("postgresql", "shop", "public", ""))
+	assert.Equal(t, "", nativeTableMRN("postgresql", "", "shop", "public", ""))
 }
 
 func TestNativeTableMRN_DropsEmptyLevelsFromAQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://table/snowflake/public.orders", nativeTableMRN("snowflake", "", "PUBLIC", "ORDERS"))
+	assert.Equal(t, "mrn://asset/table/snowflake/public.orders", nativeTableMRN("snowflake", "", "", "PUBLIC", "ORDERS"))
 }
 
 // tableRefs is deliberately conservative: it takes what plainly follows

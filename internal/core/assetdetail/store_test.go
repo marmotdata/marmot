@@ -68,14 +68,14 @@ func TestFieldAnnotationsAndCounts(t *testing.T) {
 		t.Fatalf("expected no annotations, got %+v", got)
 	}
 
-	c, err := s.TabCounts(ctx, "a1", "mrn://table/postgresql/orders", false, QueryScope{})
+	c, err := s.TabCounts(ctx, "a1", "mrn://asset/table/postgresql/orders", false, QueryScope{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if c.Lineage != 1 || c.Runs != 0 || c.Queries != nil {
 		t.Fatalf("unexpected counts %+v", c)
 	}
-	c, err = s.TabCounts(ctx, "a2", "mrn://table/dbt/orders_daily", true, QueryScope{PrincipalType: "user", PrincipalID: "u1"})
+	c, err = s.TabCounts(ctx, "a2", "mrn://asset/table/dbt/orders_daily", true, QueryScope{PrincipalType: "user", PrincipalID: "u1"})
 	if err != nil {
 		t.Fatal(err)
 	}

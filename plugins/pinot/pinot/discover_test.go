@@ -15,7 +15,7 @@ func TestDiscover_FindsTables(t *testing.T) {
 	stats := findAsset(result, "Table", "baseballStats")
 	require.NotNil(t, stats)
 	assert.Equal(t, []string{"Pinot"}, stats.Providers)
-	assert.Equal(t, "mrn://table/pinot/baseballstats", *stats.MRN)
+	assert.Equal(t, "mrn://asset/table/pinot/baseballstats", *stats.MRN)
 
 	assert.NotNil(t, findAsset(result, "Table", "dimBaseballTeams"))
 }
@@ -214,13 +214,13 @@ func TestDiscover_LinksARealtimeTableToItsKafkaTopic(t *testing.T) {
 	topic := findAsset(result, "Topic", "orders-events")
 	require.NotNil(t, topic)
 	assert.Equal(t, []string{"Kafka"}, topic.Providers, "the topic belongs to the Kafka plugin's identity")
-	assert.Equal(t, "mrn://topic/kafka/orders-events", *topic.MRN)
+	assert.Equal(t, "mrn://asset/topic/kafka@host=localhost:9092/orders-events", *topic.MRN)
 	assert.Equal(t, "kafka", topic.Metadata["stream_type"])
 	assert.Equal(t, "localhost:9092", topic.Metadata["stream_brokers"])
 	require.Len(t, topic.Sources, 1)
 	assert.Equal(t, "Pinot", topic.Sources[0].Name, "this plugin is the source that saw it")
 
-	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders-events", "mrn://table/pinot/orders_events", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/topic/kafka@host=localhost:9092/orders-events", "mrn://asset/table/pinot/orders_events", "FEEDS"))
 }
 
 func TestDiscover_ReadsStreamSettingsFromTheLegacyLocation(t *testing.T) {
@@ -230,7 +230,7 @@ func TestDiscover_ReadsStreamSettingsFromTheLegacyLocation(t *testing.T) {
 	require.NotNil(t, a)
 	assert.Equal(t, "legacy-events", a.Metadata["stream_topic"])
 	assert.NotNil(t, findAsset(result, "Topic", "legacy-events"))
-	assert.True(t, hasEdge(result, "mrn://topic/kafka/legacy-events", "mrn://table/pinot/legacy_events", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/topic/kafka@host=kafka:9092/legacy-events", "mrn://asset/table/pinot/legacy_events", "FEEDS"))
 }
 
 func TestDiscover_LinksAKinesisFedTableToItsStream(t *testing.T) {
@@ -239,10 +239,10 @@ func TestDiscover_LinksAKinesisFedTableToItsStream(t *testing.T) {
 	stream := findAsset(result, "Stream", "orders-stream")
 	require.NotNil(t, stream)
 	assert.Equal(t, []string{"Kinesis"}, stream.Providers)
-	assert.Equal(t, "mrn://stream/kinesis/orders-stream", *stream.MRN)
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders-stream", *stream.MRN)
 	assert.NotContains(t, stream.Metadata, "stream_brokers", "Kinesis has no broker list")
 
-	assert.True(t, hasEdge(result, "mrn://stream/kinesis/orders-stream", "mrn://table/pinot/kinesis_orders", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/stream/kinesis/orders-stream", "mrn://asset/table/pinot/kinesis_orders", "FEEDS"))
 }
 
 func TestDiscover_EmitsNoLineageForStreamTypesWithoutAMarmotPlugin(t *testing.T) {
@@ -271,8 +271,8 @@ func TestDiscover_SharesOneTopicAssetBetweenTables(t *testing.T) {
 		}
 	}
 	assert.Equal(t, 1, topics)
-	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders-events", "mrn://table/pinot/orders_events", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://topic/kafka/orders-events", "mrn://table/pinot/orders_events_copy", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/topic/kafka@host=localhost:9092/orders-events", "mrn://asset/table/pinot/orders_events", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/topic/kafka@host=localhost:9092/orders-events", "mrn://asset/table/pinot/orders_events_copy", "FEEDS"))
 }
 
 func TestDiscover_FallsBackToTheSchemaNamedInTheTableConfig(t *testing.T) {

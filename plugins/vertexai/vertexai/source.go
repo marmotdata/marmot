@@ -9,7 +9,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/aiplatform/v1"
 )
@@ -23,7 +22,8 @@ const provider = "Vertex AI"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "vertexai",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google Vertex AI",
 		Description:   "Discover models, endpoints, datasets, feature groups and pipeline jobs from Google Vertex AI",
 		Icon:          "vertex-ai",
@@ -294,16 +294,9 @@ func (s *Source) build(scan *scan) *pluginsdk.DiscoveryResult {
 	return result
 }
 
-// assetMRN builds the identity of every asset this plugin owns. The Marmot
-// server rebuilds an MRN from an asset's type, provider and name, so every
-// MRN and every lineage endpoint has to come from here.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
-}
-
 // newAsset fills in the parts every Vertex AI asset shares.
 func (s *Source) newAsset(assetType, name, description string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := s.config.AssetMRN(assetType, provider, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -439,26 +432,24 @@ func commonMetadata(name resourceName, createTime, updateTime string, labels map
 	return metadata
 }
 
-// bigQueryTable returns the table of a bq://project.dataset.table URI, or
-// "" when the value is not one. Vertex also accepts other schemes, and a
-// URI naming only a dataset has no table to link to.
-func bigQueryTable(uri string) string {
+// bigQueryTable returns the project, dataset and table of a bq://project.dataset.table URI, or nil when the value is not one. Vertex also accepts other schemes, and a URI naming only a dataset has no table to link to.
+func bigQueryTable(uri string) []string {
 	rest, ok := strings.CutPrefix(uri, "bq://")
 	if !ok {
-		return ""
+		return nil
 	}
 
 	parts := strings.Split(rest, ".")
 	if len(parts) != 3 {
-		return ""
+		return nil
 	}
 	for _, part := range parts {
 		if part == "" {
-			return ""
+			return nil
 		}
 	}
 
-	return parts[2]
+	return parts
 }
 
 // gcsBucket returns the bucket of a gs:// URI, or "" when the value is not

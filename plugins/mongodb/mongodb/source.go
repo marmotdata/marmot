@@ -6,6 +6,9 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -17,7 +20,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "mongodb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "MongoDB",
 		Description:   "Discover databases and collections from MongoDB instances",
 		Icon:          "mongodb",
@@ -168,10 +171,51 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		}
 	}
 
+	var bindings []pluginsdk.ZoneBinding
+	for _, host := range mongoHosts(s.config) {
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: "MongoDB", Host: host, Zone: s.config.Zone})
+	}
+
 	return &pluginsdk.DiscoveryResult{
-		Assets:  assets,
-		Lineage: lineages,
+		Assets:       assets,
+		Lineage:      lineages,
+		ZoneBindings: bindings,
 	}, nil
+}
+
+// assetMRN is the single place a MongoDB MRN is built, so databases, collections and views agree. The path runs from the database down.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, "MongoDB", path...)
+}
+
+// mongoHosts lists the lowercase host:port addresses the plugin connects to. A mongodb+srv URI names no host and port to bind, so it yields none.
+func mongoHosts(cfg *Config) []string {
+	if cfg.ConnectionURI == "" {
+		return []string{strings.ToLower(net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)))}
+	}
+
+	uri, ok := strings.CutPrefix(cfg.ConnectionURI, "mongodb://")
+	if !ok {
+		return nil
+	}
+	authority, _, _ := strings.Cut(uri, "/")
+	authority, _, _ = strings.Cut(authority, "?")
+	if i := strings.LastIndexByte(authority, '@'); i >= 0 {
+		authority = authority[i+1:]
+	}
+
+	var hosts []string
+	for _, entry := range strings.Split(authority, ",") {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		if _, _, err := net.SplitHostPort(entry); err != nil {
+			entry = net.JoinHostPort(strings.Trim(entry, "[]"), "27017")
+		}
+		hosts = append(hosts, strings.ToLower(entry))
+	}
+	return hosts
 }
 
 // buildCollectionLineage links a database to the collections and views

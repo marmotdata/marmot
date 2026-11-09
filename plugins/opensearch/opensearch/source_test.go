@@ -284,17 +284,17 @@ func TestSource_Discover(t *testing.T) {
 		case "Table":
 			indexAssets++
 			assert.Equal(t, "logs-2024.01", *a.Name)
-			assert.Contains(t, *a.MRN, "mrn://table/opensearch/")
+			assert.Contains(t, *a.MRN, "mrn://asset/table/opensearch/")
 			assert.Equal(t, []string{"OpenSearch"}, a.Providers)
 			assert.Equal(t, "test-cluster", a.Metadata["cluster"])
 		case "Data Stream":
 			dsAssets++
 			assert.Equal(t, "logs-nginx", *a.Name)
-			assert.Contains(t, *a.MRN, "mrn://data-stream/opensearch/")
+			assert.Contains(t, *a.MRN, "mrn://asset/data-stream/opensearch/")
 		case "Alias":
 			aliasAssets++
 			assert.Equal(t, "current-logs", *a.Name)
-			assert.Contains(t, *a.MRN, "mrn://alias/opensearch/")
+			assert.Contains(t, *a.MRN, "mrn://asset/alias/opensearch/")
 		}
 	}
 
@@ -399,5 +399,57 @@ func TestSource_Discover_AliasOverSystemIndexEmitsNoDanglingEdge(t *testing.T) {
 			targets = append(targets, e.Target)
 		}
 	}
-	assert.Equal(t, []string{"mrn://table/opensearch/logs"}, targets)
+	assert.Equal(t, []string{"mrn://asset/table/opensearch/logs"}, targets)
+}
+
+func TestDiscover_ZoneAppearsInEveryMRN(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.URL.Path == "/":
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"cluster_name": "test-cluster",
+				"version":      map[string]interface{}{"number": "2.12.0", "distribution": "opensearch"},
+			})
+		case r.URL.Path == "/_cat/indices":
+			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+				{"index": "logs", "health": "green", "status": "open", "uuid": "a", "pri": "1", "rep": "0", "docs.count": "1", "store.size": "1mb"},
+			})
+		default:
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{})
+		}
+	}))
+	defer server.Close()
+
+	cfg := pluginsdk.RawConfig{"addresses": []interface{}{server.URL}, "zone": "prod-eu"}
+	s := &Source{}
+	_, err := s.Validate(cfg)
+	require.NoError(t, err)
+
+	result, err := s.Discover(context.Background(), cfg)
+	require.NoError(t, err)
+
+	var found bool
+	for _, a := range result.Assets {
+		if a.Type == "Table" {
+			found = true
+			assert.Equal(t, "mrn://asset/table/opensearch@prod-eu/logs", *a.MRN)
+			assert.Empty(t, a.PreviousMRNs, "the MRN without a zone is what earlier releases produced")
+		}
+	}
+	assert.True(t, found)
+
+	require.Len(t, result.ZoneBindings, 1)
+	assert.Equal(t, "OpenSearch", result.ZoneBindings[0].Provider)
+	assert.Equal(t, "prod-eu", result.ZoneBindings[0].Zone)
+}
+
+func TestZoneBindings_HostPortFromAddresses(t *testing.T) {
+	cfg := &Config{Addresses: []string{"https://OS.internal:9200", "https://os.internal:9200", "http://other"}}
+	cfg.Zone = "prod"
+
+	assert.Equal(t, []pluginsdk.ZoneBinding{
+		{Provider: "OpenSearch", Host: "os.internal:9200", Zone: "prod"},
+		{Provider: "OpenSearch", Host: "other:80", Zone: "prod"},
+	}, (&Source{config: cfg}).zoneBindings())
 }

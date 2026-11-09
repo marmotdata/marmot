@@ -10,6 +10,7 @@ export interface TeamMember {
 
 export interface Team {
 	id: string;
+	mrn: string;
 	name: string;
 	description?: string;
 	tags: string[];

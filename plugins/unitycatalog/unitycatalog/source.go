@@ -5,17 +5,17 @@ package unitycatalog
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
 // provider is the exact string every asset carries in Providers and the
 // service component of every MRN. It has a space in it, which mrn.New
-// dashes: mrn://table/unity-catalog/shop.sales.orders.
+// dashes: mrn://asset/table/unity-catalog/shop.sales.orders.
 const provider = "Unity Catalog"
 
 // Config for the Unity Catalog plugin.
@@ -59,7 +59,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "unitycatalog",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Unity Catalog",
 		Description:   "Discover catalogs, tables, views, volumes, functions and models from Unity Catalog servers",
 		Icon:          "databricks",
@@ -152,10 +152,31 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Unity Catalog discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     d.assets,
-		Lineage:    d.lineage,
-		Statistics: d.statistics,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		Statistics:   d.statistics,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
+}
+
+// zoneBindings names the server host so other plugins can resolve it to this zone.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	u, err := url.Parse(s.config.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{
+		Provider: provider,
+		Host:     strings.ToLower(u.Hostname()) + ":" + port,
+		Zone:     s.config.Zone,
+	}}
 }
 
 // wantsCatalog applies the catalogs allow list and the exclude list.
@@ -208,7 +229,7 @@ func (d *discovery) discoverCatalog(ctx context.Context, catalog catalogInfo) {
 	}
 
 	tableCount := 0
-	catalogMRN := assetMRN("Catalog", catalog.Name)
+	catalogMRN := d.assetMRN("Catalog", catalog.Name)
 
 	for _, schema := range schemas {
 		tables, err := d.client.listTables(ctx, catalog.Name, schema.Name)
@@ -327,11 +348,9 @@ func (d *discovery) addEdge(source, target, edgeType string) {
 	d.lineage = append(d.lineage, pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType})
 }
 
-// assetMRN is the single place a Unity Catalog MRN is built. Assets and
-// lineage both go through it so the two can never drift into addressing
-// the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Unity Catalog MRN is built. Assets and lineage both go through it so the two can never drift into addressing the same object differently.
+func (d *discovery) assetMRN(assetType string, path ...string) string {
+	return d.config.AssetMRN(assetType, provider, path...)
 }
 
 // fullName is the three-part name Unity Catalog uses everywhere.

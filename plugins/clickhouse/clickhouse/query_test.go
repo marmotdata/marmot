@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +44,7 @@ func TestParsePlanWithNoReads(t *testing.T) {
 }
 
 func TestRelationMRNMatchesDiscovery(t *testing.T) {
-	assert.Equal(t, mrn.New("Table", "ClickHouse", "qtest.orders"), relationMRN(relation{database: "qtest", table: "orders"}))
+	assert.Equal(t, "mrn://asset/table/clickhouse/qtest.orders", relationMRN(&Config{}, relation{database: "qtest", table: "orders"}))
 }
 
 func TestIsReadStatement(t *testing.T) {

@@ -3,58 +3,47 @@ package questdb
 import (
 	"testing"
 
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// QuestDB has one database and no schemas, so an object's MRN is built from
-// its bare name, matching what the OpenMetadata plugin projects for a
-// QuestDB service.
+// QuestDB has one database and no schemas, so an object is addressed by its bare name.
 
 func TestTableMRN_IsTheBareTableName(t *testing.T) {
-	assert.Equal(t, "mrn://table/questdb/trades", assetMRN("Table", "trades"))
+	assert.Equal(t, "mrn://asset/table/questdb/trades", assetMRN(&Config{}, "Table", "trades"))
 }
 
 func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/questdb/trades_1h", assetMRN("View", "trades_1h"))
+	assert.Equal(t, "mrn://asset/view/questdb/trades_1h", assetMRN(&Config{}, "View", "trades_1h"))
 }
 
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI.
-	original := assetMRN("Table", "trades")
+func TestMRN_KeepsADottedSystemTableName(t *testing.T) {
+	assert.Equal(t, "mrn://asset/table/questdb/sys.text_import_log", assetMRN(&Config{}, "Table", "sys.text_import_log"))
+}
 
-	parsed, err := mrn.Parse(original)
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod-eu"}}
+
+	got := assetMRN(cfg, "Table", "trades")
+	assert.Equal(t, "mrn://asset/table/questdb@prod-eu/trades", got)
+
+	parsed, err := mrn.ParseMRN(got)
 	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, "prod-eu", parsed.Zone)
 }
 
-func TestDottedTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// QuestDB allows dots in table names (its own sys.* tables have them).
-	original := assetMRN("Table", "sys.text_import_log")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so the
-	// MRN set on an asset must be exactly mrn.New over those three fields.
+func TestTableAsset_NameAndMRN(t *testing.T) {
 	a := testSource().buildAsset(discoveredObject{table: tradesTable(), partitionCount: -1, sizeBytes: -1})
 
 	require.NotNil(t, a.MRN)
 	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-	assert.Equal(t, "mrn://table/questdb/trades", *a.MRN)
+	assert.Equal(t, "trades", *a.Name)
+	assert.Equal(t, "mrn://asset/table/questdb/trades", *a.MRN)
 }
 
-func TestViewAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
+func TestViewAsset_NameAndMRN(t *testing.T) {
 	a := testSource().buildAsset(discoveredObject{
 		table:          tableInfo{Name: "trades_1h", Kind: kindMaterializedView},
 		view:           &viewInfo{Name: "trades_1h", Materialized: true, BaseTable: "trades"},
@@ -63,8 +52,7 @@ func TestViewAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	})
 
 	require.NotNil(t, a.MRN)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-	assert.Equal(t, "mrn://view/questdb/trades_1h", *a.MRN)
+	assert.Equal(t, "mrn://asset/view/questdb/trades_1h", *a.MRN)
 }
 
 func TestViewLineage_AddressesTheBaseTableTheWayTheTablePassDoes(t *testing.T) {
@@ -78,7 +66,7 @@ func TestViewLineage_AddressesTheBaseTableTheWayTheTablePassDoes(t *testing.T) {
 		{
 			table: tableInfo{Name: "trades_1h", Kind: kindMaterializedView},
 			view:  &viewInfo{Name: "trades_1h", Materialized: true, BaseTable: "trades"},
-			mrn:   assetMRN("View", "trades_1h"),
+			mrn:   assetMRN(s.config, "View", "trades_1h"),
 		},
 	})
 

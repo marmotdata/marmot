@@ -11,41 +11,40 @@ import (
 )
 
 type JsonSchema struct {
-	Schema		*string	`json:"$schema,omitempty"`
-	Id          	*string `json:"id,omitempty"`
-	Title       	*string `json:"title,omitempty"`
-	Description 	*string `json:"description,omitempty"`
-	Ref		*string	`json:"$ref,omitempty"`
-	Type 		[]string `json:"type,omitempty"`
-	Definitions	map[string]JsonSchema `json:"definitions,omitempty"`
-	Properties	map[string]JsonSchema `json:"properties,omitempty"`
-	Items		any `json:"items,omitempty"`
-	AllOf		[]*JsonSchema `json:"allOf,omitempty"`
-	AnyOf		[]*JsonSchema `json:"anyOf,omitempty"`
-	OneOf		[]*JsonSchema `json:"oneOf,omitempty"`
-	Required	[]string `json:"required,omitempty"`
-	Enum		[]any `json:"enum,omitempty"`
-	Example		string `json:"example,omitempty"`
-	Pattern 	string `json:"pattern,omitempty"`
-	Format          string `json:"format,omitempty"`
-	Maximum         *float64 `json:"maximum,renderZero,omitempty"`
-	Minimum         *float64 `json:"minimum,renderZero,omitempty,"`
-	MaxLength       *int64 `json:"maxLength,omitempty"`
-	MinLength       *int64 `json:"minLength,omitempty"`
-	MaxItems        *int64`json:"maxItems,omitempty"`
-	MinItems        *int64 `json:"minItems,omitempty"`
-	UniqueItems     *bool `json:"uniqueItems,omitempty"`
-	MultipleOf      *float64 `json:"multipleOf,omitempty"`
-	Not		*JsonSchema `json:"not,omitempty"`
-	AdditionalProperties any `json:"additionalProperties,omitempty"`
-	MaxProperties   *int64 `json:"maxProperties,omitempty"`
-	MinProperties   *int64 `json:"minProperties,omitempty"`
-	Deprecated      *bool `json:"deprecated,omitempty"`
+	Schema               *string               `json:"$schema,omitempty"`
+	Id                   *string               `json:"id,omitempty"`
+	Title                *string               `json:"title,omitempty"`
+	Description          *string               `json:"description,omitempty"`
+	Ref                  *string               `json:"$ref,omitempty"`
+	Type                 []string              `json:"type,omitempty"`
+	Definitions          map[string]JsonSchema `json:"definitions,omitempty"`
+	Properties           map[string]JsonSchema `json:"properties,omitempty"`
+	Items                any                   `json:"items,omitempty"`
+	AllOf                []*JsonSchema         `json:"allOf,omitempty"`
+	AnyOf                []*JsonSchema         `json:"anyOf,omitempty"`
+	OneOf                []*JsonSchema         `json:"oneOf,omitempty"`
+	Required             []string              `json:"required,omitempty"`
+	Enum                 []any                 `json:"enum,omitempty"`
+	Example              string                `json:"example,omitempty"`
+	Pattern              string                `json:"pattern,omitempty"`
+	Format               string                `json:"format,omitempty"`
+	Maximum              *float64              `json:"maximum,renderZero,omitempty"`
+	Minimum              *float64              `json:"minimum,renderZero,omitempty,"`
+	MaxLength            *int64                `json:"maxLength,omitempty"`
+	MinLength            *int64                `json:"minLength,omitempty"`
+	MaxItems             *int64                `json:"maxItems,omitempty"`
+	MinItems             *int64                `json:"minItems,omitempty"`
+	UniqueItems          *bool                 `json:"uniqueItems,omitempty"`
+	MultipleOf           *float64              `json:"multipleOf,omitempty"`
+	Not                  *JsonSchema           `json:"not,omitempty"`
+	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
+	MaxProperties        *int64                `json:"maxProperties,omitempty"`
+	MinProperties        *int64                `json:"minProperties,omitempty"`
+	Deprecated           *bool                 `json:"deprecated,omitempty"`
 }
 
 func NewJsonSchema() *JsonSchema {
-	return &JsonSchema{
-	}
+	return &JsonSchema{}
 }
 
 func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
@@ -85,7 +84,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if schema.Properties != nil {
 			jSchema.Properties = make(map[string]JsonSchema)
 			for name, prop := range schema.Properties.FromOldest() {
-				jSubSchema, err := dfs(prop, depth + 1)
+				jSubSchema, err := dfs(prop, depth+1)
 				if err != nil {
 					return nil, fmt.Errorf("failed to render properties schema at line %d: %w", prop.GetValueNode().Line, err)
 				}
@@ -96,7 +95,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if schema.Items != nil && slices.Contains(schema.Type, "array") {
 			isSchemaProxy := schema.Items.IsA()
 			if isSchemaProxy {
-				jsonItemsSchema, err := dfs(schema.Items.A, depth + 1)
+				jsonItemsSchema, err := dfs(schema.Items.A, depth+1)
 				if err != nil {
 					return nil, fmt.Errorf("failed to render items schema at line %d: %w", schema.Items.A.GetValueNode().Line, err)
 				}
@@ -109,7 +108,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if schema.AllOf != nil {
 			jSchema.AllOf = []*JsonSchema{}
 			for _, allOfSchema := range schema.AllOf {
-				jsonAllOfSchema, err := dfs(allOfSchema, depth + 1)
+				jsonAllOfSchema, err := dfs(allOfSchema, depth+1)
 				if err != nil {
 					return nil, fmt.Errorf("failed to render AllOf schema at line %d: %w", allOfSchema.GetValueNode().Line, err)
 				}
@@ -120,7 +119,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if schema.AnyOf != nil {
 			jSchema.AnyOf = []*JsonSchema{}
 			for _, anyOfSchema := range schema.AnyOf {
-				jsonAnyOfSchema, err := dfs(anyOfSchema, depth + 1)
+				jsonAnyOfSchema, err := dfs(anyOfSchema, depth+1)
 				if err != nil {
 					return nil, fmt.Errorf("failed to render AnyOf schema at line %d: %w", anyOfSchema.GetValueNode().Line, err)
 				}
@@ -131,7 +130,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if schema.OneOf != nil {
 			jSchema.OneOf = []*JsonSchema{}
 			for _, oneOfSchema := range schema.OneOf {
-				jsonOneOfSchema, err := dfs(oneOfSchema, depth + 1)
+				jsonOneOfSchema, err := dfs(oneOfSchema, depth+1)
 				if err != nil {
 					return nil, fmt.Errorf("failed to render OneOf schema at line %d: %w", oneOfSchema.GetValueNode().Line, err)
 				}
@@ -160,7 +159,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		}
 
 		if schema.Not != nil {
-			jsonNotSchema, err := dfs(schema.Not, depth + 1)
+			jsonNotSchema, err := dfs(schema.Not, depth+1)
 			if err != nil {
 				return nil, fmt.Errorf("failed to render Not schema at line %d: %w", schema.Not.GetValueNode().Line, err)
 			}
@@ -185,7 +184,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		if err != nil {
 			if err.Error() != "unable to render schema for mock, it's empty" {
 				log.Warn().Err(err).Msg(fmt.Sprintf("Failed to generate mock for schema at line %d", p.GetValueNode().Line))
-			} 
+			}
 		}
 		jSchema.Example = string(mock)
 		// libopenapi renders scalar mocks as JSON, so a string example arrives quoted; unquote it so it reads as the value.
@@ -202,7 +201,7 @@ func NewJsonSchemaFromOpenAPISchema(schemaProxy *base.SchemaProxy) (*JsonSchema,
 		return nil, fmt.Errorf("Failed to dive into schema at line %d: %w", schemaProxy.GetValueNode().Line, err)
 	}
 
-	return jsonSchema, nil 
+	return jsonSchema, nil
 }
 
 func mockGenerator() *renderer.MockGenerator {
@@ -228,4 +227,3 @@ func (js JsonSchema) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(aux)
 }
-

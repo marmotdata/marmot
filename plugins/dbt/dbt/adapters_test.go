@@ -10,12 +10,12 @@ func TestGetAdapter(t *testing.T) {
 		expectedName string
 	}{
 		// Warehouse adapters
-		{"postgres", "Postgres"},
-		{"postgresql", "Postgres"},
+		{"postgres", "PostgreSQL"},
+		{"postgresql", "PostgreSQL"},
 		{"alloydb", "AlloyDB"},
 		{"mysql", "MySQL"},
-		{"sqlserver", "SQLServer"},
-		{"mssql", "SQLServer"},
+		{"sqlserver", "SQL Server"},
+		{"mssql", "SQL Server"},
 		{"snowflake", "Snowflake"},
 		{"bigquery", "BigQuery"},
 		{"redshift", "Redshift"},
@@ -28,7 +28,7 @@ func TestGetAdapter(t *testing.T) {
 		{"lakebase", "Databricks"},
 		{"spark", "Spark"},
 		{"athena", "Athena"},
-		{"glue", "AWS Glue"},
+		{"glue", "Glue"},
 		{"fabric", "Microsoft Fabric"},
 		{"fabricspark", "Microsoft Fabric"},
 		{"dremio", "Dremio"},

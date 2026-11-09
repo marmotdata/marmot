@@ -14,40 +14,44 @@ import (
 // the name loses its slash.
 
 func TestServiceMRN_IsTheRegionAndServiceID(t *testing.T) {
-	assert.Equal(t, "mrn://service/cloud-run/europe-west1-checkout-api",
-		assetMRN(typeService, "europe-west1/checkout-api"))
+	s := &Source{config: &Config{}}
+	assert.Equal(t, "mrn://asset/service/cloud-run/europe-west1-checkout-api",
+		s.assetMRN(typeService, "europe-west1/checkout-api"))
 }
 
 func TestJobMRN_IsTheRegionAndJobID(t *testing.T) {
-	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export",
-		assetMRN(typeJob, "europe-west1/nightly-export"))
+	s := &Source{config: &Config{}}
+	assert.Equal(t, "mrn://asset/job/cloud-run/europe-west1-nightly-export",
+		s.assetMRN(typeJob, "europe-west1/nightly-export"))
 }
 
 func TestServiceMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
 	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
 	// back through mrn.New, so an MRN has to survive that unchanged or the
 	// asset becomes unreachable from the UI.
-	original := assetMRN(typeService, "europe-west1/checkout-api")
+	s := &Source{config: &Config{}}
+	original := s.assetMRN(typeService, "europe-west1/checkout-api")
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, parsed.String())
 }
 
 func TestJobMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN(typeJob, "europe-west1/nightly-export")
+	s := &Source{config: &Config{}}
+	original := s.assetMRN(typeJob, "europe-west1/nightly-export")
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, parsed.String())
 }
 
 // Lineage points at an asset the gcs plugin owns, so its MRN is pinned here
 // too: a drift in either plugin's naming silently drops the edge on the server.
 func TestGCSBucketMRN_MatchesTheGCSPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/gcs/order-archive", mrn.New(gcsBucketType, gcsProvider, "order-archive"))
+	assert.Equal(t, "mrn://asset/bucket/gcs/order-archive", mrn.Asset(gcsBucketType, gcsProvider, "order-archive").String())
 }
 
 // The server rebuilds identity from (Type, Providers[0], Name), so every
@@ -62,7 +66,7 @@ func TestEveryAssetMRN_EqualsMRNNewOverItsOwnFields(t *testing.T) {
 		require.NotNil(t, asset.MRN)
 		require.NotEmpty(t, asset.Providers)
 
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN, "asset %s", *asset.Name)
+		assert.Equal(t, mrn.Asset(asset.Type, asset.Providers[0], *asset.Name).String(), *asset.MRN, "asset %s", *asset.Name)
 	}
 }
 
@@ -85,4 +89,11 @@ func TestEveryEdgeAndStatistic_PointsAtAnAssetFromTheSameRun(t *testing.T) {
 	for _, history := range result.RunHistory {
 		assert.True(t, known[history.AssetMRN], "run history %s is not an asset from this run", history.AssetMRN)
 	}
+}
+
+func TestServiceMRN_CarriesTheInstance(t *testing.T) {
+	s := &Source{config: &Config{}}
+	s.config.Zone = "prod"
+	assert.Equal(t, "mrn://asset/service/cloud-run@prod/europe-west1-checkout-api",
+		s.assetMRN(typeService, "europe-west1/checkout-api"))
 }

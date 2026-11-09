@@ -111,17 +111,17 @@ func TestDiscover_OnlyAsksForExceptionsOfFailedJobs(t *testing.T) {
 func TestDiscover_CreatesATaskPerVertex(t *testing.T) {
 	result := discover(t, newFakeJobManager().with(finishedJob()), nil)
 
-	source := findAsset(result, "Task", "WordCount/Source: in-memory-input -> tokenizer")
+	source := findAsset(result, "Task", "Source: in-memory-input -> tokenizer")
 	require.NotNil(t, source)
 	assert.Equal(t, []string{"Flink"}, source.Providers)
 
-	assert.NotNil(t, findAsset(result, "Task", "WordCount/counter -> Sink: print-sink"))
+	assert.NotNil(t, findAsset(result, "Task", "counter -> Sink: print-sink"))
 }
 
 func TestDiscover_TaskCarriesVertexMetadata(t *testing.T) {
 	result := discover(t, newFakeJobManager().with(finishedJob()), nil)
 
-	task := findAsset(result, "Task", "WordCount/counter -> Sink: print-sink")
+	task := findAsset(result, "Task", "counter -> Sink: print-sink")
 	require.NotNil(t, task)
 
 	assert.Equal(t, "90bea66de1c231edf33913ecd54406c1", task.Metadata["vertex_id"])
@@ -146,7 +146,7 @@ func TestDiscover_TaskCarriesVertexMetadata(t *testing.T) {
 func TestDiscover_TaskOfARunningJobHasNoEndTime(t *testing.T) {
 	result := discover(t, newFakeJobManager().with(runningJob()), nil)
 
-	task := findAsset(result, "Task", "State machine job/Source: Events Generator Source")
+	task := findAsset(result, "Task", "Source: Events Generator Source")
 	require.NotNil(t, task)
 	assert.Equal(t, "RUNNING", task.Metadata["status"])
 	assert.NotContains(t, task.Metadata, "end_time")
@@ -155,7 +155,7 @@ func TestDiscover_TaskOfARunningJobHasNoEndTime(t *testing.T) {
 func TestDiscover_TaskLinksToTheJobPage(t *testing.T) {
 	result := discover(t, newFakeJobManager().with(finishedJob()), nil)
 
-	task := findAsset(result, "Task", "WordCount/counter -> Sink: print-sink")
+	task := findAsset(result, "Task", "counter -> Sink: print-sink")
 	require.NotNil(t, task)
 	require.Len(t, task.ExternalLinks, 1)
 	assert.True(t, strings.HasSuffix(task.ExternalLinks[0].URL, "/#/job/completed/3cea68fa0ce6b9f13db4e9b8aabf45ba/overview"))
@@ -300,8 +300,8 @@ func TestDiscover_NewestOfTwoJobsSharingANameKeepsItBare(t *testing.T) {
 	assert.Equal(t, "00000000000000000000000000000001", suffixed.Metadata["jid"])
 
 	// Tasks follow their pipeline's name, so the two jobs' vertices stay apart.
-	assert.NotNil(t, findAsset(result, "Task", "WordCount/counter -> Sink: print-sink"))
-	assert.NotNil(t, findAsset(result, "Task", "WordCount (00000000000000000000000000000001)/counter -> Sink: print-sink"))
+	assert.True(t, hasAssetMRN(result, taskMRN("WordCount/counter -> Sink: print-sink")))
+	assert.True(t, hasAssetMRN(result, taskMRN("WordCount (00000000000000000000000000000001)/counter -> Sink: print-sink")))
 }
 
 func TestDiscover_DisambiguatedPipelineKeepsTheFlinkJobNameInItsRun(t *testing.T) {

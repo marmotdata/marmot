@@ -52,8 +52,10 @@ const (
 )
 
 type DataProduct struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// MRN is mrn://data-product/<slug>, kept up to date by the database as the product is renamed.
+	MRN         string                 `json:"mrn,omitempty"`
 	Description *string                `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
@@ -381,7 +383,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	start := time.Now()
 
 	q := `
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at, COALESCE(mrn, '')
 		FROM data_products
 		WHERE id = $1`
 
@@ -390,7 +392,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 
 	err := r.db.QueryRow(ctx, q, id).Scan(
 		&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-		&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+		&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt, &dp.MRN,
 	)
 
 	duration := time.Since(start)
@@ -522,7 +524,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 
 	q := `
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at, COALESCE(mrn, '')
 		FROM data_products
 		ORDER BY name ASC
 		LIMIT $1 OFFSET $2`
@@ -541,7 +543,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt, &dp.MRN,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
 			return nil, fmt.Errorf("scanning data product: %w", err)
@@ -618,7 +620,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	q := fmt.Sprintf(`
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at, COALESCE(mrn, '')
 		FROM data_products
 		%s
 		ORDER BY name ASC
@@ -640,7 +642,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt, &dp.MRN,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
 			return nil, fmt.Errorf("scanning search result: %w", err)
@@ -1175,7 +1177,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 
 	q := `
 		SELECT DISTINCT dp.id, dp.name, dp.description, dp.metadata, dp.tags,
-			   dp.created_by, dp.created_at, dp.updated_at
+			   dp.created_by, dp.created_at, dp.updated_at, COALESCE(dp.mrn, '')
 		FROM data_products dp
 		JOIN data_product_memberships dpm ON dp.id = dpm.data_product_id
 		WHERE dpm.asset_id = $1
@@ -1195,7 +1197,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt, &dp.MRN,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
 			return nil, fmt.Errorf("scanning data product: %w", err)

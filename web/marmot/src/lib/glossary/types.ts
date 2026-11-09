@@ -9,6 +9,7 @@ export interface Owner {
 
 export interface GlossaryTerm {
 	id: string;
+	mrn: string;
 	name: string;
 	definition: string;
 	description?: string;

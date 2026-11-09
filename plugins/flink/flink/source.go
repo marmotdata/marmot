@@ -5,6 +5,8 @@ package flink
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"strings"
 	"time"
 
@@ -49,7 +51,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "flink",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Flink",
 		Description:   "Discover jobs and their vertices from an Apache Flink JobManager",
 		Icon:          "flink",
@@ -155,9 +157,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Flink discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		RunHistory: runHistory,
+		Assets:       assets,
+		Lineage:      lineages,
+		RunHistory:   runHistory,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -208,7 +211,7 @@ func (s *Source) discoverJob(ctx context.Context, job jobSummary, name, version 
 }
 
 func (s *Source) pipelineAsset(job jobSummary, details *jobDetails, config executionConfig, name, version, cause string) pluginsdk.Asset {
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := s.pipelineMRN(name)
 	url := jobURL(s.config.Host, details.JID, details.State)
 
 	metadata := map[string]interface{}{
@@ -269,7 +272,7 @@ func (s *Source) pipelineAsset(job jobSummary, details *jobDetails, config execu
 // to each, and a DEPENDS_ON edge for every input in the plan, from the
 // vertex read to the vertex reading it.
 func (s *Source) taskAssets(pipelineName string, details *jobDetails) ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
-	pipelineMRN := assetMRN("Pipeline", pipelineName)
+	pipelineMRN := s.pipelineMRN(pipelineName)
 	url := jobURL(s.config.Host, details.JID, details.State)
 
 	nodes := make(map[string]planNode, len(details.Plan.Nodes))
@@ -280,14 +283,14 @@ func (s *Source) taskAssets(pipelineName string, details *jobDetails) ([]plugins
 	names := vertexNames(details.Vertices)
 	taskMRNs := make(map[string]string, len(details.Vertices))
 	for _, vertex := range details.Vertices {
-		taskMRNs[vertex.ID] = assetMRN("Task", pipelineName+"/"+names[vertex.ID])
+		taskMRNs[vertex.ID] = s.taskMRN(pipelineName, names[vertex.ID])
 	}
 
 	var assets []pluginsdk.Asset
 	var lineages []pluginsdk.LineageEdge
 
 	for _, vertex := range details.Vertices {
-		name := pipelineName + "/" + names[vertex.ID]
+		name := names[vertex.ID]
 		mrnValue := taskMRNs[vertex.ID]
 
 		metadata := map[string]interface{}{
@@ -319,12 +322,13 @@ func (s *Source) taskAssets(pipelineName string, details *jobDetails) ([]plugins
 		}
 
 		assets = append(assets, pluginsdk.Asset{
-			Name:      &name,
-			MRN:       &mrnValue,
-			Type:      "Task",
-			Providers: []string{provider},
-			Metadata:  metadata,
-			Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+			Name:         &name,
+			MRN:          &mrnValue,
+			PreviousMRNs: []string{mrn.New("Task", provider, pipelineName+"/"+name)},
+			Type:         "Task",
+			Providers:    []string{provider},
+			Metadata:     metadata,
+			Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 			ExternalLinks: []pluginsdk.AssetExternalLink{{
 				Name: "Open in Flink",
 				URL:  url,
@@ -504,9 +508,28 @@ func truncate(s string, limit int) string {
 	return string(runes[:limit])
 }
 
-// assetMRN is the single place a Flink MRN is built, so the asset pass,
-// the lineage pass and the run history can never drift into addressing
-// the same job or vertex differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// pipelineMRN is the MRN of a job. The asset pass, the lineage pass and the run history all go through these helpers so they can never drift into addressing the same job or vertex differently.
+func (s *Source) pipelineMRN(name string) string {
+	return s.config.AssetMRN("Pipeline", provider, name)
+}
+
+// taskMRN is the MRN of a vertex, addressed by its job and its name within the job.
+func (s *Source) taskMRN(pipelineName, vertexName string) string {
+	return s.config.AssetMRN("Task", provider, pipelineName, vertexName)
+}
+
+// zoneBindings tells Marmot which zone the JobManager this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

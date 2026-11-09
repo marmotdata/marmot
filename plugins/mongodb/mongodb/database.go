@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -55,7 +54,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, erro
 			}
 		}
 
-		mrnValue := mrn.New("Database", "MongoDB", dbName)
+		mrnValue := assetMRN(s.config, "Database", dbName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 

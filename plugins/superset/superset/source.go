@@ -5,6 +5,8 @@ package superset
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"strings"
 	"time"
 
@@ -49,7 +51,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "superset",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Superset",
 		Description:   "Discover dashboards, charts, datasets and database connections from Apache Superset",
 		Icon:          "superset",
@@ -142,8 +144,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Superset discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  d.assets,
-		Lineage: d.lineage,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -173,6 +176,8 @@ type databaseInfo struct {
 	// from its parameters or the URI path. It is the first component of
 	// a fully qualified table name.
 	defaultDatabase string
+	// hostPort is the server the connection opens as host:port, empty when the connection names none or the backend is a hosted service.
+	hostPort string
 }
 
 func (d *discovery) add(asset pluginsdk.Asset) {
@@ -218,6 +223,7 @@ func (d *discovery) discoverDatabases(ctx context.Context) error {
 			if info.defaultDatabase == "" {
 				info.defaultDatabase = uriDatabase(conn.SQLAlchemyURI)
 			}
+			info.hostPort = connectionHost(db.Backend, conn)
 			putIf(metadata, "driver", conn.Driver)
 			putIf(metadata, "host", conn.Parameters.Host)
 			putIf(metadata, "port", conn.Parameters.Port.String())
@@ -243,7 +249,7 @@ func (d *discovery) discoverDatabases(ctx context.Context) error {
 // which is also how Superset itself labels it in the chart list. Two
 // datasets with the same table name in different schemas stay apart.
 func datasetName(schema, table string) string {
-	return join(schema, table)
+	return strings.Join(levels(schema, table), ".")
 }
 
 func (d *discovery) discoverDatasets(ctx context.Context) error {
@@ -281,7 +287,7 @@ func (d *discovery) discoverDatasets(ctx context.Context) error {
 		putIf(metadata, "description", ds.Description)
 		putIf(metadata, "changed_on", ds.ChangedOnUTC)
 
-		asset := d.newAsset("Data Model Object", datasetName(ds.Schema, ds.TableName), metadata)
+		asset := d.newPathAsset("Data Model Object", ds.TableName, nonEmpty(ds.Schema, ds.TableName), datasetName(ds.Schema, ds.TableName), metadata)
 		if desc := strings.TrimSpace(ds.Description); desc != "" {
 			asset.Description = &desc
 		}
@@ -498,7 +504,7 @@ func (d *discovery) linkDataFlow() {
 			if database == "" {
 				database = info.defaultDatabase
 			}
-			if tableMRN := nativeTableMRN(backend, database, ref.Schema, ref.Table); tableMRN != "" {
+			if tableMRN := nativeTableMRN(backend, info.hostPort, database, ref.Schema, ref.Table); tableMRN != "" {
 				d.link(tableMRN, datasetMRN, "FEEDS")
 			}
 		}
@@ -514,18 +520,29 @@ func (d *discovery) sourceTables(ds dataset) []tableRef {
 	return []tableRef{{Schema: ds.Schema, Table: ds.TableName}}
 }
 
-// newAsset builds an asset with the fields every kind shares.
+// newAsset builds an asset named by a single level.
 func (d *discovery) newAsset(assetType, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	return d.newPathAsset(assetType, name, []string{name}, name, metadata)
+}
+
+// newPathAsset builds an asset with the fields every kind shares. path is the levels of its MRN and legacy the single string earlier releases built the MRN from, listed as a previous MRN when the two differ.
+func (d *discovery) newPathAsset(assetType, name string, path []string, legacy string, metadata map[string]interface{}) pluginsdk.Asset {
+	mrnValue := d.config.AssetMRN(assetType, provider, path...)
+
+	var previous []string
+	if old := mrn.New(assetType, provider, legacy); old != mrnValue {
+		previous = []string{old}
+	}
 
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Schema:    make(map[string]string),
-		Tags:      pluginsdk.InterpolateTags(d.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		PreviousMRNs: previous,
+		Type:         assetType,
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Schema:       make(map[string]string),
+		Tags:         pluginsdk.InterpolateTags(d.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -544,12 +561,6 @@ func (d *discovery) absoluteURL(path string) string {
 		return path
 	}
 	return d.config.Host + "/" + strings.TrimPrefix(path, "/")
-}
-
-// assetMRN is the single place a Superset MRN is built, so every pass
-// and every edge address an asset the same way.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
 }
 
 func ownerNames(owners []owner) []string {
@@ -630,4 +641,20 @@ func chartType(vizType string) string {
 		return "Map"
 	}
 	return "Other"
+}
+
+// zoneBindings tells Marmot which zone the Superset server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

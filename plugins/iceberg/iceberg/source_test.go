@@ -207,67 +207,74 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 	})
 }
 
-// namespaceFromAssetMRN reads the namespace the discovery pass recorded on
-// the asset. It used to cut the child's MRN at its last dot, which named a
-// namespace that does not exist whenever a table identifier contained one.
+// namespaceFromAssetMRN cuts the last level off the child's parsed path. A level holding a dot is quoted in the MRN, so it is never split in two.
 func TestNamespaceFromAssetMRN(t *testing.T) {
 	tests := []struct {
 		name     string
 		mrn      string
-		metadata map[string]interface{}
 		expected string
 	}{
-		{
-			name:     "single namespace",
-			mrn:      "mrn://table/iceberg/db.orders",
-			metadata: map[string]interface{}{"namespace": "db"},
-			expected: "mrn://namespace/iceberg/db",
-		},
-		{
-			name:     "nested namespace",
-			mrn:      "mrn://table/iceberg/catalog.schema.orders",
-			metadata: map[string]interface{}{"namespace": "catalog.schema"},
-			expected: "mrn://namespace/iceberg/catalog.schema",
-		},
-		{
-			name:     "view MRN",
-			mrn:      "mrn://view/iceberg/db.my_view",
-			metadata: map[string]interface{}{"namespace": "db"},
-			expected: "mrn://namespace/iceberg/db",
-		},
-		{
-			// Splitting the MRN at its last dot would have produced
-			// mrn://namespace/iceberg/db.orders, a Namespace no run creates,
-			// which fails the lineage foreign key rather than being dropped.
-			name:     "table identifier containing a dot",
-			mrn:      "mrn://table/iceberg/db.orders.2024",
-			metadata: map[string]interface{}{"namespace": "db"},
-			expected: "mrn://namespace/iceberg/db",
-		},
-		{
-			name:     "table at the catalog root has no namespace",
-			mrn:      "mrn://table/iceberg/tablename",
-			metadata: map[string]interface{}{"namespace": ""},
-			expected: "",
-		},
-		{
-			name:     "asset without the namespace key yields no parent",
-			mrn:      "mrn://table/iceberg/db.orders",
-			metadata: map[string]interface{}{},
-			expected: "",
-		},
+		{"single namespace", "mrn://asset/table/iceberg/db.orders", "mrn://asset/namespace/iceberg/db"},
+		{"nested namespace", "mrn://asset/table/iceberg/catalog.schema.orders", "mrn://asset/namespace/iceberg/catalog.schema"},
+		{"view MRN", "mrn://asset/view/iceberg/db.my_view", "mrn://asset/namespace/iceberg/db"},
+		{"table name containing a dot", `mrn://asset/table/iceberg/db."orders.2024"`, "mrn://asset/namespace/iceberg/db"},
+		{"zone is kept", "mrn://asset/table/iceberg@prod/db.orders", "mrn://asset/namespace/iceberg@prod/db"},
+		{"table at the catalog root has no namespace", "mrn://asset/table/iceberg/tablename", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := pluginsdk.Asset{
-				MRN:      &tt.mrn,
-				Metadata: tt.metadata,
-			}
-			result := namespaceFromAssetMRN(a)
-			assert.Equal(t, tt.expected, result)
+			a := pluginsdk.Asset{MRN: &tt.mrn}
+			assert.Equal(t, tt.expected, namespaceFromAssetMRN(a))
 		})
 	}
+}
+
+func newMRNSource(zone string) *Source {
+	cfg := &Config{}
+	cfg.Zone = zone
+	return &Source{config: cfg}
+}
+
+func TestAssetMRN_IsEveryIdentifierLevel(t *testing.T) {
+	s := newMRNSource("")
+
+	table, previous := s.assetMRN("Table", []string{"sales", "orders"})
+	assert.Equal(t, "mrn://asset/table/iceberg/sales.orders", table)
+	assert.Nil(t, previous, "a plain name keeps the MRN earlier releases gave it")
+
+	ns, _ := s.assetMRN("Namespace", []string{"lake", "sales"})
+	assert.Equal(t, "mrn://asset/namespace/iceberg/lake.sales", ns)
+}
+
+func TestAssetMRN_SameTableInTwoNamespacesDiffers(t *testing.T) {
+	s := newMRNSource("")
+	a, _ := s.assetMRN("Table", []string{"sales", "orders"})
+	b, _ := s.assetMRN("Table", []string{"archive", "orders"})
+	assert.NotEqual(t, a, b)
+}
+
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	got, _ := newMRNSource("prod-eu").assetMRN("Table", []string{"sales", "orders"})
+	assert.Equal(t, "mrn://asset/table/iceberg@prod-eu/sales.orders", got)
+}
+
+func TestAssetMRN_DottedLevelKeepsThePreviousMRN(t *testing.T) {
+	got, previous := newMRNSource("").assetMRN("Table", []string{"db", "orders.2024"})
+	assert.Equal(t, `mrn://asset/table/iceberg/db."orders.2024"`, got)
+	assert.Equal(t, []string{"mrn://table/iceberg/db.orders.2024"}, previous)
+}
+
+func TestZoneBindings_RESTHostOnly(t *testing.T) {
+	cfg := &Config{CatalogType: "rest", URI: "https://Catalog.Internal:8181/api"}
+	cfg.Zone = "prod"
+	assert.Equal(t, []pluginsdk.ZoneBinding{{Provider: "Iceberg", Host: "catalog.internal:8181", Zone: "prod"}},
+		(&Source{config: cfg}).zoneBindings())
+
+	cfg = &Config{CatalogType: "rest", URI: "https://catalog.internal"}
+	assert.Equal(t, "catalog.internal:443", (&Source{config: cfg}).zoneBindings()[0].Host)
+
+	assert.Nil(t, (&Source{config: &Config{CatalogType: "glue"}}).zoneBindings())
 }
 
 // namespacePath is what createTableAsset and createViewAsset record, so it

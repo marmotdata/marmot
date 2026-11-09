@@ -1,3 +1,5 @@
+import type { MRNParts } from '$lib/mrn';
+
 export interface AssetSource {
 	name: string;
 	last_sync_at: string;
@@ -27,6 +29,8 @@ export interface Asset {
 	id: string;
 	name: string;
 	mrn: string;
+	/** The MRN taken apart by the server; absent on older responses. */
+	mrn_parts?: MRNParts;
 	type: string;
 	providers: string[];
 	description?: string; // Technical description (from plugins)

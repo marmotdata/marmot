@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { mrnShortName } from '$lib/mrn';
 	import { fetchApi } from '$lib/api';
 	import type { Asset } from '$lib/assets/types';
 	import { m } from '$lib/paraglide/messages';
@@ -133,7 +134,7 @@
 
 	function shortTarget(mrn?: string): string {
 		if (!mrn) return '';
-		return mrn.split('/').pop() ?? mrn;
+		return mrnShortName(mrn) || mrn;
 	}
 
 	// Each tool call as a plain step: what the agent did and what it touched, never the raw function-call syntax.

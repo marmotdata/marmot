@@ -241,7 +241,7 @@ func TestStreamAsset_IdentityIsTheBareStreamName(t *testing.T) {
 	assert.Equal(t, "orders", *a.Name)
 	assert.Equal(t, "Stream", a.Type)
 	assert.Equal(t, []string{"Kinesis"}, a.Providers)
-	assert.Equal(t, "mrn://stream/kinesis/orders", *a.MRN)
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders", *a.MRN)
 }
 
 func TestStreamAsset_CountsOpenAndClosedShards(t *testing.T) {

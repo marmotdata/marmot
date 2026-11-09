@@ -242,7 +242,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, erro
 			metadata["comment"] = *comment
 		}
 
-		mrnValue := assetMRN("Database", name)
+		mrnValue := assetMRN(s.config, "Database", name)
 		dbName := name
 
 		assets = append(assets, pluginsdk.Asset{
@@ -442,7 +442,7 @@ func (s *Source) discoverColumns(ctx context.Context) (map[string][]column, erro
 // than information_schema because TimescaleDB copies a hypertable's
 // constraints onto every chunk, and the chunks are filtered out here by
 // schema.
-func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEdge, error) {
+func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]pluginsdk.LineageEdge, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
@@ -481,8 +481,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEd
 			continue
 		}
 
-		sourceMRN := assetMRN("Table", sourceTable)
-		targetMRN := assetMRN("Table", targetTable)
+		sourceMRN := assetMRN(s.config, "Table", dbName, sourceSchema, sourceTable)
+		targetMRN := assetMRN(s.config, "Table", dbName, targetSchema, targetTable)
 		if sourceMRN == targetMRN {
 			continue
 		}
@@ -561,20 +561,16 @@ func (s *Source) columnCounts(ctx context.Context) map[string]int64 {
 // the TimescaleDB catalog has better numbers they replace the PostgreSQL
 // ones, and the chunk count is added.
 func (s *Source) collectStatistics(ctx context.Context, objects []object, ts *timescaleInfo) []pluginsdk.Statistic {
-	return buildStatistics(objects, ts, s.columnCounts(ctx))
+	return buildStatistics(s.config, objects, ts, s.columnCounts(ctx))
 }
 
 // buildStatistics assembles the metrics for one database from the numbers
 // already read out of the two catalogs.
-func buildStatistics(objects []object, ts *timescaleInfo, counts map[string]int64) []pluginsdk.Statistic {
+func buildStatistics(cfg *Config, objects []object, ts *timescaleInfo, counts map[string]int64) []pluginsdk.Statistic {
 	var statistics []pluginsdk.Statistic
 
 	for _, obj := range objects {
-		assetType := "Table"
-		if obj.Kind != kindTable {
-			assetType = "View"
-		}
-		assetMRNValue := assetMRN(assetType, obj.Name)
+		assetMRNValue := objectMRN(cfg, obj)
 
 		rowCount := float64(obj.RowEstimate)
 		sizeBytes := float64(obj.SizeBytes)

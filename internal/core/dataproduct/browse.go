@@ -106,7 +106,7 @@ const productViewsSQL = `SELECT m.data_product_id, SUM(v.views)::bigint AS views
 	JOIN (` + assetsignal.ViewsSQL + `) v ON v.asset_id = m.asset_id
 	GROUP BY m.data_product_id`
 
-const productColumns = `id, name, description, metadata, tags, created_by, created_at, updated_at`
+const productColumns = `id, name, description, metadata, tags, created_by, created_at, updated_at, mrn`
 
 // ListFiltered returns a filtered, sorted page of data products with their popularity.
 func (r *PostgresRepository) ListFiltered(ctx context.Context, f ListFilter) (*ListResult, error) {
@@ -170,10 +170,14 @@ func (r *PostgresRepository) ListFiltered(ctx context.Context, f ListFilter) (*L
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
-		if err := rows.Scan(&dp.ID, &dp.Name, &dp.Description, &metadataJSON, &dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt); err != nil {
+		var mrn *string
+		if err := rows.Scan(&dp.ID, &dp.Name, &dp.Description, &metadataJSON, &dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt, &mrn); err != nil {
 			rows.Close()
 			r.recorder.RecordDBQuery(ctx, "dataproduct_list_filtered", time.Since(start), false)
 			return nil, fmt.Errorf("scanning data product: %w", err)
+		}
+		if mrn != nil {
+			dp.MRN = *mrn
 		}
 		if err := json.Unmarshal(metadataJSON, &dp.Metadata); err != nil {
 			rows.Close()

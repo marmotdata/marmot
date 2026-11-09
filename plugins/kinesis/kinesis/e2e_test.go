@@ -240,7 +240,7 @@ func TestE2E_DiscoverStreamsOverTheWire(t *testing.T) {
 	require.True(t, ok, "expected the orders stream, got %v", keys(assets))
 	assert.Equal(t, "Stream", orders.Type)
 	assert.Equal(t, []string{"Kinesis"}, orders.Providers)
-	assert.Equal(t, "mrn://stream/kinesis/orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders", *orders.MRN)
 	assert.Equal(t, []string{"kinesis"}, orders.Tags)
 	assert.Nil(t, orders.Description, "no description tag was set")
 

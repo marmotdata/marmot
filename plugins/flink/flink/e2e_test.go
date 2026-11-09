@@ -90,14 +90,14 @@ func TestE2E_DiscoversTheSeededJobs(t *testing.T) {
 	running := findE2EAsset(result, "Pipeline", "State machine job")
 	require.NotNil(t, running, "StateMachineExample should be listed as a running job")
 	assert.Equal(t, "RUNNING", running.Metadata["state"])
-	assert.Equal(t, "mrn://pipeline/flink/state-machine-job", *running.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/flink/state-machine-job", *running.MRN)
 	assert.NotContains(t, running.Metadata, "end_time")
 	assert.NotEmpty(t, running.Metadata["flink_version"])
 
 	finished := findE2EAsset(result, "Pipeline", "WordCount")
 	require.NotNil(t, finished, "WordCount should be listed as a finished job")
 	assert.Equal(t, "FINISHED", finished.Metadata["state"])
-	assert.Equal(t, "mrn://pipeline/flink/wordcount", *finished.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/flink/wordcount", *finished.MRN)
 	assert.NotEmpty(t, finished.Metadata["end_time"])
 	assert.Equal(t, float64(2), finished.Metadata["vertex_count"])
 }
@@ -105,16 +105,16 @@ func TestE2E_DiscoversTheSeededJobs(t *testing.T) {
 func TestE2E_DiscoversTasksWithTheirEdges(t *testing.T) {
 	result := discoverE2E(t)
 
-	source := findE2EAsset(result, "Task", "WordCount/Source: in-memory-input -> tokenizer")
+	source := findE2EAsset(result, "Task", "Source: in-memory-input -> tokenizer")
 	require.NotNil(t, source)
 	assert.Equal(t, "FINISHED", source.Metadata["status"])
 	assert.Equal(t, "Source: in-memory-input +- tokenizer", source.Metadata["description"])
 
-	sink := findE2EAsset(result, "Task", "WordCount/counter -> Sink: print-sink")
+	sink := findE2EAsset(result, "Task", "counter -> Sink: print-sink")
 	require.NotNil(t, sink)
 
-	assert.True(t, hasE2EEdge(result, "mrn://pipeline/flink/wordcount", *source.MRN, "CONTAINS"))
-	assert.True(t, hasE2EEdge(result, "mrn://pipeline/flink/wordcount", *sink.MRN, "CONTAINS"))
+	assert.True(t, hasE2EEdge(result, "mrn://asset/pipeline/flink/wordcount", *source.MRN, "CONTAINS"))
+	assert.True(t, hasE2EEdge(result, "mrn://asset/pipeline/flink/wordcount", *sink.MRN, "CONTAINS"))
 	assert.True(t, hasE2EEdge(result, *source.MRN, *sink.MRN, "DEPENDS_ON"),
 		"the plan says the counter reads from the source")
 }
@@ -126,11 +126,11 @@ func TestE2E_RecordsRunHistory(t *testing.T) {
 	for _, history := range result.RunHistory {
 		for _, run := range history.Runs {
 			switch history.AssetMRN {
-			case "mrn://pipeline/flink/wordcount":
+			case "mrn://asset/pipeline/flink/wordcount":
 				finished = append(finished, run.EventType)
 				assert.Equal(t, "flink", run.JobNamespace)
 				assert.Equal(t, "WordCount", run.JobName)
-			case "mrn://pipeline/flink/state-machine-job":
+			case "mrn://asset/pipeline/flink/state-machine-job":
 				running = append(running, run.EventType)
 			}
 		}

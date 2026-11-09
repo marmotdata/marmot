@@ -244,15 +244,15 @@ func TestFlowURL_PointsAtTheCloudUIForAWorkspace(t *testing.T) {
 func TestTaskName_DropsThePrefectHashSuffix(t *testing.T) {
 	// Prefect derives the hash from the task's source, so keeping it would
 	// rename the asset every time somebody edits the task.
-	assert.Equal(t, "nightly-etl/extract", taskName("nightly-etl", "extract-bf522387"))
+	assert.Equal(t, "extract", taskName("extract-bf522387"))
 }
 
 func TestTaskName_KeepsAKeyThatHasNoHashSuffix(t *testing.T) {
-	assert.Equal(t, "nightly-etl/extract", taskName("nightly-etl", "extract"))
+	assert.Equal(t, "extract", taskName("extract"))
 }
 
 func TestTaskName_KeepsAHyphenatedNameIntact(t *testing.T) {
-	assert.Equal(t, "nightly-etl/load-orders", taskName("nightly-etl", "load-orders-d6bfc39f"))
+	assert.Equal(t, "load-orders", taskName("load-orders-d6bfc39f"))
 }
 
 func TestEventTypeForState_MapsCompletedToComplete(t *testing.T) {

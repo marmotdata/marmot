@@ -14,7 +14,7 @@ func TestModel_IsNamedAfterItsDisplayName(t *testing.T) {
 
 	model := assetNamed(t, result, "Model", "churn-predictor")
 
-	assert.Equal(t, "mrn://model/vertex-ai/churn-predictor", *model.MRN)
+	assert.Equal(t, "mrn://asset/model/vertex-ai/churn-predictor", *model.MRN)
 }
 
 func TestModel_CarriesItsDescription(t *testing.T) {
@@ -165,8 +165,8 @@ func TestModel_LinksTheArtifactBucketToTheModel(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	assert.True(t, hasEdge(result,
-		"mrn://bucket/gcs/"+testBucket,
-		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://asset/bucket/gcs/"+testBucket,
+		"mrn://asset/model/vertex-ai/churn-predictor",
 		"FEEDS"))
 }
 
@@ -174,8 +174,8 @@ func TestModel_LinksThePipelineJobThatProducedIt(t *testing.T) {
 	result := discoverWith(t, fullFake(), withPipelineJobs)
 
 	assert.True(t, hasEdge(result,
-		"mrn://job/vertex-ai/churn-training",
-		"mrn://model/vertex-ai/churn-predictor",
+		"mrn://asset/job/vertex-ai/churn-training",
+		"mrn://asset/model/vertex-ai/churn-predictor",
 		"PRODUCES"))
 }
 
@@ -196,7 +196,7 @@ func TestModels_EachGetTheirOwnEdgeFromTheSharedArtifactBucket(t *testing.T) {
 
 	count := 0
 	for _, edge := range result.Lineage {
-		if edge.Source == "mrn://bucket/gcs/"+testBucket && edge.Type == "FEEDS" {
+		if edge.Source == "mrn://asset/bucket/gcs/"+testBucket && edge.Type == "FEEDS" {
 			count++
 		}
 	}

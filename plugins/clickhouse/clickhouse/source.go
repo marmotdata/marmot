@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "clickhouse",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "ClickHouse",
 		Description:   "Discover databases, tables, and views from ClickHouse instances",
 		Icon:          "clickhouse",
@@ -194,7 +195,17 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: "ClickHouse",
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
+}
+
+// assetMRN is the single place a ClickHouse MRN is built, so assets, statistics and query plans agree. The path runs from the database down.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, "ClickHouse", path...)
 }
 
 func (s *Source) initConnection(ctx context.Context) error {
@@ -285,7 +296,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, erro
 			metadata["comment"] = comment
 		}
 
-		mrnValue := mrn.New("Database", "ClickHouse", name)
+		mrnValue := assetMRN(s.config, "Database", name)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, pluginsdk.Asset{
@@ -373,7 +384,7 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]pluginsdk
 
 		tableNames = append(tableNames, name)
 
-		mrnValue := mrn.New(assetType, "ClickHouse", fmt.Sprintf("%s.%s", dbName, name))
+		mrnValue := assetMRN(s.config, assetType, dbName, name)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		a := pluginsdk.Asset{
@@ -389,6 +400,11 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]pluginsdk
 				Properties: metadata,
 				Priority:   1,
 			}},
+		}
+
+		// Earlier releases had no zone, so the old MRN only differs once one is set.
+		if previous := mrn.New(assetType, "ClickHouse", dbName+"."+name); previous != mrnValue {
+			a.PreviousMRNs = []string{previous}
 		}
 
 		if createQuery != "" {

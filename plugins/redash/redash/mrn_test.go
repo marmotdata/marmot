@@ -1,6 +1,7 @@
 package redash
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -13,73 +14,48 @@ import (
 // each Redash asset kind, so a change to naming shows up here rather than as
 // duplicated assets in a catalog.
 
+func assetMRN(assetType, name string) string {
+	return mrn.Asset(assetType, provider, name).String()
+}
+
+func TestMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod"
+	c := &collector{config: cfg}
+
+	assert.Equal(t, "mrn://asset/dashboard/redash@prod/revenue", c.assetMRN("Dashboard", "Revenue"))
+}
+
 func TestDashboardMRN_IsTheDashboardName(t *testing.T) {
-	assert.Equal(t, "mrn://dashboard/redash/revenue", assetMRN("Dashboard", "Revenue"))
+	assert.Equal(t, "mrn://asset/dashboard/redash/revenue", assetMRN("Dashboard", "Revenue"))
 }
 
 func TestChartMRN_JoinsTheDashboardAndVisualizationNames(t *testing.T) {
 	// mrn.New turns the separating slash into a hyphen, so the chart MRN
 	// reads as one name rather than a path.
-	assert.Equal(t, "mrn://chart/redash/revenue-orders-by-day", assetMRN("Chart", "Revenue/Orders by day"))
+	assert.Equal(t, "mrn://asset/chart/redash/revenue-orders-by-day", assetMRN("Chart", "Revenue/Orders by day"))
 }
 
 func TestQueryMRN_DashesTheSpacesInTheDataModelObjectType(t *testing.T) {
 	// mrn.New lowercases the type and replaces its spaces the same way it
 	// does in the name, so the type reads "data-model-object".
-	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", assetMRN("Data Model Object", "Orders by day"))
+	assert.Equal(t, "mrn://asset/data-model-object/redash/orders-by-day", assetMRN("Data Model Object", "Orders by day"))
 }
 
 func TestDataSourceMRN_IsTheDataSourceName(t *testing.T) {
-	assert.Equal(t, "mrn://datasource/redash/shop", assetMRN("DataSource", "shop"))
+	assert.Equal(t, "mrn://asset/datasource/redash/shop", assetMRN("DataSource", "shop"))
 }
 
-func TestTableMRN_MatchesWhatThePostgreSQLPluginProduces(t *testing.T) {
-	// A lineage edge points at the asset plugins/postgresql creates, so the
-	// provider and the bare name have to match it exactly.
-	assert.Equal(t, "mrn://table/postgresql/orders", mrn.New("Table", "PostgreSQL", "orders"))
-}
-
-func TestDashboardMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so an MRN has to survive that unchanged.
-	original := assetMRN("Dashboard", "Revenue")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestQueryMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Data Model Object", "Orders by day")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestChartMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Chart", "Revenue/Orders by day")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestDiscover_EveryAssetMRNEqualsMrnNewOverItsOwnFields(t *testing.T) {
-	// This is the identity the Marmot server derives. An asset whose MRN
-	// disagrees with it is filed twice, once per route.
+func TestDiscover_EveryAssetMRNIsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
 	require.NotEmpty(t, result.Assets)
 	for _, asset := range result.Assets {
-		require.NotNil(t, asset.Name)
-		require.NotNil(t, asset.MRN)
-		require.Len(t, asset.Providers, 1)
-
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+		parsed, err := mrn.ParseMRN(*asset.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy, *asset.MRN)
+		assert.Equal(t, strings.ReplaceAll(strings.ToLower(asset.Type), " ", "-"), parsed.Type)
+		assert.Equal(t, "redash", parsed.Provider)
 	}
 }
 
@@ -92,10 +68,10 @@ func TestDiscover_ProducesTheExpectedMRNSetForTheFixture(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, []string{
-		"mrn://datasource/redash/shop",
-		"mrn://data-model-object/redash/orders-by-day",
-		"mrn://dashboard/redash/revenue",
-		"mrn://chart/redash/revenue-orders-by-day",
+		"mrn://asset/datasource/redash/shop",
+		"mrn://asset/data-model-object/redash/orders-by-day",
+		"mrn://asset/dashboard/redash/revenue",
+		"mrn://asset/chart/redash/revenue-orders-by-day",
 	}, mrns)
 }
 
@@ -109,10 +85,10 @@ func TestDiscover_ProducesTheExpectedLineageForTheFixture(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, []edge{
-		{"mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
-		{"mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
-		{"mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"},
-		{"mrn://dashboard/redash/revenue", "mrn://chart/redash/revenue-orders-by-day", "CONTAINS"},
-		{"mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"},
+		{"mrn://asset/datasource/redash/shop", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"},
+		{"mrn://asset/table/postgresql@host=db.internal:5432/shop.public.orders", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"},
+		{"mrn://asset/table/postgresql@host=db.internal:5432/shop.public.customers", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"},
+		{"mrn://asset/dashboard/redash/revenue", "mrn://asset/chart/redash/revenue-orders-by-day", "CONTAINS"},
+		{"mrn://asset/data-model-object/redash/orders-by-day", "mrn://asset/chart/redash/revenue-orders-by-day", "FEEDS"},
 	}, edges)
 }

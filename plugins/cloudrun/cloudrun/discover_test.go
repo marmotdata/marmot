@@ -269,7 +269,7 @@ func TestDiscover_EmitsAnExecutionCountStatisticForEveryJob(t *testing.T) {
 	result := discover(t, newFakeAPI(), nil)
 
 	require.Len(t, result.Statistics, 1)
-	assert.Equal(t, "mrn://job/cloud-run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
+	assert.Equal(t, "mrn://asset/job/cloud-run/europe-west1-nightly-export", result.Statistics[0].AssetMRN)
 	assert.Equal(t, "asset.execution_count", result.Statistics[0].MetricName)
 	assert.Equal(t, float64(3), result.Statistics[0].Value)
 }
@@ -292,13 +292,13 @@ func TestDiscover_EmitsAFeedsEdgeFromEveryMountedBucket(t *testing.T) {
 	result := discover(t, newFakeAPI(), nil)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://bucket/gcs/order-archive",
-		Target: "mrn://service/cloud-run/europe-west1-checkout-api",
+		Source: "mrn://asset/bucket/gcs/order-archive",
+		Target: "mrn://asset/service/cloud-run/europe-west1-checkout-api",
 		Type:   "FEEDS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://bucket/gcs/order-archive",
-		Target: "mrn://job/cloud-run/europe-west1-nightly-export",
+		Source: "mrn://asset/bucket/gcs/order-archive",
+		Target: "mrn://asset/job/cloud-run/europe-west1-nightly-export",
 		Type:   "FEEDS",
 	})
 }
@@ -326,7 +326,7 @@ func TestDiscover_EmitsNoEdgeForASecretOrNFSVolume(t *testing.T) {
 	result := discover(t, newFakeAPI(), pluginsdk.RawConfig{"include_jobs": false})
 
 	require.Len(t, result.Lineage, 1)
-	assert.Equal(t, "mrn://bucket/gcs/order-archive", result.Lineage[0].Source)
+	assert.Equal(t, "mrn://asset/bucket/gcs/order-archive", result.Lineage[0].Source)
 }
 
 func TestDiscover_RecordsASourceForEveryAsset(t *testing.T) {

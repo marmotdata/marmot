@@ -38,7 +38,7 @@ func (s *Source) modelAssets(items []scanned[*aiplatform.GoogleCloudAiplatformV1
 		// emitted here and the server drops it when no such bucket is
 		// catalogued.
 		if bucket := gcsBucket(model.ArtifactUri); bucket != "" {
-			edges.add(mrn.New("Bucket", "GCS", bucket), *asset.MRN, "FEEDS")
+			edges.add(mrn.Asset("Bucket", "GCS", bucket).String(), *asset.MRN, "FEEDS")
 		}
 
 		for _, source := range []string{model.PipelineJob, model.TrainingPipeline} {
@@ -46,7 +46,7 @@ func (s *Source) modelAssets(items []scanned[*aiplatform.GoogleCloudAiplatformV1
 			if !ok {
 				continue
 			}
-			edges.add(assetMRN("Job", job), *asset.MRN, "PRODUCES")
+			edges.add(s.config.AssetMRN("Job", provider, job), *asset.MRN, "PRODUCES")
 		}
 	}
 

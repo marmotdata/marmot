@@ -6,6 +6,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -65,7 +67,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "oracle",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Oracle Database",
 		Description:   "Discover schemas, tables, views, materialized views and stored procedures from Oracle databases",
 		Icon:          "oracle",
@@ -182,10 +184,19 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(d.statistics)).
 		Msg("Oracle discovery completed")
 
+	port := s.config.Port
+	if port == 0 {
+		port = 1521
+	}
 	return &pluginsdk.DiscoveryResult{
 		Assets:     d.assets,
 		Lineage:    d.lineage,
 		Statistics: d.statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -422,14 +433,15 @@ func (d *discovery) databaseAsset(schema schemaRow, tableCount, viewCount, mview
 		metadata["created"] = schema.Created.Time.Format(time.RFC3339)
 	}
 
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", s.config.serviceID(), name)
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      "Database",
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         "Database",
+		PreviousMRNs: []string{mrn.New("Database", provider, name)},
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -470,17 +482,18 @@ func (d *discovery) tableMetadata(t tableRow, objectType, comment string) map[st
 // identity agrees with the OpenMetadata projection and the Trino plugin.
 func (d *discovery) objectAsset(assetType, owner, object string, metadata map[string]any, comment string) pluginsdk.Asset {
 	s := d.source
-	name := objectName(owner, object)
-	mrnValue := assetMRN(assetType, name)
+	name := object
+	mrnValue := assetMRN(s.config, assetType, s.config.serviceID(), owner, object)
 
 	asset := pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Schema:    make(map[string]string),
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         assetType,
+		PreviousMRNs: []string{mrn.New(assetType, provider, objectName(owner, object))},
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Schema:       make(map[string]string),
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -496,8 +509,8 @@ func (d *discovery) objectAsset(assetType, owner, object string, metadata map[st
 
 func (d *discovery) procedureAsset(p procedureRow) pluginsdk.Asset {
 	s := d.source
-	name := objectName(p.Owner, p.Name)
-	mrnValue := assetMRN("Function", name)
+	name := p.Name
+	mrnValue := assetMRN(s.config, "Function", s.config.serviceID(), p.Owner, p.Name)
 
 	metadata := map[string]any{
 		"host":        s.config.Host,
@@ -515,12 +528,13 @@ func (d *discovery) procedureAsset(p procedureRow) pluginsdk.Asset {
 	}
 
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      "Function",
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         "Function",
+		PreviousMRNs: []string{mrn.New("Function", provider, objectName(p.Owner, p.Name))},
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -772,15 +786,20 @@ func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig
 	return columnNames, dataRows, nil
 }
 
-// assetMRN is the single place an Oracle MRN is built. Every asset and every
-// lineage edge goes through it so the two can never drift into addressing
-// the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place an Oracle MRN is built. Every asset and every lineage edge goes through it so the two can never drift into addressing the same object differently. The path runs from the service name or SID down to the schema and object.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }
 
-// objectName qualifies an object by its schema, the same shape the Trino
-// plugin's connector map and the OpenMetadata projection use for Oracle.
+// serviceID is the service name or SID the plugin connects to, which stands in for the database name in every MRN.
+func (c *Config) serviceID() string {
+	if c.ServiceName != "" {
+		return c.ServiceName
+	}
+	return c.SID
+}
+
+// objectName qualifies an object by its schema, the shape earlier releases used for asset names and MRNs.
 func objectName(schema, object string) string {
 	return schema + "." + object
 }

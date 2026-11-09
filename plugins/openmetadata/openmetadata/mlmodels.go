@@ -53,7 +53,7 @@ func (c *collector) discoverMLModels(ctx context.Context, client *client) error 
 			metadata["hyper_parameters"] = params
 		}
 
-		asset := c.newAsset(m.entityBase, "mlmodel", "Model", p, c.mrnName(name, m.FullyQualifiedName), metadata)
+		asset := c.newAsset(m.entityBase, "mlmodel", "Model", p, c.ident(name, m.FullyQualifiedName), metadata)
 		if c.config.IncludeColumns {
 			setFeatures(&asset, m.MlFeatures)
 		}

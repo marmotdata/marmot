@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { mrnShortName } from '$lib/mrn';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import MetadataView from '$components/shared/MetadataView.svelte';
@@ -31,7 +32,7 @@
 		compact?: boolean;
 	} = $props();
 
-	let name = $derived(node.id.split('/').pop() ?? node.id);
+	let name = $derived(mrnShortName(node.id) || node.id);
 	let provider = $derived(node.asset.providers?.[0] ?? node.asset.provider ?? '');
 	let path = $derived(assetHref({ mrn: node.asset.mrn ?? '', type: node.type }));
 	let href = $derived(path ? resolve(path as `/discover/${string}/${string}/${string}`) : '');

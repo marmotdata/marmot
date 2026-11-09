@@ -53,7 +53,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "firebase",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Google Firebase",
 		Description:   "Discover Firestore collections and Realtime Database instances from Firebase projects",
 		Icon:          "firebase",
@@ -200,11 +200,17 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	}, nil
 }
 
-// assetMRN is the single place a Firebase MRN is built. Assets and both ends
-// of every lineage edge go through it, so the two can never drift into
-// addressing the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Firebase MRN is built. Assets and both ends of every lineage edge go through it, so the two can never drift into addressing the same object differently. The asset name is kept whole as a single level, because the project is not part of it and the zone is what tells two projects apart.
+func assetMRN(cfg *Config, assetType, name string) string {
+	return cfg.AssetMRN(assetType, provider, name)
+}
+
+// previousMRNs lists the MRN earlier releases gave an asset, which had no zone, or nothing when it is unchanged.
+func previousMRNs(assetType, name, current string) []string {
+	if previous := mrn.New(assetType, provider, name); previous != current {
+		return []string{previous}
+	}
+	return nil
 }
 
 // firestoreDatabaseName names a Firestore database asset. A Firestore

@@ -33,7 +33,7 @@ func (s *Source) discoverEndpoints(ctx context.Context, index *modelIndex) ([]pl
 			continue
 		}
 		assets = append(assets, asset)
-		edges = append(edges, servingEdges(asset, index)...)
+		edges = append(edges, s.servingEdges(asset, index)...)
 	}
 
 	log.Debug().Int("count", len(assets)).Msg("Discovered endpoints")
@@ -137,7 +137,7 @@ func variantList(variants []types.ProductionVariant) []map[string]any {
 // servingEdges links every model an endpoint serves to that endpoint. A
 // variant can name a model in another account, so only models this run
 // catalogued get an edge.
-func servingEdges(endpoint pluginsdk.Asset, index *modelIndex) []pluginsdk.LineageEdge {
+func (s *Source) servingEdges(endpoint pluginsdk.Asset, index *modelIndex) []pluginsdk.LineageEdge {
 	variants, ok := endpoint.Metadata["variants"].([]map[string]any)
 	if !ok {
 		return nil
@@ -153,7 +153,7 @@ func servingEdges(endpoint pluginsdk.Asset, index *modelIndex) []pluginsdk.Linea
 		}
 		seen[model] = true
 		edges = append(edges, pluginsdk.LineageEdge{
-			Source: assetMRN("Model", model),
+			Source: s.config.AssetMRN("Model", provider, model),
 			Target: *endpoint.MRN,
 			Type:   "FEEDS",
 		})
