@@ -5,32 +5,34 @@ set -e
 
 GITHUB_REPO="marmotdata/marmot"
 BINARY_NAME="marmot"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${MARMOT_INSTALL_DIR:-/usr/local/bin}"
 
-# Fetch the latest non-prerelease version
-echo "Fetching the latest Marmot release..."
-if command -v curl >/dev/null 2>&1; then
-    VERSION=$(curl -s "https://api.github.com/repos/${GITHUB_REPO}/releases" | 
-              grep '"tag_name":' | 
-              grep -v 'preview\|alpha\|beta\|rc' | 
-              sed -E 's/.*"([^"]+)".*/\1/' | 
-              head -n 1 | 
-              sed 's/^v//')
-elif command -v wget >/dev/null 2>&1; then
-    VERSION=$(wget -q -O- "https://api.github.com/repos/${GITHUB_REPO}/releases" | 
-              grep '"tag_name":' | 
-              grep -v 'preview\|alpha\|beta\|rc' | 
-              sed -E 's/.*"([^"]+)".*/\1/' | 
-              head -n 1 | 
-              sed 's/^v//')
-else
-    echo "Neither curl nor wget found. Please install one of them and try again."
-    exit 1
+fetch() {
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$1" -o "$2"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -O "$2" "$1"
+    else
+        echo "Neither curl nor wget found. Please install one of them and try again."
+        exit 1
+    fi
+}
+
+# Set MARMOT_VERSION to pin a release; otherwise the latest stable release is used
+VERSION="${MARMOT_VERSION#v}"
+if [ -z "$VERSION" ]; then
+    echo "Fetching the latest Marmot release..."
+    if command -v curl >/dev/null 2>&1; then
+        LATEST=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest")
+    elif command -v wget >/dev/null 2>&1; then
+        LATEST=$(wget -q -O- "https://api.github.com/repos/${GITHUB_REPO}/releases/latest")
+    fi
+    VERSION=$(printf '%s\n' "$LATEST" | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/; s/^v//')
 fi
 
 if [ -z "$VERSION" ]; then
-    echo "Could not determine the latest version. Defaulting to 0.1.0"
-    VERSION="0.4.0"
+    echo "Could not determine the latest version. Set MARMOT_VERSION and try again."
+    exit 1
 fi
 
 echo "Installing Marmot version ${VERSION}..."
@@ -63,11 +65,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [ -z "$VERSION" ]; then
-    echo "Error: Unable to determine Marmot version to install"
-    exit 1
-fi
-
 echo "Downloading Marmot ${VERSION} for ${OS}/${ARCH}..."
 
 if [ "$OS" = "windows" ]; then
@@ -78,14 +75,45 @@ else
     BINARY_SUFFIX=""
 fi
 
-DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/${FILENAME}"
+RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}"
+CHECKSUMS="marmot_${VERSION}_checksums.txt"
 
-if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$DOWNLOAD_URL" -o "${TEMP_DIR}/${FILENAME}"
-elif command -v wget >/dev/null 2>&1; then
-    wget -q -O "${TEMP_DIR}/${FILENAME}" "$DOWNLOAD_URL"
+fetch "${RELEASE_URL}/${FILENAME}" "${TEMP_DIR}/${FILENAME}"
+fetch "${RELEASE_URL}/${CHECKSUMS}" "${TEMP_DIR}/${CHECKSUMS}"
+
+# The checksum file is signed keylessly by the release workflow, so when cosign
+# is installed check that signature before trusting the checksums in it
+if command -v cosign >/dev/null 2>&1; then
+    echo "Verifying the checksum file signature with cosign..."
+    fetch "${RELEASE_URL}/${CHECKSUMS}.sigstore.json" "${TEMP_DIR}/${CHECKSUMS}.sigstore.json"
+    cosign verify-blob \
+        --bundle "${TEMP_DIR}/${CHECKSUMS}.sigstore.json" \
+        --certificate-identity "https://github.com/${GITHUB_REPO}/.github/workflows/release.yaml@refs/tags/v${VERSION}" \
+        --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+        "${TEMP_DIR}/${CHECKSUMS}" >/dev/null 2>&1 || {
+        echo "Signature verification of ${CHECKSUMS} failed. Aborting."
+        exit 1
+    }
 else
-    echo "Neither curl nor wget found. Please install one of them and try again."
+    echo "cosign not found, skipping signature verification of ${CHECKSUMS}."
+fi
+
+echo "Verifying the SHA-256 checksum of ${FILENAME}..."
+EXPECTED=$(awk -v f="$FILENAME" '$2 == f || $2 == "*"f { print $1 }' "${TEMP_DIR}/${CHECKSUMS}")
+if [ -z "$EXPECTED" ]; then
+    echo "${FILENAME} is not listed in ${CHECKSUMS}. Aborting."
+    exit 1
+fi
+if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL=$(sha256sum "${TEMP_DIR}/${FILENAME}" | awk '{ print $1 }')
+elif command -v shasum >/dev/null 2>&1; then
+    ACTUAL=$(shasum -a 256 "${TEMP_DIR}/${FILENAME}" | awk '{ print $1 }')
+else
+    echo "Neither sha256sum nor shasum found, cannot verify the download. Aborting."
+    exit 1
+fi
+if [ "$EXPECTED" != "$ACTUAL" ]; then
+    echo "Checksum mismatch for ${FILENAME}: expected ${EXPECTED}, got ${ACTUAL}. Aborting."
     exit 1
 fi
 

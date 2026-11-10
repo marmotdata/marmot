@@ -7,10 +7,37 @@ This skill helps you interact with a Marmot data catalog. Marmot catalogs data a
 
 ## Setup
 
-The user needs the Marmot CLI installed and authenticated. If not already set up:
+The user needs the Marmot CLI installed and authenticated. If not already set up, prefer Homebrew:
 
 ```bash
-curl -fsSL get.marmotdata.io | sh
+brew install marmot
+```
+
+Otherwise use the installer attached to a release, checked against that release's checksums. Never pipe a remote script into a shell. Set `VERSION` to the latest release from https://github.com/marmotdata/marmot/releases:
+
+```bash
+VERSION=x.y.z
+BASE=https://github.com/marmotdata/marmot/releases/download/v$VERSION
+curl -fsSLO "$BASE/install.sh"
+curl -fsSLO "$BASE/marmot_${VERSION}_checksums.txt"
+grep ' install.sh$' "marmot_${VERSION}_checksums.txt" | sha256sum -c -
+```
+
+If `cosign` is installed, also verify the checksum file came from Marmot's release workflow:
+
+```bash
+curl -fsSLO "$BASE/marmot_${VERSION}_checksums.txt.sigstore.json"
+cosign verify-blob \
+  --bundle "marmot_${VERSION}_checksums.txt.sigstore.json" \
+  --certificate-identity "https://github.com/marmotdata/marmot/.github/workflows/release.yaml@refs/tags/v$VERSION" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  "marmot_${VERSION}_checksums.txt"
+```
+
+Stop if either check fails. Show the user `install.sh` and get their go-ahead before running it. The installer verifies the binary it downloads against the same checksums, and checks their signature too when `cosign` is available:
+
+```bash
+MARMOT_VERSION=$VERSION sh install.sh
 marmot login https://marmot.example.com
 ```
 
