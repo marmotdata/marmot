@@ -13,9 +13,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/marmotdata/marmot/internal/core/role"
+	"github.com/marmotdata/marmot/internal/crypto"
 )
 
 var (
@@ -376,7 +376,7 @@ func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate 
 		Scan(&k.ID, &k.ServiceAccountID, &k.Name, &keyHash, &k.ExpiresAt, &k.LastUsedAt, &k.CreatedAt)
 	switch {
 	case err == nil:
-		if bcrypt.CompareHashAndPassword([]byte(keyHash), []byte(keyToValidate)) == nil {
+		if crypto.CompareAPIKey(keyHash, keyToValidate) == nil {
 			return &k, nil
 		}
 		// A lookup hit whose bcrypt does not verify means the row was tampered
@@ -408,7 +408,7 @@ func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate 
 		if err := rows.Scan(&k.ID, &k.ServiceAccountID, &k.Name, &keyHash, &k.ExpiresAt, &k.LastUsedAt, &k.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scanning api key: %w", err)
 		}
-		if err := bcrypt.CompareHashAndPassword([]byte(keyHash), []byte(keyToValidate)); err == nil {
+		if err := crypto.CompareAPIKey(keyHash, keyToValidate); err == nil {
 			return &k, nil
 		}
 	}

@@ -32,6 +32,11 @@ func TestRotateAPIKey(t *testing.T) {
 		t.Fatalf("prefix %q does not start key %q", created.Prefix, created.Key)
 	}
 
+	// Verify once first so the old secret is remembered, and rotation must still end it.
+	if _, err := repo.GetAPIKeyByHash(ctx, created.Key); err != nil {
+		t.Fatalf("new key: %v", err)
+	}
+
 	if _, err := svc.RotateAPIKey(ctx, otherID, created.ID); !errors.Is(err, ErrUnauthorized) {
 		t.Fatalf("rotating someone else's key: err = %v", err)
 	}
