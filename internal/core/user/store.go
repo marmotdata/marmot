@@ -867,6 +867,10 @@ func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate 
 		return nil, fmt.Errorf("looking up API key: %w", err)
 	}
 
+	if crypto.HasAPIKeyScheme(keyToValidate) {
+		return nil, ErrUserNotFound
+	}
+
 	// Slow path, for keys issued before key_lookup existed. It cannot be
 	// backfilled: deriving the lookup needs the key, and only the bcrypt hash
 	// was kept. The set only shrinks as those keys are rotated.

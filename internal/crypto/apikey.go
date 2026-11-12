@@ -2,10 +2,20 @@ package crypto
 
 import (
 	"crypto/sha256"
+	"strings"
 	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+// HasAPIKeyScheme reports whether key carries a scheme prefix such as mrmt_u_ or mrmt_s_.
+//
+// The prefixes arrived after key_lookup, so a prefixed key always has a lookup
+// value: one that misses the indexed lookup is invalid, and comparing it against
+// every legacy key would let anyone spend a bcrypt per legacy key with a made-up one.
+func HasAPIKeyScheme(key string) bool {
+	return strings.HasPrefix(key, "mrmt_")
+}
 
 const maxVerifiedAPIKeys = 10_000
 

@@ -386,6 +386,10 @@ func (r *PostgresRepository) GetAPIKeyByHash(ctx context.Context, keyToValidate 
 		return nil, fmt.Errorf("looking up api key: %w", err)
 	}
 
+	if crypto.HasAPIKeyScheme(keyToValidate) {
+		return nil, ErrKeyNotFound
+	}
+
 	// Slow path, for keys issued before key_lookup existed. Keys of a deleted or
 	// inactive account are excluded: they could never authenticate anyway, so
 	// comparing them was pure cost.

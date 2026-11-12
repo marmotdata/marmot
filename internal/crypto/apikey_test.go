@@ -83,3 +83,16 @@ func BenchmarkCompareAPIKey(b *testing.B) {
 		}
 	})
 }
+
+func TestHasAPIKeyScheme(t *testing.T) {
+	for key, want := range map[string]bool{
+		"mrmt_u_abc":       true,
+		"mrmt_s_abc":       true,
+		"bGVnYWN5LWtleQ==": false,
+		"":                 false,
+	} {
+		if got := HasAPIKeyScheme(key); got != want {
+			t.Errorf("HasAPIKeyScheme(%q) = %v, want %v", key, got, want)
+		}
+	}
+}
