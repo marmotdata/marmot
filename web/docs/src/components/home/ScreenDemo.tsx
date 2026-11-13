@@ -88,11 +88,11 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
     onPlayer?: (player: Player, bounds: number[]) => void;
   },
 ): JSX.Element {
-  const { label, screen, initial, steps, rest, onPlayer } = props;
+  const { label, screen, initial, steps, rest, onPlayer, phoneFocus } = props;
   const root = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const [boxWidth, setBoxWidth] = useState(0);
+  const [boxSize, setBoxSize] = useState({ w: 0, h: 0 });
   const [focus, setFocus] = useState<string | undefined>(initial.focus);
   const [camera, setCamera] = useState({ k: 1, x: 0, y: 0 });
 
@@ -106,8 +106,11 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
     let frame = 0;
     const observer = new ResizeObserver(([entry]) => {
       const width = entry?.contentRect.width ?? 0;
+      const height = entry?.contentRect.height ?? 0;
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setBoxWidth((w) => (Math.abs(w - width) < 0.5 ? w : width)));
+      frame = requestAnimationFrame(() =>
+        setBoxSize((b) => (Math.abs(b.w - width) < 0.5 && Math.abs(b.h - height) < 0.5 ? b : { w: width, h: height })),
+      );
     });
     if (box.current) observer.observe(box.current);
     let p: Player | undefined;
@@ -156,16 +159,23 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
   // Frames the focused element with a margin, measured on the unscaled screen.
   useEffect(() => {
     const el = stage.current;
-    const w = boxWidth;
+    const { w } = boxSize;
+    // On a desktop the frame has the screen's own shape, so h is w scaled. A phone's frame is
+    // taller, and the screen shown whole is too small to read there, so the camera never goes
+    // below a readable size and works on a close-up of what each step points at instead.
+    const h = boxSize.h || (w * H) / W;
     if (!el || !w) return;
     let stale = false;
-    const fit = w / W;
+    const phone = typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches;
+    const cover = Math.max(w / W, h / H);
+    const fit = phone ? Math.max(cover, 0.62) : cover;
     const frame = async () => {
-      const target = focus ? el.querySelector<HTMLElement>(focus) : null;
+      const selector = focus ?? (phone ? phoneFocus : undefined);
+      const target = selector ? el.querySelector<HTMLElement>(selector) : null;
       const main = el.querySelector<HTMLElement & { mainElement?: HTMLElement | null }>("mm-app-shell")?.mainElement;
       if (!target) {
         main?.scrollTo({ top: 0 });
-        setCamera({ k: fit, x: 0, y: 0 });
+        setCamera({ k: fit, x: phone ? Math.max(0, (W - w / fit) / 2) : 0, y: 0 });
         return;
       }
       const unit = el.getBoundingClientRect().width / W;
@@ -190,14 +200,17 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
       const rw = r.width / unit + pad * 2;
       const rh = r.height / unit + pad * 2;
       // Never past 1.25× the real size: closer than that, interface text turns clumsy.
-      const k = Math.max(fit, Math.min(w / rw, (w * (H / W)) / rh, 1.25));
+      // A phone fits the width and keeps the top of anything taller than the frame in view,
+      // since shrinking a full-height panel to fit makes it unreadable again.
+      const k = phone ? Math.max(fit, Math.min(w / rw, 1.25)) : Math.max(fit, Math.min(w / rw, h / rh, 1.25));
       const vw = w / k;
-      const vh = (w * (H / W)) / k;
+      const vh = h / k;
+      const tall = phone && rh > vh;
       // Centre it, but never show past the screen's edges.
       setCamera({
         k,
         x: Math.max(0, Math.min(W - vw, rx + rw / 2 - vw / 2)),
-        y: Math.max(0, Math.min(H - vh, ry + rh / 2 - vh / 2)),
+        y: Math.max(0, Math.min(H - vh, tall ? ry : ry + rh / 2 - vh / 2)),
       });
     };
     const t = requestAnimationFrame(() => void frame());
@@ -205,7 +218,7 @@ export default function ScreenDemo<S extends { focus?: string; beat?: number }>(
       stale = true;
       cancelAnimationFrame(t);
     };
-  }, [focus, boxWidth]);
+  }, [focus, boxSize]);
 
   return (
     <figure

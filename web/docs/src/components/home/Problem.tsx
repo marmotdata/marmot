@@ -22,6 +22,8 @@ interface Gain<S> {
   text: string;
   /** The width the elements are laid out at, before scaling to the column. */
   width: number;
+  /** The layout width on a phone card, where the full width would scale too small to read. */
+  phoneWidth?: number;
   /** Never scale below this; what no longer fits is cropped from the start, keeping the end. */
   minScale?: number;
   label: string;
@@ -35,6 +37,7 @@ const terms = gain<{ term: boolean; certified: boolean }>({
   title: "Definitions.",
   text: "Glossary terms and certified tables, read before every query.",
   width: 620,
+  phoneWidth: 440,
   label:
     "The schema of orders_daily, where net_revenue_gbp is given the glossary term Net revenue and then certified.",
   frames: [
@@ -88,6 +91,7 @@ const checked = gain<{ refused: boolean }>({
   title: "Access.",
   text: "Every query checked against what that agent may read.",
   width: 520,
+  phoneWidth: 380,
   label:
     "growth-agent queries customer emails, and Marmot refuses the query because of an access policy.",
   frames: [
@@ -193,6 +197,7 @@ const source = gain<{ wired: number }>({
   title: "One source.",
   text: "Agents from any vendor read the same facts over MCP.",
   width: 720,
+  phoneWidth: 560,
   label: "Three agents, each reading orders_daily through Marmot.",
   frames: [
     { at: 0, s: { wired: 0 } },
@@ -235,11 +240,15 @@ function Picture({
   g,
   playing,
   shown,
+  width,
 }: {
   g: Gain<unknown>;
   playing: boolean;
   shown: boolean;
+  /** Overrides the gain's layout width, for a phone card. */
+  width?: number;
 }): JSX.Element {
+  const layoutWidth = width ?? g.width;
   const box = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
@@ -293,9 +302,9 @@ function Picture({
         const natural = st.offsetHeight;
         const k = Math.max(
           g.minScale ?? 0,
-          Math.min(1, w / g.width, natural ? h / natural : 1),
+          Math.min(1, w / layoutWidth, natural ? h / natural : 1),
         );
-        setFit({ k, h: natural * k, crop: Math.max(0, g.width * k - w) });
+        setFit({ k, h: natural * k, crop: Math.max(0, layoutWidth * k - w) });
       });
     };
     const observer = new ResizeObserver(measure);
@@ -305,7 +314,7 @@ function Picture({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [g]);
+  }, [g, layoutWidth]);
 
   return (
     <figure
@@ -316,7 +325,7 @@ function Picture({
     >
       <div
         className="mkt-pic__fit"
-        style={{ inlineSize: g.width * fit.k - fit.crop, blockSize: fit.h }}
+        style={{ inlineSize: layoutWidth * fit.k - fit.crop, blockSize: fit.h }}
       >
         <div
           className="mkt-pic__stage"
@@ -324,7 +333,7 @@ function Picture({
           inert
           aria-hidden="true"
           style={{
-            inlineSize: g.width,
+            inlineSize: layoutWidth,
             transform: `translateX(${-fit.crop}px) scale(${fit.k})`,
           }}
         />
@@ -339,6 +348,16 @@ export default function Problem(): JSX.Element {
   const [active, setActive] = useState(-1);
   const [visible, setVisible] = useState(false);
   const [reduced, setReduced] = useState(false);
+  // A phone shows the gains as cards to swipe through, each with its own picture, and nothing
+  // advances on its own.
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const q = window.matchMedia("(max-width: 720px)");
+    const update = () => setPhone(q.matches);
+    update();
+    q.addEventListener("change", update);
+    return () => q.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const el = root.current;
@@ -354,7 +373,7 @@ export default function Problem(): JSX.Element {
 
   // Advances while on screen; choosing a point resets the clock, because `active` changes.
   useEffect(() => {
-    if (!visible || reduced) return;
+    if (!visible || reduced || phone) return;
     if (active < 0) {
       setActive(0);
       return;
@@ -364,7 +383,7 @@ export default function Problem(): JSX.Element {
       STEP,
     );
     return () => window.clearTimeout(t);
-  }, [visible, reduced, active]);
+  }, [visible, reduced, phone, active]);
 
   const shown = Math.max(0, active);
   return (
@@ -420,6 +439,7 @@ export default function Problem(): JSX.Element {
                 key={g.title}
                 className={i === shown ? "is-active" : undefined}
               >
+                {phone && <Picture g={g} shown playing={false} width={g.phoneWidth} />}
                 <button
                   type="button"
                   aria-pressed={i === shown}

@@ -1802,7 +1802,7 @@
 		aspect-ratio: 600 / 420;
 	}
 	.mkt-survey.is-tall .mkt-survey__map {
-		aspect-ratio: 340 / 520;
+		aspect-ratio: 340 / 380;
 	}
 	/* The unmapped sheet is bare paper; a hairline frame on both says these are two sheets, and the
 	   survey's contours stop at its edge like a map's neatline. */
@@ -2330,7 +2330,7 @@
 	.mkt-teams__tabs button[aria-selected="true"] .mkt-teams__line {
 		background: color-mix(in oklab, var(--mm-primary) 22%, var(--mm-rule));
 	}
-	@media (max-width: 880px) {
+	@media (max-width: 880px) and (min-width: 721px) {
 		.mkt-teams__tabs {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			row-gap: var(--space-6);
@@ -2520,5 +2520,204 @@
 	/* The pinned plan labels cover the cells scrolling under them, so they take the band's ground. */
 	.mkt-tour-band .mkt-plans tbody th[scope="row"] {
 		background: color-mix(in oklab, var(--mm-sunken) 50%, var(--mm-paper));
+	}
+
+	/* ------------------------------------------------------------------ phones
+	   A phone shows no moving line without something beside it to watch. Desktop is untouched:
+	   everything here is inside phone-width queries. */
+	@media (max-width: 720px) {
+		/* Teams: one scrolling row of names, the selected one underlined, no filling line. */
+		.mkt-teams__tabs {
+			display: flex;
+			gap: var(--space-5);
+			overflow-x: auto;
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--space-4));
+			padding-inline: var(--space-4);
+			border-block-end: 1px solid var(--mm-rule);
+		}
+		.mkt-teams__tabs::-webkit-scrollbar {
+			display: none;
+		}
+		.mkt-teams__tabs button {
+			display: flex;
+			flex-direction: column-reverse;
+			flex: none;
+			gap: var(--space-2);
+			padding: var(--space-3) 0 0;
+			white-space: nowrap;
+		}
+		.mkt-teams__tabs button > span:last-child {
+			display: none;
+		}
+		.mkt-teams__line {
+			margin: 0;
+			background: transparent;
+		}
+		.mkt-teams__line::after {
+			display: none;
+		}
+		.mkt-teams__tabs button[aria-selected="true"] .mkt-teams__line {
+			background: var(--mm-primary);
+		}
+		/* One card per team, swiped sideways; the next card peeks in so the swipe is obvious. */
+		.mkt-teams__cards {
+			display: flex;
+			gap: var(--space-4);
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: var(--space-4);
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--space-4));
+			padding-inline: var(--space-4);
+			align-items: start;
+		}
+		.mkt-teams__cards::-webkit-scrollbar {
+			display: none;
+		}
+		/* Each card takes the whole width, so no half-drawn neighbour shows; the dots and the
+		   fading tab row say there is more. */
+		.mkt-teams__cards {
+			gap: calc(var(--space-4) * 2);
+		}
+		.mkt-teams__cards > [role="tabpanel"] {
+			flex: 0 0 100%;
+			scroll-snap-align: start;
+			scroll-snap-stop: always;
+		}
+		.mkt-teams__dots {
+			display: flex;
+			justify-content: center;
+			gap: var(--space-2);
+			margin-block-start: var(--space-5);
+		}
+		.mkt-teams__dots span {
+			inline-size: 6px;
+			block-size: 6px;
+			border-radius: var(--radius-full);
+			background: var(--mm-rule);
+			transition: background var(--mm-dur-press) var(--mm-ease), inline-size var(--mm-dur-press) var(--mm-ease);
+		}
+		.mkt-teams__dots span.is-on {
+			inline-size: 18px;
+			background: var(--mm-text);
+		}
+		.mkt-teams__tabs {
+			mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+		}
+		.mkt-teams__cards .mkt-chapter--split {
+			padding-block-start: var(--space-6);
+		}
+		.mkt-teams__cards .mkt-chapter__more {
+			display: none;
+		}
+		/* The demo: a taller frame the camera fills with a readable close-up of each step. */
+		.mkt-teams .mkt-screen {
+			aspect-ratio: 4 / 3;
+		}
+		/* Tighter around the demo so heading, points and demo fit one screen. */
+		.mkt-teams__cards .mkt-chapter--split {
+			gap: var(--space-4);
+			padding-block: var(--space-4) 0;
+		}
+		.mkt-teams__dots {
+			margin-block-start: var(--space-3);
+		}
+		.mkt-teams__cards .mkt-chapter__text {
+			gap: var(--space-3);
+		}
+		.mkt-teams__cards .mkt-chapter__title {
+			font-size: 24px;
+		}
+		.mkt-teams__cards .mkt-chapter__lede {
+			margin-block-start: var(--space-2);
+		}
+		/* Problem: the gains as cards to swipe, each with its own picture and no moving line. */
+		.mkt-gains {
+			display: flex;
+			gap: var(--space-3);
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: var(--space-4);
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--space-4));
+			padding-inline: var(--space-4);
+		}
+		.mkt-gains::-webkit-scrollbar {
+			display: none;
+		}
+		.mkt-gains li {
+			flex: 0 0 86%;
+			scroll-snap-align: start;
+			overflow: hidden;
+			background: var(--mm-surface, var(--mm-paper));
+			border: 1px solid var(--mm-rule);
+			border-radius: var(--radius-md);
+		}
+		.mkt-gains li .mkt-pic {
+			block-size: 200px;
+			padding: var(--space-4);
+			background: var(--mm-sunken);
+		}
+		.mkt-gains button {
+			padding: var(--space-4);
+			color: var(--mm-text-2);
+			cursor: default;
+		}
+		.mkt-gains strong {
+			color: var(--mm-text);
+		}
+		.mkt-gains svg,
+		.mkt-gains__rule {
+			display: none;
+		}
+		/* Hero: the chat grows with the conversation instead of opening as an empty box. */
+		.mkt-chat {
+			block-size: auto;
+		}
+		.mkt-chat__log {
+			flex: none;
+			max-block-size: 260px;
+			mask-image: none;
+		}
+		.mkt-chat__log:empty {
+			display: none;
+		}
+		/* The password map: both sheets side by side to swipe between, each fully shown. */
+		.mkt-survey__frame {
+			display: flex;
+			gap: var(--space-3);
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: var(--space-4);
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--space-4));
+			padding-inline: var(--space-4);
+		}
+		.mkt-survey__frame::-webkit-scrollbar {
+			display: none;
+		}
+		.mkt-survey__frame {
+			gap: calc(var(--space-4) * 2);
+		}
+		.mkt-survey__frame > .mkt-survey__sheet {
+			flex: 0 0 100%;
+			scroll-snap-align: start;
+			scroll-snap-stop: always;
+			opacity: 1;
+		}
+		.mkt-survey > .mkt-teams__dots {
+			margin-block-start: calc(-1 * var(--space-4));
+		}
+		/* The password map names every table from the start, so the story reads before it plays. */
+		.mkt-survey .mkt-maphero__asset .mkt-maphero__label {
+			gap: 4px;
+			padding: 1px 6px;
+			font: var(--text-caption);
+		}
+		/* Captions under a demo stay a plain list: the close-up carries the progress. */
+		.mkt-beats[data-live] li::before {
+			display: none;
+		}
 	}
 }

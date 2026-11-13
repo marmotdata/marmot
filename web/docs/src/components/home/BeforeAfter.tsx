@@ -84,21 +84,21 @@ const WIDE: Geometry = {
 };
 const TALL: Geometry = {
   W: 340,
-  H: 520,
-  agent: { x: 170, y: 40 },
+  H: 380,
+  agent: { x: 170, y: 32 },
   at: {
-    orders: { x: 90, y: 150 },
-    v2: { x: 190, y: 200 },
-    final: { x: 90, y: 270 },
-    tmp: { x: 190, y: 330 },
-    daily: { x: 300, y: 130 },
-    customers: { x: 200, y: 440 },
+    orders: { x: 70, y: 112 },
+    v2: { x: 180, y: 150 },
+    final: { x: 70, y: 200 },
+    tmp: { x: 190, y: 245 },
+    daily: { x: 290, y: 100 },
+    customers: { x: 200, y: 318 },
   },
-  zone: { x: 200, y: 440, r: 50 },
-  stop: { x: 152, y: 428 },
-  route: "M235,45 C300,60 305,90 300,130",
-  spur: "M105,50 C0,200 10,400 152,428",
-  zoneLabel: { x: 200, y: 496 },
+  zone: { x: 200, y: 318, r: 40 },
+  stop: { x: 162, y: 308 },
+  route: "M235,36 C290,50 296,72 290,100",
+  spur: "M105,42 C10,150 30,290 162,308",
+  zoneLabel: { x: 200, y: 366 },
 };
 
 // How long each part of the story takes, so the captions can tell where one sheet's turn ends.
@@ -216,6 +216,34 @@ export default function BeforeAfter({ head }: { head?: React.ReactNode }): JSX.E
     };
   }, []);
 
+  // On a phone the two sheets sit side by side to swipe between. Swiping to one plays its half
+  // of the story, and when the story moves on by itself the row follows it.
+  const frame = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = frame.current;
+    if (!tall || !player || !row) return;
+    let t = 0;
+    const onScroll = () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        const i = Math.round(row.scrollLeft / (row.scrollWidth / 2));
+        if (i === 1 && player.elapsed < BOUNDS[1]!) player.seek(BOUNDS[1]!);
+        if (i === 0 && player.elapsed >= BOUNDS[1]!) player.seek(0);
+      }, 120);
+    };
+    row.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(t);
+      row.removeEventListener("scroll", onScroll);
+    };
+  }, [tall, player]);
+  useEffect(() => {
+    const row = frame.current;
+    if (!tall || !row) return;
+    const sheet = row.children[s.sheet === "with" ? 1 : 0] as HTMLElement | undefined;
+    if (sheet) row.scrollTo({ left: sheet.offsetLeft - row.offsetLeft, behavior: "smooth" });
+  }, [tall, s.sheet]);
+
   const reached = (id: AssetId) => WANDER.indexOf(id) > -1 && WANDER.indexOf(id) < s.visited;
   const contours = (
     <g className="mkt-survey__ground">
@@ -232,7 +260,7 @@ export default function BeforeAfter({ head }: { head?: React.ReactNode }): JSX.E
         <Beats points={HALVES} player={player} bounds={BOUNDS} className="mkt-chapter__points mkt-survey__halves" />
       </div>
 
-      <div className="mkt-survey__frame">
+      <div className="mkt-survey__frame" ref={frame}>
       <div className={`mkt-survey__sheet is-without${s.sheet === "without" ? " is-shown" : ""}`}>
         <div className="mkt-survey__map">
           <svg viewBox={`0 0 ${g.W} ${g.H}`} className="mkt-survey__svg" aria-hidden="true">
@@ -307,6 +335,13 @@ export default function BeforeAfter({ head }: { head?: React.ReactNode }): JSX.E
       </div>
 
       </div>
+
+      {tall && (
+        <div className="mkt-teams__dots" aria-hidden="true">
+          <span className={s.sheet === "without" ? "is-on" : undefined} />
+          <span className={s.sheet === "with" ? "is-on" : undefined} />
+        </div>
+      )}
 
       {/* The sheets are drawn for the eye; this says what they show, for a screen reader. */}
       <p className="mm-visually-hidden">

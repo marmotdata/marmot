@@ -158,6 +158,49 @@ export default function Teams(): JSX.Element {
   const [auto, setAuto] = useState(true);
   const [demo, setDemo] = useState<{ player: Player; bounds: number[] }>();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const strip = useRef<HTMLDivElement>(null);
+  const cards = useRef<HTMLDivElement>(null);
+  // A phone swipes between teams: every team is a card in one horizontal row, the tab names
+  // follow the swipe, and nothing advances on its own.
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const q = window.matchMedia("(max-width: 720px)");
+    const update = () => setPhone(q.matches);
+    update();
+    q.addEventListener("change", update);
+    return () => q.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    const row = cards.current;
+    if (!phone || !row) return;
+    let frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const i = Math.round(row.scrollLeft / (row.scrollWidth / teams.length));
+        setIndex((cur) =>
+          cur === i ? cur : Math.max(0, Math.min(teams.length - 1, i)),
+        );
+      });
+    };
+    row.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      row.removeEventListener("scroll", onScroll);
+    };
+  }, [phone]);
+
+  // On a phone the tabs are one scrolling row; keep the selected one in view as the tour moves
+  // on. Only the row scrolls, never the page, and on a desktop the row never overflows.
+  useEffect(() => {
+    const row = strip.current;
+    const tab = tabs.current[index];
+    if (!row || !tab || row.scrollWidth <= row.clientWidth) return;
+    row.scrollTo({
+      left: tab.offsetLeft - row.offsetLeft - 16,
+      behavior: "smooth",
+    });
+  }, [index]);
 
   // Fills the selected tab's line from the demo's own clock, and moves on when it has played once.
   useEffect(() => {
@@ -168,7 +211,7 @@ export default function Teams(): JSX.Element {
     const tick = () => {
       const p = demo.player.still ? 1 : Math.min(1, demo.player.elapsed / end);
       tab?.style.setProperty("--progress", String(p));
-      if (p >= 1 && auto && !demo.player.still) {
+      if (p >= 1 && auto && !phone && !demo.player.still) {
         setDemo(undefined);
         setIndex((i) => (i + 1) % teams.length);
         return;
@@ -180,13 +223,19 @@ export default function Teams(): JSX.Element {
       cancelAnimationFrame(frame);
       tab?.style.setProperty("--progress", "0");
     };
-  }, [demo, index, auto]);
+  }, [demo, index, auto, phone]);
 
   const choose = (i: number, focus = false) => {
     setAuto(false);
     setDemo(undefined);
     setIndex(i);
     if (focus) tabs.current[i]?.focus();
+    const card = cards.current?.children[i] as HTMLElement | undefined;
+    if (phone && card)
+      cards.current!.scrollTo({
+        left: card.offsetLeft - cards.current!.offsetLeft,
+        behavior: "smooth",
+      });
   };
   const onKeyDown = (e: React.KeyboardEvent, i: number) => {
     const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
@@ -201,7 +250,12 @@ export default function Teams(): JSX.Element {
   const t = teams[index]!;
   return (
     <div className="mkt-teams">
-      <div className="mkt-teams__tabs" role="tablist" aria-label="Teams">
+      <div
+        className="mkt-teams__tabs"
+        role="tablist"
+        aria-label="Teams"
+        ref={strip}
+      >
         {teams.map((team, i) => (
           <button
             key={team.id}
@@ -223,13 +277,38 @@ export default function Teams(): JSX.Element {
           </button>
         ))}
       </div>
-      <div
-        role="tabpanel"
-        id={`team-panel-${t.id}`}
-        aria-labelledby={`team-tab-${t.id}`}
-      >
-        <Panel key={t.id} t={t} onDemo={setDemo} />
-      </div>
+      {phone ? (
+        <>
+          <div className="mkt-teams__cards" ref={cards}>
+            {teams.map((team) => (
+              <div
+                key={team.id}
+                role="tabpanel"
+                id={`team-panel-${team.id}`}
+                aria-labelledby={`team-tab-${team.id}`}
+              >
+                <Panel t={team} onDemo={() => {}} />
+              </div>
+            ))}
+          </div>
+          <div className="mkt-teams__dots" aria-hidden="true">
+            {teams.map((team, i) => (
+              <span
+                key={team.id}
+                className={i === index ? "is-on" : undefined}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div
+          role="tabpanel"
+          id={`team-panel-${t.id}`}
+          aria-labelledby={`team-tab-${t.id}`}
+        >
+          <Panel key={t.id} t={t} onDemo={setDemo} />
+        </div>
+      )}
     </div>
   );
 }

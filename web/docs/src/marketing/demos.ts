@@ -34,6 +34,8 @@ export interface DemoConfig<S extends { focus?: string; beat?: number }> {
 	initial: S;
 	steps: (demo: Demo, set: (patch: Partial<S>) => void) => Promise<void>;
 	rest?: number;
+	/** What the camera frames on a phone when a step names no focus of its own. */
+	phoneFocus?: string;
 }
 
 type Focus = { focus?: string; beat?: number };
@@ -113,6 +115,8 @@ export const understandDemo: DemoConfig<AssetState & Focus> = {
 // The blade fills the screen's height, so framing any part of it would hide the graph. The camera
 // stays on the whole screen, graph and blade side by side, and the beats carry what to look at.
 export const traceDemo: DemoConfig<LineageState & Focus> = {
+	// A phone cannot read the graph whole, so it follows the details of each step instead.
+	phoneFocus: 'mm-details-blade',
 	label:
 		'The full-screen lineage of orders_daily follows orders from the PostgreSQL table through the Airflow load and the dbt models to the Revenue overview dashboard. An edge declared by the dbt-analytics pipeline and a Spark job reported through OpenLineage open in the blade, then the two dashboards downstream of orders_daily and who to ask about them.',
 	screen: lineageScreen,
