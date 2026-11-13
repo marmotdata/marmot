@@ -1,0 +1,236 @@
+---
+slug: /knowledgehouse
+title: "What Is a Knowledgehouse? The Next Step After the Data Warehouse"
+description: "A knowledgehouse is where a company keeps what it knows: what its data means, who may use it and every query people and agents run. What it is, how it differs from a data warehouse, a lakehouse and a knowledge base, and how to build one."
+keywords:
+  - knowledgehouse
+  - what is a knowledgehouse
+  - knowledgehouse vs data warehouse
+  - knowledgehouse vs lakehouse
+  - company knowledge for AI agents
+  - shared company knowledge
+  - governed knowledge for agents
+  - system of record for company knowledge
+  - enterprise knowledge for AI
+date: 2026-11-13
+image: /img/resources/knowledgehouse.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/knowledgehouse" />
+  <meta property="article:published_time" content="2026-11-13" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="What Is a Knowledgehouse? The Next Step After the Data Warehouse" />
+  <meta name="twitter:description" content="A knowledgehouse is where a company keeps what it knows: what its data means, who may use it and every query people and agents run." />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="What Is a Knowledgehouse? The Next Step After the Data Warehouse" />
+  <meta property="og:description" content="A knowledgehouse is where a company keeps what it knows: what its data means, who may use it and every query people and agents run." />
+  <meta property="og:url" content="https://marmotdata.io/resources/knowledgehouse" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a knowledgehouse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A knowledgehouse is the one governed place where a company keeps what it knows about its own systems and data: what each table, topic and dashboard means, who owns it, how it connects to everything else, who may use it, and a record of every query people and agents run. Where a data warehouse holds a company's data, a knowledgehouse holds the knowledge needed to use that data correctly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is a knowledgehouse different from a data warehouse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A data warehouse stores and computes over a company's data. A knowledgehouse stores what that data means and governs how it is used. It does not keep copies of the rows. It records definitions, owners, lineage and access rules, and it runs queries against the warehouse and other sources on behalf of people and agents, checking each one and recording it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is a knowledgehouse different from a knowledge base?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A knowledge base holds articles people write by hand, such as a wiki or a help centre. It is only as current as the last person who edited it. A knowledgehouse is built from the systems a company already runs, so the structure, ownership and lineage stay current as those systems change, and it governs access and queries as well as holding text."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is a knowledgehouse the same as an AI context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An AI context layer is one job a knowledgehouse does: serving governed context to agents at runtime. A knowledgehouse also governs who may query what, runs those queries and keeps a record of them, and it serves people as much as agents. The context layer is the interface; the knowledgehouse is the place the knowledge lives."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do companies need a knowledgehouse now?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Two things changed at once. People write less documentation than they used to, and most teams now run agents from several vendors. Each agent needs to know what the company's data means and what it may touch, and without one shared, governed source each agent guesses on its own. A knowledgehouse gives every person and every agent the same facts and the same rules."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you build a knowledgehouse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Start from the systems you already run. Collect structure, ownership and lineage from your databases, warehouses, streams, pipelines and dashboards, add definitions and certification for the things that matter, give every person and agent their own identity, and route queries through the same place so each one is checked and recorded. Marmot is an open source knowledgehouse that does this from a single Go binary on PostgreSQL, or hosted on Marmot Cloud."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+A knowledgehouse is where a company keeps what it knows. It knows what your data means, governs who may use it and runs every query your people and agents make, checked and recorded.
+
+The data warehouse gave companies one place for their data. The lakehouse brought files and tables under the same roof. Neither was built to hold the knowledge you need to use that data correctly: which table finance reports from, what "active customer" means, who to ask, and whether this agent is allowed to read customer emails. This guide explains what a knowledgehouse is, how it differs from the tools around it, and how to build one.
+
+---
+
+## What is a knowledgehouse? {#what-is}
+
+**A knowledgehouse is the one governed place where a company keeps what it knows about its own systems and data.** It holds three things, and they are only useful together:
+
+- **Knowledge.** What every table, topic, model and dashboard is, what its fields mean, who owns it, how it connects to everything else and which version can be trusted.
+- **Governance.** Who and what may use each thing, with every person and every agent signing in as themselves.
+- **Queries.** People and agents query the underlying sources through the knowledgehouse, so each query is checked against those rules before it runs and recorded afterwards.
+
+The word follows a familiar line. A warehouse holds a company's data. A lakehouse holds its files and tables. A knowledgehouse holds what the company knows about them, and decides how they are used.
+
+---
+
+## Why companies need one now {#why-now}
+
+**People write less down, and more of the work is done by agents.** Both trends point at the same gap.
+
+For years, knowledge about data lived in documentation, wikis and the heads of a few senior people. Documentation was always out of date, but someone could usually be asked. Two things have changed that:
+
+- **Less is written down.** Decisions that used to be recorded in a ticket or a design document now happen in a chat with a colleague or an agent, and are never written anywhere a new person will find them.
+- **Every team runs agents.** Engineering, finance, support and operations each use agents, often from different vendors. Each one needs to know what the company's data means and what it is allowed to touch. Without a shared source, every agent learns the company from scratch and guesses the rest.
+
+The result is the same confident, wrong answer, repeated by every agent: the `orders` table that excludes refunds, the revenue figure from a deprecated model, the query that reads personal data no one meant to share. A knowledgehouse gives every person and every agent one source of facts and one set of rules.
+
+---
+
+## Knowledgehouse vs data warehouse vs lakehouse {#vs-warehouse}
+
+**A warehouse and a lakehouse hold your data. A knowledgehouse holds what you know about it and governs how it is used.** They are complementary, and a knowledgehouse sits across all of them rather than replacing any.
+
+| | Data warehouse | Lakehouse | Knowledgehouse |
+|---|---|---|---|
+| **Holds** | Structured data | Files and tables in open formats | What the data means, who owns it, how it connects and who may use it |
+| **Main job** | Store and compute over data | Store and compute over data and files | Know, govern and run queries across every source |
+| **Spans** | Itself | Itself | Every warehouse, lake, database, stream, pipeline and dashboard |
+| **Used by** | Analysts, engineers, BI tools | Data and ML teams | Everyone in the company and every agent |
+| **Keeps the rows** | Yes | Yes | No. It runs queries in place and records them |
+
+A company might run Snowflake, Databricks, PostgreSQL and Kafka at the same time. A knowledgehouse is the one place that knows all of them, so an agent asking for last week's revenue is pointed to the certified table rather than the one that looks right.
+
+---
+
+## Knowledgehouse vs knowledge base {#vs-knowledge-base}
+
+**A knowledge base holds what people write. A knowledgehouse is built from the systems you already run.** A wiki or help centre is only as current as the last person who edited it, and it has no opinion about who may read your data.
+
+A knowledgehouse collects structure, ownership and lineage directly from your databases, warehouses, streams and pipelines, so it changes when they change. People add what systems cannot know, such as definitions, certification and the reasons behind a decision, and every answer is scoped to the identity asking. Knowledge bases still have a place for prose and policy. The knowledgehouse is where the facts about your data live.
+
+---
+
+## Knowledgehouse vs AI context layer {#vs-context-layer}
+
+**An AI context layer is one job a knowledgehouse does.** A [context layer](/resources/ai-context-layer) serves governed context to agents at runtime, usually over [MCP](/resources/mcp-for-data). A knowledgehouse also governs access, runs queries, keeps the audit and serves people as much as agents.
+
+Put simply, the context layer is the interface, and the knowledgehouse is the place the knowledge lives. If you are comparing tools that can do this job, our guide to [data catalogs as the AI context layer](/resources/data-catalogs-for-ai-agents) compares eight of them side by side.
+
+---
+
+## What a knowledgehouse provides {#what-it-provides}
+
+A useful knowledgehouse covers more than a list of tables. It provides:
+
+- **Structure.** Schemas and field-level detail for every source, collected automatically.
+- **Meaning.** A business glossary attached to the fields it describes, so "net revenue" means one thing everywhere.
+- **Ownership.** The team and the person responsible for each asset, so people and agents know who to ask.
+- **Lineage.** What feeds what, down to the column, so you can see what a change breaks before you make it.
+- **Trust.** Certification on the fields and tables people should use, and freshness from the systems themselves.
+- **Identity and access.** Every person and every agent as themselves, with access granted per role.
+- **Governed queries.** Queries run through the knowledgehouse, checked before they reach the source.
+- **A record.** Who asked, what ran and whether it was allowed, for every query.
+
+---
+
+## How a knowledgehouse works {#how-it-works}
+
+**A knowledgehouse sits between your systems and everyone who uses them, people and agents alike.** It works in three steps:
+
+1. **Collect.** Plugins read structure, ownership and lineage from the systems you run. Infrastructure-as-code and APIs add whatever a plugin cannot see. People add definitions and certification.
+2. **Govern.** Every person and every agent has an identity and roles. Access to each source, table or data product follows from those roles.
+3. **Serve and record.** People use the knowledgehouse through a web UI, a CLI and an API. Agents use it over MCP. When anyone queries a source, the knowledgehouse checks the query against their roles, runs it in place and records it.
+
+Because the knowledge, the rules and the queries live in one place, they stay consistent. The agent that reads a definition is governed by the same rules as the person who wrote it, and every query either of them runs lands in the same record.
+
+---
+
+## Building a knowledgehouse with Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source knowledgehouse. It runs as a single Go binary on PostgreSQL, or on [Marmot Cloud](/docs/Cloud) if you would rather not run it. The pieces above map onto it like this:
+
+- **Knowledge.** 70+ [plugins](/docs/Plugins) catalog your databases, warehouses, streams, pipelines and dashboards, and [Terraform](/docs/Populating/Terraform), [Pulumi](/docs/Populating/Pulumi) and the [API](/docs/Populating/API) add anything a plugin cannot see. Owners, [glossary terms](/docs/glossary), certified fields, [data products](/docs/data-products) and [lineage down to the column](/docs/lineage) travel with every asset.
+- **Governance.** Each agent signs in as its own [service account](/docs/Configure/access-control) with only the roles it needs. On [Marmot Cloud](/docs/Cloud/access-control), a role can be granted on a single data product, table, glossary term or source.
+- **Queries.** A source whose plugin supports querying can [answer read-only SQL](/docs/data-queries) through Marmot. Marmot checks the caller before the statement reaches the database, returns the rows without storing them and records the query in the [query audit](/docs/query-audit).
+- **One interface for agents.** The built-in [MCP server](/docs/MCP) gives Claude, Cursor and any other MCP client tools to discover data, find owners, look up terms, trace lineage and query sources, scoped to the agent's identity.
+
+When an agent's service account queries a table, Marmot also records the agent in that table's lineage, so you can see which agents depend on which data.
+
+<CalloutCard
+  title="Start your knowledgehouse"
+  description="Launch Marmot Cloud for free, or run the open source edition on your own infrastructure."
+  href="https://cloud.marmotdata.io/signup"
+  buttonText="Start for free"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### What is a knowledgehouse? {#faq-what}
+
+A knowledgehouse is the one governed place where a company keeps what it knows about its own systems and data: what each table, topic and dashboard means, who owns it, how it connects to everything else, who may use it, and a record of every query people and agents run. Where a data warehouse holds a company's data, a knowledgehouse holds the knowledge needed to use that data correctly.
+
+### How is a knowledgehouse different from a data warehouse? {#faq-vs-warehouse}
+
+A data warehouse stores and computes over a company's data. A knowledgehouse stores what that data means and governs how it is used. It does not keep copies of the rows. It records definitions, owners, lineage and access rules, and it runs queries against the warehouse and other sources on behalf of people and agents, checking each one and recording it.
+
+### How is a knowledgehouse different from a knowledge base? {#faq-vs-knowledge-base}
+
+A knowledge base holds articles people write by hand, such as a wiki or a help centre. It is only as current as the last person who edited it. A knowledgehouse is built from the systems a company already runs, so the structure, ownership and lineage stay current as those systems change, and it governs access and queries as well as holding text.
+
+### Is a knowledgehouse the same as an AI context layer? {#faq-vs-context-layer}
+
+An AI context layer is one job a knowledgehouse does: serving governed context to agents at runtime. A knowledgehouse also governs who may query what, runs those queries and keeps a record of them, and it serves people as much as agents. The context layer is the interface; the knowledgehouse is the place the knowledge lives.
+
+### Why do companies need a knowledgehouse now? {#faq-why-now}
+
+Two things changed at once. People write less documentation than they used to, and most teams now run agents from several vendors. Each agent needs to know what the company's data means and what it may touch, and without one shared, governed source each agent guesses on its own. A knowledgehouse gives every person and every agent the same facts and the same rules.
+
+### How do you build a knowledgehouse? {#faq-build}
+
+Start from the systems you already run. Collect structure, ownership and lineage from your databases, warehouses, streams, pipelines and dashboards, add definitions and certification for the things that matter, give every person and agent their own identity, and route queries through the same place so each one is checked and recorded. Marmot is an open source knowledgehouse that does this from a single Go binary on PostgreSQL, or hosted on Marmot Cloud.
+
+## Related {#related}
+
+- [Why AI Agents Give Wrong Answers About Your Company](/resources/ai-agents-wrong-answers)
+- [Shared Context for AI Agents](/resources/shared-context-for-ai-agents)
+- [Best Shared Context and Memory Tools for AI Agents in 2026](/resources/ai-agent-memory-tools)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
+- [What Is Data Governance?](/resources/data-governance)

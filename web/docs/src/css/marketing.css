@@ -3,8 +3,8 @@
    * The marketing site's own layout: zero-JS classes for pages a signed-out person reads, built
    * from design-system tokens, the .mm-btn and .mm-wordmark classes and mm-* elements. They are
    * scanned, not read, so each block is a short heading, at most one sentence and then the thing
-   * itself: points, two lists, steps or a plan table. Never a grid of identical icon cards, a logo
-   * wall or mock UI as hero art. Sit them in .mm-container for the page width and gutters.
+   * itself: a live product demo, a set of points or a plan table. Never a grid of identical icon
+   * cards or a logo wall. Sit them in .mm-container for the page width and gutters.
    */
 
 	/* Wider than the app's 1200px container: the previews need the room. Text keeps its own
@@ -14,6 +14,11 @@
 	}
 	.mkt-site .mm-container {
 		max-width: var(--mkt-width);
+	}
+	/* The footer sits outside the page's own wrapper, so on marketing pages it is widened to match,
+	   and its columns line up with the sections above. */
+	body:has(.mkt-site) .mkt-footer .mm-container {
+		max-width: 1360px;
 	}
 
 	/* Site header: the design system's mm-site-header (src/theme/Navbar), the same header as the plugin directory and Marmot Cloud. It is sticky and 57px tall, so the page scrolls anchors and focused elements clear of it. The wrapper only carries Docusaurus's sidebar state, so it stays out of the layout and the header sticks to the page. */
@@ -118,124 +123,6 @@
 		.mkt-block--aside {
 			grid-template-columns: minmax(0, 1fr);
 		}
-	}
-
-	/* Points: what a product includes, at most six. Each is a short heading and one line of about ten
-     words. Separated by a hairline above each, never boxed, never an icon in a tinted circle. */
-	.mkt-points {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: var(--space-8);
-	}
-	.mkt-points > li {
-		border-block-start: 1px solid var(--mm-rule);
-		padding-block-start: var(--space-4);
-	}
-	.mkt-points h3,
-	.mkt-points__title {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		font: var(--text-heading-sm);
-		margin: 0;
-	}
-	.mkt-points h3 :is(svg, mm-icon),
-	.mkt-points__title :is(svg, mm-icon) {
-		width: 16px;
-		height: 16px;
-		flex: none;
-		fill: currentColor;
-		color: var(--mm-text-2);
-	}
-	.mkt-points p {
-		font: var(--text-body);
-		color: var(--mm-text-2);
-		margin: var(--space-1) 0 0;
-	}
-	@media (max-width: 880px) {
-		.mkt-points {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-	@media (max-width: 560px) {
-		.mkt-points {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-
-	/* Lists: two short lists side by side, such as what is stored and what never leaves. Rows are
-     hairline-separated; an optional 16px icon leads each row in ink-2. */
-	.mkt-lists {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-8);
-	}
-	.mkt-lists h3 {
-		font: var(--text-heading-sm);
-		margin: 0 0 var(--space-2);
-	}
-	.mkt-lists ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-	.mkt-lists li {
-		display: flex;
-		align-items: flex-start;
-		gap: var(--space-3);
-		padding-block: var(--space-3);
-		font: var(--text-body);
-		border-block-start: 1px solid var(--mm-rule);
-	}
-	.mkt-lists li :is(svg, mm-icon) {
-		width: 16px;
-		height: 16px;
-		flex: none;
-		margin-block-start: 4px;
-		fill: currentColor;
-		color: var(--mm-text-2);
-	}
-	@media (max-width: 720px) {
-		.mkt-lists {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-
-	/* Steps: an ordered list of real steps, numbered because the order matters. Only for true steps;
-     never number things that are not. Use on an <ol>; the number is drawn in tabular ink-2. */
-	.mkt-steps {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		counter-reset: mkt-step;
-	}
-	.mkt-steps > li {
-		counter-increment: mkt-step;
-		display: grid;
-		grid-template-columns: var(--space-8) minmax(0, 1fr);
-		gap: var(--space-1) var(--space-3);
-		padding-block: var(--space-5);
-		border-block-start: 1px solid var(--mm-rule);
-	}
-	.mkt-steps > li::before {
-		content: counter(mkt-step);
-		grid-row: span 2;
-		font: var(--text-heading-sm);
-		color: var(--mm-text-2);
-		font-variant-numeric: tabular-nums;
-	}
-	.mkt-steps h3 {
-		font: var(--text-heading-sm);
-		margin: 0;
-	}
-	.mkt-steps p {
-		font: var(--text-body);
-		color: var(--mm-text-2);
-		margin: 0;
-		max-width: 60ch;
 	}
 
 	/* Plans: the four plans as open columns on the paper, divided by hairlines, with a rule above
@@ -454,7 +341,6 @@
 		color: var(--mm-text-3);
 	}
 
-
 	/* Site footer: chrome, on the same ground as the header with a hairline above. Columns of muted
      links under a label, then one line for the legal name and address. */
 	.mkt-footer {
@@ -519,45 +405,10 @@
 		gap: var(--space-4);
 		min-width: 0;
 	}
-	.mkt-showcase__caption {
-		margin: 0;
-		font: var(--text-caption);
-		color: var(--mm-text-2);
-	}
 	@media (max-width: 560px) {
 		.mkt-showcase {
 			padding: var(--space-3);
 			margin-inline: calc(-1 * var(--space-2));
-		}
-	}
-
-	/* Feature: a heading and one sentence beside its showcase. --wide puts the heading above, for
-     previews that need the full width (lineage, query results). */
-	.mkt-feature {
-		display: grid;
-		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-		gap: var(--space-8) var(--space-12);
-		align-items: start;
-	}
-	.mkt-feature > .mkt-block__head {
-		margin-block-end: 0;
-		position: sticky;
-		top: calc(var(--space-12) + var(--space-8));
-	}
-	.mkt-feature--wide {
-		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-6);
-	}
-	.mkt-feature--wide > .mkt-block__head {
-		position: static;
-	}
-	@media (max-width: 880px) {
-		.mkt-feature {
-			grid-template-columns: minmax(0, 1fr);
-			gap: var(--space-6);
-		}
-		.mkt-feature > .mkt-block__head {
-			position: static;
 		}
 	}
 
@@ -592,23 +443,6 @@
 		display: block;
 		font: var(--text-label);
 		color: var(--mm-text);
-	}
-
-	/* Band: the closing call to action. A heading, one sentence and one button. */
-
-	/* The hero's screen sits right under its words, full width, so the product is on the first
-	   screen and at a size that can be read. */
-	.mkt-hero__screen {
-		margin-block-start: var(--space-12);
-	}
-
-	/* The showcase's last line: the sample-data caption and the demo's pause control. */
-	.mkt-showcase__foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-3);
-		min-height: var(--control-h-sm);
 	}
 
 	/* Chapter: one step of the tour. The words sit in a row above the screen, which takes the full
@@ -714,8 +548,6 @@
 			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		}
 	}
-
-	/* The unit estimator: one panel split by a hairline, the inputs and then what they come to. */
 	/* The estimator: inputs on the left with their values set large as they move, and the result
 	   as an ink panel on a contour field, the one inverse surface on the page. */
 	.mkt-calc {
@@ -1234,53 +1066,6 @@
 	.mkt-proof blockquote p {
 		margin: 0;
 	}
-	.mkt-tour {
-		border-block-start: 1px solid var(--mm-rule);
-	}
-	.mkt-estimate {
-		margin-block-start: calc(var(--space-12) * 1.5);
-	}
-	.mkt-estimate__lede {
-		margin: var(--space-1) 0 var(--space-5);
-		color: var(--mm-text-2);
-	}
-
-	/* Centred: the headline sits over a symmetric picture (the diagram), so both share one axis
-	   and read as one piece rather than a block of text beside a drawing. */
-	.mkt-hero--centred .mkt-hero__title,
-	.mkt-hero--centred .mkt-hero__lede {
-		margin-inline: auto;
-		text-align: center;
-	}
-	.mkt-hero--centred .mkt-hero__title {
-		max-width: 20ch;
-	}
-	.mkt-hero--centred .mkt-hero__lede {
-		max-width: 60ch;
-	}
-	.mkt-hero--centred .mkt-hero__actions {
-		justify-content: center;
-	}
-	/* The words get the first screen to themselves, less a peek of the diagram below them, so it
-	   reads as an invitation to scroll rather than a wall. svh keeps mobile browser bars out of the
-	   sum, the cap stops tall desktop screens from opening a canyon, and a screen too short for
-	   both just shows the words at their natural height. */
-	.mkt-hero--centred {
-		--mkt-peek: clamp(120px, 22svh, 260px);
-		padding-block-start: 0;
-	}
-	.mkt-hero__intro {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		box-sizing: border-box;
-		min-block-size: min(calc(100svh - var(--ifm-navbar-height, 57px) - var(--mkt-peek)), 52rem);
-		padding-block: var(--space-12);
-	}
-	.mkt-hero--centred .mkt-hero__screen {
-		margin-block-start: 0;
-	}
-
 
 	/* The map hero: words on the left, the surveyed map of a sample organisation on the right,
 	   with one agent's question playing over it. Stacks below 1080px. */
@@ -1296,8 +1081,8 @@
 		align-items: center;
 	}
 	.mkt-hero--map .mkt-hero__title {
-		font-size: clamp(38px, 3.6vw, 56px);
-		max-width: 16ch;
+		font-size: clamp(32px, 2.9vw, 46px);
+		max-width: 22ch;
 	}
 	.mkt-hero--map .mkt-hero__lede {
 		max-width: 46ch;
@@ -1678,13 +1463,6 @@
 			border-inline-start: 0;
 		}
 	}
-	/* Before and after: the pain in a quiet ink-3 cross, what changes in a moss tick. */
-	.mkt-before-after section:first-child li :is(svg, mm-icon) {
-		color: var(--mm-text-3);
-	}
-	.mkt-before-after section:last-child li :is(svg, mm-icon) {
-		color: var(--mm-success);
-	}
 	/* Two ways to run it, side by side and of equal weight: open columns with a hairline between
 	   them rather than a pair of boxes. Pricing lives in the Cloud column, so the page says it once. */
 	.mkt-deploy {
@@ -1770,10 +1548,6 @@
 	.mkt-chapter__more {
 		justify-self: start;
 		font: var(--text-dense);
-	}
-	/* The actions that follow a section's main picture. */
-	.mkt-block__actions {
-		margin-block-start: var(--space-8);
 	}
 
 	/* Band: the closing call to action, over the contour field like the hero's map. A heading at
@@ -1871,27 +1645,14 @@
 	.mkt-chapter--split > .mkt-showcase {
 		margin-inline-end: calc(-1 * var(--mkt-bleed));
 	}
-	.mkt-chapter--flip {
-		grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-	}
-	.mkt-chapter--flip > .mkt-chapter__text {
-		order: 2;
-	}
-	.mkt-chapter--flip > .mkt-showcase {
-		margin-inline: calc(-1 * var(--mkt-bleed)) 0;
-	}
 	@media (min-width: 1081px) {
 		.mkt-chapter--split {
 			--mkt-bleed: clamp(0px, (100vw - var(--mkt-width, 1200px)) / 2, 160px);
 		}
 	}
 	@media (max-width: 1080px) {
-		.mkt-chapter--split,
-		.mkt-chapter--flip {
+		.mkt-chapter--split {
 			grid-template-columns: minmax(0, 1fr);
-		}
-		.mkt-chapter--flip > .mkt-chapter__text {
-			order: 0;
 		}
 	}
 
@@ -1958,66 +1719,6 @@
 	}
 
 	/* What changes: each problem on the same line as its fix, so the pair reads at a glance. */
-	.mkt-change {
-		display: grid;
-	}
-	.mkt-change__row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) var(--space-8) minmax(0, 1fr);
-		gap: var(--space-4);
-		align-items: center;
-		padding-block: var(--space-4);
-		border-block-start: 1px solid var(--mm-rule);
-	}
-	.mkt-change__row--head {
-		padding-block: 0 var(--space-3);
-		border-block-start: 0;
-		font: var(--text-label);
-		color: var(--mm-text-2);
-	}
-	.mkt-change__before,
-	.mkt-change__after {
-		display: flex;
-		gap: var(--space-3);
-		font: var(--text-body);
-	}
-	.mkt-change__before {
-		color: var(--mm-text-2);
-	}
-	.mkt-change__before svg,
-	.mkt-change__after svg {
-		inline-size: 18px;
-		block-size: 18px;
-		flex: none;
-		margin-block-start: 3px;
-		fill: currentColor;
-	}
-	.mkt-change__before svg {
-		color: var(--mm-text-3);
-	}
-	.mkt-change__after svg {
-		color: var(--mm-success);
-	}
-	.mkt-change__arrow {
-		inline-size: 18px;
-		block-size: 18px;
-		justify-self: center;
-		fill: currentColor;
-		color: var(--mm-text-3);
-	}
-	.mkt-change__arrow:dir(rtl) {
-		transform: scaleX(-1);
-	}
-	@media (max-width: 720px) {
-		.mkt-change__row {
-			grid-template-columns: minmax(0, 1fr);
-			gap: var(--space-2);
-		}
-		.mkt-change__row--head,
-		.mkt-change__arrow {
-			display: none;
-		}
-	}
 
 	.mkt-deploy__option ul {
 		list-style: none;
@@ -2040,9 +1741,6 @@
 		color: var(--mm-success);
 	}
 
-	/* The closing band answers the hero: centred, on its own contour field, the one place below the
-	   fold the survey appears. */
-
 	/* A page that is not the homepage opens with its title and one line, then gets to it. */
 	.mkt-page-head {
 		padding-block: calc(var(--space-12) * 1.75) var(--space-8);
@@ -2061,18 +1759,43 @@
 	.mkt-block--tight {
 		padding-block: var(--space-4) calc(var(--space-12) * 1.5);
 	}
-	/* What changes, as two map sheets of the same ground: unmapped (the agent wanders, dotted)
-	   beside surveyed (contours, one logged route, a hatched restricted zone). Each caption sits
-	   over its own sheet: side by side on wide screens, caption then sheet on a phone. */
+	/* What changes, condensed: the heading and the two captions on one side, and one frame on the
+	   other where the unmapped and the surveyed sheet take turns, crossfading as the story moves on. */
 	.mkt-survey {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-6) var(--space-8);
+		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+		gap: var(--space-8) clamp(var(--space-12), 15vw - 144px, calc(var(--space-12) * 2));
+		align-items: center;
 	}
-	/* Scoped to the survey so it outranks .mkt-chapter__points: the minifier merges this rule with
-	   Tailwind's .contents and moves it above that one, where source order alone would lose. */
-	.mkt-survey > .mkt-survey__halves {
-		display: contents;
+	/* The picture leads on the left, so the page alternates with the tour above it. */
+	.mkt-survey__text {
+		display: grid;
+		gap: var(--space-8);
+		order: 2;
+	}
+	.mkt-survey > .mkt-survey__text .mkt-survey__halves {
+		display: grid;
+	}
+	.mkt-survey__frame {
+		display: grid;
+		border-radius: var(--radius-md);
+	}
+	.mkt-survey__frame > .mkt-survey__sheet {
+		grid-area: 1 / 1;
+		opacity: 0;
+		transition: opacity var(--mm-dur-dialog) var(--mm-ease);
+		background: var(--mm-paper);
+	}
+	.mkt-survey__frame > .mkt-survey__sheet.is-shown {
+		opacity: 1;
+	}
+	@media (max-width: 1080px) {
+		.mkt-survey {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-survey__text {
+			order: 0;
+		}
 	}
 	.mkt-survey__map {
 		position: relative;
@@ -2096,17 +1819,6 @@
 	}
 	.mkt-survey__sheet.is-without .mkt-maphero__label {
 		background: var(--mm-sunken);
-	}
-	@media (max-width: 720px) {
-		.mkt-survey {
-			grid-template-columns: minmax(0, 1fr);
-		}
-		.mkt-survey__halves li:nth-child(2) {
-			order: 2;
-		}
-		.mkt-survey__sheet.is-with {
-			order: 3;
-		}
 	}
 	.mkt-survey__svg {
 		position: absolute;
@@ -2268,5 +1980,545 @@
 			display: inline-flex;
 		}
 	}
-}
 
+	/* The problem, then what changes, on one screen. The statement's answer is a second, quieter
+	   sentence; one picture sits beside it; four points run in a row under one hairline, each a bold
+	   word and a sentence. The current point is in ink and its stretch of the hairline fills while
+	   it plays; the rest step back. */
+	.mkt-problem {
+		padding-block: calc(var(--space-12) * 2);
+		border-block-start: 1px solid var(--mm-rule);
+	}
+	.mkt-problem__top {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: var(--space-8) clamp(var(--space-12), 15vw - 144px, calc(var(--space-12) * 2));
+		align-items: center;
+	}
+	.mkt-problem__title {
+		margin: 0;
+		font: var(--text-display-section);
+		font-size: clamp(28px, 2.6vw, 40px);
+		letter-spacing: var(--tracking-display-section);
+		text-wrap: pretty;
+	}
+	.mkt-problem__title span {
+		color: var(--mm-text-2);
+	}
+	.mkt-problem__lede {
+		margin: var(--space-6) 0 0;
+		max-width: 48ch;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+	.mkt-gains {
+		list-style: none;
+		margin: calc(var(--space-12) * 1.25) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.mkt-gains button {
+		display: grid;
+		gap: var(--space-4);
+		inline-size: 100%;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: var(--text-body);
+		color: var(--mm-text-3);
+		text-align: start;
+		cursor: pointer;
+		transition: color var(--mm-dur-press) var(--mm-ease);
+	}
+	.mkt-gains button:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 2px;
+		border-radius: var(--radius-sm);
+	}
+	.mkt-gains svg {
+		inline-size: 18px;
+		block-size: 18px;
+		fill: currentColor;
+	}
+	.mkt-gains__rule {
+		position: relative;
+		display: block;
+		block-size: 1px;
+		background: var(--mm-rule);
+	}
+	.mkt-gains__rule::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--mm-text);
+		transform: scaleX(0);
+		transform-origin: 0 50%;
+	}
+	.mkt-gains__rule:dir(rtl)::after {
+		transform-origin: 100% 50%;
+	}
+	.mkt-gains__text {
+		padding-inline-end: var(--space-8);
+	}
+	.mkt-gains strong {
+		font-weight: 600;
+		color: var(--mm-text-2);
+	}
+	.mkt-gains li.is-active button,
+	.mkt-gains button:hover {
+		color: var(--mm-text-2);
+	}
+	.mkt-gains li.is-active strong,
+	.mkt-gains button:hover strong {
+		color: var(--mm-text);
+	}
+	.mkt-gains li.is-active .mkt-gains__rule::after {
+		animation: mkt-fill var(--mkt-step, 4600ms) linear both;
+	}
+	@keyframes mkt-fill {
+		to {
+			transform: scaleX(1);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.mkt-gains li.is-active .mkt-gains__rule::after {
+			animation: none;
+			transform: scaleX(1);
+		}
+	}
+
+	/* The pictures share one sunken well and take turns in it: the real elements laid out at the
+	   app's size, scaled to fit and centred. The well is the showcase's, so the elements keep their
+	   own surfaces without becoming cards in a card. */
+	.mkt-pics {
+		display: grid;
+		background: var(--mm-sunken);
+		border-radius: var(--radius-md);
+	}
+	.mkt-pic {
+		grid-area: 1 / 1;
+		display: grid;
+		place-items: center;
+		block-size: 300px;
+		margin: 0;
+		padding: var(--space-8) var(--space-6);
+		overflow: hidden;
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity var(--mm-dur-dialog) var(--mm-ease),
+			visibility 0s linear var(--mm-dur-dialog);
+	}
+	.mkt-pic.is-shown {
+		opacity: 1;
+		visibility: visible;
+		transition: opacity var(--mm-dur-dialog) var(--mm-ease);
+	}
+	.mkt-pic__fit {
+		position: relative;
+		overflow: hidden;
+	}
+	.mkt-pic__stage {
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline-start: 0;
+		padding-block-end: 2px;
+		transform-origin: 0 0;
+	}
+	@media (max-width: 1080px) {
+		.mkt-problem__top {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	@media (max-width: 880px) {
+		.mkt-gains {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			row-gap: var(--space-8);
+		}
+	}
+	@media (max-width: 560px) {
+		.mkt-problem {
+			padding-block: calc(var(--space-12) * 1.5);
+		}
+		.mkt-pic {
+			block-size: 240px;
+			padding: var(--space-4);
+		}
+	}
+	.mkt-pic__stack {
+		display: grid;
+		gap: var(--space-3);
+	}
+	/* Where the refusal will appear, so the query does not move when it arrives. */
+	.mkt-pic__hold {
+		block-size: 78px;
+	}
+	.mkt-pic__stack mm-callout {
+		animation: mkt-arrive var(--mm-dur-dialog) var(--mm-ease) both;
+	}
+	.mkt-pic__audit {
+		--mm-audit-columns: 2rem 10.5rem minmax(15rem, 2fr) 4rem minmax(10rem, 1fr) 4rem 7rem;
+	}
+	.mkt-pic__hub {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+	}
+	/* The wires run the full height of the agents, whose centres sit at a sixth, a half and five
+	   sixths of it, matching the paths' 50, 150 and 250 of 300. The SVG is taken out of the flow so
+	   its viewBox never sets the height. */
+	.mkt-pic__wires {
+		position: relative;
+		align-self: stretch;
+	}
+	.mkt-pic__wires svg {
+		position: absolute;
+		inset: 0;
+	}
+	.mkt-pic__agents {
+		display: grid;
+		grid-auto-rows: 1fr;
+		gap: var(--space-3);
+	}
+	.mkt-pic__wires svg {
+		inline-size: 100%;
+		block-size: 100%;
+	}
+	.mkt-pic__hub path {
+		fill: none;
+		stroke: var(--mm-text-3);
+		stroke-width: 1.5;
+		vector-effect: non-scaling-stroke;
+		opacity: 0;
+		transition: opacity var(--mm-dur-dialog) var(--mm-ease);
+	}
+	.mkt-pic__hub path.is-on {
+		opacity: 1;
+	}
+	@keyframes mkt-arrive {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.mkt-pic__stack mm-callout {
+			animation: none;
+		}
+		.mkt-pic__hub path {
+			transition: none;
+		}
+	}
+
+	/* Teams: the product tour, one tab per team, each playing its demo beside what changes. */
+	.mkt-teams__heading {
+		margin: 0;
+		font: var(--text-display-section);
+		font-size: clamp(26px, 2.2vw, 34px);
+		letter-spacing: var(--tracking-display-section);
+		text-wrap: balance;
+	}
+	/* Inside the tabs the demo stays within the column, so it ends where the tab strip does. */
+	.mkt-teams .mkt-chapter--split {
+		--mkt-bleed: 0px;
+		padding-block: calc(var(--space-12) * 1.25) 0;
+	}
+
+	/* On a phone the problem's picture is too small to read, so the points carry it alone. */
+	@media (max-width: 560px) {
+		.mkt-pics {
+			display: none;
+		}
+		.mkt-gains {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	/* ---------------------------------------------------------------- depth
+	   The marketing site has more depth than the app: a paper grain over the page, contour fields
+	   behind the big moments, and product framed by hairlines on them. */
+
+	/* Paper grain: a fixed, faint fibre over everything, so flat grounds read as paper. The noise is
+	   grey around the middle and blended with soft light, so it adds texture without darkening or
+	   lightening the page, in either theme. */
+	.mkt-site {
+		position: relative;
+	}
+	.mkt-site::after {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: 1;
+		pointer-events: none;
+		opacity: 0.4;
+		mix-blend-mode: soft-light;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+
+	/* The tour: a sunken band with its own contour field, the demo framed by its hairline on it. */
+	.mkt-tour-band {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		background: var(--mm-sunken);
+		border-block: 1px solid var(--mm-rule);
+	}
+	.mkt-tour-band .mkt-screen {
+		border-radius: var(--radius-md);
+	}
+
+	/* Teams: large tabs across the width. Each has a line that fills while its demo plays. */
+	.mkt-teams__tabs {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--space-6);
+	}
+	.mkt-teams__tabs button {
+		display: grid;
+		gap: var(--space-1);
+		padding: 0 0 var(--space-2);
+		margin: 0;
+		border: 0;
+		background: none;
+		text-align: start;
+		color: var(--mm-text-3);
+		cursor: pointer;
+		transition: color var(--mm-dur-press) var(--mm-ease);
+	}
+	.mkt-teams__tabs button:focus-visible {
+		outline: 2px solid var(--mm-text);
+		outline-offset: 4px;
+		border-radius: var(--radius-sm);
+	}
+	.mkt-teams__line {
+		position: relative;
+		display: block;
+		block-size: 2px;
+		margin-block-end: var(--space-3);
+		background: var(--mm-rule);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+	}
+	.mkt-teams__line::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--mm-primary);
+		transform: scaleX(var(--progress, 0));
+		transform-origin: 0 50%;
+	}
+	.mkt-teams__line:dir(rtl)::after {
+		transform-origin: 100% 50%;
+	}
+	.mkt-teams__tabs strong {
+		font: var(--text-heading-sm);
+		color: var(--mm-text-2);
+	}
+	.mkt-teams__tabs button > span:last-child {
+		font: var(--text-body);
+	}
+	.mkt-teams__tabs button[aria-selected="true"],
+	.mkt-teams__tabs button:hover {
+		color: var(--mm-text-2);
+	}
+	.mkt-teams__tabs button[aria-selected="true"] strong,
+	.mkt-teams__tabs button:hover strong {
+		color: var(--mm-text);
+	}
+	.mkt-teams__tabs button[aria-selected="true"] .mkt-teams__line {
+		background: color-mix(in oklab, var(--mm-primary) 22%, var(--mm-rule));
+	}
+	@media (max-width: 880px) {
+		.mkt-teams__tabs {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			row-gap: var(--space-6);
+		}
+	}
+
+	/* The pause after the tour: an ink band with the survey's lines in paper, the one dark moment on
+	   the page, so it reads as a stop rather than another section. */
+	.mkt-cta-band {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		color: var(--mm-paper);
+		background: var(--mm-text);
+		--mm-topography-line: color-mix(in oklab, var(--mm-paper) 14%, transparent);
+		--mm-topography-index: color-mix(in oklab, var(--mm-paper) 24%, transparent);
+	}
+	.mkt-cta-band .mkt-tour-action {
+		padding-block: calc(var(--space-12) * 1.75);
+		border-block-start: 0;
+	}
+	.mkt-cta-band .mkt-tour-action__title {
+		font-size: clamp(28px, 2.6vw, 40px);
+		color: var(--mm-paper);
+	}
+	.mkt-cta-band .mkt-tour-action__lede {
+		color: color-mix(in oklab, var(--mm-paper) 72%, var(--mm-text));
+	}
+	.mkt-cta-band .mm-btn--secondary {
+		color: var(--mm-paper);
+		background: transparent;
+		border-color: color-mix(in oklab, var(--mm-paper) 45%, transparent);
+	}
+	.mkt-cta-band .mm-btn--secondary:hover {
+		background: color-mix(in oklab, var(--mm-paper) 10%, transparent);
+	}
+	.mkt-cta-band :focus-visible {
+		outline-color: var(--mm-paper);
+	}
+
+	/* Security: the statement with its reason, then four raised sheets laid on the ground. */
+	.mkt-trust__head {
+		display: grid;
+		gap: var(--space-4);
+		justify-items: start;
+		max-width: 44rem;
+	}
+	.mkt-trust__title {
+		margin: 0;
+		font: var(--text-display-section);
+		font-size: clamp(28px, 2.6vw, 40px);
+		letter-spacing: var(--tracking-display-section);
+		text-wrap: pretty;
+	}
+	.mkt-trust__title span {
+		color: var(--mm-text-2);
+	}
+	/* The four answers on one sheet, split into quarters by hairlines: one object to read,
+	   not four loose cards. Each icon sits on its heading's line. */
+	.mkt-trust__points {
+		list-style: none;
+		margin: calc(var(--space-12) * 1.25) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		background: var(--mm-surface, var(--mm-paper));
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+	.mkt-trust__points li {
+		padding: var(--space-8) var(--space-6);
+		border-inline-start: 1px solid var(--mm-rule);
+	}
+	.mkt-trust__points li:first-child {
+		border-inline-start: 0;
+	}
+	.mkt-trust__points h3 {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0;
+		font: var(--text-heading-sm);
+	}
+	.mkt-trust__points svg {
+		inline-size: 20px;
+		block-size: 20px;
+		flex: none;
+		fill: currentColor;
+		color: var(--mm-primary);
+	}
+	.mkt-trust__points p {
+		margin: var(--space-2) 0 0;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+	@media (max-width: 1080px) {
+		.mkt-trust__points {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.mkt-trust__points li:nth-child(odd) {
+			border-inline-start: 0;
+		}
+		.mkt-trust__points li:nth-child(n + 3) {
+			border-block-start: 1px solid var(--mm-rule);
+		}
+	}
+	@media (max-width: 560px) {
+		.mkt-trust__points {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.mkt-trust__points li {
+			border-inline-start: 0;
+		}
+		.mkt-trust__points li + li {
+			border-block-start: 1px solid var(--mm-rule);
+		}
+	}
+
+	/* The open source line under the closing band's two options: present, but quieter than both. */
+	.mkt-deploy__oss {
+		margin: var(--space-8) 0 0;
+		font: var(--text-body);
+		color: var(--mm-text-2);
+	}
+
+	/* The problem's picture: a contour field in its well, and the product as a raised sheet on it. */
+	.mkt-pics {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+	}
+	.mkt-pic__fit {
+		background: var(--mm-paper);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-dialog);
+		outline: var(--space-4) solid var(--mm-paper);
+	}
+
+	/* The contour fields behind the problem's picture and the tour: a flat ground lighter than
+	   sunken, and the lines faded back, so the field is felt more than seen. */
+	.mkt-pics,
+	.mkt-tour-band {
+		background: color-mix(in oklab, var(--mm-sunken) 50%, var(--mm-paper));
+	}
+	.mkt-pics mm-topography,
+	.mkt-tour-band mm-topography {
+		opacity: 0.55;
+	}
+
+	/* A single self-hosted option, at the width of one column of the two-up layout. */
+	.mkt-tiers--one {
+		grid-template-columns: minmax(0, 1fr);
+		margin: 0;
+	}
+
+	/* Pricing, in the homepage's language: the heading over a faint contour field at hero size, the
+	   plans as one sheet split by hairlines like the security block, and the comparison on the same
+	   sunken band as the team tour. */
+	.mkt-page-head--field {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		padding-block: calc(var(--space-12) * 2.25) calc(var(--space-12) * 1.25);
+	}
+	.mkt-page-head--field .mkt-page-head__title {
+		font: var(--text-display-hero);
+		font-size: clamp(40px, 4vw, 56px);
+		letter-spacing: var(--tracking-display-hero);
+	}
+	.mkt-page-head--field mm-topography {
+		opacity: 0.55;
+	}
+	.mkt-plans-sheet .mkt-tiers {
+		background: var(--mm-surface, var(--mm-paper));
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+	.mkt-plans-sheet .mkt-tier,
+	.mkt-plans-sheet .mkt-tier:first-child,
+	.mkt-plans-sheet .mkt-tier:last-child,
+	.mkt-plans-sheet .mkt-tier:nth-child(odd),
+	.mkt-plans-sheet .mkt-tier:nth-child(even) {
+		padding: var(--space-8) var(--space-6);
+	}
+	/* The pinned plan labels cover the cells scrolling under them, so they take the band's ground. */
+	.mkt-tour-band .mkt-plans tbody th[scope="row"] {
+		background: color-mix(in oklab, var(--mm-sunken) 50%, var(--mm-paper));
+	}
+}

@@ -11,12 +11,12 @@ import Beats from "@site/src/components/home/Beats";
 import { terrain } from "@site/src/marketing/terrain";
 
 /*
- * What changes, as two map sheets of the same ground side by side. Without Marmot the ground is
+ * What changes, as two map sheets of the same ground that take turns in one frame. Without Marmot the ground is
  * unmapped: the agent wanders from one look-alike table to the next and walks straight into the
  * customer table. With Marmot the ground is surveyed: one logged route to the right table, and
- * the personal data fenced off as a restricted zone that a query is refused at. Both sheets are
- * on screen throughout, so the difference shows before anything plays; the story then plays one
- * sheet and then the other, captioned above them like the chapters' points.
+ * the personal data fenced off as a restricted zone that a query is refused at. The story plays one
+ * sheet and then crossfades to the other, captioned beside them like the chapters' points; choosing
+ * a caption shows that sheet.
  */
 
 interface Point {
@@ -119,8 +119,10 @@ interface State {
   visited: number;
   arrived: boolean;
   refused: boolean;
+  /** Which sheet is on show: the two take turns in one frame. */
+  sheet: "without" | "with";
 }
-const START: State = { leg: null, dot: null, visited: 0, arrived: false, refused: false };
+const START: State = { leg: null, dot: null, visited: 0, arrived: false, refused: false, sheet: "without" };
 
 const pct = (g: Geometry, p: Point) => ({ left: `${(p.x / g.W) * 100}%`, top: `${(p.y / g.H) * 100}%` });
 
@@ -150,12 +152,11 @@ function Agent({ g, children }: { g: Geometry; children: React.ReactNode }): JSX
   );
 }
 
-export default function BeforeAfter(): JSX.Element {
+export default function BeforeAfter({ head }: { head?: React.ReactNode }): JSX.Element {
   const root = useRef<HTMLDivElement>(null);
   const wanderRef = useRef<SVGPathElement>(null);
   const routeRef = useRef<SVGPathElement>(null);
   const spurRef = useRef<SVGPathElement>(null);
-  const withSheet = useRef<HTMLDivElement>(null);
   const [player, setPlayer] = useState<Player>();
   // The story opens with both sheets still and waits there until they scroll into view.
   const [s, setS] = useState<State>(START);
@@ -193,7 +194,7 @@ export default function BeforeAfter(): JSX.Element {
           await demo.animate(T.wander, (t) => set({ dot: along(wanderRef.current, t), visited: Math.min(WANDER.length, Math.floor(t * WANDER.length + 0.05)) }));
           await demo.wait(T.lost);
           // Surveyed: one route to the right table, then a query refused at the zone.
-          set({ leg: null, dot: null });
+          set({ leg: null, dot: null, sheet: "with" });
           await demo.wait(T.pause);
           set({ leg: "route" });
           await demo.animate(T.route, (t) => set({ dot: along(routeRef.current, t) }));
@@ -215,29 +216,6 @@ export default function BeforeAfter(): JSX.Element {
     };
   }, []);
 
-  // On a phone the sheets are stacked, so someone who scrolls on to the second one is shown it
-  // rather than left waiting for the first to finish above them.
-  useEffect(() => {
-    const sheet = withSheet.current;
-    if (!tall || !player || !sheet) return;
-    let showing = false;
-    const skip = () => showing && player.elapsed < BOUNDS[1]! && player.seek(BOUNDS[1]!);
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        showing = !!entry?.isIntersecting;
-        skip();
-      },
-      { threshold: 0.5 },
-    );
-    io.observe(sheet);
-    // When the story starts over, it skips the first sheet again for as long as the second is showing.
-    const timer = setInterval(skip, 250);
-    return () => {
-      io.disconnect();
-      clearInterval(timer);
-    };
-  }, [tall, player]);
-
   const reached = (id: AssetId) => WANDER.indexOf(id) > -1 && WANDER.indexOf(id) < s.visited;
   const contours = (
     <g className="mkt-survey__ground">
@@ -249,9 +227,13 @@ export default function BeforeAfter(): JSX.Element {
 
   return (
     <div className={`mkt-survey${tall ? " is-tall" : ""}`} ref={root}>
-      <Beats points={HALVES} player={player} bounds={BOUNDS} className="mkt-chapter__points mkt-survey__halves" />
+      <div className="mkt-survey__text">
+        {head}
+        <Beats points={HALVES} player={player} bounds={BOUNDS} className="mkt-chapter__points mkt-survey__halves" />
+      </div>
 
-      <div className="mkt-survey__sheet is-without">
+      <div className="mkt-survey__frame">
+      <div className={`mkt-survey__sheet is-without${s.sheet === "without" ? " is-shown" : ""}`}>
         <div className="mkt-survey__map">
           <svg viewBox={`0 0 ${g.W} ${g.H}`} className="mkt-survey__svg" aria-hidden="true">
             <path ref={wanderRef} d={wander} className="mkt-survey__wander" />
@@ -276,7 +258,7 @@ export default function BeforeAfter(): JSX.Element {
         </div>
       </div>
 
-      <div className="mkt-survey__sheet is-with" ref={withSheet}>
+      <div className={`mkt-survey__sheet is-with${s.sheet === "with" ? " is-shown" : ""}`}>
         <div className="mkt-survey__map">
           <svg viewBox={`0 0 ${g.W} ${g.H}`} className="mkt-survey__svg" aria-hidden="true">
             <defs>
@@ -322,6 +304,8 @@ export default function BeforeAfter(): JSX.Element {
             Personal data · needs a grant
           </span>
         </div>
+      </div>
+
       </div>
 
       {/* The sheets are drawn for the eye; this says what they show, for a screen reader. */}

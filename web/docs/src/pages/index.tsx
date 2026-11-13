@@ -1,94 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
 import { CONSOLE_URL, useCloudSignedIn } from "@site/src/hooks/useCloudSignedIn";
+import { ENTERPRISE_MAIL } from "@site/src/components/pricing/plans";
 import MapHero from "@site/src/components/home/MapHero";
-import ScreenDemo from "@site/src/components/home/ScreenDemo";
-import Beats from "@site/src/components/home/Beats";
-import type { Player } from "@site/src/marketing/demo";
 import Faq from "@site/src/components/home/Faq";
 import BeforeAfter from "@site/src/components/home/BeforeAfter";
-import { findDemo, queryDemo, traceDemo, understandDemo, type DemoConfig } from "@site/src/marketing/demos";
-import Search from "~icons/material-symbols/search";
-import FilterList from "~icons/material-symbols/filter-list";
-import Extension from "~icons/material-symbols/extension-outline";
-import Group from "~icons/material-symbols/group-outline";
-import MenuBook from "~icons/material-symbols/menu-book-outline";
-import Verified from "~icons/material-symbols/verified-outline";
-import AccountTree from "~icons/material-symbols/account-tree-outline";
-import Sync from "~icons/material-symbols/sync";
-import Dashboard from "~icons/material-symbols/dashboard-outline";
-import Terminal from "~icons/material-symbols/terminal";
-import Block from "~icons/material-symbols/block";
-import History from "~icons/material-symbols/history";
+import Teams from "@site/src/components/home/Teams";
+import Problem from "@site/src/components/home/Problem";
+import Lock from "~icons/material-symbols/lock-outline";
+import Badge from "~icons/material-symbols/badge-outline";
+import Key from "~icons/material-symbols/key-outline";
+import Database from "~icons/material-symbols/database-outline";
 import Check from "~icons/material-symbols/check";
-
-type IconType = React.ComponentType<{ "aria-hidden"?: string }>;
-type ChapterData = {
-  id: string;
-  title: string;
-  lede: string;
-  points: { Icon: IconType; text: string }[];
-  /** Where to read more: the docs for what the chapter shows. */
-  more: { to: string; label: string };
-  demo: DemoConfig<{ focus?: string; beat?: number }>;
-};
-// Each chapter's demo drives a different screen; the list only has to hand them on.
-const any = <S extends { focus?: string; beat?: number }>(d: DemoConfig<S>) => d as unknown as DemoConfig<{ focus?: string; beat?: number }>;
-
-// Each chapter opens with the problem it solves, then shows the product solving it. They run in
-// the order an agent's question does: find the table, learn what it means, query it, and then
-// what a change to it would break.
-const chapters: ChapterData[] = [
-  {
-    id: "find",
-    title: "Find the right table without asking in Slack",
-    lede: "Search every connected source in plain words, from the browser, the CLI or an agent over MCP.",
-    points: [
-      { Icon: Search, text: "Tables, topics, dashboards and models in one list" },
-      { Icon: FilterList, text: "Filter by type, owner, tag or any metadata" },
-      { Icon: Extension, text: "Kept current by 70+ plugins" },
-    ],
-    more: { to: "/docs/Plugins", label: "See the plugins" },
-    demo: any(findDemo),
-  },
-  {
-    id: "understand",
-    title: "Know what a column means before anyone trusts it",
-    lede: "Owners, descriptions and glossary terms sit with every asset, so humans and agents answer from the same facts.",
-    points: [
-      { Icon: Group, text: "Owners and teams on every asset" },
-      { Icon: MenuBook, text: "Glossary terms that explain each field" },
-      { Icon: Verified, text: "Certified fields marked as the ones to use" },
-    ],
-    more: { to: "/docs/glossary", label: "How the glossary works" },
-    demo: any(understandDemo),
-  },
-  {
-    id: "query",
-    title: "Let humans and agents query your data without sharing passwords",
-    lede: "Humans and agents run queries through Marmot under the same rules. Each query is checked against the caller’s permissions before it reaches the database, and logged with who ran it and whether it was allowed. Access rules per table, data product and glossary term come with Marmot Cloud.",
-    points: [
-      { Icon: Terminal, text: "Read-only queries against the sources you connect" },
-      { Icon: Block, text: "Refused before it reaches the database" },
-      { Icon: History, text: "Who ran what, when and whether it was allowed" },
-    ],
-    more: { to: "/docs/Cloud/access-control", label: "How access control works" },
-    demo: any(queryDemo),
-  },
-  {
-    id: "trace",
-    title: "See what breaks before you change it",
-    lede: "Lineage follows data from source tables through every model to the dashboards that use it.",
-    points: [
-      { Icon: AccountTree, text: "Upstream and downstream, across tools" },
-      { Icon: Sync, text: "From plugins and OpenLineage runs" },
-      { Icon: Dashboard, text: "The dashboards a change would break" },
-    ],
-    more: { to: "/docs/open-lineage", label: "How lineage is collected" },
-    demo: any(traceDemo),
-  },
-];
 
 // Some of the sources Marmot has a plugin for, named beside the quote.
 const sources = [
@@ -103,37 +27,25 @@ const sources = [
   { provider: "mongodb", name: "MongoDB" },
 ];
 
+// What a security reviewer asks first, each answered by something Marmot Cloud does today.
+const trust = [
+  { Icon: Lock, title: "Your own instance", text: "A dedicated database and encryption key for every customer." },
+  { Icon: Badge, title: "Your identity provider", text: "Single sign-on for people, a service account for every agent." },
+  { Icon: Key, title: "No stored passwords", text: "Credentials stay in your secret store, or aren't needed at all." },
+  { Icon: Database, title: "Rows are never stored", text: "Results go straight to whoever asked. Marmot keeps the record." },
+];
+
 const deploy = {
-  oss: ["The catalog, lineage, glossary and MCP server", "One binary, or on Kubernetes with the Helm chart", "Help from the community on Discord and GitHub"],
   cloud: ["Access control per table, product and term", "Governed queries, with an audit log of every one", "Upgrades, nightly backups and support from the team"],
+  enterprise: ["A per-agent audit trail, exported to your SIEM", "Data residency, VPC peering or your own infrastructure", "A named contact, a shared Slack channel and an SLA"],
 };
 
-// One chapter of the tour: the problem, then its points as captions that follow the demo beside it.
-function Chapter({ c, flip = false }: { c: ChapterData; flip?: boolean }): JSX.Element {
-  const [demo, setDemo] = useState<{ player: Player; bounds: number[] }>();
-  return (
-    <section className={`mkt-chapter mkt-chapter--split${flip ? " mkt-chapter--flip" : ""}`} id={c.id} aria-labelledby={`${c.id}-title`}>
-      <div className="mkt-chapter__text">
-        <div>
-          <h2 className="mkt-chapter__title" id={`${c.id}-title`}>
-            {c.title}
-          </h2>
-          <p className="mkt-chapter__lede">{c.lede}</p>
-        </div>
-        <Beats points={c.points} player={demo?.player} bounds={demo?.bounds} />
-        <Link className="mm-link mkt-chapter__more" to={c.more.to}>
-          {c.more.label}
-        </Link>
-      </div>
-      <ScreenDemo {...c.demo} onPlayer={(player, bounds) => setDemo({ player, bounds })} />
-    </section>
-  );
-}
-
-// A pause in the tour: one line and the two ways in, so nobody scrolls three demos with nothing to act on.
+// A pause after the tour: one line and the two ways in, so nobody scrolls the demos with nothing to act on.
 function TourAction(): JSX.Element {
   return (
-    <aside className="mkt-tour-action" aria-labelledby="tour-action">
+    <aside className="mkt-cta-band" aria-labelledby="tour-action">
+      <mm-topography seed="3" density="sparse" fade="start"></mm-topography>
+      <div className="mm-container mkt-tour-action">
       <div>
         <h2 className="mkt-tour-action__title" id="tour-action">
           Try it on your own data
@@ -145,6 +57,7 @@ function TourAction(): JSX.Element {
         <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
           Deploy it yourself
         </Link>
+      </div>
       </div>
     </aside>
   );
@@ -170,17 +83,17 @@ export default function Home(): JSX.Element {
   }, []);
   return (
     <Layout
-      title="Data catalog, query gateway and MCP server for humans and agents"
-      description="Marmot is a data catalog, query gateway and MCP server in one. Your team and your agents look up what a table means and who owns it, then query it through Marmot, which checks each query against your access rules and keeps a record of every query. Open source, or hosted on Marmot Cloud."
+      title="The knowledgehouse for your company"
+      description="Marmot is the knowledgehouse for your company: it knows what your data means, governs who may use it and runs every query your people and agents make, checked and recorded. Open source, or hosted on Marmot Cloud."
     >
       <div className="mkt-site">
         <section className="mkt-hero mkt-hero--map">
           <div className="mm-container mkt-hero__grid">
             <div>
-              <h1 className="mkt-hero__title">Give humans and agents safe access to the right data.</h1>
+              <h1 className="mkt-hero__title">Let every person and every agent know your company as well as your best people do.</h1>
               <p className="mkt-hero__lede">
-                Marmot is a data catalog, query gateway and MCP server in one. Your team and your agents read the same definitions and owners, and
-                every query they run is checked and recorded.
+                Marmot is the knowledgehouse for your company. It knows what your data means, governs who may use it and runs every query your
+                people and agents make, checked and recorded.
               </p>
               <div className="mkt-hero__actions">
                 <SignUp />
@@ -237,37 +150,67 @@ export default function Home(): JSX.Element {
           </div>
         </section>
 
-        <section className="mkt-block mkt-block--rule" aria-labelledby="change">
+        <Problem />
+
+
+        <section className="mkt-block mkt-tour-band" aria-labelledby="teams">
+          <mm-topography seed="7" density="sparse" fade="end"></mm-topography>
           <div className="mm-container">
             <div className="mkt-block__head">
-              <h2 className="mkt-block__title" id="change">
-                Why a database password isn’t enough
+              <h2 className="mkt-teams__heading" id="teams">
+                How each team works with Marmot
               </h2>
-              <p className="mkt-block__lede">Both maps show a finance agent looking for last week’s revenue in the same six tables.</p>
             </div>
-            <BeforeAfter />
-            <div className="mkt-hero__actions mkt-block__actions">
-              <SignUp />
-              <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
-                Deploy it yourself
-              </Link>
-            </div>
+            <Teams />
           </div>
         </section>
 
-        <div className="mm-container mkt-tour">
-          {chapters.map((c, i) => (
-            <React.Fragment key={c.id}>
-              <Chapter c={c} flip={i % 2 === 1} />
-              {c.id === "query" && <TourAction />}
-            </React.Fragment>
-          ))}
-        </div>
+        <section className="mkt-block" aria-labelledby="change">
+          <div className="mm-container">
+            <BeforeAfter
+              head={
+                <div>
+                  <h2 className="mkt-teams__heading" id="change">
+                    Why a database password isn’t enough
+                  </h2>
+                  <p className="mkt-chapter__lede">The same finance agent, looking for last week’s revenue in the same six tables.</p>
+                </div>
+              }
+            />
+          </div>
+        </section>
+
+        <TourAction />
+
+        <section className="mkt-block mkt-block--rule mkt-trust" aria-labelledby="trust">
+          <div className="mm-container">
+            <div className="mkt-trust__head">
+              <h2 className="mkt-trust__title" id="trust">
+                Ready for your security review.{" "}
+                <span>Your data stays where it lives.</span>
+              </h2>
+              <Link className="mm-link" to="/docs/Cloud/security">
+                How Marmot Cloud keeps your knowledge safe
+              </Link>
+            </div>
+            <ul className="mkt-trust__points">
+              {trust.map(({ Icon, title, text }) => (
+                <li key={title}>
+                  <h3>
+                    <Icon aria-hidden="true" />
+                    {title}
+                  </h3>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
         <section className="mkt-block mkt-block--rule" aria-labelledby="questions">
           <div className="mm-container mkt-block--aside">
             <div className="mkt-block__head">
-              <h2 className="mkt-block__title" id="questions">
+              <h2 className="mkt-teams__heading" id="questions">
                 Questions
               </h2>
               <p className="mkt-block__lede">
@@ -286,13 +229,13 @@ export default function Home(): JSX.Element {
           <mm-topography seed="11" fade="start"></mm-topography>
           <div className="mm-container">
             <h2 className="mkt-band__title" id="deploy">
-              Give your team and your agents one safe way in to your data
+              Get started with Marmot
             </h2>
-            <p className="mkt-band__lede">Run it yourself or let us run it. It’s the same catalog and the same MCP server either way, so you can move between them.</p>
+            <p className="mkt-band__lede">Start free on Marmot Cloud, or talk to us about Enterprise to run it on your terms.</p>
             <div className="mkt-deploy">
               <section className="mkt-deploy__option" aria-labelledby="deploy-cloud">
                 <h3 id="deploy-cloud">Marmot Cloud</h3>
-                <p>We run it for you and add access control on top.</p>
+                <p>We run it for you, with access control and an audit of every query.</p>
                 <ul>
                   {deploy.cloud.map((t) => (
                     <li key={t}>
@@ -309,11 +252,11 @@ export default function Home(): JSX.Element {
                   </Link>
                 </div>
               </section>
-              <section className="mkt-deploy__option" aria-labelledby="deploy-oss">
-                <h3 id="deploy-oss">Open source</h3>
-                <p>MIT-licensed and free, on your own infrastructure.</p>
+              <section className="mkt-deploy__option" aria-labelledby="deploy-enterprise">
+                <h3 id="deploy-enterprise">Enterprise</h3>
+                <p>For large organisations with their own security and compliance needs.</p>
                 <ul>
-                  {deploy.oss.map((t) => (
+                  {deploy.enterprise.map((t) => (
                     <li key={t}>
                       <Check aria-hidden="true" />
                       {t}
@@ -321,15 +264,21 @@ export default function Home(): JSX.Element {
                   ))}
                 </ul>
                 <div className="mkt-deploy__actions">
-                  <Link className="mm-btn mm-btn--secondary" to="/docs/Deploy">
-                    Deploy it yourself
-                  </Link>
-                  <a className="mm-link" href="https://github.com/marmotdata/marmot">
-                    View on GitHub
+                  <a className="mm-btn mm-btn--secondary" href={ENTERPRISE_MAIL}>
+                    Talk to us
                   </a>
+                  <Link className="mm-link" to="/pricing">
+                    Compare plans
+                  </Link>
                 </div>
               </section>
             </div>
+            <p className="mkt-deploy__oss">
+              Want to try it on your own first? The open source edition is MIT-licensed.{" "}
+              <a className="mm-link" href="https://github.com/marmotdata/marmot">
+                View on GitHub
+              </a>
+            </p>
           </div>
         </section>
 

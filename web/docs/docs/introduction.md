@@ -8,7 +8,7 @@ import IntroDiagram from '@site/src/components/IntroDiagram';
 
 # Introduction
 
-Marmot gives people and AI agents one governed way in to your data. It catalogs the tables, topics, dashboards and pipelines you already run, records what each one means and who owns it, and serves that context in the web UI, over the API and to agents through its [MCP server](MCP/index.md).
+Marmot is the knowledgehouse for your company: it knows what your data means, governs who may use it and runs every query through it, for people and AI agents alike. It catalogs the tables, topics, dashboards and pipelines you already run, records what each one means and who owns it, and serves that context in the web UI, over the API and to agents through its [MCP server](MCP/index.md).
 
 People and agents can also run SQL through Marmot against the sources you connect. Each query is checked against the caller's roles before it reaches the database, and the query audit records who ran what and what came back, so an agent never needs a database password of its own.
 

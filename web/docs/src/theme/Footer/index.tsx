@@ -24,6 +24,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Topics",
     links: [
+      { label: "Knowledgehouse", href: "/resources/knowledgehouse" },
       { label: "Data catalog", href: "/resources/data-catalog" },
       { label: "Open source data catalog", href: "/resources/open-source-data-catalog" },
       { label: "Data lineage", href: "/resources/data-lineage" },
@@ -32,6 +33,8 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "AI data engineering", href: "/resources/ai-data-engineering" },
       { label: "MCP for data", href: "/resources/mcp-for-data" },
       { label: "Data access for agents", href: "/resources/ai-agent-database-access" },
+      { label: "Shared context for agents", href: "/resources/shared-context-for-ai-agents" },
+      { label: "AI agent memory tools", href: "/resources/ai-agent-memory-tools" },
     ],
   },
   {

@@ -2,10 +2,22 @@ import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
 import OpenInNew from "~icons/material-symbols/open-in-new";
+import Schedule from "~icons/material-symbols/schedule-outline";
+import Person from "~icons/material-symbols/person-outline";
+import Verified from "~icons/material-symbols/verified-user-outline";
+import Shield from "~icons/material-symbols/shield-outline";
 import styles from "./security.module.css";
 
 const REPORT_EMAIL = "security@marmotdata.io";
 const GITHUB_ADVISORY = "https://github.com/marmotdata/marmot/security/advisories/new";
+
+// What a reporter wants to know before they write, each stated in full in the policy below.
+const promises = [
+  { Icon: Schedule, title: "Acknowledged in two days", text: "We reply within two business days of your report." },
+  { Icon: Verified, title: "An answer within a week", text: "We tell you whether we can reproduce it within a week." },
+  { Icon: Person, title: "Read by an engineer", text: "Your report goes to the people who build Marmot." },
+  { Icon: Shield, title: "Safe harbour", text: "Research within these rules is authorised. We will not pursue you." },
+];
 
 // The policy's sections, in page order, for the contents list.
 const sections = [
@@ -61,6 +73,22 @@ export default function Security(): JSX.Element {
             </div>
           </div>
         </header>
+
+        <section className={`mkt-trust ${styles.promises}`} aria-label="What to expect when you report">
+          <div className="mm-container">
+            <ul className="mkt-trust__points">
+              {promises.map(({ Icon, title, text }) => (
+                <li key={title}>
+                  <h3>
+                    <Icon aria-hidden="true" />
+                    {title}
+                  </h3>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
         <div className={`mkt-doc ${styles.doc}`}>
           <div className="mm-container">
@@ -279,6 +307,27 @@ export default function Security(): JSX.Element {
             </div>
           </div>
         </div>
+
+        <aside className="mkt-cta-band" aria-labelledby="report-band">
+          <mm-topography seed="29" density="sparse" fade="start"></mm-topography>
+          <div className="mm-container mkt-tour-action">
+            <div>
+              <h2 className="mkt-tour-action__title" id="report-band">
+                Found something? Tell us first.
+              </h2>
+              <p className="mkt-tour-action__lede">An engineer reads every report, and we reply within two business days.</p>
+            </div>
+            <div className="mkt-hero__actions">
+              <a className="mm-btn mm-btn--primary" href={`mailto:${REPORT_EMAIL}`}>
+                Email {REPORT_EMAIL}
+              </a>
+              <a className="mm-btn mm-btn--secondary" href={GITHUB_ADVISORY} target="_blank" rel="noopener noreferrer">
+                Report privately on GitHub
+                <span className="mm-visually-hidden"> (opens in a new tab)</span>
+              </a>
+            </div>
+          </div>
+        </aside>
       </div>
     </Layout>
   );

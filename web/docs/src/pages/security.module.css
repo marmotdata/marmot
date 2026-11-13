@@ -9,8 +9,7 @@
 	position: relative;
 	isolation: isolate;
 	overflow: hidden;
-	padding-block: calc(var(--space-12) * 1.5) var(--space-12);
-	border-block-end: 1px solid var(--mm-rule);
+	padding-block: calc(var(--space-12) * 2) var(--space-12);
 }
 .headGrid {
 	display: grid;
@@ -21,8 +20,24 @@
 .headText {
 	max-width: 64ch;
 }
+/* At the homepage hero's size, over a faint field, so the page reads as part of the same site. */
 .title {
 	max-width: 22ch;
+	font: var(--text-display-hero);
+	font-size: clamp(36px, 3.6vw, 52px);
+	letter-spacing: var(--tracking-display-hero);
+}
+.head :global(mm-topography) {
+	opacity: 0.55;
+}
+/* Section headings in the display face, as the homepage's are. */
+.doc :global(.mkt-doc__body h2) {
+	margin-block-start: calc(var(--space-12) * 1.25);
+	font: var(--text-display-section);
+	letter-spacing: var(--tracking-display-section);
+}
+.doc :global(.mkt-doc__body h2:first-child) {
+	margin-block-start: 0;
 }
 .actions {
 	display: flex;
@@ -39,7 +54,8 @@
 
 /* Body: the policy at a reading measure, with the contents list to the side on wide screens. */
 .doc {
-	padding-block-start: var(--space-12);
+	padding-block: calc(var(--space-12) * 1.5);
+	border-block-start: 1px solid var(--mm-rule);
 }
 .layout {
 	display: grid;
@@ -105,4 +121,12 @@
 	.doc {
 		padding-block-start: var(--space-8);
 	}
+}
+
+/* What to expect, as one sheet split by hairlines like the homepage's security block. */
+.promises {
+	padding-block-end: var(--space-12);
+}
+.promises :global(.mkt-trust__points) {
+	margin: 0;
 }

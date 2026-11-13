@@ -13,7 +13,7 @@ export const productFaq: FaqItem[] = [
   },
   {
     q: 'We already have a data catalog. Why add Marmot?',
-    a: 'A catalog tells people what exists. Marmot also serves that context to agents over MCP and runs their queries, so the system that knows a table holds personal data is the same one that decides who may query it. That is why we think of Marmot as a context layer for humans and agents, with the catalog as one part of it.',
+    a: 'A catalog tells people what exists. Marmot also serves that context to agents over MCP and runs their queries, so the system that knows a table holds personal data is the same one that decides who may query it. That is why we call Marmot a knowledgehouse for people and agents, with the catalog as one part of it.',
   },
   {
     q: 'What can a person or an agent see and query?',
@@ -34,18 +34,6 @@ export const productFaq: FaqItem[] = [
   {
     q: 'Do I have to give Marmot my database credentials?',
     a: 'No. Register where the secret lives in Google Secret Manager, AWS Secrets Manager, Azure Key Vault or HashiCorp Vault, and your instance reads it when a run starts, over a five-minute OpenID Connect token your cloud trusts. The run record keeps a mask.',
-  },
-  {
-    q: 'Where does our instance run?',
-    a: 'You choose the region when you launch, and your catalog stays there. Every instance runs its own Marmot with its own database, so catalogs are never shared between customers.',
-  },
-  {
-    q: 'Who handles upgrades?',
-    a: 'You upgrade Marmot when it suits you, and fixes reach Cloud before the open source releases. Everything underneath is patched continuously, with nothing for you to do.',
-  },
-  {
-    q: 'Who runs Marmot Cloud?',
-    a: 'The people who build Marmot. The team includes engineers from HashiCorp, Adidas, Just Eat Takeaway.com and Traefik, who help maintain Kubernetes, Terraform, Redpanda and Cloud Native Computing Foundation projects.',
   },
 ];
 
@@ -78,6 +66,18 @@ export const pricingFaq: FaqItem[] = [
   {
     q: 'What happens if I cancel?',
     a: 'Your instances keep running until the end of the billing period. After that they are stopped, and you have 30 days to export before they are deleted.',
+  },
+  {
+    q: 'Where does our instance run?',
+    a: 'You choose the region when you launch, and your catalog stays there. Every instance runs its own Marmot with its own database, so catalogs are never shared between customers.',
+  },
+  {
+    q: 'Who handles upgrades?',
+    a: 'You upgrade Marmot when it suits you, and fixes reach Cloud before the open source releases. Everything underneath is patched continuously, with nothing for you to do.',
+  },
+  {
+    q: 'Who runs Marmot Cloud?',
+    a: 'The people who build Marmot. The team includes engineers from HashiCorp, Adidas, Just Eat Takeaway.com and Traefik, who help maintain Kubernetes, Terraform, Redpanda and Cloud Native Computing Foundation projects.',
   },
 ];
 

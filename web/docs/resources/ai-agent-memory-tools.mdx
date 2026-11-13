@@ -1,0 +1,340 @@
+---
+slug: /ai-agent-memory-tools
+title: "Best Shared Context and Memory Tools for AI Agents in 2026"
+description: "AI agent memory and shared context tools compared for 2026: Marmot, Glean, Mem0, Zep, Letta and Cognee, on what they remember, who it is shared with, governance, MCP and open source."
+keywords:
+  - AI agent memory
+  - best AI agent memory tools
+  - agent memory tools 2026
+  - shared memory for AI agents
+  - shared context for AI agents
+  - long-term memory for AI agents
+  - Mem0 alternative
+  - Zep alternative
+  - Letta alternative
+  - memory layer for AI agents
+  - MCP memory server
+date: 2026-11-13
+hide_table_of_contents: false
+image: /img/resources/ai-agent-memory-tools.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/ai-agent-memory-tools" />
+  <meta property="article:published_time" content="2026-11-13" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Best Shared Context and Memory Tools for AI Agents in 2026" />
+  <meta name="twitter:description" content="AI agent memory and shared context tools compared: Marmot, Glean, Mem0, Zep, Letta and Cognee, on scope, governance, MCP and open source." />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Best Shared Context and Memory Tools for AI Agents in 2026" />
+  <meta property="og:description" content="AI agent memory and shared context tools compared: Marmot, Glean, Mem0, Zep, Letta and Cognee, on scope, governance, MCP and open source." />
+  <meta property="og:url" content="https://marmotdata.io/resources/ai-agent-memory-tools" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is AI agent memory?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AI agent memory is information an agent keeps between conversations so it does not start from nothing each time: a user's preferences, facts it learned earlier, decisions made in a previous session. Memory tools such as Mem0, Zep, Letta and Cognee store this outside the model's context window and retrieve the relevant parts when the agent needs them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between agent memory and shared context?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Agent memory is what one agent remembers about its own users and conversations. Shared context is what every agent in a company should know about the company, such as what its data means, who owns it and who may use it, held in one governed place. Memory is scoped to an agent, user or session; shared context is common to the whole organisation and governed by its access rules."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an agent memory tool or a shared context tool?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Often both, for different jobs. If your problem is that an agent forgets what a user told it last week, you need memory. If your problem is that different agents give different answers about the same business question, read the wrong table or reach data they should not, you need shared context. Most teams running several agents across a company hit the second problem first."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can AI agents from different vendors share memory?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "They can share context if it sits behind a standard interface such as the Model Context Protocol. Claude, Cursor, ChatGPT and agents built with frameworks like LangChain can all call an MCP server, so one server can serve the same facts to every agent. Memory stored inside one agent framework is harder to share with agents built on another."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which tools give AI agents shared, governed company context?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Marmot gives every agent the same governed knowledge about a company's data, with each agent signing in as its own identity, and lets agents query the data under the same rules with every query recorded. Glean gives agents permission-aware search over written workplace knowledge such as documents and chat. Memory tools such as Mem0, Zep, Letta and Cognee focus on what individual agents or users remember."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which is the best shared context or memory tool for AI agents in 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It depends on the problem. For shared, governed knowledge about a company's data that every agent can query, with governed access to the data itself, Marmot is the strongest open source option. For permission-aware search over documents and chat, Glean is the established choice. For per-user memory, Mem0 is the simplest to add, Zep suits facts that change over time, Letta suits agents that manage their own memory, and Cognee suits graph memory built from documents."
+          }
+        }
+      ]
+    })}
+  </script>
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Shared context and memory tools for AI agents, 2026",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Marmot", "url": "https://github.com/marmotdata/marmot" },
+        { "@type": "ListItem", "position": 2, "name": "Glean", "url": "https://www.glean.com" },
+        { "@type": "ListItem", "position": 3, "name": "Mem0", "url": "https://mem0.ai" },
+        { "@type": "ListItem", "position": 4, "name": "Zep", "url": "https://www.getzep.com" },
+        { "@type": "ListItem", "position": 5, "name": "Letta", "url": "https://www.letta.com" },
+        { "@type": "ListItem", "position": 6, "name": "Cognee", "url": "https://www.cognee.ai" }
+      ]
+    })}
+  </script>
+</Head>
+
+Agents forget, and agents disagree. Those are two different problems, and in 2026 they are solved by two different kinds of tool.
+
+Memory tools help one agent remember its users and earlier conversations. Shared context tools give every agent in a company the same governed picture of the company itself. This guide compares the main options on both sides: Marmot, Glean, Mem0, Zep, Letta and Cognee. We look at what each one remembers, who it is shared with, whether it follows your company's access rules, how agents reach it and what you have to run.
+
+## Quick answer {#quick-answer}
+
+**If your agents need to agree on what your company's data means and stay inside your access rules, use Marmot. If one agent needs to remember its users, use a memory tool.** Marmot gives every agent, from any vendor, the same governed knowledge over MCP, with its own identity and every query recorded; it is open source (MIT) and runs as one Go binary on PostgreSQL. For memory, Mem0 is the simplest to add, Zep suits facts that change over time, Letta suits agents that manage their own memory and Cognee suits graph memory built from documents. Glean is the established choice for search across documents and chat. Many teams use Marmot and a memory tool together.
+
+---
+
+## Memory and shared context are different jobs {#two-jobs}
+
+**Memory is what one agent remembers. Shared context is what every agent should know.** The tools in this guide all give an agent information it would not otherwise have, which is why they are often compared as if they were the same thing.
+
+- **Agent memory** keeps facts from an agent's own interactions: that a user prefers short answers, what was decided earlier in a thread, what a customer said last month. It is scoped to an agent, a user or a session.
+- **Shared context** holds what the whole company knows: what a table or metric means, who owns it, how it connects to everything else, which source is certified and who may read it. It is common to every agent and governed by the company's rules.
+
+A team with one assistant usually feels the memory problem first. A company running several agents across several teams usually feels the shared context problem first: two agents give two revenue figures, one reads a deprecated table, another reaches personal data it should not. We cover the second problem in depth in [Shared Context for AI Agents](/resources/shared-context-for-ai-agents).
+
+---
+
+## How we compared them {#evaluation-criteria}
+
+**We judged each tool on what it holds, who can use it and how safely.** These are the columns in the matrix below.
+
+- **What it holds.** Conversations and user facts, written workplace knowledge, or knowledge about the company's data.
+- **Scope.** Whether it serves one agent, one user, one session or the whole company.
+- **Built from.** Whether the knowledge comes from the agent's own interactions, from documents you load, or from the systems the company already runs.
+- **Follows company access rules.** Whether every answer is scoped to the identity asking, using the company's permissions rather than only a user or agent identifier.
+- **Governed queries to data.** Whether an agent can read the underlying data through the same rules, with each query checked and recorded.
+- **MCP.** Whether agents from any vendor can reach it through the Model Context Protocol.
+- **Open source.** Whether you can read and self-host the code.
+
+---
+
+## Comparison matrix {#comparison-matrix}
+
+**Here is how the six tools compare, as of November 2026.** MCP and licence cells reflect what we could confirm from each project's current documentation and repositories. Memory tools move quickly, so check the current docs before you decide.
+
+| Tool | What it holds | Scope | Built from | Follows company access rules | Governed queries to data | MCP | Open source | Best for |
+|------|---------------|-------|------------|------------------------------|--------------------------|-----|-------------|----------|
+| **[Marmot](https://github.com/marmotdata/marmot)** | What the company's data means, who owns it, lineage, certification, access rules | Whole company | The systems you run, plus definitions people add | Yes, per identity; per resource on Marmot Cloud | Yes, read-only SQL, every query audited | Native (built in) | Yes (MIT) | Shared, governed company knowledge every agent can query |
+| **[Glean](https://www.glean.com)** | Written workplace knowledge: documents, chat, tickets | Whole company | Workplace apps | Yes, inherits each app's permissions | Not its focus | Official remote server | No | Permission-aware search over what people have written |
+| **[Mem0](https://mem0.ai)** | Facts and preferences from conversations | Per user, agent or session | The agent's interactions | Scoped by user or agent ID | No | Available on the hosted platform | Yes (Apache 2.0) | Adding long-term memory to an existing agent |
+| **[Zep](https://www.getzep.com)** | A temporal knowledge graph of facts that change over time | Per user or group | Conversations and business data you add | Scoped by user or group | No | Graphiti MCP server | Graphiti engine (Apache 2.0); Zep cloud is proprietary | Facts that change over time |
+| **[Letta](https://www.letta.com)** | The agent's own editable memory blocks | Per agent (blocks can be shared between agents) | The agent's interactions | Scoped by agent | No | Agents call MCP tools | Yes (Apache 2.0) | Stateful agents that manage their own memory |
+| **[Cognee](https://www.cognee.ai)** | Graph and vector memory built from documents and data | Per dataset | Documents and data you load | Not its focus | No | Official server (`cognee-mcp`) | Yes (Apache 2.0) | Graph memory built from your own documents |
+
+---
+
+## The tools, one by one {#per-tool}
+
+Each entry follows the same shape: who it is best for, a short take, pros and cons, and when to choose it.
+
+### Marmot {#marmot}
+
+**Best for:** companies that want every agent, from every vendor, to work from the same governed knowledge about their data, and to reach the data itself under the same rules.
+
+Marmot is the knowledgehouse for your company: it knows what your data means, governs who may use it and runs every query your people and agents make, checked and recorded. It is not a conversation memory store. It is the shared context underneath every agent, built from the systems you already run rather than from what an agent happened to see. It runs as a single Go binary on PostgreSQL, or on [Marmot Cloud](/docs/Cloud).
+
+**Marmot pros:**
+
+- **Built from your systems, not from chat.** 70+ [plugins](/docs/Plugins) collect structure, ownership and lineage from your databases, warehouses, streams, pipelines and dashboards, so the knowledge stays current as they change. [Glossary terms](/docs/glossary), certified fields and [data products](/docs/data-products) add the meaning.
+- **One identity per agent.** Each agent signs in as its own [service account](/docs/Configure/access-control) and sees only what its roles allow. On [Marmot Cloud](/docs/Cloud/access-control), a role can be granted on a single data product, table, glossary term or source.
+- **Governed queries, not only context.** Agents can [query sources through Marmot](/docs/data-queries). Each query is checked before it reaches the database and recorded in the [query audit](/docs/query-audit), so an agent never needs a database password of its own.
+- **Native MCP for any vendor.** The [MCP server](/docs/MCP) is part of the binary and works with Claude Code, Claude Desktop, Cursor, Cline and LibreChat, with [LangChain and Claude Agent SDK integrations](/docs/Agents) for agents you build.
+- **Agents show up in lineage.** When an agent queries a table, Marmot records the agent in that table's lineage, so you can see which agents depend on which data.
+- **MIT licensed.**
+
+**Marmot cons:**
+
+- **Not a conversation memory store.** Marmot does not keep each user's preferences or an agent's chat history. Pair it with a memory tool if your agent needs to remember individual users.
+- **Focused on data and systems.** It knows your tables, topics, pipelines and dashboards in depth. For search across documents and chat, a workplace search tool covers more of that ground.
+- **Per-resource access is not in the open source edition.** Open source Marmot grants roles across the whole instance; per-resource grants are part of Marmot Cloud.
+
+**Choose Marmot if:** your agents need to agree on what your data means, use the certified sources and stay inside your access rules, whichever vendor built them.
+
+### Glean {#glean}
+
+**Best for:** companies that want agents to search what people have written across workplace apps.
+
+Glean indexes documents, chat, tickets and other workplace content and serves it to people and agents with each app's permissions intact. Its remote MCP server is tenant-specific and permission-aware, so an agent only sees what its user can already see in Glean.
+
+**Glean pros:**
+
+- **Broad coverage of written knowledge** across the apps people use every day.
+- **Permission-aware by design**, inheriting access from each source app.
+- **Official remote MCP server** for assistants such as Claude and Cursor.
+
+**Glean cons:**
+
+- **Built around what has been written down.** Knowledge that only lives in systems, such as which table is certified or what depends on a column, is outside its main focus.
+- **Not a gateway to your databases.** Governed SQL against your sources is not what it is for.
+- **Closed source** and enterprise-priced.
+
+### Mem0 {#mem0}
+
+**Best for:** teams adding long-term memory to an agent they already have.
+
+Mem0 is a memory layer you add to an existing agent. It extracts facts and preferences from conversations, stores them, and retrieves the relevant ones on later turns, scoped by user, agent or session.
+
+**Mem0 pros:**
+
+- **Simple to add** to an existing agent or framework.
+- **Open source (Apache 2.0)**, with a hosted platform if you would rather not run it.
+- **Good at per-user personalisation**, which is what most chat assistants need.
+
+**Mem0 cons:**
+
+- **Remembers interactions, not the company.** It knows what a user said, not what your tables mean or who owns them.
+- **Scoped by identifiers, not company access rules.** It is not built to enforce who may read which data.
+
+### Zep {#zep}
+
+**Best for:** agents that need to track facts that change over time.
+
+Zep builds a temporal knowledge graph, so it can tell that a fact was true last month and has since changed. Its open source engine, Graphiti, has its own MCP server; the hosted Zep product is proprietary.
+
+**Zep pros:**
+
+- **Time-aware memory**, which matters when facts change.
+- **Graph structure** for relationships between people, accounts and events.
+- **Open source engine (Graphiti, Apache 2.0)** with an MCP server.
+
+**Zep cons:**
+
+- **Scoped to users and groups**, not your company's access rules.
+- **Self-hosting means running Graphiti directly**, since the hosted Zep product is closed source.
+
+### Letta {#letta}
+
+**Best for:** teams building stateful agents that manage their own memory.
+
+Letta, formerly MemGPT, is an open source runtime for stateful agents. Each agent keeps labelled, editable memory blocks and decides for itself what to keep, and blocks can be shared between agents.
+
+**Letta pros:**
+
+- **Agents manage their own memory**, following the MemGPT research.
+- **Shared memory blocks** let several agents read the same state.
+- **Open source (Apache 2.0)**, self-hosted or cloud.
+
+**Letta cons:**
+
+- **A full agent runtime, not a layer you add.** Adopting it means building your agents on it.
+- **Memory quality depends on the model** deciding well what to keep.
+- **Shared within Letta.** Agents built on other frameworks or vendors cannot read the same blocks directly.
+
+### Cognee {#cognee}
+
+**Best for:** teams that want graph-based memory built from their own documents and data.
+
+Cognee is an open source memory platform that combines vector search with a graph database, building relationships between entities in the documents and data you load. Its `cognee-mcp` server exposes that memory to any MCP client.
+
+**Cognee pros:**
+
+- **Graph and vector memory together**, so retrieval follows relationships as well as similarity.
+- **Official MCP server** for Claude Code, Cursor and other clients.
+- **Open source (Apache 2.0)** and self-hostable.
+
+**Cognee cons:**
+
+- **Built from what you load.** It does not collect knowledge from your running systems on its own.
+- **Governance is not its focus**, so access rules are yours to build around it.
+
+---
+
+## The verdict: which tool should you use? {#verdict}
+
+**Start with the problem you actually have.** If one agent forgets its users, you need memory, and Mem0, Zep, Letta and Cognee are all good answers depending on how you build agents. If your agents disagree about the company, read the wrong sources or reach data they should not, you need shared context, and memory will not fix it.
+
+For shared context about a company's data, Marmot is the strongest open source option. Every agent, from any vendor, reads the same governed knowledge over MCP, signs in as itself, and can query the data under the same rules with every query recorded. It runs from a single Go binary on PostgreSQL, or on Marmot Cloud. For search across documents and chat, Glean is the established choice.
+
+Most companies running agents at scale end up with both: a memory tool for each agent's own users, and one shared, governed knowledgehouse underneath all of them.
+
+<CalloutCard
+  title="Give every agent the same context"
+  description="Connect Claude, Cursor or any MCP-compatible agent to Marmot in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### What is AI agent memory? {#faq-what-is-memory}
+
+AI agent memory is information an agent keeps between conversations so it does not start from nothing each time: a user's preferences, facts it learned earlier, decisions made in a previous session. Memory tools such as Mem0, Zep, Letta and Cognee store this outside the model's context window and retrieve the relevant parts when the agent needs them.
+
+### What is the difference between agent memory and shared context? {#faq-memory-vs-context}
+
+Agent memory is what one agent remembers about its own users and conversations. Shared context is what every agent in a company should know about the company, such as what its data means, who owns it and who may use it, held in one governed place. Memory is scoped to an agent, user or session; shared context is common to the whole organisation and governed by its access rules.
+
+### Do I need an agent memory tool or a shared context tool? {#faq-which-do-i-need}
+
+Often both, for different jobs. If your problem is that an agent forgets what a user told it last week, you need memory. If your problem is that different agents give different answers about the same business question, read the wrong table or reach data they should not, you need shared context. Most teams running several agents across a company hit the second problem first.
+
+### Can AI agents from different vendors share memory? {#faq-cross-vendor}
+
+They can share context if it sits behind a standard interface such as the Model Context Protocol. Claude, Cursor, ChatGPT and agents built with frameworks like LangChain can all call an MCP server, so one server can serve the same facts to every agent. Memory stored inside one agent framework is harder to share with agents built on another.
+
+### Which tools give AI agents shared, governed company context? {#faq-shared-tools}
+
+Marmot gives every agent the same governed knowledge about a company's data, with each agent signing in as its own identity, and lets agents query the data under the same rules with every query recorded. Glean gives agents permission-aware search over written workplace knowledge such as documents and chat. Memory tools such as Mem0, Zep, Letta and Cognee focus on what individual agents or users remember.
+
+### Which is the best shared context or memory tool for AI agents in 2026? {#faq-best}
+
+It depends on the problem. For shared, governed knowledge about a company's data that every agent can query, with governed access to the data itself, Marmot is the strongest open source option. For permission-aware search over documents and chat, Glean is the established choice. For per-user memory, Mem0 is the simplest to add, Zep suits facts that change over time, Letta suits agents that manage their own memory, and Cognee suits graph memory built from documents.
+
+## Related {#related}
+
+- [Why AI Agents Give Wrong Answers About Your Company](/resources/ai-agents-wrong-answers)
+- [Shared Context for AI Agents](/resources/shared-context-for-ai-agents)
+- [What Is a Knowledgehouse?](/resources/knowledgehouse)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+
+---
+
+- **Marmot Cloud:** [cloud.marmotdata.io](https://cloud.marmotdata.io), hosted Marmot that's free to start and priced per compute unit with unlimited users ([pricing](/pricing))
+- **Docs:** [marmotdata.io/docs](/docs/introduction)
+- **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
+
+<CalloutCard
+  title="Join the Community"
+  description="Get help, share feedback and connect with other Marmot users on Discord."
+  href="https://discord.gg/TWCk7hVFN4"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

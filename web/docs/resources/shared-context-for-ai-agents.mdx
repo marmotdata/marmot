@@ -1,0 +1,219 @@
+---
+slug: /shared-context-for-ai-agents
+title: "Shared Context for AI Agents: One Source of Truth for Every Agent"
+description: "Why every AI agent in a company needs the same governed context, what shared context should contain, how it differs from agent memory, and how to give agents from any vendor one source of truth over MCP."
+keywords:
+  - shared context for AI agents
+  - shared context
+  - multi-agent shared context
+  - shared knowledge for AI agents
+  - company context for AI agents
+  - shared memory for AI agents
+  - context sharing between agents
+  - single source of truth for AI agents
+  - enterprise AI agent context
+date: 2026-11-13
+image: /img/resources/shared-context-for-ai-agents.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/shared-context-for-ai-agents" />
+  <meta property="article:published_time" content="2026-11-13" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Shared Context for AI Agents: One Source of Truth for Every Agent" />
+  <meta name="twitter:description" content="Why every AI agent in a company needs the same governed context, and how to give agents from any vendor one source of truth over MCP." />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Shared Context for AI Agents: One Source of Truth for Every Agent" />
+  <meta property="og:description" content="Why every AI agent in a company needs the same governed context, and how to give agents from any vendor one source of truth over MCP." />
+  <meta property="og:url" content="https://marmotdata.io/resources/shared-context-for-ai-agents" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is shared context for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Shared context is one governed source of facts about a company that every AI agent reads from, whichever vendor built it and whichever team runs it. It covers what the company's data means, who owns it, how it connects and what each agent may use, so a finance agent, a support agent and an engineer's coding agent all answer from the same definitions and the same rules."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do AI agents need shared context?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Without it, each agent learns the company on its own and fills the gaps by guessing. Two agents give two different revenue figures, one reads a deprecated table, another reads personal data it should not. Shared context means every agent starts from the same definitions, the same certified sources and the same access rules, and a correction made once reaches every agent."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between shared context and agent memory?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Agent memory is what one agent remembers about its own conversations and users, such as preferences and earlier answers. Shared context is what every agent should know about the company, such as what a table means and who may read it. Memory is personal to an agent or a user; shared context is common to the whole organisation and governed by its rules. Most production systems need both."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do agents from different vendors share context?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Through a standard interface. The Model Context Protocol lets Claude, Cursor, ChatGPT and agents built with frameworks such as LangChain call the same server for context. If the shared context lives behind one MCP server and one API, every agent reads the same facts no matter which vendor built it, and you avoid keeping a separate copy of company knowledge inside each tool."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you keep shared context secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Give every agent its own identity and scope every answer to it. An agent should sign in with its own service account and see only what its roles allow, and any query it runs against your data should be checked before it reaches the source and recorded afterwards. Sharing context should never mean sharing one set of credentials."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should shared context contain?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "At minimum: the structure of your data, business definitions, ownership, lineage, which sources are certified, and access rules. The most useful shared context also lets agents query the data itself through the same rules, so an agent can move from knowing which table to use to reading it without a separate database password."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+Shared context is one governed source of facts that every AI agent in a company reads from. It is what lets a finance agent, a support agent and an engineer's coding agent give the same answer to the same question, under the same rules.
+
+Most companies now run agents from several vendors across several teams. Each one is capable, and each one learns the company from scratch. This guide explains what shared context is, why it matters more as the number of agents grows, how it differs from agent memory, and how to give agents from any vendor one source of truth.
+
+---
+
+## What is shared context? {#what-is}
+
+**Shared context is what every agent should know about the company, held in one place and served to all of them.** It is not a prompt you paste into each tool, and it is not one agent's memory. It is a common, governed source that any agent can query at runtime.
+
+It answers the questions every agent asks before it acts:
+
+- What exists, and which version should I use?
+- What does this field, metric or term mean here?
+- Who owns it, and who should I ask?
+- What does it depend on, and what depends on it?
+- Am I allowed to read it?
+
+When those answers come from one place, a correction made once reaches every agent, and every agent is governed by the same rules.
+
+---
+
+## Why every agent needs the same context {#why}
+
+**Agents that learn the company separately disagree with each other, and every disagreement is a wrong answer for someone.** The failure is easy to recognise:
+
+- The finance agent reports revenue from the certified model. The sales agent reports it from a table that excludes refunds. Both sound confident.
+- A support agent explains a dashboard using a definition the analytics team changed last quarter.
+- A coding agent drops a column without knowing which dashboards are built on it.
+- An agent built by one team reads customer emails because nothing told it that table holds personal data.
+
+Each of these comes from the same gap. The model is capable, but it has no shared, current, governed picture of the company. The more agents you run, the more often the gap shows. Shared context closes it once for all of them, rather than once per tool.
+
+There is a second reason, and it is quieter. People write less documentation than they used to, and more of the reasoning behind a decision now happens in a conversation with an agent. Without somewhere shared to put what matters, it stays with whoever had that conversation.
+
+---
+
+## Shared context vs agent memory {#vs-memory}
+
+**Memory is what one agent remembers. Shared context is what every agent should know.** The two are often confused, because both give an agent information it would not otherwise have.
+
+| | Agent memory | Shared context |
+|---|---|---|
+| **Holds** | One agent's conversations, user preferences and earlier answers | What the company's data means, who owns it, how it connects and who may use it |
+| **Scope** | One agent, user or session | The whole organisation |
+| **Source** | The agent's own interactions | The systems the company runs, plus definitions people add |
+| **Governed by** | Whoever runs that agent | The company's access rules, applied to every caller |
+| **Correct when** | The agent remembers accurately | The underlying systems and definitions are current |
+
+Memory tools are good at what they do: they help an agent remember that a user prefers short answers or what was decided earlier in a thread. They are not built to know that `orders_daily` is the table finance reports from, or to stop an agent reading personal data. Most production systems need both. We compare the main tools on both sides in [Best Shared Context and Memory Tools for AI Agents in 2026](/resources/ai-agent-memory-tools).
+
+---
+
+## What shared context should contain {#what-it-contains}
+
+A shared context worth querying covers more than a list of tables. It should include:
+
+- **Structure.** Schemas and field-level detail from every source, kept current automatically.
+- **Meaning.** Business glossary terms attached to the fields they describe.
+- **Ownership.** The team and the person responsible for each asset.
+- **Lineage.** What feeds what, down to the column, so agents can reason about impact.
+- **Trust.** Which tables and fields are certified as the ones to use.
+- **Access rules.** What each agent may read, enforced every time it asks.
+- **Governed queries.** A way for an agent to read the data itself under the same rules, so it does not need a database password of its own.
+
+---
+
+## How to share context across agents from any vendor {#how}
+
+**Put the context behind one standard interface, and give every agent its own identity.** Two choices decide whether shared context works in practice.
+
+**One interface every agent can call.** The [Model Context Protocol](/resources/mcp-for-data) is the standard most agents already speak. Claude, Cursor, ChatGPT and agents built with frameworks such as LangChain can all call an MCP server. If your shared context lives behind one MCP server and one API, it does not matter which vendor built an agent: it reads the same facts. You also avoid the alternative, which is a separate copy of company knowledge inside every tool, each drifting on its own.
+
+**One identity per agent.** Sharing context should never mean sharing credentials. Each agent should sign in with its own service account, see only what its roles allow, and leave a record of every query it runs. That way a new agent gets the same knowledge on day one, and you can still answer exactly what each agent did.
+
+---
+
+## Building shared context with Marmot {#marmot}
+
+[Marmot](/docs/introduction) is the knowledgehouse for your company: it knows what your data means, governs who may use it and runs every query your people and agents make. That makes it a shared context for every agent you run. It runs as a single Go binary on PostgreSQL, or on [Marmot Cloud](/docs/Cloud).
+
+- **One source of facts.** 70+ [plugins](/docs/Plugins) collect structure, ownership and lineage from your databases, warehouses, streams, pipelines and dashboards. [Glossary terms](/docs/glossary), certified fields and [data products](/docs/data-products) add the meaning.
+- **One interface for every agent.** The built-in [MCP server](/docs/MCP) works with Claude Code, Claude Desktop, Cursor, Cline and LibreChat, and the [LangChain and Claude Agent SDK integrations](/docs/Agents) cover agents you build yourself.
+- **One identity per agent.** Each agent signs in as its own [service account](/docs/Configure/access-control). On [Marmot Cloud](/docs/Cloud/access-control), a role can be granted on a single data product, table, glossary term or source.
+- **Governed queries and a record.** Agents can [query sources through Marmot](/docs/data-queries). Each query is checked before it reaches the database and recorded in the [query audit](/docs/query-audit), and the agent appears in the lineage of every table it reads.
+
+<CalloutCard
+  title="Give every agent the same context"
+  description="Connect Claude, Cursor or any MCP-compatible agent to Marmot in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### What is shared context for AI agents? {#faq-what}
+
+Shared context is one governed source of facts about a company that every AI agent reads from, whichever vendor built it and whichever team runs it. It covers what the company's data means, who owns it, how it connects and what each agent may use, so a finance agent, a support agent and an engineer's coding agent all answer from the same definitions and the same rules.
+
+### Why do AI agents need shared context? {#faq-why}
+
+Without it, each agent learns the company on its own and fills the gaps by guessing. Two agents give two different revenue figures, one reads a deprecated table, another reads personal data it should not. Shared context means every agent starts from the same definitions, the same certified sources and the same access rules, and a correction made once reaches every agent.
+
+### What is the difference between shared context and agent memory? {#faq-vs-memory}
+
+Agent memory is what one agent remembers about its own conversations and users, such as preferences and earlier answers. Shared context is what every agent should know about the company, such as what a table means and who may read it. Memory is personal to an agent or a user; shared context is common to the whole organisation and governed by its rules. Most production systems need both.
+
+### How do agents from different vendors share context? {#faq-vendors}
+
+Through a standard interface. The Model Context Protocol lets Claude, Cursor, ChatGPT and agents built with frameworks such as LangChain call the same server for context. If the shared context lives behind one MCP server and one API, every agent reads the same facts no matter which vendor built it, and you avoid keeping a separate copy of company knowledge inside each tool.
+
+### How do you keep shared context secure? {#faq-secure}
+
+Give every agent its own identity and scope every answer to it. An agent should sign in with its own service account and see only what its roles allow, and any query it runs against your data should be checked before it reaches the source and recorded afterwards. Sharing context should never mean sharing one set of credentials.
+
+### What should shared context contain? {#faq-contain}
+
+At minimum: the structure of your data, business definitions, ownership, lineage, which sources are certified, and access rules. The most useful shared context also lets agents query the data itself through the same rules, so an agent can move from knowing which table to use to reading it without a separate database password.
+
+## Related {#related}
+
+- [Why AI Agents Give Wrong Answers About Your Company](/resources/ai-agents-wrong-answers)
+- [What Is a Knowledgehouse?](/resources/knowledgehouse)
+- [Best Shared Context and Memory Tools for AI Agents in 2026](/resources/ai-agent-memory-tools)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [AI Agent Database Access](/resources/ai-agent-database-access)

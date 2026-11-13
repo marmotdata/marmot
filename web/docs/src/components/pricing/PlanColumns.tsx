@@ -39,10 +39,11 @@ export default function PlanColumns(): JSX.Element {
 }
 
 /** The two ways to run Marmot yourself, in the same columns as the Cloud plans so they read as one set of choices. */
-export function SelfHostedColumns(): JSX.Element {
+export function SelfHostedColumns({ only }: { only?: string[] } = {}): JSX.Element {
+  const options = only ? SELF_HOSTED.filter((o) => only.includes(o.id)) : SELF_HOSTED;
   return (
-    <ul className="mkt-tiers mkt-tiers--two" aria-label="Self-hosted options">
-      {SELF_HOSTED.map((o) => (
+    <ul className={`mkt-tiers${options.length === 2 ? " mkt-tiers--two" : " mkt-tiers--one"}`} aria-label="Self-hosted options">
+      {options.map((o) => (
         <li key={o.id} className="mkt-tier">
           <h3 className="mkt-tier__name">{o.name}</h3>
           <p className="mkt-tier__for">{o.tagline}</p>

@@ -8,11 +8,11 @@
 </p>
 
 <p align="center">
-  <strong>One governed way in to your data, for people and AI agents.</strong>
+  <strong>The open source knowledgehouse for your company.</strong>
 </p>
 
 <p align="center">
-  Marmot catalogs your tables, topics, dashboards and pipelines with 70+ plugins, records their lineage, owners and definitions,
+  Marmot knows what your data means, governs who may use it and runs every query through it, for people and agents alike. It catalogs your tables, topics, dashboards and pipelines with 70+ plugins, records their lineage, owners and definitions,
   and lets people and agents query the data through it, with every query checked and audited.<br>
   Use it from the web UI, the CLI, the SDKs or its built-in MCP server. It runs as one Go binary backed by PostgreSQL.
 </p>

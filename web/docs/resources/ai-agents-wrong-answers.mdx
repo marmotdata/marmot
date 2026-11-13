@@ -1,0 +1,203 @@
+---
+slug: /ai-agents-wrong-answers
+title: "Why AI Agents Give Wrong Answers About Your Company, and How to Fix It"
+description: "Why AI agents give confident, wrong or inconsistent answers about a company's own data, why a better model will not fix it, and how shared, governed company knowledge does. A practical guide for teams running agents at work."
+keywords:
+  - AI agents give wrong answers
+  - AI agent hallucinating company data
+  - AI agents inconsistent answers
+  - why is my AI agent wrong
+  - AI agents company knowledge
+  - stop AI agent hallucinations data
+  - AI agent wrong table
+  - agents give different answers
+  - institutional knowledge AI agents
+  - knowledge loss when employees leave
+date: 2026-11-13
+image: /img/resources/ai-agents-wrong-answers.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/ai-agents-wrong-answers" />
+  <meta property="article:published_time" content="2026-11-13" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Why AI Agents Give Wrong Answers About Your Company, and How to Fix It" />
+  <meta name="twitter:description" content="Why agents give confident, wrong or inconsistent answers about your own data, and how shared, governed company knowledge fixes it." />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Why AI Agents Give Wrong Answers About Your Company, and How to Fix It" />
+  <meta property="og:description" content="Why agents give confident, wrong or inconsistent answers about your own data, and how shared, governed company knowledge fixes it." />
+  <meta property="og:url" content="https://marmotdata.io/resources/ai-agents-wrong-answers" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why do AI agents give wrong answers about company data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Usually because they are missing company knowledge, not because the model is weak. An agent does not know which of several look-alike tables finance reports from, what a metric means at your company, which model was deprecated last quarter or which table holds personal data. It fills the gaps by guessing, and a confident guess reads like a correct answer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do different AI agents give different answers to the same question?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each agent learned the company separately. A finance agent, a sales agent and an analyst's assistant may each have been pointed at different tables, given different definitions or prompted by different people. Without one shared source of definitions and certified sources, they drift apart, and each one sounds sure of itself."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Will a better model stop my agents giving wrong answers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not for questions about your own company. A stronger model reasons better, but it still cannot know which table is certified, what your team means by active customer or who owns a dashboard unless something tells it. The fix is giving every agent the same governed knowledge about your data, not a bigger model."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you stop AI agents hallucinating about your data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Give them one shared, governed source of company knowledge to check before they act: what each table and field means, which sources are certified, who owns them, how they connect and what each agent may read. Serve it over a standard interface such as MCP so every agent uses it, give each agent its own identity, and route its queries through the same place so they are checked and recorded."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens to company knowledge when people leave?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Much of it leaves with them, because the reasons behind decisions, which table not to use and who to ask were never written down. Agents make this worse, because more decisions now happen in conversations with an agent rather than in a ticket or document. Recording ownership, definitions and certification in one shared place keeps the most important of that knowledge with the company."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What tool fixes AI agents giving wrong answers about company data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A knowledgehouse: one governed place that knows what your data means, governs who may use it and runs every query your people and agents make. Marmot is an open source knowledgehouse. It collects structure, ownership and lineage from your systems, holds definitions and certification, gives every agent its own identity, serves all of it over MCP, and records every query an agent runs."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+AI agents usually give wrong answers about a company for one reason: they are missing what the company knows. The model is rarely the problem. The context is.
+
+If your agents report different revenue figures, quote definitions that changed months ago, pick the wrong table or reach data they should not, this guide explains why it happens, why a better model will not fix it, and what does.
+
+---
+
+## The symptoms {#symptoms}
+
+**The failures look different, but they share one cause.** If any of these sound familiar, the rest of this guide is for you:
+
+- **Two agents, two answers.** The finance agent and the sales agent give different numbers for last month's revenue, and both sound certain.
+- **The look-alike table.** An agent finds `orders`, `orders_v2`, `orders_final` and `orders_daily`, and picks the wrong one.
+- **The stale definition.** A support agent explains a dashboard using a definition the analytics team changed last quarter.
+- **The change that broke something.** A coding agent drops a column without knowing which dashboards depend on it.
+- **The data it should not have read.** An agent built by one team reads customer emails because nothing told it the table holds personal data.
+- **The knowledge that left.** Someone who knew which table not to use moves on, and the agents keep using it.
+
+---
+
+## Why it happens {#why}
+
+**An agent knows a lot about the world and almost nothing about your company.** It does not know that your `orders` table excludes refunds, that "active customer" means 90 days at your company and 30 at the last one, or that a model was deprecated in a meeting no one wrote up.
+
+Three things make this worse in 2026:
+
+- **Less is written down.** Decisions that used to land in a ticket or a design document now happen in a chat with a colleague or an agent. A new person, or a new agent, has nowhere to find them.
+- **Every team runs its own agents.** Each one is set up separately, often by different people with different prompts and different access, so each learns a slightly different version of the company.
+- **Agents act on what they find.** A person reading a stale definition might notice. An agent takes it at face value and acts on it, at speed.
+
+The result is confident, plausible, wrong output, and a different version of it from every agent.
+
+---
+
+## Why a better model will not fix it {#not-the-model}
+
+**A stronger model reasons better about the information it has. It cannot invent information it does not have.** No model, however capable, can know which of your tables is certified, who owns your revenue dashboard or what your team decided last quarter unless something tells it.
+
+Prompts are not a fix either. Pasting definitions into each agent's instructions works for one agent for a week. Then the definitions change, a new agent is set up from an old prompt, and the copies drift apart. The knowledge needs to live in one place that every agent reads at the moment it needs it.
+
+---
+
+## The fix: shared, governed company knowledge {#fix}
+
+**Give every agent the same governed knowledge about your company, and route what it does through the same place.** That means four things:
+
+1. **One source of what your data means.** Structure, definitions, ownership, lineage and certification, collected from the systems you run and kept current as they change.
+2. **One interface every agent uses.** A standard such as the [Model Context Protocol](/resources/mcp-for-data), so agents from any vendor read the same facts rather than their own copies.
+3. **One identity per agent.** Each agent signs in as itself and sees only what its roles allow, so sharing knowledge never means sharing credentials.
+4. **Governed queries and a record.** When an agent needs the data itself, its query is checked before it reaches the source and recorded afterwards, so you can see exactly what each agent did.
+
+This is what a [knowledgehouse](/resources/knowledgehouse) is: the one governed place where a company keeps what it knows. We go deeper on the shared part in [Shared Context for AI Agents](/resources/shared-context-for-ai-agents).
+
+---
+
+## Fixing it with Marmot {#marmot}
+
+[Marmot](/docs/introduction) is an open source knowledgehouse. It knows what your data means, governs who may use it and runs every query your people and agents make. Here is how it answers each symptom:
+
+| Symptom | What Marmot does |
+|---|---|
+| **Two agents, two answers** | Every agent reads the same [glossary terms](/docs/glossary), definitions and certified sources over one [MCP server](/docs/MCP) |
+| **The look-alike table** | Certified fields and owners mark the table to use, and [lineage](/docs/lineage) shows where each one comes from |
+| **The stale definition** | Definitions live in one place, attached to the fields they describe, so a correction reaches every agent at once |
+| **The change that broke something** | Column-level lineage shows the models and dashboards downstream before anyone merges |
+| **The data it should not have read** | Each agent signs in as its own [service account](/docs/Configure/access-control); its [queries](/docs/data-queries) are checked before they reach the database and recorded in the [query audit](/docs/query-audit) |
+| **The knowledge that left** | Owners, definitions and certification are recorded with each asset rather than in one person's head |
+
+Marmot runs as a single Go binary on PostgreSQL, or on [Marmot Cloud](/docs/Cloud), where roles can also be granted on a single data product, table, glossary term or source.
+
+<CalloutCard
+  title="Give your agents the knowledge they are missing"
+  description="Launch Marmot Cloud for free, or run the open source edition on your own infrastructure."
+  href="https://cloud.marmotdata.io/signup"
+  buttonText="Start for free"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### Why do AI agents give wrong answers about company data? {#faq-why-wrong}
+
+Usually because they are missing company knowledge, not because the model is weak. An agent does not know which of several look-alike tables finance reports from, what a metric means at your company, which model was deprecated last quarter or which table holds personal data. It fills the gaps by guessing, and a confident guess reads like a correct answer.
+
+### Why do different AI agents give different answers to the same question? {#faq-different-answers}
+
+Each agent learned the company separately. A finance agent, a sales agent and an analyst's assistant may each have been pointed at different tables, given different definitions or prompted by different people. Without one shared source of definitions and certified sources, they drift apart, and each one sounds sure of itself.
+
+### Will a better model stop my agents giving wrong answers? {#faq-better-model}
+
+Not for questions about your own company. A stronger model reasons better, but it still cannot know which table is certified, what your team means by active customer or who owns a dashboard unless something tells it. The fix is giving every agent the same governed knowledge about your data, not a bigger model.
+
+### How do you stop AI agents hallucinating about your data? {#faq-stop}
+
+Give them one shared, governed source of company knowledge to check before they act: what each table and field means, which sources are certified, who owns them, how they connect and what each agent may read. Serve it over a standard interface such as MCP so every agent uses it, give each agent its own identity, and route its queries through the same place so they are checked and recorded.
+
+### What happens to company knowledge when people leave? {#faq-people-leave}
+
+Much of it leaves with them, because the reasons behind decisions, which table not to use and who to ask were never written down. Agents make this worse, because more decisions now happen in conversations with an agent rather than in a ticket or document. Recording ownership, definitions and certification in one shared place keeps the most important of that knowledge with the company.
+
+### What tool fixes AI agents giving wrong answers about company data? {#faq-tool}
+
+A knowledgehouse: one governed place that knows what your data means, governs who may use it and runs every query your people and agents make. Marmot is an open source knowledgehouse. It collects structure, ownership and lineage from your systems, holds definitions and certification, gives every agent its own identity, serves all of it over MCP, and records every query an agent runs.
+
+## Related {#related}
+
+- [What Is a Knowledgehouse?](/resources/knowledgehouse)
+- [Shared Context for AI Agents](/resources/shared-context-for-ai-agents)
+- [Best Shared Context and Memory Tools for AI Agents in 2026](/resources/ai-agent-memory-tools)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [AI Agent Database Access](/resources/ai-agent-database-access)
