@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"crypto/sha256"
 	"sync"
 	"testing"
 
@@ -94,5 +95,31 @@ func TestHasAPIKeyScheme(t *testing.T) {
 		if got := HasAPIKeyScheme(key); got != want {
 			t.Errorf("HasAPIKeyScheme(%q) = %v, want %v", key, got, want)
 		}
+	}
+}
+
+// At the cap one entry makes room for the new one, so the other remembered keys stay remembered.
+func TestCompareAPIKey_EvictsOneAtCap(t *testing.T) {
+	verifiedMu.Lock()
+	saved := verifiedAPIKeys
+	verifiedAPIKeys = make(map[[sha256.Size]byte]struct{}, maxVerifiedAPIKeys)
+	for i := range maxVerifiedAPIKeys {
+		verifiedAPIKeys[sha256.Sum256([]byte{byte(i), byte(i >> 8)})] = struct{}{}
+	}
+	verifiedMu.Unlock()
+	t.Cleanup(func() {
+		verifiedMu.Lock()
+		verifiedAPIKeys = saved
+		verifiedMu.Unlock()
+	})
+
+	if err := CompareAPIKey(hashKey(t, "mrmt_u_at-cap"), "mrmt_u_at-cap"); err != nil {
+		t.Fatal(err)
+	}
+
+	verifiedMu.Lock()
+	defer verifiedMu.Unlock()
+	if n := len(verifiedAPIKeys); n != maxVerifiedAPIKeys {
+		t.Fatalf("remembered %d keys at the cap, want %d", n, maxVerifiedAPIKeys)
 	}
 }

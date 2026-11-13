@@ -53,9 +53,13 @@ func CompareAPIKey(hash, key string) error {
 
 	verifiedMu.Lock()
 	// Only holders of a valid key add entries, so the cap is reached only with more
-	// live keys than this; starting over then costs one bcrypt per key.
+	// live keys than this. Dropping one arbitrary entry (map order is randomised)
+	// costs its holder one bcrypt, where clearing the set would cost every holder one.
 	if len(verifiedAPIKeys) >= maxVerifiedAPIKeys {
-		clear(verifiedAPIKeys)
+		for evict := range verifiedAPIKeys {
+			delete(verifiedAPIKeys, evict)
+			break
+		}
 	}
 	verifiedAPIKeys[id] = struct{}{}
 	verifiedMu.Unlock()
