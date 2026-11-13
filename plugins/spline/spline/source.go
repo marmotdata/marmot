@@ -164,32 +164,34 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	var lineages []pluginsdk.LineageEdge
 	var runHistory []pluginsdk.AssetRunHistory
 
-	// One execution plan can be replayed by many runs, so plans are fetched
-	// once and shared.
-	plans := make(map[string]*ExecutionPlanInfo)
+	// One execution plan can be replayed by many runs, so plans and their
+	// column lineage are fetched once and shared.
+	plans := make(map[string]*LineageDetailed)
+	planColumns := make(map[string]map[string][]pluginsdk.ColumnEdge)
 	seenEdges := make(map[string]struct{})
+	columnEdges := make(map[string]int)
 
 	for _, app := range applications {
 		pipelineMRN := s.config.AssetMRN("Pipeline", provider, app.Name)
 
-		columnLineage := make(map[string][]ColumnLineageEntry)
 		var inputURIs, outputURIs []string
 
 		for _, planID := range app.PlanIDs {
-			plan, ok := plans[planID]
+			detailed, ok := plans[planID]
 			if !ok {
-				detailed, err := s.client.GetLineageDetailed(ctx, planID)
+				var err error
+				detailed, err = s.client.GetLineageDetailed(ctx, planID)
 				if err != nil {
 					log.Warn().Err(err).Str("plan_id", planID).Msg("Failed to read execution plan, skipping its lineage")
 					plans[planID] = nil
 					continue
 				}
-				plan = &detailed.ExecutionPlan
-				plans[planID] = plan
+				plans[planID] = detailed
 			}
-			if plan == nil {
+			if detailed == nil {
 				continue
 			}
+			plan := &detailed.ExecutionPlan
 
 			for _, input := range plan.Inputs {
 				if input.Source == "" {
@@ -226,13 +228,27 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 			})
 
 			if s.config.IncludeColumnLineage {
-				if entries := s.columnLineage(ctx, plan); len(entries) > 0 {
-					columnLineage[outputMRN] = append(columnLineage[outputMRN], entries...)
+				byInput, ok := planColumns[planID]
+				if !ok {
+					byInput = s.columnLineage(ctx, detailed)
+					planColumns[planID] = byInput
+				}
+				for _, inputMRN := range sortedKeys(byInput) {
+					if inputMRN == outputMRN {
+						continue
+					}
+					addColumnEdge(&lineages, columnEdges, pluginsdk.LineageEdge{
+						Source:        inputMRN,
+						Target:        outputMRN,
+						Type:          "DEPENDS_ON",
+						JobMRN:        pipelineMRN,
+						ColumnLineage: byInput[inputMRN],
+					})
 				}
 			}
 		}
 
-		assets = append(assets, s.buildPipelineAsset(app, plans, inputURIs, outputURIs, columnLineage))
+		assets = append(assets, s.buildPipelineAsset(app, plans, inputURIs, outputURIs))
 		runHistory = append(runHistory, buildRunHistory(pipelineMRN, app))
 	}
 
@@ -307,7 +323,7 @@ func applicationName(event ExecutionEvent) string {
 	return strings.TrimSpace(event.ExecutionPlanID)
 }
 
-func (s *Source) buildPipelineAsset(app application, plans map[string]*ExecutionPlanInfo, inputURIs, outputURIs []string, columnLineage map[string][]ColumnLineageEntry) pluginsdk.Asset {
+func (s *Source) buildPipelineAsset(app application, plans map[string]*LineageDetailed, inputURIs, outputURIs []string) pluginsdk.Asset {
 	latest := app.Events[0]
 
 	metadata := map[string]any{
@@ -333,7 +349,8 @@ func (s *Source) buildPipelineAsset(app application, plans map[string]*Execution
 	}
 	metadata["execution_plan_ids"] = capIDs(app.PlanIDs)
 
-	if plan := plans[latest.ExecutionPlanID]; plan != nil {
+	if detailed := plans[latest.ExecutionPlanID]; detailed != nil {
+		plan := detailed.ExecutionPlan
 		setIfNotEmpty(metadata, "system_name", plan.SystemInfo.Name)
 		setIfNotEmpty(metadata, "system_version", plan.SystemInfo.Version)
 		setIfNotEmpty(metadata, "agent_name", plan.AgentInfo.Name)
@@ -345,16 +362,6 @@ func (s *Source) buildPipelineAsset(app application, plans map[string]*Execution
 	}
 	if len(outputURIs) > 0 {
 		metadata["outputs"] = outputURIs
-	}
-
-	// Marmot's lineage edges carry no column information, so the column map is
-	// stored on the pipeline as JSON keyed by the MRN of the table it produced.
-	if len(columnLineage) > 0 {
-		if encoded, err := json.Marshal(columnLineage); err == nil {
-			metadata["column_lineage"] = string(encoded)
-		} else {
-			log.Warn().Err(err).Str("application", app.Name).Msg("Failed to encode column lineage")
-		}
 	}
 
 	var externalLinks []pluginsdk.AssetExternalLink
@@ -416,88 +423,6 @@ func buildRunHistory(pipelineMRN string, app application) pluginsdk.AssetRunHist
 	}
 
 	return pluginsdk.AssetRunHistory{AssetMRN: pipelineMRN, Runs: runs}
-}
-
-// ColumnLineageEntry records which columns one output column was derived from.
-type ColumnLineageEntry struct {
-	ToColumn    string   `json:"to_column"`
-	FromColumns []string `json:"from_columns"`
-}
-
-// columnLineage resolves, for every column an execution plan produced, the
-// columns it was derived from. Spline answers one column per request, so the
-// number of lookups is capped.
-func (s *Source) columnLineage(ctx context.Context, plan *ExecutionPlanInfo) []ColumnLineageEntry {
-	attributes := plan.Extra.Attributes
-	if len(attributes) > maxAttributesPerPlan {
-		log.Warn().
-			Str("plan_id", plan.ID).
-			Int("attributes", len(attributes)).
-			Int("limit", maxAttributesPerPlan).
-			Msg("Execution plan has more columns than the lookup limit, column lineage is truncated")
-		attributes = attributes[:maxAttributesPerPlan]
-	}
-
-	var entries []ColumnLineageEntry
-
-	for _, attribute := range attributes {
-		if attribute.ID == "" || attribute.Name == "" {
-			continue
-		}
-
-		result, err := s.client.GetAttributeLineage(ctx, attribute.ID)
-		if err != nil {
-			log.Warn().Err(err).Str("attribute", attribute.Name).Msg("Failed to read column lineage")
-			continue
-		}
-
-		sources := sourceColumns(result.Lineage, attribute.ID)
-		if len(sources) == 0 {
-			// A column read straight from an input has no derivation to record.
-			continue
-		}
-		entries = append(entries, ColumnLineageEntry{ToColumn: attribute.Name, FromColumns: sources})
-	}
-
-	return entries
-}
-
-// sourceColumns walks the attribute graph from rootID and returns the names of
-// every column it depends on. Spline points an edge from a column to the
-// column it was derived from, so following edges forward finds its sources.
-func sourceColumns(graph AttributeGraph, rootID string) []string {
-	names := make(map[string]string, len(graph.Nodes))
-	for _, node := range graph.Nodes {
-		names[node.ID] = node.Name
-	}
-
-	outgoing := make(map[string][]string, len(graph.Edges))
-	for _, edge := range graph.Edges {
-		outgoing[edge.Source] = append(outgoing[edge.Source], edge.Target)
-	}
-
-	visited := map[string]struct{}{rootID: {}}
-	queue := []string{rootID}
-	var sources []string
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		for _, next := range outgoing[current] {
-			if _, seen := visited[next]; seen {
-				continue
-			}
-			visited[next] = struct{}{}
-			queue = append(queue, next)
-			if name := names[next]; name != "" {
-				sources = appendUnique(sources, name)
-			}
-		}
-	}
-
-	sort.Strings(sources)
-	return sources
 }
 
 // nativeMRN builds the MRN of an asset owned by another Marmot plugin, using that plugin's own provider and path. The host in the URI only hints at the owning plugin's zone, which Marmot resolves from the zone bindings that plugin reports.

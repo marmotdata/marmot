@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -99,6 +100,35 @@ func TestViewLineage_Integration(t *testing.T) {
 		assert.Equal(t, []string{"total"}, got.FromColumns)
 		assert.Equal(t, "expression", got.Transform)
 	}
+}
+
+// TestViewLineage_PostgresDialectRegistered guards the blank import of the
+// postgres dialect: lineage/sql registers none itself, so without it every
+// view would silently fall back to table-only lineage.
+func TestViewLineage_PostgresDialectRegistered(t *testing.T) {
+	require.True(t, sqllineage.Supported("postgres"))
+
+	mrn := "mrn://asset/table/postgresql/shop.public.orders"
+	assetIdx := map[schemaTable]*pluginsdk.Asset{
+		{schema: "public", table: "orders"}: {
+			MRN:    &mrn,
+			Schema: map[string]string{"columns": `[{"column_name":"customer_id","data_type":"integer"},{"column_name":"total","data_type":"numeric"}]`},
+		},
+	}
+
+	var extractor sqllineage.Extractor
+	got, err := extractor.Extract(context.Background(), sqllineage.ExtractRequest{
+		SQL:             "SELECT customer_id, sum(total) AS total_spend FROM public.orders GROUP BY customer_id",
+		Dialect:         "postgres",
+		DefaultDatabase: "shop",
+		DefaultSchema:   "public",
+		Sources:         buildExtractSources(assetIdx, "shop"),
+	})
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"customer_id"}, ToColumn: "customer_id", Confidence: 1},
+		{FromColumns: []string{"total"}, ToColumn: "total_spend", Transform: "expression", Confidence: 1},
+	}, got[mrn])
 }
 
 func findEdgeByTargetSuffix(edges []pluginsdk.LineageEdge, targetContains, sourceContains string) *pluginsdk.LineageEdge {

@@ -74,6 +74,98 @@ func TestLineage_CarriesThePipelineThatMovedTheData(t *testing.T) {
 	assert.Equal(t, "mrn://asset/pipeline/airflow/orders_etl", found.JobMRN)
 }
 
+// columnLineageResponse is GET /api/v1/lineage/table/{id} for raw_orders as
+// OpenMetadata returns it: the entity and its neighbours by FQN, and the
+// edge's column lineage named by column FQN.
+const columnLineageResponse = `{
+  "entity": {"id": "id-pg.shop.public.raw_orders", "type": "table", "name": "raw_orders",
+             "fullyQualifiedName": "pg.shop.public.raw_orders"},
+  "nodes": [
+    {"id": "id-pg.shop.public.orders", "type": "table", "name": "orders",
+     "fullyQualifiedName": "pg.shop.public.orders"}
+  ],
+  "upstreamEdges": [],
+  "downstreamEdges": [
+    {
+      "fromEntity": "id-pg.shop.public.raw_orders",
+      "toEntity": "id-pg.shop.public.orders",
+      "lineageDetails": {
+        "sqlQuery": "INSERT INTO orders SELECT id, amount * fx AS amount_gbp FROM raw_orders",
+        "source": "QueryLineage",
+        "columnsLineage": [
+          {"fromColumns": ["pg.shop.public.raw_orders.id"], "toColumn": "pg.shop.public.orders.id"},
+          {"fromColumns": ["pg.shop.public.raw_orders.amount", "pg.shop.public.raw_orders.fx"],
+           "toColumn": "pg.shop.public.orders.amount_gbp", "function": "amount * fx"},
+          {"fromColumns": ["pg.shop.public.raw_orders.\"ship.to\".city"], "toColumn": "pg.shop.public.orders.city"},
+          {"fromColumns": ["pg.shop.public.customers.name"], "toColumn": "pg.shop.public.orders.customer_name"},
+          {"fromColumns": [], "toColumn": "pg.shop.public.orders.loaded_at"}
+        ]
+      }
+    }
+  ]
+}`
+
+func TestLineage_CarriesColumnLineageOnTheEdge(t *testing.T) {
+	var resp lineageResponse
+	require.NoError(t, json.Unmarshal([]byte(columnLineageResponse), &resp))
+
+	f := newFakeOM().
+		with("tables",
+			tableEntity("pg", "Postgres", "pg.shop.public.raw_orders", "Regular"),
+			tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")).
+		withLineage("table", "id-pg.shop.public.raw_orders", resp)
+
+	result := discover(t, f, nil)
+
+	var found *pluginsdk.LineageEdge
+	for i, e := range result.Lineage {
+		if e.Type == "DEPENDS_ON" {
+			found = &result.Lineage[i]
+		}
+	}
+	require.NotNil(t, found)
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"id"}, ToColumn: "id"},
+		{FromColumns: []string{"amount", "fx"}, ToColumn: "amount_gbp", Transform: "amount * fx"},
+		{FromColumns: []string{"ship.to.city"}, ToColumn: "city"},
+	}, found.ColumnLineage, "columns from another table and targets with no source are dropped")
+}
+
+func TestLineage_KeepsColumnLineageWhenTheOtherEndOmitsIt(t *testing.T) {
+	var withColumns lineageResponse
+	require.NoError(t, json.Unmarshal([]byte(columnLineageResponse), &withColumns))
+	bare := lineageEdge{FromEntity: "id-pg.shop.public.raw_orders", ToEntity: "id-pg.shop.public.orders"}
+
+	f := newFakeOM().
+		with("tables",
+			tableEntity("pg", "Postgres", "pg.shop.public.raw_orders", "Regular"),
+			tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")).
+		withLineage("table", "id-pg.shop.public.raw_orders", withColumns).
+		withLineage("table", "id-pg.shop.public.orders", lineageResponse{UpstreamEdges: []lineageEdge{bare}})
+
+	result := discover(t, f, nil)
+
+	require.Len(t, result.Lineage, 1)
+	assert.Len(t, result.Lineage[0].ColumnLineage, 3)
+}
+
+func TestColumnName_StripsTheTableFQN(t *testing.T) {
+	name, ok := columnName("svc.db.schema.orders.id", "svc.db.schema.orders")
+	assert.True(t, ok)
+	assert.Equal(t, "id", name)
+
+	name, ok = columnName(`svc."my.db".schema.orders."a.b"`, `svc."my.db".schema.orders`)
+	assert.True(t, ok)
+	assert.Equal(t, "a.b", name)
+
+	_, ok = columnName("svc.db.schema.customers.id", "svc.db.schema.orders")
+	assert.False(t, ok, "a column of another table is not this table's")
+
+	name, ok = columnName("svc.db.schema.orders.id", "")
+	assert.True(t, ok)
+	assert.Equal(t, "id", name, "without the table FQN the last part is the name")
+}
+
 func TestLineage_IgnoresEdgesToEntitiesThatWereNotImported(t *testing.T) {
 	edge := lineageEdge{FromEntity: "id-pg.shop.public.raw_orders", ToEntity: "id-not-imported"}
 

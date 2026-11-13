@@ -88,6 +88,10 @@ func seededGraph() *fakeReader {
 	f.rows[tableLineageQuery] = []map[string]any{
 		{"downstream": "postgres://prod.public/orders", "upstream": "postgres://prod.public/customers"},
 	}
+	f.rows[columnLineageQuery] = []map[string]any{
+		{"downstream": "hive://gold.sales/orders_view", "to_column": "order_id", "upstream": "hive://gold.sales/orders", "from_column": "order_id"},
+		{"downstream": "postgres://prod.public/orders", "to_column": "customer_id", "upstream": "postgres://prod.public/customers", "from_column": "id"},
+	}
 	f.rows[dashboardQuery] = []map[string]any{revenueDashboardRow()}
 	f.rows[dashboardUsageQuery] = []map[string]any{
 		{"key": "superset_dashboard://prod.finance/revenue", "total_usage": int64(7), "unique_usage": int64(1)},
@@ -303,6 +307,16 @@ func statisticFor(c *collector, assetMRN, metric string) (float64, bool) {
 		}
 	}
 	return 0, false
+}
+
+// edgeOf returns the run's lineage edge between two assets, if any.
+func edgeOf(c *collector, source, target, edgeType string) *pluginsdk.LineageEdge {
+	for i, edge := range c.lineage {
+		if edge.Source == source && edge.Target == target && edge.Type == edgeType {
+			return &c.lineage[i]
+		}
+	}
+	return nil
 }
 
 // hasEdge reports whether the run produced this exact lineage edge.

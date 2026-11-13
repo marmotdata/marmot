@@ -1,6 +1,7 @@
 package mssql
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -524,7 +525,7 @@ func TestViewOfEdges_PointFromTheBaseTableToTheView(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.customers c JOIN dbo.orders o ON o.customer_id = c.customer_id",
 	}
 
-	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(context.Background(), testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	require.Len(t, edges, 2)
 	for _, edge := range edges {
@@ -543,7 +544,7 @@ func TestViewOfEdges_SkipAnObjectThisRunDidNotDiscover(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.audit_log",
 	}
 
-	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(context.Background(), testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Empty(t, edges)
 }
@@ -553,13 +554,13 @@ func TestViewOfEdges_SkipAViewReferencingItself(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.order_totals",
 	}
 
-	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(context.Background(), testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Empty(t, edges)
 }
 
 func TestViewOfEdges_SkipATableWithNoDefinition(t *testing.T) {
-	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), map[string]string{}, discoveredNames())
+	edges := viewOfEdges(context.Background(), testSource().config, "shop", viewAssets(t), map[string]string{}, discoveredNames())
 
 	assert.Empty(t, edges)
 }
@@ -569,7 +570,7 @@ func TestViewOfEdges_EmitOneEdgePerBaseObject(t *testing.T) {
 		"dbo.order_totals": "CREATE VIEW dbo.order_totals AS SELECT * FROM dbo.orders UNION ALL SELECT * FROM dbo.orders",
 	}
 
-	edges := viewOfEdges(testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
+	edges := viewOfEdges(context.Background(), testSource().config, "shop", viewAssets(t), definitions, discoveredNames())
 
 	assert.Len(t, edges, 1)
 }

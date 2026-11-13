@@ -12,6 +12,7 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
 	_ "github.com/microsoft/go-mssqldb" // pure-Go TDS driver, registered as "sqlserver"
 	"github.com/rs/zerolog/log"
 )
@@ -120,9 +121,10 @@ type discovery struct {
 	objects map[string]objectRef
 }
 
-// objectRef locates a discovered table or view and records its asset type, so an edge is built with the MRN the object actually has.
+// objectRef locates a discovered table or view and records its asset type, so an edge is built with the MRN the object actually has. Columns maps each column name to its type, which is what view column lineage resolves names against.
 type objectRef struct {
 	Database, Schema, Name, Type string
+	Columns                      map[string]string
 }
 
 func (r objectRef) mrn(cfg *Config) string {
@@ -325,6 +327,7 @@ func (s *Source) discoverDatabase(ctx context.Context, database databaseInfo, se
 		objectAssets = append(objectAssets, asset)
 		result.objects[strings.ToLower(qualifiedName(database.Name, object.Schema, object.Name))] = objectRef{
 			Database: database.Name, Schema: object.Schema, Name: object.Name, Type: assetType,
+			Columns: columnTypes(columnsByObject[key]),
 		}
 	}
 
@@ -361,7 +364,7 @@ func (s *Source) discoverDatabase(ctx context.Context, database databaseInfo, se
 	}
 
 	if s.config.IncludeViews {
-		result.lineage = append(result.lineage, viewOfEdges(s.config, database.Name, objectAssets, viewDefinitions, result.objects)...)
+		result.lineage = append(result.lineage, viewOfEdges(dbCtx, s.config, database.Name, objectAssets, viewDefinitions, result.objects)...)
 	}
 
 	if s.config.IncludeStatistics {
@@ -628,10 +631,14 @@ func (s *Source) foreignKeyEdges(ctx context.Context, databaseName string, exclu
 
 // viewOfEdges links each view to the objects its definition reads, pointing
 // from the base object to the view. Only references that resolve to something
-// discovered in this run become edges.
-func viewOfEdges(cfg *Config, databaseName string, objectAssets []pluginsdk.Asset, viewDefinitions map[string]string, objects map[string]objectRef) []pluginsdk.LineageEdge {
+// discovered in this run become edges. Each edge carries the column lineage
+// the definition yields for its base object; a definition the parser cannot
+// read still produces the table-level edge.
+func viewOfEdges(ctx context.Context, cfg *Config, databaseName string, objectAssets []pluginsdk.Asset, viewDefinitions map[string]string, objects map[string]objectRef) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 	seen := make(map[string]bool)
+	var sources []sqllineage.ExtractSource
+	var extractor sqllineage.Extractor
 
 	for _, asset := range objectAssets {
 		if asset.Type != "View" {
@@ -644,6 +651,11 @@ func viewOfEdges(cfg *Config, databaseName string, objectAssets []pluginsdk.Asse
 		if !ok {
 			continue
 		}
+
+		if sources == nil {
+			sources = buildExtractSources(cfg, objects)
+		}
+		columnLineage := viewColumnLineage(ctx, &extractor, databaseName, schemaName, viewName, definition, sources)
 
 		for _, reference := range extractViewReferences(definition, databaseName, schemaName) {
 			base, found := objects[strings.ToLower(reference)]
@@ -667,9 +679,10 @@ func viewOfEdges(cfg *Config, databaseName string, objectAssets []pluginsdk.Asse
 				Msg("Found view reference")
 
 			edges = append(edges, pluginsdk.LineageEdge{
-				Source: sourceMRN,
-				Target: *asset.MRN,
-				Type:   "VIEW_OF",
+				Source:        sourceMRN,
+				Target:        *asset.MRN,
+				Type:          "VIEW_OF",
+				ColumnLineage: columnLineage[sourceMRN],
 			})
 		}
 	}

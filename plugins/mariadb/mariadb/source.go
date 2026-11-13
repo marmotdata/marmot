@@ -189,6 +189,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to get view definitions")
 		} else {
+			attachViewColumnLineage(ctx, s.config.Database, objects, viewLineages)
 			lineages = append(lineages, viewLineages...)
 			log.Debug().Int("count", len(viewLineages)).Msg("Discovered view dependencies")
 		}

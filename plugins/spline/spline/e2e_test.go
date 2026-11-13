@@ -95,11 +95,17 @@ func seedSpline(t *testing.T, baseURL string) {
 	plan := func(id, name, output string, inputs []string, appendMode bool) map[string]any {
 		reads := make([]map[string]any, 0, len(inputs))
 		for i, input := range inputs {
+			// Only the first input supplies the columns the plan writes, so
+			// column lineage has to be traced to the right read.
+			output := []string{}
+			if i == 0 {
+				output = []string{"attr-order-id", "attr-total"}
+			}
 			reads = append(reads, map[string]any{
 				"id":           fmt.Sprintf("op-read-%d", i),
 				"name":         "LogicalRelation",
 				"inputSources": []string{input},
-				"output":       []string{"attr-order-id", "attr-total"},
+				"output":       output,
 			})
 		}
 		return map[string]any{
@@ -298,22 +304,31 @@ func TestE2E_DiscoverReturnsRunHistoryIncludingTheFailure(t *testing.T) {
 	assert.Equal(t, "FAIL", night.Runs[0].EventType)
 }
 
-func TestE2E_DiscoverReturnsColumnLineageOnTheOutput(t *testing.T) {
+func TestE2E_DiscoverReturnsColumnLineageOnTheInputToOutputEdge(t *testing.T) {
 	result := discoverE2E(t)
 
-	encoded, ok := e2eAssetsByName(result)["daily-etl"].Metadata["column_lineage"].(string)
-	require.True(t, ok, "expected column_lineage on the pipeline")
+	const (
+		orders       = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.orders"
+		customers    = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.customers"
+		orderSummary = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"
+	)
 
-	var lineage map[string][]struct {
-		ToColumn    string   `json:"to_column"`
-		FromColumns []string `json:"from_columns"`
+	var found *pluginsdk.LineageEdge
+	for i, edge := range result.Lineage {
+		if edge.Target == orderSummary && edge.Type == "DEPENDS_ON" {
+			assert.NotEqual(t, customers, edge.Source, "no written column came from customers")
+			if edge.Source == orders {
+				found = &result.Lineage[i]
+			}
+		}
 	}
-	require.NoError(t, json.Unmarshal([]byte(encoded), &lineage))
-
-	entries := lineage["mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"]
-	require.NotEmpty(t, entries)
-	assert.Equal(t, "revenue", entries[0].ToColumn)
-	assert.Equal(t, []string{"order_id", "total"}, entries[0].FromColumns)
+	require.NotNil(t, found, "expected a column lineage edge from orders to order_summary")
+	assert.Equal(t, "mrn://asset/pipeline/spline/daily-etl", found.JobMRN)
+	assert.ElementsMatch(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"order_id"}, ToColumn: "order_id"},
+		{FromColumns: []string{"total"}, ToColumn: "total"},
+		{FromColumns: []string{"order_id", "total"}, ToColumn: "revenue", Transform: "expression"},
+	}, found.ColumnLineage)
 }
 
 func TestE2E_DiscoverAddsTheSplineUILink(t *testing.T) {

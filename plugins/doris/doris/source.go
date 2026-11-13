@@ -153,6 +153,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	}
 
 	lineages = append(lineages, resolvePendingEdges(pending, objectMRNs)...)
+	attachViewColumnLineage(ctx, s.config.Catalog, assets, lineages)
 
 	log.Info().
 		Int("assets", len(assets)).

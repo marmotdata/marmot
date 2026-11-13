@@ -18,7 +18,6 @@ type SplineFields struct {
 	AgentVersion     string   `json:"agent_version" metadata:"agent_version" description:"Version of the Spline agent"`
 	Inputs           []string `json:"inputs" metadata:"inputs" description:"Raw data source URIs the application read"`
 	Outputs          []string `json:"outputs" metadata:"outputs" description:"Raw data source URIs the application wrote"`
-	ColumnLineage    string   `json:"column_lineage" metadata:"column_lineage" description:"Column level lineage as JSON, keyed by the MRN of the table produced"`
 	URL              string   `json:"url" metadata:"url" description:"Link to the most recent run in the Spline UI"`
 }
 

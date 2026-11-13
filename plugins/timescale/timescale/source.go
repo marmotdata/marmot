@@ -241,7 +241,7 @@ func (s *Source) discoverDatabase(ctx context.Context, dbName, dbMRN string) (*p
 		})
 	}
 
-	lineages = append(lineages, viewLineage(s.config, objects, ts)...)
+	lineages = append(lineages, viewLineage(ctx, s.config, objects, ts)...)
 
 	if s.config.DiscoverForeignKeys {
 		fkLineages, err := s.discoverForeignKeys(ctx, dbName)

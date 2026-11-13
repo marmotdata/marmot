@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
 )
 
 // tableIndex remembers the tables a run discovered so the tables a saved
@@ -13,6 +14,10 @@ import (
 type tableIndex struct {
 	byQualified map[string]string
 	byName      map[string]string
+
+	// sources and views feed view column lineage; see viewEdges.
+	sources []sqllineage.ExtractSource
+	views   []viewDefinition
 }
 
 func newTableIndex() *tableIndex {

@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
+	_ "github.com/marmotdata/plugin-sdk/lineage/sql/postgres"
 	"github.com/rs/zerolog/log"
 )
 
@@ -743,8 +747,10 @@ func referencedObjects(definition string, known map[string]bool) []string {
 
 // viewLineage links every view to the tables it reads. A continuous
 // aggregate's source hypertable comes from the TimescaleDB catalog, which
-// names it exactly; the rest is read off the definition.
-func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
+// names it exactly; the rest is read off the definition. Each edge carries
+// the column lineage the SQL extractor derives from the definition; a view
+// whose definition the extractor cannot parse keeps its table-level edges.
+func viewLineage(ctx context.Context, cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
 	known := make(map[string]bool, len(objects))
 	byKey := make(map[string]object, len(objects))
 	byName := make(map[string]object, len(objects))
@@ -765,6 +771,8 @@ func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.L
 		return obj, ok
 	}
 
+	extractSources := viewExtractSources(cfg, objects)
+
 	var lineages []pluginsdk.LineageEdge
 	seen := make(map[string]bool)
 
@@ -776,7 +784,7 @@ func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.L
 		viewMRN := objectMRN(cfg, obj)
 		definition := obj.Definition
 
-		var sources []object
+		var sourceMRNs []string
 		if ts != nil {
 			if agg, ok := ts.aggregates[obj.key()]; ok {
 				// PostgreSQL rewrites a continuous aggregate to read from the
@@ -785,18 +793,27 @@ func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.L
 				// keeps the original query and names the source hypertable.
 				definition = agg.Definition
 				if base, ok := lookup(agg.HypertableSchema, agg.HypertableName); ok {
-					sources = append(sources, base)
+					sourceMRNs = append(sourceMRNs, objectMRN(cfg, base))
 				}
 			}
 		}
 		for _, name := range referencedObjects(definition, known) {
 			if base, ok := lookup(obj.Schema, name); ok {
-				sources = append(sources, base)
+				sourceMRNs = append(sourceMRNs, objectMRN(cfg, base))
 			}
 		}
 
-		for _, source := range sources {
-			sourceMRN := objectMRN(cfg, source)
+		columnEdges := viewColumnLineage(ctx, obj, definition, extractSources)
+		// The parser also resolves tables the scan cannot reach, such as
+		// those read inside a CTE; only discovered objects are passed in,
+		// so every MRN it returns has an asset behind it.
+		for _, mrn := range slices.Sorted(maps.Keys(columnEdges)) {
+			if !slices.Contains(sourceMRNs, mrn) {
+				sourceMRNs = append(sourceMRNs, mrn)
+			}
+		}
+
+		for _, sourceMRN := range sourceMRNs {
 			if sourceMRN == viewMRN {
 				continue
 			}
@@ -808,12 +825,56 @@ func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.L
 
 			// Source is the table the view reads, Target is the view.
 			lineages = append(lineages, pluginsdk.LineageEdge{
-				Source: sourceMRN,
-				Target: viewMRN,
-				Type:   "VIEW_OF",
+				Source:        sourceMRN,
+				Target:        viewMRN,
+				Type:          "VIEW_OF",
+				ColumnLineage: columnEdges[sourceMRN],
 			})
 		}
 	}
 
 	return lineages
+}
+
+// viewColumnLineage derives a view's column edges from its definition,
+// keyed by source-object MRN. It returns nil when the definition cannot be
+// parsed, which leaves the view with table-level lineage only.
+func viewColumnLineage(ctx context.Context, view object, definition string, sources []sqllineage.ExtractSource) map[string][]pluginsdk.ColumnEdge {
+	if definition == "" || len(sources) == 0 {
+		return nil
+	}
+	var extractor sqllineage.Extractor
+	edges, err := extractor.Extract(ctx, sqllineage.ExtractRequest{
+		SQL:             definition,
+		Dialect:         "postgres",
+		DefaultDatabase: view.Database,
+		DefaultSchema:   view.Schema,
+		Sources:         sources,
+	})
+	if err != nil {
+		log.Debug().Err(err).Str("view", view.key()).Msg("View column lineage extract failed; falling back to table-only")
+		return nil
+	}
+	return edges
+}
+
+// viewExtractSources describes every discovered object to the extractor,
+// with the columns object discovery found for it. Views are included so a
+// view over a view, or over a continuous aggregate, gets column edges too.
+func viewExtractSources(cfg *Config, objects []object) []sqllineage.ExtractSource {
+	sources := make([]sqllineage.ExtractSource, 0, len(objects))
+	for _, obj := range objects {
+		cols := make(map[string]string, len(obj.Columns))
+		for _, c := range obj.Columns {
+			cols[c.Name] = c.DataType
+		}
+		sources = append(sources, sqllineage.ExtractSource{
+			MRN:      objectMRN(cfg, obj),
+			Database: obj.Database,
+			Schema:   obj.Schema,
+			Table:    obj.Name,
+			Columns:  cols,
+		})
+	}
+	return sources
 }

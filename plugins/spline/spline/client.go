@@ -80,17 +80,47 @@ type ExecutionPlanInfo struct {
 	Output     *DataSourceInfo    `json:"output"`
 }
 
-// LineageDetailed is the response of GET /consumer/lineage-detailed. The
-// operation graph is not read: the plugin only needs the plan's inputs,
-// output and attributes.
+// LineageDetailed is the response of GET /consumer/lineage-detailed. Only the
+// operations of the graph are read, to find the plan's reads and its write;
+// the plan's inputs and output come from the execution plan itself.
 type LineageDetailed struct {
 	ExecutionPlan ExecutionPlanInfo `json:"executionPlan"`
+	Graph         struct {
+		Nodes []OperationNode `json:"nodes"`
+	} `json:"graph"`
 }
 
-// AttributeNode is one column in an attribute dependency graph.
-type AttributeNode struct {
+// OperationNode is one operation of an execution plan. Type is "Read",
+// "Write" or "Transformation".
+type OperationNode struct {
 	ID   string `json:"_id"`
+	Type string `json:"_type"`
 	Name string `json:"name"`
+}
+
+// OperationDetails is the response of GET /consumer/operations/{id}. Schemas
+// holds every schema the operation touches and Inputs indexes the ones it
+// reads, so a write's first input schema is the columns it wrote.
+type OperationDetails struct {
+	Operation struct {
+		ID         string `json:"_id"`
+		Type       string `json:"_type"`
+		Properties struct {
+			InputSources []string `json:"inputSources"`
+			OutputSource string   `json:"outputSource"`
+		} `json:"properties"`
+	} `json:"operation"`
+	Schemas [][]PlanAttribute `json:"schemas"`
+	Inputs  []int             `json:"inputs"`
+}
+
+// AttributeNode is one column in an attribute dependency graph. OriginOpID is
+// the operation that first produced the column, which for a column read from
+// an input is that input's Read operation.
+type AttributeNode struct {
+	ID         string `json:"_id"`
+	Name       string `json:"name"`
+	OriginOpID string `json:"originOpId"`
 }
 
 // AttributeEdge points from a column to a column it was derived from.
@@ -302,6 +332,15 @@ func (c *Client) GetLineageDetailed(ctx context.Context, planID string) (*Lineag
 		return nil, fmt.Errorf("getting lineage for plan %s: %w", planID, err)
 	}
 	return &detailed, nil
+}
+
+// GetOperation returns one operation of an execution plan with its schemas.
+func (c *Client) GetOperation(ctx context.Context, operationID string) (*OperationDetails, error) {
+	var details OperationDetails
+	if err := c.do(ctx, "/consumer/operations/"+url.PathEscape(operationID), nil, &details); err != nil {
+		return nil, fmt.Errorf("getting operation %s: %w", operationID, err)
+	}
+	return &details, nil
 }
 
 // GetAttributeLineage returns the columns one column was derived from.

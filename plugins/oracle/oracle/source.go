@@ -12,6 +12,7 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
@@ -176,7 +177,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	if s.config.DiscoverForeignKeys {
 		d.addForeignKeyLineage()
 	}
-	d.addViewLineage()
+	d.addViewLineage(ctx)
 
 	log.Info().
 		Int("assets", len(d.assets)).
@@ -214,6 +215,9 @@ type discovery struct {
 	// objects maps every table, view and materialized view emitted in this
 	// run to its MRN, so an edge is only ever built to an asset that exists.
 	objects map[objectRef]string
+	// columns maps every table, view and materialized view to its column
+	// names and types, as the catalog reports them, for view column lineage.
+	columns map[objectRef]map[string]string
 	// texts holds the SQL behind every view and materialized view, resolved
 	// into VIEW_OF edges at the end.
 	texts []viewText
@@ -306,6 +310,7 @@ func (d *discovery) discoverSchema(ctx context.Context, schema schemaRow) error 
 		asset := d.objectAsset("Table", t.Owner, t.Name, metadata, tableComments[t.Name])
 		d.setColumns(&asset, t.Name, columns[t.Name], columnComments[t.Name], primaryKeys[t.Name])
 		d.addObject(asset, *dbAsset.MRN)
+		d.addColumnTypes(objectRef{Owner: t.Owner, Name: t.Name}, columns[t.Name])
 		d.addStatistics(asset, t, len(columns[t.Name]))
 	}
 
@@ -328,6 +333,7 @@ func (d *discovery) discoverSchema(ctx context.Context, schema schemaRow) error 
 		d.setColumns(&asset, v.Name, columns[v.Name], columnComments[v.Name], nil)
 		d.addObject(asset, *dbAsset.MRN)
 		d.addColumnCount(asset, len(columns[v.Name]))
+		d.addColumnTypes(objectRef{Owner: v.Owner, Name: v.Name}, columns[v.Name])
 		d.texts = append(d.texts, viewText{ref: objectRef{Owner: v.Owner, Name: v.Name}, text: v.Text})
 	}
 
@@ -369,6 +375,7 @@ func (d *discovery) discoverSchema(ctx context.Context, schema schemaRow) error 
 		} else {
 			d.addColumnCount(asset, len(columns[mv.Name]))
 		}
+		d.addColumnTypes(objectRef{Owner: mv.Owner, Name: mv.Name}, columns[mv.Name])
 		d.texts = append(d.texts, viewText{ref: objectRef{Owner: mv.Owner, Name: mv.Name}, text: mv.Query})
 	}
 
@@ -606,6 +613,11 @@ func (d *discovery) addObject(asset pluginsdk.Asset, databaseMRN string) {
 }
 
 func (d *discovery) addEdge(source, target, edgeType string) {
+	d.addEdgeWithColumns(source, target, edgeType, nil)
+}
+
+// addEdgeWithColumns is addEdge for an edge that carries column lineage.
+func (d *discovery) addEdgeWithColumns(source, target, edgeType string, columnLineage []pluginsdk.ColumnEdge) {
 	if source == target {
 		return
 	}
@@ -614,7 +626,7 @@ func (d *discovery) addEdge(source, target, edgeType string) {
 		return
 	}
 	d.edges[key] = struct{}{}
-	d.lineage = append(d.lineage, pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType})
+	d.lineage = append(d.lineage, pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType, ColumnLineage: columnLineage})
 }
 
 // addStatistics reports what the optimizer statistics know about a table.
@@ -683,13 +695,22 @@ func (d *discovery) addForeignKeyLineage() {
 // SQL reads from. Edges run in the direction the data flows, base object to
 // view, the way the MongoDB plugin draws them. Oracle stores view text with
 // references either unqualified or as OWNER.OBJECT, so an unqualified name
-// is looked up in the view's own schema.
-func (d *discovery) addViewLineage() {
+// is looked up in the view's own schema. Each edge carries the column
+// lineage the SQL yields for its base object, when the SQL parses.
+func (d *discovery) addViewLineage(ctx context.Context) {
+	var sources []sqllineage.ExtractSource
+	var extractor sqllineage.Extractor
+
 	for _, v := range d.texts {
 		viewMRN, ok := d.objects[v.ref]
 		if !ok {
 			continue
 		}
+		if sources == nil {
+			sources = d.buildExtractSources()
+		}
+		columnLineage := viewColumnLineage(ctx, &extractor, v.ref, v.text, d.columns[v.ref], sources)
+
 		for _, ref := range extractViewReferences(v.text) {
 			if ref.Owner == "" {
 				ref.Owner = v.ref.Owner
@@ -698,7 +719,7 @@ func (d *discovery) addViewLineage() {
 			if !ok {
 				continue
 			}
-			d.addEdge(baseMRN, viewMRN, "VIEW_OF")
+			d.addEdgeWithColumns(baseMRN, viewMRN, "VIEW_OF", columnLineage[baseMRN])
 		}
 	}
 }

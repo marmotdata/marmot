@@ -48,6 +48,7 @@ func graphConfig(t *testing.T) pluginsdk.RawConfig {
 		"username":     os.Getenv("MARMOT_TEST_AMUNDSEN_USER"),
 		"password":     os.Getenv("MARMOT_TEST_AMUNDSEN_PASSWORD"),
 		"amundsen_url": "https://amundsen.marmot.test",
+		"encrypted":    false,
 	}
 }
 
@@ -242,6 +243,26 @@ func TestE2E_DashboardContainsItsCharts(t *testing.T) {
 		assert.True(t, hasLineage(result, "mrn://asset/dashboard/superset/finance-revenue", chart, "CONTAINS"),
 			"missing CONTAINS edge for %s", chart)
 	}
+}
+
+func TestE2E_ColumnLineageRidesOnTheTableEdges(t *testing.T) {
+	result := discoverGraph(t)
+
+	columnsOn := func(source, target string) []pluginsdk.ColumnEdge {
+		for _, edge := range result.Lineage {
+			if edge.Source == source && edge.Target == target && edge.Type == "FEEDS" {
+				return edge.ColumnLineage
+			}
+		}
+		t.Fatalf("no FEEDS edge from %s to %s", source, target)
+		return nil
+	}
+
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"id"}, ToColumn: "customer_id"}},
+		columnsOn("mrn://asset/table/postgresql/prod.public.customers", "mrn://asset/table/postgresql/prod.public.orders"))
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"order_id"}, ToColumn: "order_id"}},
+		columnsOn("mrn://asset/table/hive/sales.orders", "mrn://asset/view/hive/sales.orders_view"),
+		"column lineage alone adds the edge between two tables")
 }
 
 func TestE2E_TableFeedsDashboardLineage(t *testing.T) {

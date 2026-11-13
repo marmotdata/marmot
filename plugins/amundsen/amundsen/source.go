@@ -174,6 +174,10 @@ func (c *collector) collect(ctx context.Context, r reader) error {
 		return err
 	}
 
+	if err := c.discoverColumnLineage(ctx, r); err != nil {
+		return err
+	}
+
 	if c.config.IncludeDashboards {
 		if err := c.discoverDashboards(ctx, r); err != nil {
 			return err

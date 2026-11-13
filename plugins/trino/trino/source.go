@@ -163,6 +163,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 
 	var assets []pluginsdk.Asset
 	var lineages []pluginsdk.LineageEdge
+	viewSQL := map[string]string{}
 
 	catalogs, err := s.discoverCatalogs(ctx)
 	if err != nil {
@@ -206,6 +207,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 			}
 
 			s.attachDDL(ctx, catalogName, schemaName, tableAssets)
+			s.collectViewDefinitions(ctx, catalogName, schemaName, tableAssets, viewSQL)
 
 			// Catalog -> Table/View lineage
 			if s.config.IncludeCatalogs {
@@ -223,6 +225,10 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 
 		s.attachTableComments(ctx, catalogName, assets)
 	}
+
+	// Views can read tables in other catalogs, so they are parsed once
+	// every catalog is in.
+	lineages = append(lineages, viewLineage(ctx, assets, viewSQL)...)
 
 	if s.config.IncludeStats {
 		s.collectStats(ctx, assets)

@@ -205,6 +205,12 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 		lineage = append(lineage, catalogLineage...)
 	}
 
+	// Views can read tables of any catalog, so they are resolved once
+	// every catalog is in.
+	if s.config.DiscoverLineage {
+		lineage = append(lineage, tables.viewEdges(ctx)...)
+	}
+
 	workGroupAssets, workGroupLineage := s.discoverWorkGroups(ctx, tables)
 	assets = append(assets, workGroupAssets...)
 	lineage = append(lineage, workGroupLineage...)
@@ -258,6 +264,10 @@ func (s *Source) discoverCatalog(ctx context.Context, c catalogSummary, reader c
 			asset := s.tableAsset(c, db.Name, t)
 			assets = append(assets, asset)
 			tables.add(db.Name, t.Name, *asset.MRN)
+			tables.addSource(c.Name, db.Name, t, *asset.MRN)
+			if asset.Type == typeView && asset.Query != nil {
+				tables.addView(viewDefinition{catalog: c.Name, database: db.Name, name: t.Name, mrn: *asset.MRN, sql: *asset.Query})
+			}
 
 			if !s.config.DiscoverLineage {
 				continue

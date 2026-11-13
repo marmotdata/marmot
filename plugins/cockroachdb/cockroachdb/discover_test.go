@@ -1,6 +1,7 @@
 package cockroachdb
 
 import (
+	"context"
 	"encoding/json"
 	"math/big"
 	"testing"
@@ -320,13 +321,96 @@ func TestViewLineage_LinksAViewToEveryBaseRelation(t *testing.T) {
 		"public.customer_totals": "SELECT c.id, sum(o.total) FROM shop.public.orders AS o JOIN shop.public.customers AS c ON c.id = o.customer_id GROUP BY c.id",
 	}
 
-	edges := viewLineage(newSource().config, "shop", relations, definitions, known)
+	edges := viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, nil)
 
-	// Edges run base table -> view, the direction the data flows.
+	// Edges run base table -> view, the direction the data flows, and each
+	// carries the columns the view reads from that table.
 	assert.ElementsMatch(t, []pluginsdk.LineageEdge{
-		{Source: "mrn://asset/table/cockroachdb/shop.public.orders", Target: "mrn://asset/view/cockroachdb/shop.public.customer_totals", Type: "VIEW_OF"},
-		{Source: "mrn://asset/table/cockroachdb/shop.public.customers", Target: "mrn://asset/view/cockroachdb/shop.public.customer_totals", Type: "VIEW_OF"},
+		{
+			Source: "mrn://asset/table/cockroachdb/shop.public.orders", Target: "mrn://asset/view/cockroachdb/shop.public.customer_totals", Type: "VIEW_OF",
+			ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"total"}, ToColumn: "sum", Transform: "expression", Confidence: 1}},
+		},
+		{
+			Source: "mrn://asset/table/cockroachdb/shop.public.customers", Target: "mrn://asset/view/cockroachdb/shop.public.customer_totals", Type: "VIEW_OF",
+			ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"id"}, ToColumn: "id", Confidence: 1}},
+		},
 	}, edges)
+}
+
+func TestViewLineage_ExpandsAStarFromDiscoveredColumns(t *testing.T) {
+	relations := []relation{
+		{Schema: "public", Name: "orders", Kind: relkindTable},
+		{Schema: "public", Name: "paid_orders", Kind: relkindView},
+	}
+	known := map[string]relation{}
+	for _, r := range relations {
+		known[r.key()] = r
+	}
+	columns := map[string][]column{
+		"public.orders": {
+			{Column: pluginsdk.Column{Name: "id", DataType: "INT8"}},
+			{Column: pluginsdk.Column{Name: "status", DataType: "STRING"}},
+		},
+	}
+	definitions := map[string]string{
+		"public.paid_orders": "SELECT * FROM shop.public.orders WHERE status = 'paid'",
+	}
+
+	edges := viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, columns)
+
+	require.Len(t, edges, 1)
+	assert.ElementsMatch(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"id"}, ToColumn: "id", Confidence: 1},
+		{FromColumns: []string{"status"}, ToColumn: "status", Confidence: 1},
+	}, edges[0].ColumnLineage)
+}
+
+func TestViewLineage_KeepsTableEdgesWhenTheDefinitionDoesNotParse(t *testing.T) {
+	relations := []relation{
+		{Schema: "public", Name: "orders", Kind: relkindTable},
+		{Schema: "public", Name: "broken", Kind: relkindView},
+	}
+	known := map[string]relation{}
+	for _, r := range relations {
+		known[r.key()] = r
+	}
+	definitions := map[string]string{
+		"public.broken": "SELECT id FROM shop.public.orders WHERE (",
+	}
+
+	edges := viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, nil)
+
+	assert.Equal(t, []pluginsdk.LineageEdge{
+		{Source: "mrn://asset/table/cockroachdb/shop.public.orders", Target: "mrn://asset/view/cockroachdb/shop.public.broken", Type: "VIEW_OF"},
+	}, edges)
+}
+
+func TestViewLineage_AddsSourcesOnlyTheParserResolves(t *testing.T) {
+	relations := []relation{
+		{Schema: "public", Name: "orders", Kind: relkindTable},
+		{Schema: "public", Name: "recent", Kind: relkindView},
+	}
+	known := map[string]relation{}
+	for _, r := range relations {
+		known[r.key()] = r
+	}
+	columns := map[string][]column{
+		"public.orders": {{Column: pluginsdk.Column{Name: "id", DataType: "INT8"}}},
+	}
+	// The reference scan stops at the parenthesis after FROM, so only the
+	// parser sees orders inside the derived table.
+	definitions := map[string]string{
+		"public.recent": "SELECT r.id FROM (SELECT id FROM shop.public.orders) AS r",
+	}
+
+	edges := viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, columns)
+
+	assert.Equal(t, []pluginsdk.LineageEdge{{
+		Source:        "mrn://asset/table/cockroachdb/shop.public.orders",
+		Target:        "mrn://asset/view/cockroachdb/shop.public.recent",
+		Type:          "VIEW_OF",
+		ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"id"}, ToColumn: "id", Confidence: 1}},
+	}}, edges)
 }
 
 func TestViewLineage_ViewOnAViewSourcesTheViewType(t *testing.T) {
@@ -344,7 +428,7 @@ func TestViewLineage_ViewOnAViewSourcesTheViewType(t *testing.T) {
 		"public.paid_totals": "SELECT sum(total) FROM shop.public.paid_orders",
 	}
 
-	edges := viewLineage(newSource().config, "shop", relations, definitions, known)
+	edges := viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, nil)
 
 	assert.Contains(t, edges, pluginsdk.LineageEdge{
 		Source: "mrn://asset/view/cockroachdb/shop.public.paid_orders",
@@ -358,14 +442,14 @@ func TestViewLineage_SkipsReferencesThatWereNotDiscovered(t *testing.T) {
 	known := map[string]relation{"public.v": relations[0]}
 	definitions := map[string]string{"public.v": "SELECT 1 FROM other.public.t"}
 
-	assert.Empty(t, viewLineage(newSource().config, "shop", relations, definitions, known))
+	assert.Empty(t, viewLineage(context.Background(), newSource().config, "shop", relations, definitions, known, nil))
 }
 
 func TestViewLineage_SkipsViewsWithoutADefinition(t *testing.T) {
 	relations := []relation{{Schema: "public", Name: "v", Kind: relkindView}}
 	known := map[string]relation{"public.v": relations[0]}
 
-	assert.Empty(t, viewLineage(newSource().config, "shop", relations, nil, known))
+	assert.Empty(t, viewLineage(context.Background(), newSource().config, "shop", relations, nil, known, nil))
 }
 
 func TestConvertValue_NilStaysNil(t *testing.T) {

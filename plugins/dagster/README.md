@@ -15,3 +15,5 @@ Set `zone` when you catalogue more than one Dagster deployment. It becomes part 
 ## Lineage
 
 Pipelines contain their Tasks, Tasks depend on the Tasks feeding their inputs, Datasets feed the Datasets built from them, and a Pipeline produces every Dataset it materialises. When an asset names a warehouse table and its compute kind is Snowflake, BigQuery, Postgres or DuckDB, the Dataset also produces that native table, named `<database>.<schema>.<table>` as the warehouse's own plugin names it.
+
+An asset with `dagster/column_lineage` metadata carries its column lineage on the edges from its upstream Datasets: each column's dependencies on another asset's columns go on the edge from that asset. The lineage recorded by the latest materialization is used when there is one, since integrations such as dagster-dbt only record it there; otherwise the asset definition's is.

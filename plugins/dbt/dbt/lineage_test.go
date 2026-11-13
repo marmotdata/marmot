@@ -1,6 +1,7 @@
 package dbt
 
 import (
+	"context"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -74,7 +75,7 @@ func sourceWith(manifest *DBTManifest, discoverSources bool) *Source {
 func TestModelLineage_SourceEdgeKeptWhenSourcesAreDiscovered(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 
-	modelAssets, lineages := s.discoverModels()
+	modelAssets, lineages := s.discoverModels(context.Background())
 	sourceAssets := s.discoverSources()
 	all := append(modelAssets, sourceAssets...)
 
@@ -95,7 +96,7 @@ func TestModelLineage_SourceEdgeKeptWhenSourcesAreDiscovered(t *testing.T) {
 func TestModelLineage_SourceEdgeDroppedWhenSourcesAreNotDiscovered(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), false)
 
-	modelAssets, lineages := s.discoverModels()
+	modelAssets, lineages := s.discoverModels(context.Background())
 
 	assertLineageOnlyReferencesDiscoveredAssets(t, modelAssets, lineages)
 
@@ -109,7 +110,7 @@ func TestModelLineage_SourceEdgeDroppedWhenSourcesAreNotDiscovered(t *testing.T)
 func TestModelLineage_CreatesEdgeMatchesTheModelsOwnAsset(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 
-	modelAssets, lineages := s.discoverModels()
+	modelAssets, lineages := s.discoverModels(context.Background())
 	all := append(modelAssets, s.discoverSources()...)
 
 	var creates []string
@@ -128,7 +129,7 @@ func TestModelLineage_CreatesEdgeMatchesTheModelsOwnAsset(t *testing.T) {
 func TestModelMRN_IsDatabaseSchemaAndName(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 
-	assets, _ := s.discoverModels()
+	assets, _ := s.discoverModels(context.Background())
 
 	var model pluginsdk.Asset
 	for _, a := range assets {
@@ -158,7 +159,7 @@ func TestTargetZoneAppliesToWarehouseTablesButNotToModels(t *testing.T) {
 	s := sourceWith(manifestWithModelOnSource(), true)
 	s.config.TargetZone = "prod-pg"
 
-	modelAssets, lineages := s.discoverModels()
+	modelAssets, lineages := s.discoverModels(context.Background())
 	all := append(modelAssets, s.discoverSources()...)
 
 	assertLineageOnlyReferencesDiscoveredAssets(t, all, lineages)

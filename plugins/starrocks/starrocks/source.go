@@ -215,6 +215,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		s.discoverDatabase(ctx, d, database, catalogType, version)
 	}
 	s.resolveLineage(d)
+	attachViewColumnLineage(ctx, s.config.Catalog, d.assets, d.lineage)
 
 	log.Info().
 		Int("assets", len(d.assets)).

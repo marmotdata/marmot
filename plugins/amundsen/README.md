@@ -4,7 +4,7 @@ Amundsen is a catalog, so every entry in it describes something that lives somew
 
 ## What it reads
 
-Tables and views, their columns, owners, tags, badges and programmatic descriptions; dashboards and their charts; read counts as statistics; table to table lineage from `HAS_UPSTREAM`, and dashboard to table lineage from `DASHBOARD_WITH_TABLE`.
+Tables and views, their columns, owners, tags, badges and programmatic descriptions; dashboards and their charts; read counts as statistics; table to table lineage from `HAS_UPSTREAM` between tables, column lineage from `HAS_UPSTREAM` between columns (carried on the edge between their tables), and dashboard to table lineage from `DASHBOARD_WITH_TABLE`.
 
 No database, cluster or schema assets are created. Those belong to the technology's own plugin.
 

@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "dbt_version": "1.8.0",
+    "adapter_type": "postgres",
+    "project_name": "shop"
+  },
+  "nodes": {
+    "model.shop.stg_orders": {
+      "unique_id": "model.shop.stg_orders",
+      "name": "stg_orders",
+      "resource_type": "model",
+      "package_name": "shop",
+      "database": "analytics",
+      "schema": "staging",
+      "config": {"materialized": "view"},
+      "depends_on": {"nodes": ["source.shop.raw.orders"]},
+      "compiled_code": "select\n    id as order_id,\n    customer_id,\n    amount\nfrom \"analytics\".\"raw\".\"orders\""
+    },
+    "model.shop.customer_orders": {
+      "unique_id": "model.shop.customer_orders",
+      "name": "customer_orders",
+      "resource_type": "model",
+      "package_name": "shop",
+      "database": "analytics",
+      "schema": "marts",
+      "config": {"materialized": "table"},
+      "columns": {
+        "customer_id": {"name": "customer_id", "data_type": "integer"}
+      },
+      "depends_on": {
+        "nodes": [
+          "model.shop.stg_orders",
+          "source.shop.raw.customers",
+          "seed.shop.country_codes"
+        ]
+      },
+      "compiled_code": "with orders as (\n    select * from \"analytics\".\"staging\".\"stg_orders\"\n)\nselect\n    c.id as customer_id,\n    c.first_name || ' ' || c.last_name as customer_name,\n    cc.country_name,\n    sum(o.amount) as total_amount\nfrom orders o\njoin \"analytics\".\"raw\".\"customers_v2\" c on o.customer_id = c.id\nleft join \"analytics\".\"seeds\".\"country_codes\" cc on cc.code = c.country_code\ngroup by 1, 2, 3"
+    },
+    "seed.shop.country_codes": {
+      "unique_id": "seed.shop.country_codes",
+      "name": "country_codes",
+      "resource_type": "seed",
+      "package_name": "shop",
+      "database": "analytics",
+      "schema": "seeds",
+      "columns": {
+        "code": {"name": "code", "data_type": "text"},
+        "country_name": {"name": "country_name", "data_type": "text"}
+      }
+    }
+  },
+  "sources": {
+    "source.shop.raw.orders": {
+      "unique_id": "source.shop.raw.orders",
+      "name": "orders",
+      "resource_type": "source",
+      "package_name": "shop",
+      "database": "analytics",
+      "schema": "raw",
+      "identifier": "orders"
+    },
+    "source.shop.raw.customers": {
+      "unique_id": "source.shop.raw.customers",
+      "name": "customers",
+      "resource_type": "source",
+      "package_name": "shop",
+      "database": "analytics",
+      "schema": "raw",
+      "identifier": "customers_v2"
+    }
+  }
+}

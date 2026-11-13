@@ -1,6 +1,7 @@
 package presto
 
 import (
+	"context"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -77,7 +78,7 @@ func TestViewLineage_EdgeRunsFromBaseTableToView(t *testing.T) {
 		viewAsset("memory", "shop", "big_orders", prestoViewDefinition),
 	}
 
-	edges := viewLineage(assets)
+	edges := viewLineage(context.Background(), assets)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", edges[0].Source)
@@ -92,7 +93,7 @@ func TestViewLineage_ResolvesBareNamesAgainstTheViewsSchema(t *testing.T) {
 		viewAsset("memory", "shop", "v", "SELECT * FROM orders"),
 	}
 
-	edges := viewLineage(assets)
+	edges := viewLineage(context.Background(), assets)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", edges[0].Source)
@@ -104,7 +105,7 @@ func TestViewLineage_ReachesTablesInOtherCatalogs(t *testing.T) {
 		viewAsset("memory", "shop", "v", "SELECT * FROM tpch.tiny.nation"),
 	}
 
-	edges := viewLineage(assets)
+	edges := viewLineage(context.Background(), assets)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, "mrn://asset/table/presto/tpch.tiny.nation", edges[0].Source)
@@ -115,7 +116,7 @@ func TestViewLineage_DropsUndiscoveredReferences(t *testing.T) {
 		viewAsset("memory", "shop", "v", "SELECT * FROM hive.raw.events"),
 	}
 
-	assert.Empty(t, viewLineage(assets))
+	assert.Empty(t, viewLineage(context.Background(), assets))
 }
 
 func TestViewLineage_DeduplicatesRepeatedReferences(t *testing.T) {
@@ -124,7 +125,7 @@ func TestViewLineage_DeduplicatesRepeatedReferences(t *testing.T) {
 		viewAsset("memory", "shop", "v", "SELECT * FROM orders UNION ALL SELECT * FROM shop.orders"),
 	}
 
-	assert.Len(t, viewLineage(assets), 1)
+	assert.Len(t, viewLineage(context.Background(), assets), 1)
 }
 
 func TestViewLineage_ViewsCanStackOnViews(t *testing.T) {
@@ -133,7 +134,7 @@ func TestViewLineage_ViewsCanStackOnViews(t *testing.T) {
 		viewAsset("memory", "shop", "v2", "SELECT * FROM v1"),
 	}
 
-	edges := viewLineage(assets)
+	edges := viewLineage(context.Background(), assets)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, "mrn://asset/view/presto/memory.shop.v1", edges[0].Source)
@@ -144,5 +145,5 @@ func TestViewLineage_IgnoresViewsWithoutADefinition(t *testing.T) {
 	s := &Source{config: &Config{}}
 	view := s.createTableAsset("memory", "shop", "v", "VIEW", "memory")
 
-	assert.Empty(t, viewLineage([]pluginsdk.Asset{tableAsset("memory", "shop", "orders"), view}))
+	assert.Empty(t, viewLineage(context.Background(), []pluginsdk.Asset{tableAsset("memory", "shop", "orders"), view}))
 }

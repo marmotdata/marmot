@@ -1,6 +1,7 @@
 package presto
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -58,8 +59,9 @@ func resolveReference(parts []string, catalog, schema string) tableKey {
 // viewLineage emits a VIEW_OF edge from each base table to the view that
 // reads it, for base tables discovered in this run. References to
 // anything else (CTEs, functions, tables in skipped catalogs) resolve to
-// nothing and are dropped.
-func viewLineage(assets []pluginsdk.Asset) []pluginsdk.LineageEdge {
+// nothing and are dropped. Each edge then carries the column lineage the
+// SQL parser derives from the view, when it can parse it.
+func viewLineage(ctx context.Context, assets []pluginsdk.Asset) []pluginsdk.LineageEdge {
 	mrns := make(map[tableKey]string, len(assets))
 	for _, a := range assets {
 		if a.Type == "Table" || a.Type == "View" {
@@ -102,5 +104,5 @@ func viewLineage(assets []pluginsdk.Asset) []pluginsdk.LineageEdge {
 		}
 	}
 
-	return lineages
+	return attachColumnLineage(ctx, assets, lineages)
 }

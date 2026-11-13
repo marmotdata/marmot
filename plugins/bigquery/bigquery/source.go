@@ -253,6 +253,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		}
 	}
 
+	// Views can read any dataset, so their lineage waits for every table.
+	lineages = append(lineages, s.discoverViewLineage(ctx, assets)...)
+
 	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
@@ -494,6 +497,13 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]plugin
 
 		if tableType == TableTypeView && metadata.ViewQuery != "" {
 			assetMetadata["view_query"] = metadata.ViewQuery
+			if metadata.UseLegacySQL {
+				assetMetadata["use_legacy_sql"] = true
+			}
+		}
+
+		if metadata.MaterializedView != nil && metadata.MaterializedView.Query != "" {
+			assetMetadata["materialized_view_query"] = metadata.MaterializedView.Query
 		}
 
 		if tableType == TableTypeExternal && metadata.ExternalDataConfig != nil {

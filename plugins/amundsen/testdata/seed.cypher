@@ -82,6 +82,14 @@ CREATE (customers)-[:READ_BY {read_count: 5}]->(u1)
 CREATE (orders)-[:HAS_UPSTREAM]->(customers)
 CREATE (customers)-[:HAS_DOWNSTREAM]->(orders)
 
+// Column lineage, written both ways as Amundsen's ColumnLineage model
+// does: customers.id feeds orders.customer_id, and the Hive view's
+// order_id is read from the Hive table, which has no table lineage.
+CREATE (oc2)-[:HAS_UPSTREAM]->(cc1)
+CREATE (cc1)-[:HAS_DOWNSTREAM]->(oc2)
+CREATE (vc1)-[:HAS_UPSTREAM]->(hc1)
+CREATE (hc1)-[:HAS_DOWNSTREAM]->(vc1)
+
 // A Superset dashboard with one query and two charts.
 CREATE (dbg:Dashboardgroup {key: 'superset_dashboard://prod.finance', name: 'finance', url: 'https://superset.marmot.test/dashboard/group/finance'})
 CREATE (dbg)-[:DASHBOARD_GROUP_OF]->(dbc)

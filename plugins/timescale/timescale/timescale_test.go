@@ -1,6 +1,7 @@
 package timescale
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -424,19 +425,102 @@ func TestViewLineage_LinksAPlainViewToItsTables(t *testing.T) {
 			Definition: "SELECT c.name FROM customers c JOIN conditions co ON co.customer_id = c.id"},
 	}
 
-	edges := viewLineage(&Config{}, objects, nil)
+	edges := viewLineage(context.Background(), &Config{}, objects, nil)
 
 	require.Len(t, edges, 2)
+	// conditions is only joined on, so its edge has no column lineage.
 	assert.Contains(t, edges, pluginsdk.LineageEdge{
 		Source: "mrn://asset/table/postgresql/shop.public.conditions",
 		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
 		Type:   "VIEW_OF",
 	})
 	assert.Contains(t, edges, pluginsdk.LineageEdge{
-		Source: "mrn://asset/table/postgresql/shop.public.customers",
-		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
-		Type:   "VIEW_OF",
+		Source:        "mrn://asset/table/postgresql/shop.public.customers",
+		Target:        "mrn://asset/view/postgresql/shop.public.customer_readings",
+		Type:          "VIEW_OF",
+		ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"name"}, ToColumn: "name", Confidence: 1}},
 	})
+}
+
+func TestViewLineage_ExpandsAStarFromDiscoveredColumns(t *testing.T) {
+	objects := []object{
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable, Columns: []column{
+			{Column: pluginsdk.Column{Name: "time", DataType: "timestamp with time zone"}},
+			{Column: pluginsdk.Column{Name: "device_id", DataType: "text"}},
+		}},
+		{Database: "shop", Schema: "public", Name: "recent", Kind: kindView,
+			Definition: "SELECT * FROM conditions WHERE time > now() - interval '1 day'"},
+	}
+
+	edges := viewLineage(context.Background(), &Config{}, objects, nil)
+
+	require.Len(t, edges, 1)
+	assert.ElementsMatch(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"device_id"}, ToColumn: "device_id", Confidence: 1},
+		{FromColumns: []string{"time"}, ToColumn: "time", Confidence: 1},
+	}, edges[0].ColumnLineage)
+}
+
+// The column lineage of a continuous aggregate comes from the catalog's copy
+// of the original query, not the rewritten view definition, so it lands on
+// the edge from the source hypertable.
+func TestViewLineage_AggregateCarriesColumnLineageFromTheCatalogQuery(t *testing.T) {
+	objects := []object{
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable, Columns: []column{
+			{Column: pluginsdk.Column{Name: "time", DataType: "timestamp with time zone"}},
+			{Column: pluginsdk.Column{Name: "device_id", DataType: "text"}},
+			{Column: pluginsdk.Column{Name: "temperature", DataType: "double precision"}},
+		}},
+		{Database: "shop", Schema: "public", Name: "conditions_daily", Kind: kindView,
+			Definition: "SELECT bucket, device_id, avg_temp FROM _timescaledb_internal._materialized_hypertable_2"},
+	}
+	agg := sampleAggregate()
+	agg.Definition = `SELECT time_bucket('1 day'::interval, conditions."time") AS bucket, conditions.device_id, avg(conditions.temperature) AS avg_temp FROM conditions GROUP BY (time_bucket('1 day'::interval, conditions."time")), conditions.device_id`
+	ts := &timescaleInfo{aggregates: map[string]*aggregate{"public.conditions_daily": agg}}
+
+	edges := viewLineage(context.Background(), &Config{}, objects, ts)
+
+	require.Len(t, edges, 1)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.conditions", edges[0].Source)
+	assert.ElementsMatch(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"time"}, ToColumn: "bucket", Transform: "expression", Confidence: 1},
+		{FromColumns: []string{"device_id"}, ToColumn: "device_id", Confidence: 1},
+		{FromColumns: []string{"temperature"}, ToColumn: "avg_temp", Transform: "expression", Confidence: 1},
+	}, edges[0].ColumnLineage)
+}
+
+func TestViewLineage_KeepsTableEdgesWhenTheDefinitionDoesNotParse(t *testing.T) {
+	objects := []object{
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
+		{Database: "shop", Schema: "public", Name: "broken", Kind: kindView, Definition: "SELECT time FROM conditions WHERE ("},
+	}
+
+	assert.Equal(t, []pluginsdk.LineageEdge{{
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/view/postgresql/shop.public.broken",
+		Type:   "VIEW_OF",
+	}}, viewLineage(context.Background(), &Config{}, objects, nil))
+}
+
+func TestViewLineage_AddsSourcesOnlyTheParserResolves(t *testing.T) {
+	objects := []object{
+		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable, Columns: []column{
+			{Column: pluginsdk.Column{Name: "device_id", DataType: "text"}},
+		}},
+		{Database: "shop", Schema: "public", Name: "devices", Kind: kindView,
+			Definition: "WITH d AS (SELECT device_id FROM conditions) SELECT device_id FROM d"},
+	}
+
+	// The scan sees only the CTE name d after FROM; the parser follows it
+	// back to conditions.
+	edges := viewLineage(context.Background(), &Config{}, objects, nil)
+
+	assert.Equal(t, []pluginsdk.LineageEdge{{
+		Source:        "mrn://asset/table/postgresql/shop.public.conditions",
+		Target:        "mrn://asset/view/postgresql/shop.public.devices",
+		Type:          "VIEW_OF",
+		ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"device_id"}, ToColumn: "device_id", Confidence: 1}},
+	}}, edges)
 }
 
 // PostgreSQL rewrites a continuous aggregate to read from the hidden
@@ -453,7 +537,7 @@ func TestViewLineage_LinksAnAggregateToItsSourceHypertable(t *testing.T) {
 		"public.conditions_daily": sampleAggregate(),
 	}}
 
-	edges := viewLineage(&Config{}, objects, ts)
+	edges := viewLineage(context.Background(), &Config{}, objects, ts)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, pluginsdk.LineageEdge{
@@ -473,7 +557,7 @@ func TestViewLineage_NeverPointsAtTheMaterializationHypertable(t *testing.T) {
 		"public.conditions_daily": sampleAggregate(),
 	}}
 
-	for _, edge := range viewLineage(&Config{}, objects, ts) {
+	for _, edge := range viewLineage(context.Background(), &Config{}, objects, ts) {
 		assert.NotContains(t, edge.Source, "materialized_hypertable")
 	}
 }
@@ -484,7 +568,7 @@ func TestViewLineage_SkipsTables(t *testing.T) {
 		{Database: "shop", Schema: "public", Name: "conditions", Kind: kindTable},
 	}
 
-	assert.Empty(t, viewLineage(&Config{}, objects, nil))
+	assert.Empty(t, viewLineage(context.Background(), &Config{}, objects, nil))
 }
 
 func TestViewLineage_SkipsAViewOverAnUndiscoveredTable(t *testing.T) {
@@ -492,7 +576,7 @@ func TestViewLineage_SkipsAViewOverAnUndiscoveredTable(t *testing.T) {
 		{Database: "shop", Schema: "public", Name: "report", Kind: kindView, Definition: "SELECT * FROM archived_orders"},
 	}
 
-	assert.Empty(t, viewLineage(&Config{}, objects, nil))
+	assert.Empty(t, viewLineage(context.Background(), &Config{}, objects, nil))
 }
 
 func TestViewLineage_EmitsEachEdgeOnce(t *testing.T) {
@@ -510,7 +594,7 @@ func TestViewLineage_EmitsEachEdgeOnce(t *testing.T) {
 
 	// The catalog names conditions as the source and the definition mentions
 	// it too, which must not produce the edge twice.
-	assert.Len(t, viewLineage(&Config{}, objects, ts), 1)
+	assert.Len(t, viewLineage(context.Background(), &Config{}, objects, ts), 1)
 }
 
 func TestViewLineage_LinksAViewToAnotherView(t *testing.T) {
@@ -519,7 +603,7 @@ func TestViewLineage_LinksAViewToAnotherView(t *testing.T) {
 		{Database: "shop", Schema: "public", Name: "conditions_weekly", Kind: kindView, Definition: "SELECT * FROM conditions_daily"},
 	}
 
-	edges := viewLineage(&Config{}, objects, nil)
+	edges := viewLineage(context.Background(), &Config{}, objects, nil)
 
 	require.Len(t, edges, 1)
 	assert.Equal(t, "mrn://asset/view/postgresql/shop.public.conditions_daily", edges[0].Source)
@@ -531,7 +615,7 @@ func TestViewLineage_SkipsASelfReference(t *testing.T) {
 		{Database: "shop", Schema: "public", Name: "loop", Kind: kindView, Definition: "SELECT * FROM loop"},
 	}
 
-	assert.Empty(t, viewLineage(&Config{}, objects, nil))
+	assert.Empty(t, viewLineage(context.Background(), &Config{}, objects, nil))
 }
 
 // Statistics assembly. A hypertable's parent table holds no rows of its own.

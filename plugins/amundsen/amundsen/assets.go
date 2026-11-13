@@ -39,9 +39,10 @@ type collector struct {
 	// Amundsen table key.
 	ownersByTable map[string][]owner
 	// seenMRN keeps two Amundsen entries that project onto one MRN from
-	// becoming two assets, and seenEdge does the same for lineage.
+	// becoming two assets, and seenEdge does the same for lineage,
+	// holding each edge's position in lineage.
 	seenMRN  map[string]struct{}
-	seenEdge map[string]struct{}
+	seenEdge map[string]int
 }
 
 func newCollector(config *Config) *collector {
@@ -51,7 +52,7 @@ func newCollector(config *Config) *collector {
 		mrnByKey:      make(map[string]string),
 		ownersByTable: make(map[string][]owner),
 		seenMRN:       make(map[string]struct{}),
-		seenEdge:      make(map[string]struct{}),
+		seenEdge:      make(map[string]int),
 	}
 }
 
@@ -119,19 +120,21 @@ func (c *collector) add(key string, asset pluginsdk.Asset) bool {
 
 // link records a lineage edge, skipping one already recorded. Amundsen
 // stores its table lineage twice, once as HAS_UPSTREAM and once as
-// HAS_DOWNSTREAM, so duplicates are normal rather than a mistake.
-func (c *collector) link(source, target, edgeType string) {
+// HAS_DOWNSTREAM, so duplicates are normal rather than a mistake. It
+// returns the recorded edge, which stays valid until the next link.
+func (c *collector) link(source, target, edgeType string) *pluginsdk.LineageEdge {
 	if source == "" || target == "" || source == target {
-		return
+		return nil
 	}
 
 	key := source + "|" + target + "|" + edgeType
-	if _, seen := c.seenEdge[key]; seen {
-		return
+	if position, seen := c.seenEdge[key]; seen {
+		return &c.lineage[position]
 	}
-	c.seenEdge[key] = struct{}{}
+	c.seenEdge[key] = len(c.lineage)
 
 	c.lineage = append(c.lineage, pluginsdk.LineageEdge{Source: source, Target: target, Type: edgeType})
+	return &c.lineage[len(c.lineage)-1]
 }
 
 // stat records one usage metric, leaving out the zero that Amundsen

@@ -372,9 +372,19 @@ type lineageEdge struct {
 }
 
 type lineageDetails struct {
-	SQLQuery string     `json:"sqlQuery"`
-	Source   string     `json:"source"`
-	Pipeline *entityRef `json:"pipeline"`
+	SQLQuery       string          `json:"sqlQuery"`
+	Source         string          `json:"source"`
+	Pipeline       *entityRef      `json:"pipeline"`
+	ColumnsLineage []columnLineage `json:"columnsLineage"`
+}
+
+// columnLineage is one target column of an edge and the source columns it
+// was derived from. Both ends are column FQNs: the table's FQN followed by
+// the column name.
+type columnLineage struct {
+	FromColumns []string `json:"fromColumns"`
+	ToColumn    string   `json:"toColumn"`
+	Function    string   `json:"function"`
 }
 
 // splitFQN splits an OpenMetadata fully qualified name into its parts.

@@ -204,11 +204,39 @@ const assetNodesFixture = `{
                   {"name": "amount", "type": "double", "description": "Order amount", "constraints": {"nullable": true, "unique": false}}
                 ]
               }
+            },
+            {
+              "__typename": "TableColumnLineageMetadataEntry",
+              "label": "dagster/column_lineage",
+              "lineage": [
+                {"columnName": "id", "columnDeps": [{"assetKey": {"path": ["raw_orders"]}, "columnName": "id"}]}
+              ]
             }
           ],
           "dependencies": [{"asset": {"assetKey": {"path": ["raw_orders"]}}}],
           "dependedBy": [{"asset": {"assetKey": {"path": ["order_metrics"]}}}],
-          "assetMaterializations": [{"runId": "05c1267f-d0b5-496c-a5dc-17aa462775f1", "timestamp": "1788853307723"}]
+          "assetMaterializations": [
+            {
+              "runId": "05c1267f-d0b5-496c-a5dc-17aa462775f1",
+              "timestamp": "1788853307723",
+              "metadataEntries": [
+                {
+                  "__typename": "TableColumnLineageMetadataEntry",
+                  "label": "dagster/column_lineage",
+                  "lineage": [
+                    {
+                      "columnName": "amount_gbp",
+                      "columnDeps": [
+                        {"assetKey": {"path": ["raw_orders"]}, "columnName": "amount"},
+                        {"assetKey": {"path": ["raw_orders"]}, "columnName": "fx"}
+                      ]
+                    },
+                    {"columnName": "id", "columnDeps": [{"assetKey": {"path": ["raw_orders"]}, "columnName": "id"}]}
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
           "id": "r.defs.py.__repository__.order_metrics",
@@ -221,10 +249,18 @@ const assetNodesFixture = `{
           "isPartitioned": false,
           "isObservable": false,
           "isMaterializable": true,
-          "metadataEntries": [],
+          "metadataEntries": [
+            {
+              "__typename": "TableColumnLineageMetadataEntry",
+              "label": "dagster/column_lineage",
+              "lineage": [
+                {"columnName": "total", "columnDeps": [{"assetKey": {"path": ["clean_orders"]}, "columnName": "amount_gbp"}]}
+              ]
+            }
+          ],
           "dependencies": [{"asset": {"assetKey": {"path": ["clean_orders"]}}}],
           "dependedBy": [],
-          "assetMaterializations": [{"runId": "05c1267f-d0b5-496c-a5dc-17aa462775f1", "timestamp": "1788853308896"}]
+          "assetMaterializations": [{"runId": "05c1267f-d0b5-496c-a5dc-17aa462775f1", "timestamp": "1788853308896", "metadataEntries": []}]
         },
         {
           "id": "r.defs.py.__repository__.raw_orders",

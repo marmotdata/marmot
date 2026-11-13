@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
@@ -274,7 +276,7 @@ func (s *Source) discoverDatabase(ctx context.Context, dbName string) (*database
 	}
 
 	if s.config.IncludeViews {
-		result.lineage = append(result.lineage, viewLineage(s.config, dbName, relations, definitions, byKey)...)
+		result.lineage = append(result.lineage, viewLineage(ctx, s.config, dbName, relations, definitions, byKey, columns)...)
 	}
 
 	return result, nil
@@ -675,10 +677,14 @@ func listForeignKeys(ctx context.Context, cfg *Config, conn *pgx.Conn, dbName st
 
 // viewLineage links every view to the relations its definition reads from.
 // Edges run in the direction the data flows, base relation to view, the
-// same way the MongoDB plugin draws its VIEW_OF edges.
-func viewLineage(cfg *Config, dbName string, relations []relation, definitions map[string]string, known map[string]relation) []pluginsdk.LineageEdge {
+// same way the MongoDB plugin draws its VIEW_OF edges. Each edge carries the
+// column lineage the SQL extractor derives from the definition; a view whose
+// definition the extractor cannot parse keeps its table-level edges.
+func viewLineage(ctx context.Context, cfg *Config, dbName string, relations []relation, definitions map[string]string, known map[string]relation, columns map[string][]column) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 	seen := make(map[string]struct{})
+
+	sources := viewExtractSources(cfg, dbName, known, columns)
 
 	for _, view := range relations {
 		if !view.isView() {
@@ -690,27 +696,40 @@ func viewLineage(cfg *Config, dbName string, relations []relation, definitions m
 		}
 
 		viewMRN := assetMRN(cfg, view.assetType(), dbName, view.Schema, view.Name)
+		columnEdges := viewColumnLineage(ctx, dbName, view, definition, sources)
 
+		var sourceMRNs []string
 		for _, ref := range viewReferences(definition) {
 			base, ok := resolveReference(ref, dbName, view.Schema, known)
 			if !ok {
 				log.Debug().Str("view", view.key()).Strs("reference", ref).Msg("Skipping VIEW_OF edge, reference not discovered")
 				continue
 			}
+			sourceMRNs = append(sourceMRNs, assetMRN(cfg, base.assetType(), dbName, base.Schema, base.Name))
+		}
+		// The parser also resolves relations the reference scan cannot
+		// reach, such as those read inside a CTE; only discovered relations
+		// are passed in, so every MRN it returns has an asset behind it.
+		for _, mrn := range slices.Sorted(maps.Keys(columnEdges)) {
+			if !slices.Contains(sourceMRNs, mrn) {
+				sourceMRNs = append(sourceMRNs, mrn)
+			}
+		}
 
-			edge := pluginsdk.LineageEdge{
-				Source: assetMRN(cfg, base.assetType(), dbName, base.Schema, base.Name),
-				Target: viewMRN,
-				Type:   "VIEW_OF",
-			}
-			if edge.Source == edge.Target {
+		for _, sourceMRN := range sourceMRNs {
+			if sourceMRN == viewMRN {
 				continue
 			}
-			if _, dup := seen[edge.Source+":"+edge.Target]; dup {
+			if _, dup := seen[sourceMRN+":"+viewMRN]; dup {
 				continue
 			}
-			seen[edge.Source+":"+edge.Target] = struct{}{}
-			edges = append(edges, edge)
+			seen[sourceMRN+":"+viewMRN] = struct{}{}
+			edges = append(edges, pluginsdk.LineageEdge{
+				Source:        sourceMRN,
+				Target:        viewMRN,
+				Type:          "VIEW_OF",
+				ColumnLineage: columnEdges[sourceMRN],
+			})
 		}
 	}
 	return edges

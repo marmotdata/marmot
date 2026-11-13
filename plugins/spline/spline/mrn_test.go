@@ -102,7 +102,7 @@ func TestAsset_PipelineMRNAndName(t *testing.T) {
 		PlanIDs: []string{"plan"},
 	}
 
-	asset := source.buildPipelineAsset(app, map[string]*ExecutionPlanInfo{}, nil, nil, nil)
+	asset := source.buildPipelineAsset(app, map[string]*LineageDetailed{}, nil, nil)
 
 	require.NotNil(t, asset.MRN)
 	assert.Equal(t, "mrn://asset/pipeline/spline@prod-eu/daily-etl", *asset.MRN)

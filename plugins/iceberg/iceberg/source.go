@@ -218,8 +218,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}
 
 	var viewAssets []pluginsdk.Asset
+	var viewDefs []viewDefinition
 	if config.IncludeViews {
-		viewAssets, err = s.discoverViews(ctx, namespaces)
+		viewAssets, viewDefs, err = s.discoverViews(ctx, namespaces)
 		if err != nil {
 			return nil, fmt.Errorf("discovering views: %w", err)
 		}
@@ -234,6 +235,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	if config.IncludeNamespaces {
 		lineages = buildContainsLineage(tableAssets, viewAssets)
 	}
+	lineages = append(lineages, viewLineage(ctx, allAssets, viewDefs)...)
 
 	return &pluginsdk.DiscoveryResult{
 		Assets:       allAssets,

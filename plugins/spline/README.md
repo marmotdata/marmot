@@ -10,7 +10,9 @@ The plugin creates no tables or buckets of its own. An edge only appears in Marm
 
 ## Column Lineage
 
-With `include_column_lineage` the plugin reads Spline's attribute lineage for every column of a run's output and stores it on the pipeline as JSON under the `column_lineage` metadata key, keyed by the MRN of the table produced. Marmot's lineage edges carry no column information, so it is recorded as metadata rather than on the edge.
+With `include_column_lineage` the plugin reads Spline's attribute lineage for every column a run wrote and traces it back to the input it was read from. The mapping is carried on a `DEPENDS_ON` edge from each input table to the output table, with the pipeline as the edge's job, so the lineage graph can trace columns across the Spark job. A pipeline has no columns, so the FEEDS and PRODUCES edges through it carry none.
+
+A column computed from other columns is marked `expression`; one written as it was read is a plain copy. A column that comes from no input, such as a literal, has no mapping. Spline answers one column per request, so at most 200 columns per execution plan are traced.
 
 ## Host
 

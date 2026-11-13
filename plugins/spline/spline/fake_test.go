@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -102,6 +103,17 @@ func newFakeSpline(t *testing.T, events []map[string]any) *fakeSpline {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(graph))
+	})
+
+	mux.HandleFunc("/consumer/operations/", func(w http.ResponseWriter, r *http.Request) {
+		fake.Requests["/consumer/operations"]++
+		operation, ok := operationFixtures[strings.TrimPrefix(r.URL.Path, "/consumer/operations/")]
+		if !ok {
+			http.Error(w, "operation not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(operation))
 	})
 
 	fake.server = httptest.NewServer(mux)
@@ -218,10 +230,14 @@ var lineageDetailedFixtures = map[string]string{
   "graph": {
     "nodes": [
       {"_id": "11111111-1111-1111-1111-111111111111:op-1", "_type": "Read", "name": "LogicalRelation", "properties": {}},
+      {"_id": "11111111-1111-1111-1111-111111111111:op-2", "_type": "Read", "name": "LogicalRelation", "properties": {}},
+      {"_id": "11111111-1111-1111-1111-111111111111:op-3", "_type": "Transformation", "name": "Join", "properties": {}},
       {"_id": "11111111-1111-1111-1111-111111111111:op-0", "_type": "Write", "name": "SaveIntoDataSourceCommand", "properties": {}}
     ],
     "edges": [
-      {"source": "11111111-1111-1111-1111-111111111111:op-1", "target": "11111111-1111-1111-1111-111111111111:op-0"}
+      {"source": "11111111-1111-1111-1111-111111111111:op-1", "target": "11111111-1111-1111-1111-111111111111:op-3"},
+      {"source": "11111111-1111-1111-1111-111111111111:op-2", "target": "11111111-1111-1111-1111-111111111111:op-3"},
+      {"source": "11111111-1111-1111-1111-111111111111:op-3", "target": "11111111-1111-1111-1111-111111111111:op-0"}
     ]
   }
 }`,
@@ -257,7 +273,17 @@ var lineageDetailedFixtures = map[string]string{
     "inputs": [{"sourceType": null, "source": "jdbc:postgresql://pg.internal:5432/warehouse:public.orders"}],
     "output": {"sourceType": null, "source": "s3a://marmot-lake/reports/nightly"}
   },
-  "graph": {"nodes": [], "edges": []}
+  "graph": {
+    "nodes": [
+      {"_id": "33333333-3333-3333-3333-333333333333:op-1", "_type": "Read", "name": "LogicalRelation", "properties": {}},
+      {"_id": "33333333-3333-3333-3333-333333333333:op-2", "_type": "Transformation", "name": "Project", "properties": {}},
+      {"_id": "33333333-3333-3333-3333-333333333333:op-0", "_type": "Write", "name": "InsertIntoHadoopFsRelationCommand", "properties": {}}
+    ],
+    "edges": [
+      {"source": "33333333-3333-3333-3333-333333333333:op-1", "target": "33333333-3333-3333-3333-333333333333:op-2"},
+      {"source": "33333333-3333-3333-3333-333333333333:op-2", "target": "33333333-3333-3333-3333-333333333333:op-0"}
+    ]
+  }
 }`,
 }
 
@@ -287,5 +313,87 @@ var attributeLineageFixtures = map[string]string{
     "edges": []
   },
   "impact": {"nodes": [], "edges": []}
+}`,
+	// customer_name is written exactly as it was read from customers.
+	planDaily + ":attr-customer-name": `{
+  "lineage": {
+    "nodes": [
+      {"_id": "11111111-1111-1111-1111-111111111111:attr-customer-name", "name": "customer_name", "originOpId": "11111111-1111-1111-1111-111111111111:op-2", "transOpIds": []}
+    ],
+    "edges": []
+  },
+  "impact": {"nodes": [], "edges": []}
+}`,
+	// order_id is a projection of the input's id column.
+	planNight + ":attr-order-id": `{
+  "lineage": {
+    "nodes": [
+      {"_id": "33333333-3333-3333-3333-333333333333:attr-order-id", "name": "order_id", "originOpId": "33333333-3333-3333-3333-333333333333:op-2", "transOpIds": []},
+      {"_id": "33333333-3333-3333-3333-333333333333:attr-id", "name": "id", "originOpId": "33333333-3333-3333-3333-333333333333:op-1", "transOpIds": []}
+    ],
+    "edges": [
+      {"source": "33333333-3333-3333-3333-333333333333:attr-order-id", "target": "33333333-3333-3333-3333-333333333333:attr-id"}
+    ]
+  },
+  "impact": {"nodes": [], "edges": []}
+}`,
+}
+
+// operationFixtures answer GET /consumer/operations/{id}, in the shape the
+// Spline server returns. daily-etl's write and both its reads are known;
+// nightly-report's write is not, so its column lineage falls back to the
+// plan's attribute list.
+var operationFixtures = map[string]string{
+	planDaily + ":op-0": `{
+  "operation": {
+    "_id": "11111111-1111-1111-1111-111111111111:op-0",
+    "_type": "Write",
+    "name": "SaveIntoDataSourceCommand",
+    "properties": {"append": false, "inputSources": null, "outputSource": "jdbc:postgresql://pg.internal:5432/warehouse:public.order_summary"}
+  },
+  "dataTypes": [],
+  "schemas": [
+    [
+      {"id": "11111111-1111-1111-1111-111111111111:attr-total", "name": "total", "dataTypeId": "dt-double"},
+      {"id": "11111111-1111-1111-1111-111111111111:attr-customer-name", "name": "customer_name", "dataTypeId": "dt-string"},
+      {"id": "11111111-1111-1111-1111-111111111111:attr-revenue", "name": "revenue", "dataTypeId": "dt-double"}
+    ],
+    [
+      {"id": "11111111-1111-1111-1111-111111111111:attr-total", "name": "total", "dataTypeId": "dt-double"},
+      {"id": "11111111-1111-1111-1111-111111111111:attr-customer-name", "name": "customer_name", "dataTypeId": "dt-string"},
+      {"id": "11111111-1111-1111-1111-111111111111:attr-revenue", "name": "revenue", "dataTypeId": "dt-double"}
+    ]
+  ],
+  "inputs": [0],
+  "output": 1
+}`,
+	planDaily + ":op-1": `{
+  "operation": {
+    "_id": "11111111-1111-1111-1111-111111111111:op-1",
+    "_type": "Read",
+    "name": "LogicalRelation",
+    "properties": {"append": null, "inputSources": ["jdbc:postgresql://pg.internal:5432/warehouse:public.orders"], "outputSource": null}
+  },
+  "dataTypes": [],
+  "schemas": [[
+    {"id": "11111111-1111-1111-1111-111111111111:attr-order-id", "name": "order_id", "dataTypeId": "dt-long"},
+    {"id": "11111111-1111-1111-1111-111111111111:attr-total", "name": "total", "dataTypeId": "dt-double"}
+  ]],
+  "inputs": [],
+  "output": 0
+}`,
+	planDaily + ":op-2": `{
+  "operation": {
+    "_id": "11111111-1111-1111-1111-111111111111:op-2",
+    "_type": "Read",
+    "name": "LogicalRelation",
+    "properties": {"append": null, "inputSources": ["jdbc:postgresql://pg.internal:5432/warehouse:public.customers"], "outputSource": null}
+  },
+  "dataTypes": [],
+  "schemas": [[
+    {"id": "11111111-1111-1111-1111-111111111111:attr-customer-name", "name": "customer_name", "dataTypeId": "dt-string"}
+  ]],
+  "inputs": [],
+  "output": 0
 }`,
 }

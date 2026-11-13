@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -400,6 +401,63 @@ func TestDiscoverTableLineage_SkipsAnUnreadableKey(t *testing.T) {
 	assert.False(t, hasEdge(c, "", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS"))
 	for _, edge := range c.lineage {
 		assert.NotEmpty(t, edge.Source)
+	}
+}
+
+func TestDiscoverColumnLineage_RidesOnTheTableEdge(t *testing.T) {
+	c := discover(t, testConfig(), seededGraph())
+
+	edge := edgeOf(c, "mrn://asset/table/postgresql/prod.public.customers", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS")
+	require.NotNil(t, edge)
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"id"}, ToColumn: "customer_id"}}, edge.ColumnLineage)
+
+	edges := 0
+	for _, e := range c.lineage {
+		if e.Source == edge.Source && e.Target == edge.Target {
+			edges++
+		}
+	}
+	assert.Equal(t, 1, edges, "column lineage must not add a second edge between two tables")
+}
+
+func TestDiscoverColumnLineage_AddsTheEdgeWhenTheTablesHaveNoLineage(t *testing.T) {
+	// Amundsen loads column lineage separately from table lineage, so the
+	// Hive view has column lineage but no table lineage of its own.
+	c := discover(t, testConfig(), seededGraph())
+
+	edge := edgeOf(c, "mrn://asset/table/hive/sales.orders", "mrn://asset/view/hive/sales.orders_view", "FEEDS")
+	require.NotNil(t, edge)
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"order_id"}, ToColumn: "order_id"}}, edge.ColumnLineage)
+}
+
+func TestDiscoverColumnLineage_FoldsTheSourcesOfOneColumnAcrossPages(t *testing.T) {
+	f := seededGraph()
+	f.rows[columnLineageQuery] = []map[string]any{
+		{"downstream": "postgres://prod.public/orders", "to_column": "total", "upstream": "postgres://prod.public/customers", "from_column": "email"},
+		{"downstream": "postgres://prod.public/orders", "to_column": "total", "upstream": "postgres://prod.public/customers", "from_column": "id"},
+		{"downstream": "postgres://prod.public/orders", "to_column": "total", "upstream": "postgres://prod.public/customers", "from_column": "id"},
+	}
+	config := testConfig()
+	config.PageSize = 1
+
+	c := discover(t, config, f)
+
+	edge := edgeOf(c, "mrn://asset/table/postgresql/prod.public.customers", "mrn://asset/table/postgresql/prod.public.orders", "FEEDS")
+	require.NotNil(t, edge)
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"email", "id"}, ToColumn: "total"}}, edge.ColumnLineage)
+}
+
+func TestDiscoverColumnLineage_SkipsAnUnreadableKey(t *testing.T) {
+	f := seededGraph()
+	f.rows[columnLineageQuery] = []map[string]any{
+		{"downstream": "postgres://prod.public/orders", "to_column": "customer_id", "upstream": "not-an-amundsen-key", "from_column": "id"},
+	}
+
+	c := discover(t, testConfig(), f)
+
+	for _, edge := range c.lineage {
+		assert.NotEmpty(t, edge.Source)
+		assert.Empty(t, edge.ColumnLineage)
 	}
 }
 

@@ -1,6 +1,57 @@
 package cockroachdb
 
-import "strings"
+import (
+	"context"
+	"strings"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
+	_ "github.com/marmotdata/plugin-sdk/lineage/sql/postgres"
+	"github.com/rs/zerolog/log"
+)
+
+// viewColumnLineage derives a view's column edges from its definition,
+// keyed by source-relation MRN. It returns nil when the definition cannot
+// be parsed, which leaves the view with table-level lineage only.
+func viewColumnLineage(ctx context.Context, dbName string, view relation, definition string, sources []sqllineage.ExtractSource) map[string][]pluginsdk.ColumnEdge {
+	if len(sources) == 0 {
+		return nil
+	}
+	var extractor sqllineage.Extractor
+	edges, err := extractor.Extract(ctx, sqllineage.ExtractRequest{
+		SQL:             definition,
+		Dialect:         "cockroachdb",
+		DefaultDatabase: dbName,
+		DefaultSchema:   view.Schema,
+		Sources:         sources,
+	})
+	if err != nil {
+		log.Debug().Err(err).Str("view", view.key()).Msg("View column lineage extract failed; falling back to table-only")
+		return nil
+	}
+	return edges
+}
+
+// viewExtractSources describes every discovered relation to the extractor,
+// with the columns column discovery found for it. Views are included so a
+// view over a view gets column edges too.
+func viewExtractSources(cfg *Config, dbName string, known map[string]relation, columns map[string][]column) []sqllineage.ExtractSource {
+	sources := make([]sqllineage.ExtractSource, 0, len(known))
+	for key, r := range known {
+		cols := make(map[string]string, len(columns[key]))
+		for _, c := range columns[key] {
+			cols[c.Name] = c.DataType
+		}
+		sources = append(sources, sqllineage.ExtractSource{
+			MRN:      assetMRN(cfg, r.assetType(), dbName, r.Schema, r.Name),
+			Database: dbName,
+			Schema:   r.Schema,
+			Table:    r.Name,
+			Columns:  cols,
+		})
+	}
+	return sources
+}
 
 // viewReferences returns the names a view definition reads from: every
 // identifier chain that follows FROM or JOIN, and the further ones a comma

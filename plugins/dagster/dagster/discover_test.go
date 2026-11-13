@@ -326,6 +326,73 @@ func TestDiscover_DatasetFeedsItsDownstreamDataset(t *testing.T) {
 		"FEEDS"))
 }
 
+func feedsEdge(t *testing.T, result *pluginsdk.DiscoveryResult, source, target string) pluginsdk.LineageEdge {
+	t.Helper()
+
+	for _, edge := range result.Lineage {
+		if edge.Source == source && edge.Target == target && edge.Type == "FEEDS" {
+			return edge
+		}
+	}
+	t.Fatalf("no FEEDS edge from %s to %s", source, target)
+	return pluginsdk.LineageEdge{}
+}
+
+func TestDiscover_DatasetEdgeCarriesTheLatestMaterializationsColumnLineage(t *testing.T) {
+	// clean_orders declares lineage for id only, but its last materialization
+	// recorded amount_gbp as well; the materialization is what was written.
+	result := discover(t, newFakeDagster(), nil)
+
+	edge := feedsEdge(t, result, "mrn://asset/dataset/dagster/raw_orders", "mrn://asset/dataset/dagster/clean_orders")
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"amount", "fx"}, ToColumn: "amount_gbp"},
+		{FromColumns: []string{"id"}, ToColumn: "id"},
+	}, edge.ColumnLineage)
+}
+
+func TestDiscover_DatasetEdgeFallsBackToTheDefinitionsColumnLineage(t *testing.T) {
+	result := discover(t, newFakeDagster(), nil)
+
+	edge := feedsEdge(t, result, "mrn://asset/dataset/dagster/clean_orders", "mrn://asset/dataset/dagster/order_metrics")
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"amount_gbp"}, ToColumn: "total"},
+	}, edge.ColumnLineage)
+}
+
+func TestDiscover_ColumnLineageIsNotFlattenedIntoMetadata(t *testing.T) {
+	result := discover(t, newFakeDagster(), nil)
+
+	assert.NotContains(t, assetByName(t, result, "order_metrics").Metadata, "dagster_column_lineage")
+}
+
+func TestColumnLineage_SplitsAColumnAcrossItsUpstreamAssets(t *testing.T) {
+	var node AssetNode
+	require.NoError(t, json.Unmarshal([]byte(`{
+	  "assetKey": {"path": ["order_facts"]},
+	  "metadataEntries": [{
+	    "__typename": "TableColumnLineageMetadataEntry",
+	    "label": "dagster/column_lineage",
+	    "lineage": [{
+	      "columnName": "customer_total",
+	      "columnDeps": [
+	        {"assetKey": {"path": ["sales", "orders"]}, "columnName": "amount"},
+	        {"assetKey": {"path": ["crm", "customers"]}, "columnName": "id"},
+	        {"assetKey": {"path": ["sales", "orders"]}, "columnName": "amount"}
+	      ]
+	    }]
+	  }]
+	}`), &node))
+
+	byUpstream := columnLineage(node)
+
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"amount"}, ToColumn: "customer_total"}}, byUpstream[datasetName(AssetKey{Path: []string{"sales", "orders"}})])
+	assert.Equal(t, []pluginsdk.ColumnEdge{{FromColumns: []string{"id"}, ToColumn: "customer_total"}}, byUpstream[datasetName(AssetKey{Path: []string{"crm", "customers"}})])
+}
+
+func TestColumnLineage_IsEmptyWithoutALineageEntry(t *testing.T) {
+	assert.Nil(t, columnLineage(AssetNode{AssetKey: AssetKey{Path: []string{"raw_orders"}}}))
+}
+
 func TestDiscover_PipelineProducesTheDatasetsItMaterialises(t *testing.T) {
 	result := discover(t, newFakeDagster(), nil)
 

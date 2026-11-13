@@ -48,14 +48,17 @@ func (s *Source) discoverTables(ctx context.Context, namespaces map[string]iceta
 	return assets, nil
 }
 
-func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetable.Identifier) ([]pluginsdk.Asset, error) {
+// discoverViews returns the views' assets and, for each view with SQL in a
+// dialect the lineage parser reads, its definition.
+func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetable.Identifier) ([]pluginsdk.Asset, []viewDefinition, error) {
 	vc, ok := s.cat.(viewCatalog)
 	if !ok {
 		log.Debug().Msg("Catalog does not support views")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	var assets []pluginsdk.Asset
+	var defs []viewDefinition
 
 	for nsPath, ns := range namespaces {
 		for ident, err := range vc.ListViews(ctx, ns) {
@@ -73,10 +76,13 @@ func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetab
 
 			a := s.createViewAsset(v, ident)
 			assets = append(assets, a)
+			if def, ok := newViewDefinition(v, ident, *a.MRN); ok {
+				defs = append(defs, def)
+			}
 		}
 	}
 
-	return assets, nil
+	return assets, defs, nil
 }
 
 func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier) pluginsdk.Asset {
@@ -179,6 +185,9 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) plugin
 	if ver := v.CurrentVersion(); ver != nil {
 		if len(ver.Representations) > 0 {
 			query = &ver.Representations[0].Sql
+			if dialect := ver.Representations[0].Dialect; dialect != "" {
+				metadata["sql_dialect"] = dialect
+			}
 		}
 	}
 

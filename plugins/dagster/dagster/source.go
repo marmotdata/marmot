@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -535,6 +536,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 
 		assets = append(assets, asset)
 
+		columnsByUpstream := columnLineage(node)
 		for _, dependency := range node.Dependencies {
 			upstream := datasetName(dependency.Asset.AssetKey)
 			if _, ok := known[upstream]; !ok {
@@ -544,9 +546,10 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 				continue
 			}
 			lineage = append(lineage, pluginsdk.LineageEdge{
-				Source: s.datasetMRN(dependency.Asset.AssetKey),
-				Target: mrnValue,
-				Type:   "FEEDS",
+				Source:        s.datasetMRN(dependency.Asset.AssetKey),
+				Target:        mrnValue,
+				Type:          "FEEDS",
+				ColumnLineage: columnsByUpstream[upstream],
 			})
 		}
 
@@ -888,6 +891,66 @@ func metadataKey(label string) string {
 	}, label)
 
 	return strings.Trim(key, "_")
+}
+
+// columnLineage reads an asset's TableColumnLineage and groups it by the
+// upstream asset each source column belongs to, ready to go on the edge from
+// that asset. The latest materialization's lineage is preferred over the
+// definition's, since integrations such as dagster-dbt only record it at
+// materialization time and it reflects what the asset actually wrote.
+func columnLineage(node AssetNode) map[string][]pluginsdk.ColumnEdge {
+	entries := columnLineageEntries(node.MetadataEntries)
+	if len(node.AssetMaterializations) > 0 {
+		if latest := columnLineageEntries(node.AssetMaterializations[0].MetadataEntries); len(latest) > 0 {
+			entries = latest
+		}
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+
+	byUpstream := make(map[string][]pluginsdk.ColumnEdge)
+	for _, entry := range entries {
+		if entry.ColumnName == "" {
+			continue
+		}
+
+		// One column can draw on several upstream assets; each edge only
+		// carries the columns that come from its own source.
+		var upstreams []string
+		from := make(map[string][]string)
+		for _, dep := range entry.ColumnDeps {
+			if dep.ColumnName == "" || len(dep.AssetKey.Path) == 0 {
+				continue
+			}
+			upstream := datasetName(dep.AssetKey)
+			if _, ok := from[upstream]; !ok {
+				upstreams = append(upstreams, upstream)
+			}
+			if !slices.Contains(from[upstream], dep.ColumnName) {
+				from[upstream] = append(from[upstream], dep.ColumnName)
+			}
+		}
+
+		for _, upstream := range upstreams {
+			byUpstream[upstream] = append(byUpstream[upstream], pluginsdk.ColumnEdge{
+				FromColumns: from[upstream],
+				ToColumn:    entry.ColumnName,
+			})
+		}
+	}
+	return byUpstream
+}
+
+// columnLineageEntries returns the column lineage among an asset's metadata
+// entries. Dagster stores it under the dagster/column_lineage label.
+func columnLineageEntries(entries []MetadataEntry) []TableColumnLineageEntry {
+	for _, entry := range entries {
+		if entry.Typename == "TableColumnLineageMetadataEntry" {
+			return entry.Lineage
+		}
+	}
+	return nil
 }
 
 // tableSchemaColumns converts a Dagster TableSchema entry into Marmot columns.

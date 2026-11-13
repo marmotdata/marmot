@@ -1,7 +1,6 @@
 package spline
 
 import (
-	"encoding/json"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -197,7 +196,15 @@ func TestErrorMessage_EncodesAnUnrecognisedShape(t *testing.T) {
 // Column lineage walks the attribute graph, where an edge points from a
 // derived column to the column it came from.
 
-func TestSourceColumns_FollowsEdgesToTheSourceColumns(t *testing.T) {
+func originNames(nodes []AttributeNode) []string {
+	names := make([]string, 0, len(nodes))
+	for _, node := range nodes {
+		names = append(names, node.Name)
+	}
+	return names
+}
+
+func TestOriginColumns_FollowsEdgesToTheSourceColumns(t *testing.T) {
 	graph := AttributeGraph{
 		Nodes: []AttributeNode{
 			{ID: "revenue", Name: "revenue"},
@@ -210,18 +217,24 @@ func TestSourceColumns_FollowsEdgesToTheSourceColumns(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, []string{"order_id", "total"}, sourceColumns(graph, "revenue"))
+	origins, derived := originColumns(graph, "revenue")
+	assert.Equal(t, []string{"order_id", "total"}, originNames(origins))
+	assert.True(t, derived)
 }
 
-func TestSourceColumns_IsEmptyForAColumnReadStraightFromTheInput(t *testing.T) {
+func TestOriginColumns_IsTheColumnItselfWhenReadStraightFromTheInput(t *testing.T) {
 	graph := AttributeGraph{
-		Nodes: []AttributeNode{{ID: "total", Name: "total"}},
+		Nodes: []AttributeNode{{ID: "total", Name: "total", OriginOpID: "read"}},
 	}
 
-	assert.Empty(t, sourceColumns(graph, "total"))
+	origins, derived := originColumns(graph, "total")
+	assert.Equal(t, []AttributeNode{{ID: "total", Name: "total", OriginOpID: "read"}}, origins)
+	assert.False(t, derived)
 }
 
-func TestSourceColumns_FollowsTransitiveDependencies(t *testing.T) {
+func TestOriginColumns_SkipsIntermediateColumns(t *testing.T) {
+	// revenue is computed inside the plan, so only the column it came from
+	// belongs to an input.
 	graph := AttributeGraph{
 		Nodes: []AttributeNode{
 			{ID: "margin", Name: "margin"},
@@ -234,16 +247,26 @@ func TestSourceColumns_FollowsTransitiveDependencies(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, []string{"revenue", "total"}, sourceColumns(graph, "margin"))
+	origins, _ := originColumns(graph, "margin")
+	assert.Equal(t, []string{"total"}, originNames(origins))
 }
 
-func TestSourceColumns_SurvivesACycle(t *testing.T) {
+func TestOriginColumns_SurvivesACycle(t *testing.T) {
 	graph := AttributeGraph{
 		Nodes: []AttributeNode{{ID: "a", Name: "a"}, {ID: "b", Name: "b"}},
 		Edges: []AttributeEdge{{Source: "a", Target: "b"}, {Source: "b", Target: "a"}},
 	}
 
-	assert.Equal(t, []string{"b"}, sourceColumns(graph, "a"))
+	origins, derived := originColumns(graph, "a")
+	assert.Empty(t, origins, "a cycle has no column it was read from")
+	assert.True(t, derived)
+}
+
+func TestTransformOf_LabelsOnlyRealDerivations(t *testing.T) {
+	assert.Equal(t, "", transformOf([]string{"total"}, "total", false))
+	assert.Equal(t, "", transformOf([]string{"total"}, "TOTAL", true))
+	assert.Equal(t, "expression", transformOf([]string{"id"}, "order_id", true))
+	assert.Equal(t, "expression", transformOf([]string{"order_id", "total"}, "revenue", true))
 }
 
 // Discovery against the fake server.
@@ -474,21 +497,92 @@ func TestDiscover_AttachesRunFacets(t *testing.T) {
 	t.Fatal("no run history for daily-etl")
 }
 
-func TestDiscover_RecordsColumnLineageForTheOutputTable(t *testing.T) {
+func findEdge(result *pluginsdk.DiscoveryResult, source, target, edgeType string) *pluginsdk.LineageEdge {
+	for i, edge := range result.Lineage {
+		if edge.Source == source && edge.Target == target && edge.Type == edgeType {
+			return &result.Lineage[i]
+		}
+	}
+	return nil
+}
+
+const (
+	ordersMRN       = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.orders"
+	customersMRN    = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.customers"
+	orderSummaryMRN = "mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"
+)
+
+func TestDiscover_PutsColumnLineageOnAnEdgeFromEachInputTable(t *testing.T) {
+	// daily-etl joins orders and customers. Each written column is traced back
+	// to the Read operation it came from, so the columns land on the edge from
+	// the right table.
 	fake := newFakeSpline(t, fixtureEvents())
 
-	metadata := assetsByName(discoverAgainstFake(t, fake, nil))["daily-etl"].Metadata
+	result := discoverAgainstFake(t, fake, nil)
 
-	encoded, ok := metadata["column_lineage"].(string)
-	require.True(t, ok, "expected column_lineage on the pipeline")
+	orders := findEdge(result, ordersMRN, orderSummaryMRN, "DEPENDS_ON")
+	require.NotNil(t, orders)
+	assert.Equal(t, "mrn://asset/pipeline/spline/daily-etl", orders.JobMRN)
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"total"}, ToColumn: "total"},
+		{FromColumns: []string{"order_id", "total"}, ToColumn: "revenue", Transform: "expression"},
+	}, orders.ColumnLineage)
 
-	var lineage map[string][]ColumnLineageEntry
-	require.NoError(t, json.Unmarshal([]byte(encoded), &lineage))
+	customers := findEdge(result, customersMRN, orderSummaryMRN, "DEPENDS_ON")
+	require.NotNil(t, customers)
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"customer_name"}, ToColumn: "customer_name"},
+	}, customers.ColumnLineage)
+}
 
-	entries := lineage["mrn://asset/table/postgresql@host=pg.internal:5432/warehouse.public.order_summary"]
-	require.Len(t, entries, 1)
-	assert.Equal(t, "revenue", entries[0].ToColumn)
-	assert.Equal(t, []string{"order_id", "total"}, entries[0].FromColumns)
+func TestDiscover_LooksUpOnlyTheColumnsThePlanWrote(t *testing.T) {
+	// order_id is in daily-etl's attribute list but not in its write's schema.
+	fake := newFakeSpline(t, fixtureEvents())
+
+	result := discoverAgainstFake(t, fake, nil)
+
+	for _, edge := range result.Lineage {
+		if edge.Target != orderSummaryMRN {
+			continue
+		}
+		for _, column := range edge.ColumnLineage {
+			assert.NotEqual(t, "order_id", column.ToColumn, "order_id was not written by daily-etl")
+		}
+	}
+}
+
+func TestDiscover_ResolvesASingleInputPlanWithoutAskingItsReads(t *testing.T) {
+	// nightly-report reads only orders, so every read column came from it. Its
+	// write cannot be read, so the plan's attribute list is used instead.
+	fake := newFakeSpline(t, fixtureEvents())
+
+	result := discoverAgainstFake(t, fake, nil)
+
+	edge := findEdge(result, ordersMRN, "mrn://asset/bucket/s3/marmot-lake", "DEPENDS_ON")
+	require.NotNil(t, edge)
+	assert.Equal(t, "mrn://asset/pipeline/spline/nightly-report", edge.JobMRN)
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"id"}, ToColumn: "order_id", Transform: "expression"},
+	}, edge.ColumnLineage)
+
+	// daily-etl's write and its two reads, and nightly-report's write.
+	assert.Equal(t, 4, fake.Requests["/consumer/operations"])
+}
+
+func TestDiscover_EmitsNoColumnEdgeForAPlanWithoutColumnLineage(t *testing.T) {
+	fake := newFakeSpline(t, fixtureEvents())
+
+	result := discoverAgainstFake(t, fake, nil)
+
+	assert.Nil(t, findEdge(result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/table/hive/sales.orders", "DEPENDS_ON"))
+}
+
+func TestDiscover_NoLongerStoresColumnLineageAsMetadata(t *testing.T) {
+	fake := newFakeSpline(t, fixtureEvents())
+
+	result := discoverAgainstFake(t, fake, nil)
+
+	assert.NotContains(t, assetsByName(result)["daily-etl"].Metadata, "column_lineage")
 }
 
 func TestDiscover_SkipsColumnLineageWhenDisabled(t *testing.T) {
@@ -496,8 +590,29 @@ func TestDiscover_SkipsColumnLineageWhenDisabled(t *testing.T) {
 
 	result := discoverAgainstFake(t, fake, pluginsdk.RawConfig{"include_column_lineage": false})
 
-	assert.NotContains(t, assetsByName(result)["daily-etl"].Metadata, "column_lineage")
+	for _, edge := range result.Lineage {
+		assert.Empty(t, edge.ColumnLineage)
+		assert.NotEqual(t, "DEPENDS_ON", edge.Type)
+	}
 	assert.Zero(t, fake.Requests["/consumer/attribute-lineage-and-impact"])
+	assert.Zero(t, fake.Requests["/consumer/operations"])
+}
+
+func TestAddColumnEdge_MergesColumnsFromAnotherPlan(t *testing.T) {
+	var edges []pluginsdk.LineageEdge
+	index := map[string]int{}
+
+	addColumnEdge(&edges, index, pluginsdk.LineageEdge{Source: "a", Target: "b", Type: "DEPENDS_ON", JobMRN: "job-1",
+		ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"x"}, ToColumn: "x"}}})
+	addColumnEdge(&edges, index, pluginsdk.LineageEdge{Source: "a", Target: "b", Type: "DEPENDS_ON", JobMRN: "job-2",
+		ColumnLineage: []pluginsdk.ColumnEdge{{FromColumns: []string{"x"}, ToColumn: "x"}, {FromColumns: []string{"y"}, ToColumn: "z"}}})
+
+	require.Len(t, edges, 1)
+	assert.Equal(t, "job-1", edges[0].JobMRN)
+	assert.Equal(t, []pluginsdk.ColumnEdge{
+		{FromColumns: []string{"x"}, ToColumn: "x"},
+		{FromColumns: []string{"y"}, ToColumn: "z"},
+	}, edges[0].ColumnLineage)
 }
 
 func TestDiscover_AddsAnExternalLinkWhenTheUIHostIsSet(t *testing.T) {

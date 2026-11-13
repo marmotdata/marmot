@@ -194,7 +194,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 
 	// Views can read tables in other catalogs, so base tables are
 	// resolved once every catalog is in.
-	lineages = append(lineages, viewLineage(assets)...)
+	lineages = append(lineages, viewLineage(ctx, assets)...)
 
 	log.Info().
 		Int("assets", len(assets)).

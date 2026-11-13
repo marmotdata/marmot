@@ -196,6 +196,17 @@ type MetadataEntry struct {
 	Schema     *struct {
 		Columns []TableColumn `json:"columns"`
 	} `json:"schema"`
+	Lineage []TableColumnLineageEntry `json:"lineage"`
+}
+
+// TableColumnLineageEntry is one column of a TableColumnLineage metadata
+// entry and the upstream asset columns it was derived from.
+type TableColumnLineageEntry struct {
+	ColumnName string `json:"columnName"`
+	ColumnDeps []struct {
+		AssetKey   AssetKey `json:"assetKey"`
+		ColumnName string   `json:"columnName"`
+	} `json:"columnDeps"`
 }
 
 // AssetEdge is one end of an asset-to-asset dependency.
@@ -206,10 +217,12 @@ type AssetEdge struct {
 }
 
 // Materialization records that an asset was written by a run.
-// Timestamp is epoch milliseconds, serialised as a string.
+// Timestamp is epoch milliseconds, serialised as a string. Only the column
+// lineage entries of its metadata are requested.
 type Materialization struct {
-	RunID     string `json:"runId"`
-	Timestamp string `json:"timestamp"`
+	RunID           string          `json:"runId"`
+	Timestamp       string          `json:"timestamp"`
+	MetadataEntries []MetadataEntry `json:"metadataEntries"`
 }
 
 // AssetNode is a software-defined asset as declared in code.
@@ -297,6 +310,10 @@ const runsQuery = `query MarmotRuns($filter: RunsFilter!, $limit: Int!) {
   }
 }`
 
+// Column lineage is read from the definition's metadata and from the latest
+// materialization's, where integrations such as dagster-dbt record it. Every
+// Dagster release with isMaterializable also has TableColumnLineage, so the
+// query needs no fallback for older webservers.
 const assetNodesQuery = `query MarmotAssetNodes($selector: RepositorySelector!) {
   repositoryOrError(repositorySelector: $selector) {
     __typename
@@ -322,10 +339,23 @@ const assetNodesQuery = `query MarmotAssetNodes($selector: RepositorySelector!) 
           ... on TableSchemaMetadataEntry {
             schema { columns { name type description constraints { nullable unique } } }
           }
+          ... on TableColumnLineageMetadataEntry {
+            lineage { columnName columnDeps { assetKey { path } columnName } }
+          }
         }
         dependencies { asset { assetKey { path } } }
         dependedBy { asset { assetKey { path } } }
-        assetMaterializations(limit: 1) { runId timestamp }
+        assetMaterializations(limit: 1) {
+          runId
+          timestamp
+          metadataEntries {
+            __typename
+            label
+            ... on TableColumnLineageMetadataEntry {
+              lineage { columnName columnDeps { assetKey { path } columnName } }
+            }
+          }
+        }
       }
     }
     ... on RepositoryNotFoundError { message }

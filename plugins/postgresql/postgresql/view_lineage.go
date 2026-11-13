@@ -8,6 +8,7 @@ import (
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
+	_ "github.com/marmotdata/plugin-sdk/lineage/sql/postgres"
 	"github.com/rs/zerolog/log"
 )
 

@@ -2,6 +2,7 @@ package openmetadata
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -106,6 +107,15 @@ func (c *collector) lineageTargets() []lineageTarget {
 // collectEdges converts one lineage response into Marmot edges, keyed so
 // the same edge seen from both endpoints is stored once.
 func (c *collector) collectEdges(resp *lineageResponse, edges map[string]pluginsdk.LineageEdge) {
+	// Column lineage names columns by FQN, so the FQN of each end is needed
+	// to tell the column name apart from the table it belongs to.
+	fqnByID := make(map[string]string, len(resp.Nodes)+1)
+	for _, node := range append([]entityRef{resp.Entity}, resp.Nodes...) {
+		if node.ID != "" && node.FullyQualifiedName != "" {
+			fqnByID[node.ID] = node.FullyQualifiedName
+		}
+	}
+
 	for _, edge := range append(resp.UpstreamEdges, resp.DownstreamEdges...) {
 		source, ok := c.mrnByID[edge.FromEntity]
 		if !ok {
@@ -132,9 +142,70 @@ func (c *collector) collectEdges(resp *lineageResponse, edges map[string]plugins
 				lineageEdge.JobMRN = jobMRN
 			}
 		}
+		if edge.Details != nil {
+			lineageEdge.ColumnLineage = columnEdges(edge.Details.ColumnsLineage, fqnByID[edge.FromEntity], fqnByID[edge.ToEntity])
+		}
 
-		edges[source+"\x00"+target] = lineageEdge
+		// The same edge is seen from both ends; a view that lost its
+		// column lineage must not replace one that has it.
+		key := source + "\x00" + target
+		if existing, seen := edges[key]; seen && len(existing.ColumnLineage) > len(lineageEdge.ColumnLineage) {
+			continue
+		}
+		edges[key] = lineageEdge
 	}
+}
+
+// columnEdges converts OpenMetadata's column lineage into Marmot's. Columns
+// are named by FQN; the table FQN is stripped to leave the column name. A
+// source column that does not belong to the edge's source table is dropped,
+// and a target column without a source column says nothing and is skipped.
+func columnEdges(columns []columnLineage, fromFQN, toFQN string) []pluginsdk.ColumnEdge {
+	var out []pluginsdk.ColumnEdge
+	for _, column := range columns {
+		to, ok := columnName(column.ToColumn, toFQN)
+		if !ok {
+			continue
+		}
+
+		var from []string
+		for _, fromColumn := range column.FromColumns {
+			if name, ok := columnName(fromColumn, fromFQN); ok && !slices.Contains(from, name) {
+				from = append(from, name)
+			}
+		}
+		if len(from) == 0 {
+			continue
+		}
+
+		out = append(out, pluginsdk.ColumnEdge{
+			FromColumns: from,
+			ToColumn:    to,
+			Transform:   strings.TrimSpace(column.Function),
+		})
+	}
+	return out
+}
+
+// columnName returns the name of a column given its FQN and the FQN of the
+// table it should belong to. A nested column keeps its parent's name, as
+// in address.city. When the table's FQN is not known the last FQN part is
+// the best name available.
+func columnName(columnFQN, tableFQN string) (string, bool) {
+	if columnFQN == "" {
+		return "", false
+	}
+	if tableFQN == "" {
+		parts := splitFQN(columnFQN)
+		name := parts[len(parts)-1]
+		return name, name != ""
+	}
+
+	rest, ok := strings.CutPrefix(columnFQN, tableFQN+".")
+	if !ok || rest == "" {
+		return "", false
+	}
+	return strings.Join(splitFQN(rest), "."), true
 }
 
 // entityKindOf maps an OpenMetadata entity kind to the path segment the

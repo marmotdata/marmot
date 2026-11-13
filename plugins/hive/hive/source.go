@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	sqllineage "github.com/marmotdata/plugin-sdk/lineage/sql"
 	"github.com/rs/zerolog/log"
 )
 
@@ -170,6 +171,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		d.discoverDatabase(ctx, database)
 	}
 	d.resolvePendingEdges()
+	d.attachColumnLineage(ctx)
 
 	log.Info().
 		Int("assets", len(d.assets)).
@@ -236,6 +238,10 @@ type discovery struct {
 	// view to its MRN.
 	known   map[string]string
 	pending []pendingEdge
+	// lineageSources and views feed view column lineage; see
+	// attachColumnLineage.
+	lineageSources []sqllineage.ExtractSource
+	views          []hiveView
 }
 
 // pendingEdge is a lineage edge with one endpoint still named by db.table
@@ -400,6 +406,7 @@ func (d *discovery) discoverObject(ctx context.Context, database, table string) 
 	asset := d.source.objectAsset(database, table, info, partitions, partitionsKnown, ddl)
 	d.assets = append(d.assets, asset)
 	d.known[strings.ToLower(qualifiedName(database, table))] = *asset.MRN
+	d.addLineageInputs(database, table, info, *asset.MRN)
 
 	if d.source.config.IncludeStatistics {
 		d.statistics = append(d.statistics, objectStatistics(*asset.MRN, info)...)

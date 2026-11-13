@@ -69,6 +69,20 @@ ORDER BY downstream, upstream
 SKIP $skip LIMIT $limit
 `
 
+// Amundsen's ColumnLineage model links columns the same way TableLineage
+// links tables, both directions included. The tables the two columns
+// belong to are read alongside, since a column key is not something
+// Marmot can resolve on its own.
+const columnLineageQuery = `
+MATCH (a:Column)-[:HAS_UPSTREAM]->(b:Column)
+MATCH (downstream:Table)-[:COLUMN]->(a)
+MATCH (upstream:Table)-[:COLUMN]->(b)
+RETURN downstream.key AS downstream, a.name AS to_column,
+       upstream.key AS upstream, b.name AS from_column
+ORDER BY downstream, upstream, to_column, from_column
+SKIP $skip LIMIT $limit
+`
+
 // tableRow is one row of tableQuery.
 type tableRow struct {
 	Database                 string
@@ -286,6 +300,66 @@ func (c *collector) discoverTableLineage(ctx context.Context, r reader) error {
 
 	log.Debug().Int("edges", edges).Msg("Discovered Amundsen table lineage")
 	return nil
+}
+
+// discoverColumnLineage puts Amundsen's column lineage on the FEEDS edge
+// between the two tables. Column lineage is loaded separately from table
+// lineage, so the edge is added when the tables have none of their own.
+func (c *collector) discoverColumnLineage(ctx context.Context, r reader) error {
+	type tablePair struct{ upstream, downstream string }
+
+	var pairs []tablePair
+	columns := make(map[tablePair][]pluginsdk.ColumnEdge)
+
+	err := eachPage(ctx, r, "column lineage", columnLineageQuery, c.config.PageSize, func(rows []map[string]any) error {
+		for _, row := range rows {
+			toColumn, fromColumn := textOf(row, "to_column"), textOf(row, "from_column")
+			if toColumn == "" || fromColumn == "" {
+				continue
+			}
+			pair := tablePair{upstream: c.tableMRN(textOf(row, "upstream")), downstream: c.tableMRN(textOf(row, "downstream"))}
+			if pair.upstream == "" || pair.downstream == "" || pair.upstream == pair.downstream {
+				continue
+			}
+
+			edges, seen := columns[pair]
+			if !seen {
+				pairs = append(pairs, pair)
+			}
+			columns[pair] = addColumnSource(edges, toColumn, fromColumn)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, pair := range pairs {
+		if edge := c.link(pair.upstream, pair.downstream, "FEEDS"); edge != nil {
+			edge.ColumnLineage = columns[pair]
+		}
+	}
+
+	log.Debug().Int("edges", len(pairs)).Msg("Discovered Amundsen column lineage")
+	return nil
+}
+
+// addColumnSource records that toColumn reads fromColumn, folding every
+// source of one target column into a single entry.
+func addColumnSource(edges []pluginsdk.ColumnEdge, toColumn, fromColumn string) []pluginsdk.ColumnEdge {
+	for i := range edges {
+		if edges[i].ToColumn != toColumn {
+			continue
+		}
+		for _, existing := range edges[i].FromColumns {
+			if existing == fromColumn {
+				return edges
+			}
+		}
+		edges[i].FromColumns = append(edges[i].FromColumns, fromColumn)
+		return edges
+	}
+	return append(edges, pluginsdk.ColumnEdge{FromColumns: []string{fromColumn}, ToColumn: toColumn})
 }
 
 // tableMRN resolves an Amundsen table key to an MRN. A key discovered in

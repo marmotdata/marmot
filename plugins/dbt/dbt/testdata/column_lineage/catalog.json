@@ -1,0 +1,46 @@
+{
+  "metadata": {"dbt_version": "1.8.0"},
+  "nodes": {
+    "model.shop.stg_orders": {
+      "unique_id": "model.shop.stg_orders",
+      "metadata": {"type": "VIEW", "database": "analytics", "schema": "staging", "name": "stg_orders"},
+      "columns": {
+        "order_id": {"name": "order_id", "type": "integer", "index": 1},
+        "customer_id": {"name": "customer_id", "type": "integer", "index": 2},
+        "amount": {"name": "amount", "type": "numeric", "index": 3}
+      }
+    },
+    "model.shop.customer_orders": {
+      "unique_id": "model.shop.customer_orders",
+      "metadata": {"type": "BASE TABLE", "database": "analytics", "schema": "marts", "name": "customer_orders"},
+      "columns": {
+        "customer_id": {"name": "customer_id", "type": "integer", "index": 1},
+        "customer_name": {"name": "customer_name", "type": "text", "index": 2},
+        "country_name": {"name": "country_name", "type": "text", "index": 3},
+        "total_amount": {"name": "total_amount", "type": "numeric", "index": 4}
+      }
+    }
+  },
+  "sources": {
+    "source.shop.raw.orders": {
+      "unique_id": "source.shop.raw.orders",
+      "metadata": {"type": "BASE TABLE", "database": "analytics", "schema": "raw", "name": "orders"},
+      "columns": {
+        "id": {"name": "id", "type": "integer", "index": 1},
+        "customer_id": {"name": "customer_id", "type": "integer", "index": 2},
+        "amount": {"name": "amount", "type": "numeric", "index": 3},
+        "created_at": {"name": "created_at", "type": "timestamp", "index": 4}
+      }
+    },
+    "source.shop.raw.customers": {
+      "unique_id": "source.shop.raw.customers",
+      "metadata": {"type": "BASE TABLE", "database": "analytics", "schema": "raw", "name": "customers_v2"},
+      "columns": {
+        "id": {"name": "id", "type": "integer", "index": 1},
+        "first_name": {"name": "first_name", "type": "text", "index": 2},
+        "last_name": {"name": "last_name", "type": "text", "index": 3},
+        "country_code": {"name": "country_code", "type": "text", "index": 4}
+      }
+    }
+  }
+}

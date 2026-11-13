@@ -153,6 +153,15 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 			})
 		}
 		log.Debug().Int("count", len(objectAssets)).Msg("Discovered tables and views")
+
+		log.Debug().Str("database", s.config.Database).Msg("Starting view column-lineage discovery")
+		viewLineages, err := s.discoverViewLineage(ctx, s.config.Database, objectAssets)
+		if err != nil {
+			log.Warn().Err(err).Str("database", s.config.Database).Msg("Failed to discover view column lineage")
+		} else {
+			lineages = append(lineages, viewLineages...)
+			log.Debug().Int("count", len(viewLineages)).Msg("Discovered view column-lineage edges")
+		}
 	}
 
 	if s.config.DiscoverForeignKeys {

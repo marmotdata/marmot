@@ -30,6 +30,10 @@ Two systems of the same technology are told apart by zone. Map each OpenMetadata
 
 Technologies Marmot has no plugin for yet, such as Snowflake or Looker, are imported under their own provider name. Nothing is invented: an entity is only imported when Marmot already has an asset type that means the same thing.
 
+## Lineage
+
+With `include_lineage` each imported entity is asked for its lineage, and every edge between two imported assets becomes a `DEPENDS_ON` edge. The pipeline OpenMetadata records as having moved the data becomes the edge's job, and the edge's column lineage comes across with it: each target column, the source columns it was derived from and the transformation OpenMetadata recorded, if any.
+
 ## Container Prefixes and Drives
 
 Object storage comes across as the bucket alone. OpenMetadata models the prefixes inside a bucket as containers of their own, but Marmot's S3, GCS and Azure Blob plugins catalogue the bucket and nothing below it, so an imported prefix would sit in the catalog forever without a native run ever updating it. Set `include_container_prefixes: true` to import the hierarchy anyway, worth doing when nothing else is going to catalogue that bucket.

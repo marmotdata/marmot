@@ -110,6 +110,7 @@ type ManifestNode struct {
 	Database     string                 `json:"database"`
 	Schema       string                 `json:"schema"`
 	Alias        string                 `json:"alias"`
+	Identifier   string                 `json:"identifier"`
 	Description  string                 `json:"description"`
 	Columns      map[string]NodeColumn  `json:"columns"`
 	Tags         []string               `json:"tags"`
@@ -252,7 +253,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 
 	// Discover models
 	if config.DiscoverModels && s.manifest != nil {
-		modelAssets, modelLineages := s.discoverModels()
+		modelAssets, modelLineages := s.discoverModels(ctx)
 		assets = append(assets, modelAssets...)
 		lineages = append(lineages, modelLineages...)
 	}
@@ -364,7 +365,7 @@ func (s *Source) getMaterialization(node ManifestNode) string {
 	return ""
 }
 
-func (s *Source) discoverModels() ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
+func (s *Source) discoverModels(ctx context.Context) ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
 	var assets []pluginsdk.Asset
 	var lineages []pluginsdk.LineageEdge
 
@@ -383,7 +384,7 @@ func (s *Source) discoverModels() ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
 			assets = append(assets, materializedAsset)
 		}
 
-		modelLineages := s.createModelLineage(node, nodeID)
+		modelLineages := s.createModelLineage(ctx, node, nodeID)
 		lineages = append(lineages, modelLineages...)
 	}
 
@@ -673,7 +674,7 @@ func (s *Source) cleanMetadata(metadata map[string]interface{}) map[string]inter
 	return cleaned
 }
 
-func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsdk.LineageEdge {
+func (s *Source) createModelLineage(ctx context.Context, node ManifestNode, nodeID string) []pluginsdk.LineageEdge {
 	var lineages []pluginsdk.LineageEdge
 
 	adapter := s.getAdapter()
@@ -698,6 +699,7 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 	}
 	outputMRN := s.warehouseMRN(adapter, outputType, node.Database, node.Schema, tableName)
 
+	upstream := map[string]string{}
 	for _, depNodeID := range node.DependsOn.Nodes {
 		var depNode ManifestNode
 		var found bool
@@ -752,12 +754,15 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			sourceMRN = s.warehouseMRN(adapter, "Table", depNode.Database, depNode.Schema, depName)
 		}
 
+		upstream[depNodeID] = sourceMRN
 		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: modelMRN,
 			Type:   "DEPENDS_ON",
 		})
 	}
+
+	s.attachColumnLineage(ctx, node, upstream, lineages)
 
 	lineages = append(lineages, pluginsdk.LineageEdge{
 		Source: modelMRN,
