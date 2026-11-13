@@ -67,8 +67,8 @@ func (s *Setup) Initialize(ctx context.Context) error {
 	// refuse to start and turn every rollback into a crash loop.
 	if current, err := migrator.GetCurrentVersion(ctx); err != nil {
 		return fmt.Errorf("getting current version: %w", err)
-	} else if known := int32(len(migrator.Migrations)); current > known {
-		log.Warn().Int32("version", current).Int32("known", known).Msg("Database schema is ahead of this release, not migrating")
+	} else if known := len(migrator.Migrations); int(current) > known {
+		log.Warn().Int32("version", current).Int("known", known).Msg("Database schema is ahead of this release, not migrating")
 		return nil
 	}
 
