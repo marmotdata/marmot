@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -19,10 +20,10 @@ type ConsumerGroupMember struct {
 	TopicPartitions map[string][]int
 }
 
-func (s *Source) enrichWithSchemaRegistry(topic string, metadata map[string]interface{}) (map[string]string, error) {
+func (s *Source) enrichWithSchemaRegistry(ctx context.Context, topic string, metadata map[string]interface{}) (map[string]string, error) {
 	schema := make(map[string]string)
 
-	subjects, err := s.schemaRegistry.GetAllSubjects()
+	subjects, err := s.schemaRegistry.Subjects(ctx)
 	if err != nil {
 		return schema, fmt.Errorf("listing subjects: %w", err)
 	}
@@ -34,7 +35,7 @@ func (s *Source) enrichWithSchemaRegistry(topic string, metadata map[string]inte
 
 	for _, subject := range subjects {
 		if len(subject) > len(prefix) && subject[:len(prefix)] == prefix {
-			schemaMetadata, err := s.schemaRegistry.GetLatestSchemaMetadata(subject)
+			schemaMetadata, err := s.schemaRegistry.SchemaByVersion(ctx, subject, -1)
 			if err != nil {
 				log.Warn().Err(err).Str("subject", subject).Msg("Failed to get schema for subject")
 				continue
@@ -44,9 +45,9 @@ func (s *Source) enrichWithSchemaRegistry(topic string, metadata map[string]inte
 
 			metadata[suffix+"_schema_id"] = schemaMetadata.ID
 			metadata[suffix+"_schema_version"] = schemaMetadata.Version
-			metadata[suffix+"_schema_type"] = schemaMetadata.SchemaType
+			metadata[suffix+"_schema_type"] = schemaMetadata.Type.String()
 
-			schema[subject] = schemaMetadata.Schema
+			schema[subject] = schemaMetadata.Schema.Schema
 			matchedCount++
 		}
 	}

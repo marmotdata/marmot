@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/pkg/sr"
 )
 
 func (s *Source) initClient(ctx context.Context) error {
@@ -77,40 +77,33 @@ func (s *Source) initSchemaRegistry() error {
 		return fmt.Errorf("schema registry URL is required")
 	}
 
-	conf := schemaregistry.NewConfig(s.config.SchemaRegistry.URL)
-
-	if s.config.SchemaRegistry.SkipVerify && (len(s.config.SchemaRegistry.URL) > 5 && s.config.SchemaRegistry.URL[:5] == "https") {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, //nolint:gosec // G402: user opted into skipping schema registry TLS verification
+	// Matches the request.timeout.ms default of the Confluent client this replaced.
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	if timeout, ok := s.config.SchemaRegistry.Config["request.timeout.ms"]; ok {
+		if val, err := strconv.Atoi(timeout); err == nil {
+			httpClient.Timeout = time.Duration(val) * time.Millisecond
 		}
+	}
 
-		transport := &http.Transport{
-			TLSClientConfig: tlsConfig,
+	if s.config.SchemaRegistry.SkipVerify && strings.HasPrefix(s.config.SchemaRegistry.URL, "https") {
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, //nolint:gosec // G402: user opted into skipping schema registry TLS verification
+			},
 		}
+	}
 
-		conf.HTTPClient = &http.Client{
-			Transport: transport,
-			Timeout:   30 * time.Second,
-		}
+	opts := []sr.ClientOpt{
+		sr.URLs(s.config.SchemaRegistry.URL),
+		sr.HTTPClient(httpClient),
 	}
 
 	if userInfo, ok := s.config.SchemaRegistry.Config["basic.auth.user.info"]; ok {
-		conf.BasicAuthUserInfo = userInfo
+		user, pass, _ := strings.Cut(userInfo, ":")
+		opts = append(opts, sr.BasicAuth(user, pass))
 	}
 
-	if timeout, ok := s.config.SchemaRegistry.Config["request.timeout.ms"]; ok {
-		if val, err := strconv.Atoi(timeout); err == nil {
-			conf.RequestTimeoutMs = val
-		}
-	}
-
-	if cacheCapacity, ok := s.config.SchemaRegistry.Config["cache.capacity"]; ok {
-		if val, err := strconv.Atoi(cacheCapacity); err == nil {
-			conf.CacheCapacity = val
-		}
-	}
-
-	client, err := schemaregistry.NewClient(conf)
+	client, err := sr.NewClient(opts...)
 	if err != nil {
 		return fmt.Errorf("creating Schema Registry client: %w", err)
 	}

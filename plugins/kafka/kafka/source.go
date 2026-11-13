@@ -7,11 +7,11 @@ import (
 	"net"
 	"strings"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/pkg/sr"
 )
 
 // Config for the Kafka plugin.
@@ -81,7 +81,7 @@ type Source struct {
 	config         *Config
 	client         *kgo.Client
 	admin          *kadm.Client
-	schemaRegistry schemaregistry.Client
+	schemaRegistry *sr.Client
 }
 
 // ApplyDefaults sets default values on the config. The default:"" struct

@@ -3,12 +3,12 @@ module github.com/marmotdata/marmot/plugins/kafka
 go 1.26.10
 
 require (
-	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
 	github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a
 	github.com/rs/zerolog v1.35.1
 	github.com/twmb/franz-go v1.22.2
 	github.com/twmb/franz-go/pkg/kadm v1.19.0
 	github.com/twmb/franz-go/pkg/kmsg v1.15.0
+	github.com/twmb/franz-go/pkg/sr v1.8.0
 )
 
 require (

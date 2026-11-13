@@ -66,7 +66,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (pluginsdk.
 	var schema map[string]string
 	if s.schemaRegistry != nil {
 		var err error
-		schema, err = s.enrichWithSchemaRegistry(topic, metadata)
+		schema, err = s.enrichWithSchemaRegistry(ctx, topic, metadata)
 		if err != nil {
 			log.Warn().Err(err).Str("topic", topic).Msg("Failed to get schema information")
 		}

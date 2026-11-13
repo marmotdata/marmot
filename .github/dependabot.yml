@@ -57,10 +57,6 @@ updates:
     multi-ecosystem-group: "plugins"
     patterns: ["*"]
     labels: ["dependencies", "kind/dependency", "area/plugins"]
-    # 2.14+ makes schemaregistry import the cgo-only kafka package, and plugins build with CGO_ENABLED=0.
-    ignore:
-      - dependency-name: "github.com/confluentinc/confluent-kafka-go/v2"
-        versions: [">=2.14.0"]
 
   # plugins e-l
   - package-ecosystem: "gomod"
@@ -75,10 +71,6 @@ updates:
     multi-ecosystem-group: "plugins"
     patterns: ["*"]
     labels: ["dependencies", "kind/dependency", "area/plugins"]
-    # 2.14+ makes schemaregistry import the cgo-only kafka package, and plugins build with CGO_ENABLED=0.
-    ignore:
-      - dependency-name: "github.com/confluentinc/confluent-kafka-go/v2"
-        versions: [">=2.14.0"]
 
   # plugins m-p
   - package-ecosystem: "gomod"
@@ -103,7 +95,3 @@ updates:
     multi-ecosystem-group: "plugins"
     patterns: ["*"]
     labels: ["dependencies", "kind/dependency", "area/plugins"]
-    # 2.14+ makes schemaregistry import the cgo-only kafka package, and plugins build with CGO_ENABLED=0.
-    ignore:
-      - dependency-name: "github.com/confluentinc/confluent-kafka-go/v2"
-        versions: [">=2.14.0"]
