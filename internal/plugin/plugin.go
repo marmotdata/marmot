@@ -50,6 +50,8 @@ type DiscoveryResult struct {
 	Statistics    []Statistic               `json:"statistics"`
 	RunHistory    []AssetRunHistory         `json:"run_history,omitempty"`
 	GlossaryTerms []GlossaryTerm            `json:"glossary_terms,omitempty"`
+	// ZoneBindings are the hosts the plugin connected to and the zone each belongs to.
+	ZoneBindings []asset.ZoneBinding `json:"zone_bindings,omitempty"`
 }
 
 // GlossaryTerm mirrors pluginsdk.GlossaryTerm: a business definition the
@@ -101,6 +103,8 @@ type Run struct {
 	Config       RawPluginConfig `json:"config,omitempty"`
 	Summary      *RunSummary     `json:"summary,omitempty"`
 	CreatedBy    string          `json:"created_by"`
+	// Owner is who started the run: the schedule for a scheduled run, the principal for a CLI or API run. Checkpoints and the run's contributions to assets belong to the pipeline, source and owner together, so two people running the same pipeline file never treat each other's assets as stale.
+	Owner string `json:"owner,omitempty"`
 } // @name PluginRun
 
 type RunStatus string // @name RunStatus

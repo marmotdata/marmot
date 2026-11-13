@@ -80,7 +80,7 @@ func (c *collector) addFolder(d dirRecord, folders map[string]bool) {
 	c.record(asset, d.Path)
 
 	if d.Parent != "" && folders[d.Parent] {
-		c.link(assetMRN(typeFolder, d.Parent), *asset.MRN)
+		c.link(c.config.assetMRN(typeFolder, d.Parent), *asset.MRN)
 	}
 }
 
@@ -132,7 +132,7 @@ func (c *collector) addFile(f fileRecord, folders map[string]bool) {
 	}
 
 	if f.Directory != "" && folders[f.Directory] {
-		c.link(assetMRN(typeFolder, f.Directory), *asset.MRN)
+		c.link(c.config.assetMRN(typeFolder, f.Directory), *asset.MRN)
 	}
 }
 
@@ -213,7 +213,7 @@ func (c *collector) readColumns(f fileRecord, kind string) (columns *columnSet, 
 }
 
 func (c *collector) newAsset(assetType, name string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := c.config.assetMRN(assetType, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,

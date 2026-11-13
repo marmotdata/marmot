@@ -257,7 +257,7 @@ func TestE2E_ValidateRejectsARunHistoryLimitOutOfRange(t *testing.T) {
 func TestE2E_DiscoversTheWorkflowAsAPipeline(t *testing.T) {
 	result := discoverE2E(t)
 
-	pipeline := findAsset(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := findAsset(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "Pipeline", pipeline.Type)
 	assert.Equal(t, []string{"Glue"}, pipeline.Providers)
 	require.NotNil(t, pipeline.Description)
@@ -269,7 +269,7 @@ func TestE2E_DiscoversTheWorkflowAsAPipeline(t *testing.T) {
 func TestE2E_PipelineLinksToTheConsole(t *testing.T) {
 	result := discoverE2E(t)
 
-	pipeline := findAsset(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := findAsset(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	require.Len(t, pipeline.ExternalLinks, 1)
 	assert.Equal(t, "Open in AWS Console", pipeline.ExternalLinks[0].Name)
 }
@@ -279,13 +279,13 @@ func TestE2E_PipelineLinksToTheConsole(t *testing.T) {
 func TestE2E_DiscoversTheWorkflowSteps(t *testing.T) {
 	result := discoverE2E(t)
 
-	scheduled := findAsset(t, result, "mrn://task/glue/daily-etl-start-crawler")
+	scheduled := findAsset(t, result, "mrn://asset/task/glue/daily-etl.start-crawler")
 	assert.Equal(t, "Task", scheduled.Type)
-	assert.Equal(t, "daily-etl/start-crawler", *scheduled.Name)
+	assert.Equal(t, "start-crawler", *scheduled.Name)
 	assert.Equal(t, "SCHEDULED", scheduled.Metadata["trigger_type"])
 	assert.Equal(t, "cron(0 2 * * ? *)", scheduled.Metadata["trigger_schedule"])
 
-	conditional := findAsset(t, result, "mrn://task/glue/daily-etl-after-crawl")
+	conditional := findAsset(t, result, "mrn://asset/task/glue/daily-etl.after-crawl")
 	assert.Equal(t, "ANY: crawler orders-crawler SUCCEEDED", conditional.Metadata["trigger_predicate"])
 	assert.Equal(t, "job load-orders, job aggregate-orders", conditional.Metadata["trigger_actions"])
 }
@@ -293,23 +293,23 @@ func TestE2E_DiscoversTheWorkflowSteps(t *testing.T) {
 func TestE2E_PipelineContainsItsSteps(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, findEdge(result, "mrn://pipeline/glue/daily-etl", "mrn://task/glue/daily-etl-start-crawler", "CONTAINS"))
-	assert.True(t, findEdge(result, "mrn://pipeline/glue/daily-etl", "mrn://task/glue/daily-etl-after-crawl", "CONTAINS"))
+	assert.True(t, findEdge(result, "mrn://asset/pipeline/glue/daily-etl", "mrn://asset/task/glue/daily-etl.start-crawler", "CONTAINS"))
+	assert.True(t, findEdge(result, "mrn://asset/pipeline/glue/daily-etl", "mrn://asset/task/glue/daily-etl.after-crawl", "CONTAINS"))
 }
 
 func TestE2E_StepsLinkToTheJobsAndCrawlersTheyRun(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, findEdge(result, "mrn://task/glue/daily-etl-start-crawler", "mrn://crawler/glue/orders-crawler", "DEPENDS_ON"))
-	assert.True(t, findEdge(result, "mrn://task/glue/daily-etl-after-crawl", "mrn://job/glue/load-orders", "DEPENDS_ON"))
-	assert.True(t, findEdge(result, "mrn://crawler/glue/orders-crawler", "mrn://task/glue/daily-etl-after-crawl", "DEPENDS_ON"))
+	assert.True(t, findEdge(result, "mrn://asset/task/glue/daily-etl.start-crawler", "mrn://asset/crawler/glue/orders-crawler", "DEPENDS_ON"))
+	assert.True(t, findEdge(result, "mrn://asset/task/glue/daily-etl.after-crawl", "mrn://asset/job/glue/load-orders", "DEPENDS_ON"))
+	assert.True(t, findEdge(result, "mrn://asset/crawler/glue/orders-crawler", "mrn://asset/task/glue/daily-etl.after-crawl", "DEPENDS_ON"))
 }
 
 func TestE2E_CrawlerLinksItsBucketAndDatabase(t *testing.T) {
 	result := discoverE2E(t)
 
-	assert.True(t, findEdge(result, "mrn://bucket/s3/marmot-lake", "mrn://crawler/glue/orders-crawler", "FEEDS"))
-	assert.True(t, findEdge(result, "mrn://crawler/glue/orders-crawler", "mrn://database/glue/shop", "PRODUCES"))
+	assert.True(t, findEdge(result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/crawler/glue/orders-crawler", "FEEDS"))
+	assert.True(t, findEdge(result, "mrn://asset/crawler/glue/orders-crawler", "mrn://asset/database/glue/shop", "PRODUCES"))
 }
 
 func TestE2E_DoesNotDuplicateAssetsTheGluePluginOwns(t *testing.T) {
@@ -325,7 +325,7 @@ func TestE2E_DoesNotDuplicateAssetsTheGluePluginOwns(t *testing.T) {
 func TestE2E_AttachesJobRunsToTheGlueJobAsset(t *testing.T) {
 	result := discoverE2E(t)
 
-	runs := findRuns(result, "mrn://job/glue/load-orders")
+	runs := findRuns(result, "mrn://asset/job/glue/load-orders")
 	require.NotEmpty(t, runs, "expected run history on the job asset the Glue plugin owns")
 
 	assert.Equal(t, "glue", runs[0].JobNamespace)
@@ -341,7 +341,7 @@ func TestE2E_AttachesJobRunsToTheGlueJobAsset(t *testing.T) {
 func TestE2E_AttachesWorkflowRunsToThePipeline(t *testing.T) {
 	result := discoverE2E(t)
 
-	runs := findRuns(result, "mrn://pipeline/glue/daily-etl")
+	runs := findRuns(result, "mrn://asset/pipeline/glue/daily-etl")
 	require.NotEmpty(t, runs)
 
 	assert.Equal(t, "daily-etl", runs[0].JobName)
@@ -357,7 +357,7 @@ func TestE2E_ReadsWorkflowTags(t *testing.T) {
 	result, err := buildBinary(t).Discover(t.Context(), config)
 	require.NoError(t, err)
 
-	pipeline := findAsset(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := findAsset(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "data", pipeline.Metadata["tag_team"])
 }
 

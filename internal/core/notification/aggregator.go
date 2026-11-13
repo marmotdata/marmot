@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	coreasset "github.com/marmotdata/marmot/internal/core/asset"
 	"strings"
 	"sync"
 	"time"
@@ -229,7 +230,7 @@ func (a *assetChangeAggregator) sendAssetNotification(owner Recipient, asset ass
 		data["changed_fields"] = asset.changedFields
 	}
 	if asset.changeType != TypeAssetDeleted {
-		link := fmt.Sprintf("/discover/%s", strings.TrimPrefix(asset.assetMRN, "mrn://"))
+		link := coreasset.DiscoverPath(asset.assetMRN)
 		if isSchemaRelated {
 			link += "?tab=schema"
 		} else if asset.changeType == TypeLineageChange {

@@ -3,6 +3,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { formatRelativeTime } from '$lib/utils';
 	import { SvelteSet } from 'svelte/reactivity';
+	import AssetIdentity from './AssetIdentity.svelte';
 	import '@marmotdata/elements/metadata-viewer.js';
 	import '@marmotdata/elements/code-sample.js';
 
@@ -111,6 +112,10 @@
 				{/each}
 			</ul>
 		</mm-section>
+	{/if}
+
+	{#if asset.id && asset.mrn}
+		<AssetIdentity assetId={asset.id} mrn={asset.mrn} />
 	{/if}
 </div>
 

@@ -52,17 +52,18 @@ func (s *Source) discoverFirestore(ctx context.Context, projectDetails map[strin
 		addFirestoreDatabaseMetadata(metadata, database.details)
 
 		name := firestoreDatabaseName(database.id)
-		databaseMRN := assetMRN("Database", name)
+		databaseMRN := assetMRN(s.config, "Database", name)
 		description := fmt.Sprintf("Firestore database %s", database.id)
 
 		result.assets = append(result.assets, pluginsdk.Asset{
-			Name:        &name,
-			MRN:         &databaseMRN,
-			Type:        "Database",
-			Providers:   []string{provider},
-			Description: &description,
-			Metadata:    metadata,
-			Tags:        pluginsdk.InterpolateTags(s.config.Tags, metadata),
+			Name:         &name,
+			MRN:          &databaseMRN,
+			PreviousMRNs: previousMRNs("Database", name, databaseMRN),
+			Type:         "Database",
+			Providers:    []string{provider},
+			Description:  &description,
+			Metadata:     metadata,
+			Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 			ExternalLinks: []pluginsdk.AssetExternalLink{{
 				Name: "Open in Firebase",
 				URL:  fmt.Sprintf("https://console.firebase.google.com/project/%s/firestore", s.config.ProjectID),
@@ -229,18 +230,19 @@ func (s *Source) collectionAsset(databaseID string, group collectionGroup, sampl
 	}
 
 	name := collectionName(databaseID, group.path)
-	collectionMRN := assetMRN("Collection", name)
+	collectionMRN := assetMRN(s.config, "Collection", name)
 	description := fmt.Sprintf("Firestore collection %s in database %s", group.path, databaseID)
 
 	asset := pluginsdk.Asset{
-		Name:        &name,
-		MRN:         &collectionMRN,
-		Type:        "Collection",
-		Providers:   []string{provider},
-		Description: &description,
-		Metadata:    metadata,
-		Schema:      make(map[string]string),
-		Tags:        pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &collectionMRN,
+		PreviousMRNs: previousMRNs("Collection", name, collectionMRN),
+		Type:         "Collection",
+		Providers:    []string{provider},
+		Description:  &description,
+		Metadata:     metadata,
+		Schema:       make(map[string]string),
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),

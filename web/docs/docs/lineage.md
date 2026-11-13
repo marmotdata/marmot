@@ -48,15 +48,15 @@ An edge that carries column-level lineage shows how many columns it maps. Select
 
 ## Send lineage from your own pipelines
 
-`POST /api/v1/lineage/batch` records a list of edges between assets by MRN. Both assets of an edge must already be in the catalog. `column_lineage` is optional; each entry names the target column and the source columns it's derived from:
+`POST /api/v1/lineage/batch` records a list of edges between assets by [MRN](MRNs/index.md). Both assets of an edge must already be in the catalog. `column_lineage` is optional; each entry names the target column and the source columns it's derived from:
 
 ```bash
 curl -X POST https://marmot.example.com/api/v1/lineage/batch \
   -H "X-API-Key: <api-key>" \
   -H "Content-Type: application/json" \
   -d '[{
-    "source": "mrn://table/postgresql/orders",
-    "target": "mrn://model/dbt/fct_orders",
+    "source": "mrn://asset/table/postgresql/analytics.public.orders",
+    "target": "mrn://asset/model/dbt/analytics.marts.fct_orders",
     "type": "DIRECT",
     "column_lineage": [
       { "from_columns": ["order_id"], "to_column": "order_id" },
@@ -66,7 +66,7 @@ curl -X POST https://marmot.example.com/api/v1/lineage/batch \
   }]'
 ```
 
-Sending an edge that already exists refreshes its column lineage, so a pipeline can send its lineage on every run. `POST /api/v1/lineage/direct` records a single edge without column lineage. The [API reference](api-reference.md) has the full schema.
+MRNs in the older form without a kind, such as `mrn://table/postgresql/orders`, are accepted too. Sending an edge that already exists refreshes its column lineage, so a pipeline can send its lineage on every run. `POST /api/v1/lineage/direct` records a single edge without column lineage. The [API reference](api-reference.md) has the full schema.
 
 ## Next steps
 

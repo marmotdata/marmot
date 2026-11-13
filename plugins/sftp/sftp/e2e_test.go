@@ -319,10 +319,10 @@ func TestE2E_LinksFoldersAndFilesWithContains(t *testing.T) {
 		edges[e.Source+" -> "+e.Target] = true
 	}
 
-	assert.True(t, edges["mrn://folder/sftp/incoming -> mrn://folder/sftp/incoming-2026-09"])
-	assert.True(t, edges["mrn://folder/sftp/incoming-2026-09 -> mrn://file/sftp/incoming-2026-09-orders.csv"])
-	assert.True(t, edges["mrn://folder/sftp/archive -> mrn://folder/sftp/archive-2026-08"])
-	assert.True(t, edges["mrn://folder/sftp/incoming -> mrn://file/sftp/incoming-notes.txt"])
+	assert.True(t, edges["mrn://asset/folder/sftp/incoming -> mrn://asset/folder/sftp/incoming-2026-09"])
+	assert.True(t, edges["mrn://asset/folder/sftp/incoming-2026-09 -> mrn://asset/file/sftp/incoming-2026-09-orders.csv"])
+	assert.True(t, edges["mrn://asset/folder/sftp/archive -> mrn://asset/folder/sftp/archive-2026-08"])
+	assert.True(t, edges["mrn://asset/folder/sftp/incoming -> mrn://asset/file/sftp/incoming-notes.txt"])
 }
 
 func TestE2E_EveryAssetMRNMatchesItsOwnFields(t *testing.T) {
@@ -337,9 +337,9 @@ func TestE2E_EveryAssetMRNMatchesItsOwnFields(t *testing.T) {
 		require.Equal(t, []string{"SFTP"}, a.Providers)
 	}
 
-	assert.Equal(t, "mrn://file/sftp/incoming-2026-09-orders.csv",
+	assert.Equal(t, "mrn://asset/file/sftp/incoming-2026-09-orders.csv",
 		*e2eAsset(t, result, "File", "incoming/2026-09/orders.csv").MRN)
-	assert.Equal(t, "mrn://folder/sftp/incoming-2026-09",
+	assert.Equal(t, "mrn://asset/folder/sftp/incoming-2026-09",
 		*e2eAsset(t, result, "Folder", "incoming/2026-09").MRN)
 }
 

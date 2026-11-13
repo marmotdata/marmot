@@ -6,7 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -81,10 +84,12 @@ type BatchCreateRequest struct {
 	Statistics    []CreateStatisticRequest    `json:"statistics"`
 	RunHistory    []CreateRunHistoryRequest   `json:"run_history"`
 	GlossaryTerms []CreateGlossaryTermRequest `json:"glossary_terms,omitempty"`
-	Config        plugin.RawPluginConfig      `json:"config"`
-	PipelineName  string                      `json:"pipeline_name"`
-	SourceName    string                      `json:"source_name"`
-	RunID         string                      `json:"run_id"`
+	// ZoneBindings are the hosts the plugin connected to and the zone each belongs to.
+	ZoneBindings []asset.ZoneBinding    `json:"zone_bindings,omitempty"`
+	Config       plugin.RawPluginConfig `json:"config"`
+	PipelineName string                 `json:"pipeline_name"`
+	SourceName   string                 `json:"source_name"`
+	RunID        string                 `json:"run_id"`
 }
 
 // CreateGlossaryTermRequest is one business term the source system
@@ -101,13 +106,17 @@ type CreateGlossaryTermRequest struct {
 }
 
 type CreateAssetRequest struct {
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
-	Providers   []string               `json:"providers"`
-	Description *string                `json:"description"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	Schema      map[string]interface{} `json:"schema"`
-	Tags        []string               `json:"tags"`
+	Name string `json:"name"`
+	// MRN is the plugin's own MRN, which carries the schema, database and zone a bare name cannot.
+	MRN *string `json:"mrn,omitempty"`
+	// PreviousMRNs are MRNs earlier versions of the plugin gave the asset, so the server moves it rather than replacing it.
+	PreviousMRNs []string               `json:"previous_mrns,omitempty"`
+	Type         string                 `json:"type"`
+	Providers    []string               `json:"providers"`
+	Description  *string                `json:"description"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	Schema       map[string]interface{} `json:"schema"`
+	Tags         []string               `json:"tags"`
 	// Sources carry the provenance a plugin recorded: which run wrote the
 	// asset, when, with what properties and at what priority. Sending only
 	// the names left the Sources panel permanently blank for every
@@ -164,6 +173,10 @@ type BatchCreateResponse struct {
 	Lineage              []LineageResult       `json:"lineage"`
 	Documentation        []DocumentationResult `json:"documentation"`
 	StaleEntitiesRemoved []string              `json:"stale_entities_removed,omitempty"`
+	// StaleContributionsWithdrawn are assets this run stopped describing that another writer still describes, so they were kept.
+	StaleContributionsWithdrawn []string `json:"stale_contributions_withdrawn,omitempty"`
+	// Warnings are identity problems the server worked around.
+	Warnings []string `json:"warnings,omitempty"`
 	// Glossary is absent when the source curates no business terms, and
 	// from servers that predate them.
 	Glossary *GlossaryResult `json:"glossary,omitempty"`
@@ -486,6 +499,26 @@ func runDestroy(ctx context.Context, config plugin.Config, client *apiClient) er
 	return nil
 }
 
+// localZone names this machine and user for plugins that read local files.
+func localZone() string {
+	host, _ := os.Hostname()
+	host, _, _ = strings.Cut(host, ".")
+	who := os.Getenv("USER")
+	if who == "" {
+		who = os.Getenv("USERNAME")
+	}
+	parts := make([]string, 0, 2)
+	for _, p := range []string{who, host} {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	if len(parts) == 0 {
+		return "local"
+	}
+	return mrn.Asset("x", strings.Join(parts, "-"), "x").Provider
+}
+
 func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, overallSummary *Summary, config plugin.Config) error {
 	registry := plugin.GetRegistry()
 
@@ -498,6 +531,13 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 		source := entry.Source
 
 		printSourceHeader(sourceName)
+
+		// A local file is a different database on every machine, so without a zone each machine gets its own and ten people ingesting their own dev.duckdb never land on one asset.
+		if entry.Meta.IdentityScope == pluginsdk.IdentityScopeFile && pluginsdk.RawZone(pluginsdk.RawConfig(rawConfig)) == "" {
+			rawConfig = maps.Clone(rawConfig)
+			rawConfig[pluginsdk.ZoneKey] = localZone()
+			printStep(fmt.Sprintf("Using zone %q for local files; set zone in the config to share one", rawConfig[pluginsdk.ZoneKey]))
+		}
 
 		_, err = source.Validate(rawConfig)
 		if err != nil {
@@ -591,6 +631,8 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 
 				assets = append(assets, CreateAssetRequest{
 					Name:          name,
+					MRN:           asset.MRN,
+					PreviousMRNs:  asset.PreviousMRNs,
 					Type:          asset.Type,
 					Providers:     asset.Providers,
 					Description:   asset.Description,
@@ -659,6 +701,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				Statistics:    statisticRequests(result.Statistics),
 				RunHistory:    runHistory,
 				GlossaryTerms: glossaryTerms,
+				ZoneBindings:  result.ZoneBindings,
 				Config:        maskedConfig,
 				PipelineName:  config.Name,
 				SourceName:    sourceName,
@@ -688,6 +731,12 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 
 			for _, staleMRN := range assetResponse.StaleEntitiesRemoved {
 				printChange(symbolDelete, "asset", "", staleMRN, statusDeleted)
+			}
+			if n := len(assetResponse.StaleContributionsWithdrawn); n > 0 {
+				printWarning(fmt.Sprintf("%d assets this run no longer found were kept because another source still describes them", n))
+			}
+			for _, warning := range assetResponse.Warnings {
+				printWarning(warning)
 			}
 
 			printAssetSummary(runSummary, overallSummary)
@@ -730,7 +779,8 @@ func processAssetResults(results []AssetResult, runSummary *plugin.RunSummary, o
 		if result.Error != "" {
 			runSummary.ErrorsCount++
 			overallSummary.ErrorsEncountered++
-			printChange(symbolDelete, result.Type, result.Provider, result.Name, "error")
+			// The reason matters more than the symbol: a collision with another asset in the run reads as a deletion otherwise.
+			printError(fmt.Sprintf("%s.%s.%s: %s", result.Type, result.Provider, result.Name, result.Error))
 		} else {
 			switch result.Status {
 			case statusCreated:

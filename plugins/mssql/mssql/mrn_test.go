@@ -38,144 +38,91 @@ func testDatabase() databaseInfo {
 	}
 }
 
-func TestTableMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders",
-		assetMRN("Table", qualifiedName("shop", "dbo", "orders")))
+func TestTableMRN_IsTheFullyQualifiedPath(t *testing.T) {
+	cfg := testSource().config
+
+	assert.Equal(t, "mrn://asset/table/sql-server/shop.dbo.orders", assetMRN(cfg, "Table", "shop", "dbo", "orders"))
+	assert.Equal(t, "mrn://asset/view/sql-server/shop.dbo.order_totals", assetMRN(cfg, "View", "shop", "dbo", "order_totals"))
+	assert.Equal(t, "mrn://asset/function/sql-server/shop.dbo.get_customer", assetMRN(cfg, "Function", "shop", "dbo", "get_customer"))
 }
 
 func TestDatabaseMRN_IsTheBareDatabaseName(t *testing.T) {
-	assert.Equal(t, "mrn://database/sql-server/shop", assetMRN("Database", "shop"))
+	assert.Equal(t, "mrn://asset/database/sql-server/shop", assetMRN(testSource().config, "Database", "shop"))
 }
 
-func TestViewMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals",
-		assetMRN("View", qualifiedName("shop", "dbo", "order_totals")))
+func TestSameTableInTwoSchemasOrDatabasesGetsDifferentMRNs(t *testing.T) {
+	cfg := testSource().config
+
+	assert.NotEqual(t, assetMRN(cfg, "Table", "shop", "dbo", "users"), assetMRN(cfg, "Table", "shop", "sales", "users"))
+	assert.NotEqual(t, assetMRN(cfg, "Table", "shop", "dbo", "users"), assetMRN(cfg, "Table", "crm", "dbo", "users"))
 }
 
-func TestFunctionMRN_IsTheFullyQualifiedName(t *testing.T) {
-	assert.Equal(t, "mrn://function/sql-server/shop.dbo.get_customer",
-		assetMRN("Function", qualifiedName("shop", "dbo", "get_customer")))
-}
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod-eu"}}
 
-func TestProviderName_LosesItsSpaceInTheMRN(t *testing.T) {
-	// The provider keeps its space where it is displayed, but mrn.New dashes
-	// it so the MRN needs no escaping in a URL or a lineage edge.
-	assert.Equal(t, providerName, "SQL Server")
-	assert.Contains(t, assetMRN("Table", "shop.dbo.orders"), "/sql-server/")
-}
+	got := assetMRN(cfg, "Table", "shop", "dbo", "orders")
+	assert.Equal(t, "mrn://asset/table/sql-server@prod-eu/shop.dbo.orders", got)
 
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so it has to survive byte-identical.
-	original := assetMRN("Table", "shop.dbo.orders")
-
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(got)
 	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, "prod-eu", parsed.Zone)
 }
 
-func TestDatabaseMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Database", "shop")
+func TestZoneBinding_NamesTheServerAddress(t *testing.T) {
+	s := testSource()
+	s.config.Zone = "prod-eu"
 
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
+	assert.Equal(t, pluginsdk.ZoneBinding{Provider: "SQL Server", Host: "sqlserver.company.com:1433", Zone: "prod-eu"}, s.zoneBinding())
+}
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+func TestObjectAsset_KeepsItsOwnNameAndListsTheOldMRNWhenAnZoneIsSet(t *testing.T) {
+	object := objectInfo{Schema: "dbo", Name: "orders", TypeDesc: "USER_TABLE"}
+
+	plain := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
+	assert.Equal(t, "orders", *plain.Name)
+	assert.Equal(t, "mrn://asset/table/sql-server/shop.dbo.orders", *plain.MRN)
+	assert.Empty(t, plain.PreviousMRNs, "an unchanged MRN needs no previous entry")
+
+	s := testSource()
+	s.config.Zone = "prod-eu"
+	withZone := s.objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
+	assert.Equal(t, []string{"mrn://asset/table/sql-server/shop.dbo.orders"}, withZone.PreviousMRNs)
 }
 
 func TestDatabaseAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so an
-	// asset whose MRN says something else lands on a second, orphan asset.
 	asset := testSource().databaseAsset(testDatabase(), serverInfo{}, 2, 3, 2)
 
-	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://database/sql-server/shop", *asset.MRN)
+	require.NotNil(t, asset.MRN)
+	require.NotNil(t, asset.Name)
+	assert.Equal(t, "mrn://asset/database/sql-server/shop", *asset.MRN)
+	assert.Equal(t, "shop", *asset.Name)
 }
 
-func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	object := objectInfo{Schema: "dbo", Name: "orders", TypeDesc: "USER_TABLE"}
-
-	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
-
-	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", *asset.MRN)
-	assert.Equal(t, "shop.dbo.orders", *asset.Name)
-}
-
-func TestViewAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	object := objectInfo{Schema: "dbo", Name: "order_totals", TypeDesc: "VIEW"}
-
-	asset := testSource().objectAsset(testDatabase(), object, "View", "", "SELECT 1", nil, nil)
-
-	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://view/sql-server/shop.dbo.order_totals", *asset.MRN)
-}
-
-func TestFunctionAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	routine := routineInfo{Schema: "dbo", Name: "get_customer", TypeDesc: "SQL_STORED_PROCEDURE"}
-
-	asset := testSource().routineAsset(testDatabase(), routine)
-
-	requireMRNAgreesWithFields(t, asset)
-	assert.Equal(t, "mrn://function/sql-server/shop.dbo.get_customer", *asset.MRN)
-}
-
-func TestTableAsset_MRNMatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
-	// The OpenMetadata plugin projects an Mssql service's tables with a fully
-	// qualified name under the provider "SQL Server". This plugin has to
-	// produce the same MRN, or the day it takes over, that asset is stranded
-	// and a second one appears alongside it.
+func TestTableAsset_NameIsTheObjectsOwnName(t *testing.T) {
 	object := objectInfo{Schema: "dbo", Name: "customers", TypeDesc: "USER_TABLE"}
 
 	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
 
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.customers", *asset.MRN)
+	assert.Equal(t, "customers", *asset.Name)
+	assert.Equal(t, "mrn://asset/table/sql-server/shop.dbo.customers", *asset.MRN)
 	assert.Equal(t, []string{"SQL Server"}, asset.Providers)
 }
 
+func TestFunctionAsset_NameIsTheRoutinesOwnName(t *testing.T) {
+	routine := routineInfo{Schema: "dbo", Name: "get_customer", TypeDesc: "SQL_STORED_PROCEDURE"}
+
+	asset := testSource().routineAsset(testDatabase(), routine)
+
+	assert.Equal(t, "get_customer", *asset.Name)
+	assert.Equal(t, "mrn://asset/function/sql-server/shop.dbo.get_customer", *asset.MRN)
+}
+
 func TestTableAsset_MRNSurvivesASchemaNameWithASpace(t *testing.T) {
-	// mrn.New turns a space in the name into a hyphen. That is fine as long
-	// as it does it the same way every time, because the edges are built from
-	// the same helper.
 	object := objectInfo{Schema: "order archive", Name: "orders", TypeDesc: "USER_TABLE"}
 
 	asset := testSource().objectAsset(testDatabase(), object, "Table", "", "", nil, nil)
 
-	assert.Equal(t, "mrn://table/sql-server/shop.order-archive.orders", *asset.MRN)
-
-	parsed, err := mrn.Parse(*asset.MRN)
+	parsed, err := mrn.ParseMRN(*asset.MRN)
 	require.NoError(t, err)
-	assert.Equal(t, *asset.MRN, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestForeignKeyEdge_PointsAtMRNsThisRunCreates(t *testing.T) {
-	// An edge whose endpoint does not exist is dropped by the server, so both
-	// ends have to be built with the same helper the assets used.
-	source := assetMRN("Table", qualifiedName("shop", "dbo", "orders"))
-	target := assetMRN("Table", qualifiedName("shop", "dbo", "customers"))
-
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", source)
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.customers", target)
-}
-
-func TestContainsEdge_LinksTheDatabaseToATableWhoseNameIsNotItsPrefix(t *testing.T) {
-	// The Contents tree is built from CONTAINS edges, not by matching MRN
-	// prefixes. Here the database MRN happens to be a prefix of the table
-	// name, but the edge is what makes the link.
-	database := assetMRN("Database", "shop")
-	table := assetMRN("Table", qualifiedName("shop", "dbo", "orders"))
-
-	assert.Equal(t, "mrn://database/sql-server/shop", database)
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", table)
-	assert.NotEqual(t, database, table)
-}
-
-func requireMRNAgreesWithFields(t *testing.T, asset pluginsdk.Asset) {
-	t.Helper()
-
-	require.NotNil(t, asset.MRN)
-	require.NotNil(t, asset.Name)
-	require.NotEmpty(t, asset.Providers)
-	assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+	assert.Equal(t, *asset.MRN, parsed.String())
 }

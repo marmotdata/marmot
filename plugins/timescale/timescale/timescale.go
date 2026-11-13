@@ -744,16 +744,25 @@ func referencedObjects(definition string, known map[string]bool) []string {
 // viewLineage links every view to the tables it reads. A continuous
 // aggregate's source hypertable comes from the TimescaleDB catalog, which
 // names it exactly; the rest is read off the definition.
-func viewLineage(objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
+func viewLineage(cfg *Config, objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
 	known := make(map[string]bool, len(objects))
-	types := make(map[string]string, len(objects))
+	byKey := make(map[string]object, len(objects))
+	byName := make(map[string]object, len(objects))
 	for _, obj := range objects {
 		known[obj.Name] = true
-		if obj.Kind == kindTable {
-			types[obj.Name] = "Table"
-		} else {
-			types[obj.Name] = "View"
+		byKey[obj.key()] = obj
+		if _, ok := byName[obj.Name]; !ok {
+			byName[obj.Name] = obj
 		}
+	}
+
+	// A name read off a definition may omit its schema, so the referencing view's own schema is tried first.
+	lookup := func(schema, name string) (object, bool) {
+		if obj, ok := byKey[schema+"."+name]; ok {
+			return obj, true
+		}
+		obj, ok := byName[name]
+		return obj, ok
 	}
 
 	var lineages []pluginsdk.LineageEdge
@@ -764,10 +773,10 @@ func viewLineage(objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
 			continue
 		}
 
-		viewMRN := assetMRN("View", obj.Name)
+		viewMRN := objectMRN(cfg, obj)
 		definition := obj.Definition
 
-		var sources []string
+		var sources []object
 		if ts != nil {
 			if agg, ok := ts.aggregates[obj.key()]; ok {
 				// PostgreSQL rewrites a continuous aggregate to read from the
@@ -775,15 +784,19 @@ func viewLineage(objects []object, ts *timescaleInfo) []pluginsdk.LineageEdge {
 				// names an object this plugin deliberately skips. The catalog
 				// keeps the original query and names the source hypertable.
 				definition = agg.Definition
-				if known[agg.HypertableName] {
-					sources = append(sources, agg.HypertableName)
+				if base, ok := lookup(agg.HypertableSchema, agg.HypertableName); ok {
+					sources = append(sources, base)
 				}
 			}
 		}
-		sources = append(sources, referencedObjects(definition, known)...)
+		for _, name := range referencedObjects(definition, known) {
+			if base, ok := lookup(obj.Schema, name); ok {
+				sources = append(sources, base)
+			}
+		}
 
 		for _, source := range sources {
-			sourceMRN := assetMRN(types[source], source)
+			sourceMRN := objectMRN(cfg, source)
 			if sourceMRN == viewMRN {
 				continue
 			}

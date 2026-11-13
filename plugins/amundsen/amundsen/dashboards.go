@@ -149,7 +149,7 @@ func (c *collector) addDashboard(dashboard dashboardRow, use usage) (bool, int) 
 	metadata := map[string]any{"amundsen": provenance}
 	putIf(metadata, "chart_count", int64(len(dashboard.Charts)))
 
-	asset := c.newAsset("Dashboard", provider, name, dashboard.Description, c.assetTags(dashboard.Tags), metadata)
+	asset := c.newAsset("Dashboard", provider, flatIdent(name), dashboard.Description, c.assetTags(dashboard.Tags), metadata)
 	asset.ExternalLinks = append(c.dashboardLinks(dashboard, provider), asset.ExternalLinks...)
 
 	if !c.add(dashboard.Key, asset) {
@@ -181,7 +181,8 @@ func (c *collector) addChart(dashboard dashboardRow, chart chartRow, provider, d
 		return false
 	}
 
-	name := dashboardName(dashboard.GroupName, dashboard.Name) + "/" + label
+	dashboardPath := dashboardName(dashboard.GroupName, dashboard.Name)
+	chartID := identity{Name: label, Path: []string{dashboardPath, label}, Legacy: dashboardPath + "/" + label}
 
 	provenance := map[string]any{}
 	putIf(provenance, "dashboard_key", dashboard.Key)
@@ -194,7 +195,7 @@ func (c *collector) addChart(dashboard dashboardRow, chart chartRow, provider, d
 	metadata := map[string]any{"amundsen": provenance}
 	putIf(metadata, "chart_type", chart.Type)
 
-	asset := c.newAsset("Chart", provider, name, "", c.assetTags(dashboard.Tags), metadata)
+	asset := c.newAsset("Chart", provider, chartID, "", c.assetTags(dashboard.Tags), metadata)
 	if chart.URL != "" {
 		asset.ExternalLinks = append([]pluginsdk.AssetExternalLink{{
 			Name: "Open in " + provider,

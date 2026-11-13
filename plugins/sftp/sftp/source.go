@@ -9,12 +9,13 @@ package sftp
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +29,7 @@ const provider = "SFTP"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "sftp",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "SFTP",
 		Description:   "Discover directories and files from an SFTP server",
 		Icon:          "sftp",
@@ -195,6 +196,11 @@ func (s *Source) collect(ctx context.Context, fsys fileSystem) *pluginsdk.Discov
 		Assets:     c.assets,
 		Lineage:    c.lineage,
 		Statistics: c.statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}
 }
 
@@ -227,6 +233,6 @@ func normaliseRoots(roots []string) []string {
 // assetMRN is the single place an SFTP MRN is built. The walk, the asset
 // pass and the lineage pass all go through it, so they can never drift
 // into addressing the same directory differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+func (c *Config) assetMRN(assetType, name string) string {
+	return c.AssetMRN(assetType, provider, name)
 }

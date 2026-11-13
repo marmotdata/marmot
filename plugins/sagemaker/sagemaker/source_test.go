@@ -154,10 +154,6 @@ func TestConsoleURL_IsEmptyWithoutAKnownRegion(t *testing.T) {
 	assert.Empty(t, source.consoleURL("models/churn-xgb"))
 }
 
-func TestBareTableName_DropsTheDatabaseQualifier(t *testing.T) {
-	assert.Equal(t, "customer_features", bareTableName("sagemaker_featurestore.customer_features"))
-}
-
-func TestBareTableName_LeavesAnUnqualifiedNameAlone(t *testing.T) {
-	assert.Equal(t, "customer_features", bareTableName("customer_features"))
+func TestGlueTableMRN_LeavesAnUnqualifiedNameAlone(t *testing.T) {
+	assert.Equal(t, "mrn://asset/table/glue/customer_features", glueTableMRN("customer_features"))
 }

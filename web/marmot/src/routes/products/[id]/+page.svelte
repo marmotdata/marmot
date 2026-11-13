@@ -13,6 +13,7 @@
 	import { getProductMembers } from '$lib/dataproducts/api';
 	import { assetRouteParams, normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
 	import { plainQuery } from '$lib/dataproducts/plain';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import IconUploader from '$components/product/IconUploader.svelte';
@@ -400,6 +401,13 @@
 									</div>
 								</mm-section>
 							{/if}
+							<mm-section heading={m.common_details()}>
+								<mm-description-list layout="stacked">
+									<mm-description term={m.mrn_label()} mono
+										><MrnValue value={p.mrn} /></mm-description
+									>
+								</mm-description-list>
+							</mm-section>
 							<mm-section heading={m.products_tab_rules()}>
 								{#if canManage}
 									<mm-button

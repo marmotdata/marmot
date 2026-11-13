@@ -1,6 +1,6 @@
 The Cassandra plugin discovers keyspaces, tables and materialized views from Apache Cassandra clusters. It reads the `system_schema` tables over CQL with the pure-Go `gocql` driver, so it works with Cassandra 3.0 and later and needs no cgo.
 
-Tables and views are named `keyspace.table`, the same identity the OpenMetadata plugin projects for a Cassandra service, so the two routes land on one asset.
+Tables and views are identified in their MRN by `keyspace.table`, the same identity the OpenMetadata plugin projects for a Cassandra service, so the two routes land on one asset. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone.
 
 ## Required Permissions
 

@@ -2,8 +2,10 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -28,6 +30,8 @@ var (
 )
 
 type User struct {
+	// MRN is mrn://user/<username>, derived from the name.
+	MRN                string `json:"mrn,omitempty"`
 	ID                 string `json:"id"`
 	Username           string `json:"username"`
 	Name               string `json:"name"`
@@ -483,4 +487,12 @@ func (s *service) InvalidateSessions(ctx context.Context, userID string) error {
 	return s.repo.UpdateUser(ctx, userID, map[string]interface{}{
 		"sessions_invalidated_at": time.Now(),
 	})
+}
+
+// MarshalJSON adds the user's MRN, which follows its name, to every response that carries one.
+func (v User) MarshalJSON() ([]byte, error) {
+	type plain User
+	p := plain(v)
+	p.MRN = mrn.User(v.Username).String()
+	return json.Marshal(p)
 }

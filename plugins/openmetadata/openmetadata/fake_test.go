@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/require"
 )
 
@@ -120,15 +119,10 @@ func discover(t *testing.T, f *fakeOM, overrides pluginsdk.RawConfig) *pluginsdk
 	return result
 }
 
-// findAsset looks an asset up by the name component of its MRN, rebuilt
-// as mrn.New with the asset's own type and first provider. Name is that
-// same string, so looking up by either gives the same asset.
+// findAsset looks an asset up by its type and its own name.
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, asset := range result.Assets {
-		if asset.Type != assetType || asset.MRN == nil || len(asset.Providers) == 0 {
-			continue
-		}
-		if *asset.MRN == mrn.New(assetType, asset.Providers[0], name) {
+		if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
 			return &result.Assets[i]
 		}
 	}

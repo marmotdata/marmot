@@ -22,13 +22,14 @@ const provider = "Presto"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "presto",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Presto",
 		Description:   "Discover catalogs, schemas, tables and views from Presto clusters",
 		Icon:          "presto",
 		Category:      "data-warehouse",
 		Status:        "experimental",
 		Features:      []string{"Assets", "Lineage"},
+		Federates:     true,
 		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(PrestoCatalogFields{}, "Catalog",
@@ -54,9 +55,10 @@ type Config struct {
 	SSLCertPath string `json:"ssl_cert_path,omitempty" group:"Authentication" label:"SSL Cert Path" description:"Path to TLS certificate file"`
 
 	// Scope
-	Catalog         string   `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
-	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
-	ExcludeSchemas  []string `json:"exclude_schemas,omitempty" group:"Discovery" default:"[]" description:"Schemas to skip in every catalog"`
+	CatalogMap      map[string]CatalogMapping `json:"catalog_map,omitempty" group:"Discovery" label:"Catalog Map" description:"Maps a catalog name to the native system it reads, as {zone, database}. A mapped catalog's tables get the MRN the native plugin gives them so both discover one asset; an unmapped catalog's tables stay Presto's own assets"`
+	Catalog         string                    `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
+	ExcludeCatalogs []string                  `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
+	ExcludeSchemas  []string                  `json:"exclude_schemas,omitempty" group:"Discovery" default:"[]" description:"Schemas to skip in every catalog"`
 
 	// Discovery options
 	IncludeCatalogs bool `json:"include_catalogs" group:"Discovery" default:"true" description:"Create catalog-level assets"`
@@ -144,7 +146,12 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	var statistics []pluginsdk.Statistic
 
 	for _, catalog := range catalogs {
-		info := connectorInfoForName(connectors[catalog])
+		if !internalConnectors[connectors[catalog]] {
+			if reason := s.config.unmappedReason(catalog, connectors[catalog]); reason != "" {
+				log.Warn().Str("catalog", catalog).Str("connector", connectors[catalog]).
+					Msgf("Catalog is unmapped because %s, so its tables are Presto assets and won't merge with the native plugin's", reason)
+			}
+		}
 
 		schemas, err := s.discoverSchemas(ctx, catalog)
 		if err != nil {
@@ -152,7 +159,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 			continue
 		}
 
-		tableAssets, err := s.discoverTables(ctx, catalog, connectors[catalog], info)
+		tableAssets, err := s.discoverTables(ctx, catalog, connectors[catalog])
 		if err != nil {
 			log.Warn().Err(err).Str("catalog", catalog).Msg("Failed to discover tables")
 			continue
@@ -199,6 +206,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     fmt.Sprintf("%s:%d", strings.ToLower(s.config.Host), s.config.Port),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -342,7 +354,7 @@ func (s *Source) excludedSchemaList() string {
 	return strings.Join(names, ", ")
 }
 
-func (s *Source) discoverTables(ctx context.Context, catalog, connector string, info connectorInfo) ([]pluginsdk.Asset, error) {
+func (s *Source) discoverTables(ctx context.Context, catalog, connector string) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -374,7 +386,7 @@ func (s *Source) discoverTables(ctx context.Context, catalog, connector string, 
 			continue
 		}
 
-		assets = append(assets, s.createTableAsset(catalog, schema, table, tableType, connector, info))
+		assets = append(assets, s.createTableAsset(catalog, schema, table, tableType, connector))
 	}
 
 	if err := rowsErr(rows); err != nil {
@@ -691,7 +703,7 @@ func (s *Source) createCatalogAsset(catalog, connector, version string, schemaCo
 	}
 
 	name := catalog
-	mrnValue := assetMRN("Catalog", provider, name)
+	mrnValue := s.config.catalogMRN(name)
 
 	return pluginsdk.Asset{
 		Name:      &name,
@@ -709,7 +721,7 @@ func (s *Source) createCatalogAsset(catalog, connector, version string, schemaCo
 	}
 }
 
-func (s *Source) createTableAsset(catalog, schema, table, tableType, connector string, info connectorInfo) pluginsdk.Asset {
+func (s *Source) createTableAsset(catalog, schema, table, tableType, connector string) pluginsdk.Asset {
 	metadata := map[string]any{
 		"catalog":    catalog,
 		"schema":     schema,
@@ -725,18 +737,18 @@ func (s *Source) createTableAsset(catalog, schema, table, tableType, connector s
 		assetType = "View"
 	}
 
-	// Name doubles as the MRN's name segment, so the two must carry the
-	// same string.
-	name := info.MRNName(catalog, schema, table)
-	mrnValue := assetMRN(assetType, info.Provider, name)
+	target := s.config.targetFor(catalog, connector, schema, table)
+	mrnValue := target.mrn(assetType)
+	name := table
 
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{info.Provider},
-		Metadata:  metadata,
-		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         assetType,
+		Providers:    []string{target.Provider},
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		PreviousMRNs: previousMRNs(target, assetType, catalog, connector, schema, table),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -746,12 +758,16 @@ func (s *Source) createTableAsset(catalog, schema, table, tableType, connector s
 	}
 }
 
-// assetMRN is the single place a Presto MRN is built, so assets and the
-// lineage that points at them can never drift apart. The service is a
-// parameter because tables of a mapped connector belong to that
-// connector's native provider, not to Presto.
-func assetMRN(assetType, service, name string) string {
-	return mrn.New(assetType, service, name)
+// previousMRNs returns the MRN earlier releases gave a Presto-owned table when it was filed under a guessed provider with the catalog in its name, which is the only old identity that belonged to Presto alone. The guessed native names without a catalog were shared with the native plugin's own assets and are left alone.
+func previousMRNs(target tableTarget, assetType, catalog, connector, schema, table string) []string {
+	if target.Native {
+		return nil
+	}
+	switch connector {
+	case "iceberg", "delta_lake", "hive", "hudi", "hive-hadoop2", "delta":
+		return []string{mrn.Asset(assetType, connectorMap[connector].Provider, catalog+"."+schema+"."+table).LegacyString()}
+	}
+	return nil
 }
 
 // tableKey addresses one table or view by its Presto path.

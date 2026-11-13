@@ -1,57 +1,66 @@
 package grafana
 
 import (
+	"net"
 	"strings"
 	"unicode"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-// sqlSource describes how the tables read through one Grafana data
-// source type are catalogued by the Marmot plugin for that technology.
-// A lineage edge only lands when it uses the exact provider and name
-// shape that plugin produces, so both are pinned here.
+// sqlSource describes how the tables read through one Grafana data source type are catalogued by the Marmot plugin for that technology. A lineage edge only lands when it uses the exact provider and path that plugin produces, so both are pinned here.
 type sqlSource struct {
-	// Provider is the Marmot provider string of the technology, used
-	// verbatim as the service component of the table's MRN.
+	// Provider is the Marmot provider string of the technology, used verbatim as the provider of the table's MRN.
 	Provider string
 
-	// tableName builds the table's Marmot name from the parts of a
-	// reference in the query. database is the reference's own database
-	// when it has one, otherwise the data source's configured database.
-	tableName func(database, schema, table string) string
+	// tablePath builds the levels of the table's MRN from the parts of a reference in the query. database is the reference's own database when it has one, otherwise the data source's configured database.
+	tablePath func(database, schema, table string) []string
+
+	// Port is the port the database listens on when the data source URL names a host without one.
+	Port string
 }
 
-// datasourceMap maps the Grafana data source types that run SQL to the
-// naming rule of the native Marmot plugin for the same technology.
-// Older Grafana releases report the PostgreSQL data source as postgres.
+// datasourceMap maps the Grafana data source types that run SQL to the naming of the native Marmot plugin for the same technology. Older Grafana releases report the PostgreSQL data source as postgres.
 var datasourceMap = map[string]sqlSource{
-	"grafana-postgresql-datasource":    {Provider: "PostgreSQL", tableName: bareName},
-	"postgres":                         {Provider: "PostgreSQL", tableName: bareName},
-	"mysql":                            {Provider: "MySQL", tableName: bareName},
-	"mssql":                            {Provider: "SQL Server", tableName: sqlServerName},
-	"grafana-clickhouse-datasource":    {Provider: "ClickHouse", tableName: bareName},
-	"vertamedia-clickhouse-datasource": {Provider: "ClickHouse", tableName: bareName},
+	"grafana-postgresql-datasource":    {Provider: "PostgreSQL", tablePath: postgresPath, Port: "5432"},
+	"postgres":                         {Provider: "PostgreSQL", tablePath: postgresPath, Port: "5432"},
+	"mysql":                            {Provider: "MySQL", tablePath: databaseTablePath, Port: "3306"},
+	"mssql":                            {Provider: "SQL Server", tablePath: sqlServerPath, Port: "1433"},
+	"grafana-clickhouse-datasource":    {Provider: "ClickHouse", tablePath: databaseTablePath, Port: "9000"},
+	"vertamedia-clickhouse-datasource": {Provider: "ClickHouse", tablePath: databaseTablePath, Port: "8123"},
 }
 
-// bareName names a table by its own name, the way the PostgreSQL,
-// MySQL and ClickHouse plugins do.
-func bareName(_, _, table string) string {
-	return table
-}
-
-// sqlServerName names a table database.schema.table with the schema
-// defaulting to dbo, the way the SQL Server plugin does. Without a
-// database there is no name that plugin would recognise, so none is
-// produced.
-func sqlServerName(database, schema, table string) string {
+// postgresPath names a table database.schema.table with the schema defaulting to public. Without a database there is no path the PostgreSQL plugin would recognise, so none is produced.
+func postgresPath(database, schema, table string) []string {
 	if database == "" {
-		return ""
+		return nil
+	}
+	if schema == "" {
+		schema = "public"
+	}
+	return []string{database, schema, table}
+}
+
+// databaseTablePath names a table database.table, the way the MySQL and ClickHouse plugins do. A query's schema qualifier is the database for these engines.
+func databaseTablePath(database, schema, table string) []string {
+	if schema != "" {
+		database = schema
+	}
+	if database == "" {
+		return nil
+	}
+	return []string{database, table}
+}
+
+// sqlServerPath names a table database.schema.table with the schema defaulting to dbo, the way the SQL Server plugin does. Without a database there is no path that plugin would recognise, so none is produced.
+func sqlServerPath(database, schema, table string) []string {
+	if database == "" {
+		return nil
 	}
 	if schema == "" {
 		schema = "dbo"
 	}
-	return database + "." + schema + "." + table
+	return []string{database, schema, table}
 }
 
 // tableRef is one table a query reads, split into the parts the query
@@ -381,15 +390,13 @@ func isWordRune(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
-// sqlTableMRNs returns the MRNs of the tables a query reads through a
-// data source of the given type, named the way the native plugin for
-// that technology names them. Data source types that do not run SQL
-// yield nothing.
-func sqlTableMRNs(datasourceType, database, sql string) []string {
+// sqlTableMRNs returns the MRNs of the tables a query reads through a data source of the given type, named the way the native plugin for that technology names them. host is the data source's address and becomes a hint, so Marmot picks the zone that owns that server. Data source types that do not run SQL yield nothing.
+func sqlTableMRNs(datasourceType, database, host, sql string) []string {
 	src, ok := datasourceMap[datasourceType]
 	if !ok || strings.TrimSpace(sql) == "" {
 		return nil
 	}
+	hint := hostFromURL(host, src.Port)
 
 	var out []string
 	for _, ref := range extractTables(sql) {
@@ -397,11 +404,33 @@ func sqlTableMRNs(datasourceType, database, sql string) []string {
 		if db == "" {
 			db = database
 		}
-		name := src.tableName(db, ref.Schema, ref.Table)
-		if name == "" {
+		path := src.tablePath(db, ref.Schema, ref.Table)
+		if len(path) == 0 {
 			continue
 		}
-		out = append(out, mrn.New("Table", src.Provider, name))
+		out = append(out, mrn.Asset("Table", src.Provider, path...).WithHost(hint).String())
 	}
 	return out
+}
+
+// hostFromURL reads the host:port of a data source URL, which Grafana stores as host:port or as a full URL. The default port fills in when it names none.
+func hostFromURL(raw, defaultPort string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if i := strings.Index(raw, "://"); i >= 0 {
+		raw = raw[i+3:]
+	}
+	if i := strings.IndexAny(raw, "/?"); i >= 0 {
+		raw = raw[:i]
+	}
+	raw = strings.ToLower(raw)
+	if h, p, err := net.SplitHostPort(raw); err == nil {
+		return net.JoinHostPort(h, p)
+	}
+	if raw == "" || defaultPort == "" {
+		return ""
+	}
+	return net.JoinHostPort(strings.Trim(raw, "[]"), defaultPort)
 }

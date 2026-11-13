@@ -1,10 +1,10 @@
 package assets
 
 import (
+	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdetail"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
@@ -17,6 +17,7 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -34,6 +35,7 @@ type Handler struct {
 	lookups          lookups.Recorder
 	details          *assetdetail.Store
 	signals          *assetsignal.Service
+	db               *pgxpool.Pool
 }
 
 func NewHandler(
@@ -79,7 +81,22 @@ func (h *Handler) WithSignals(signals *assetsignal.Service) *Handler {
 }
 
 func (h *Handler) Routes() []common.Route {
+	view := []func(http.HandlerFunc) http.HandlerFunc{
+		common.WithAuth(h.userService, h.authService, h.config),
+		common.RequirePermission(h.userService, "assets", "view"),
+	}
+	manage := []func(http.HandlerFunc) http.HandlerFunc{
+		common.WithAuth(h.userService, h.authService, h.config),
+		common.RequirePermission(h.userService, "assets", "manage"),
+	}
 	routes := []common.Route{
+		{Path: "/api/v1/assets/by-mrn", Method: http.MethodPut, Handler: h.upsertByMRN, Middleware: manage},
+		{Path: "/api/v1/assets/merge/{id}", Method: http.MethodPost, Handler: h.mergeAsset, Middleware: manage},
+		{Path: "/api/v1/assets/identity/{id}", Method: http.MethodGet, Handler: h.getIdentity, Middleware: view},
+		{Path: "/api/v1/zone-bindings", Method: http.MethodGet, Handler: h.listZoneBindings, Middleware: view},
+		{Path: "/api/v1/zone-bindings", Method: http.MethodPut, Handler: h.putZoneBinding, Middleware: manage},
+		{Path: "/api/v1/zone-bindings", Method: http.MethodDelete, Handler: h.deleteZoneBinding, Middleware: manage},
+		{Path: "/api/v1/mrn/resolve", Method: http.MethodGet, Handler: h.resolveMRN, Middleware: view},
 		{
 			Path:    "/api/v1/assets/",
 			Method:  http.MethodPost,

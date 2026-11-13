@@ -24,9 +24,9 @@ When you are done, stop scheduling the run. The imported assets stay exactly as 
 
 ## Running Alongside Native Plugins
 
-By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself.
+An imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://asset/table/postgresql/shop.public.orders` whether Marmot read it from OpenMetadata or from the database itself. The path is the OpenMetadata name below the service, trimmed to the levels the native plugin uses: MySQL names a table `<database>.<table>`, BigQuery `<project>.<dataset>.<table>`, and so on.
 
-This means names drop the levels the native plugin does not use. Marmot's own plugins for Postgres, MySQL, BigQuery, MongoDB, ClickHouse, Glue and Iceberg all name a table by its bare name, so `public.orders` and `staging.orders` resolve to one asset, as do two OpenMetadata services holding the same table name. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs.
+Two systems of the same technology are told apart by zone. Map each OpenMetadata service to the Marmot zone of its native plugin with `service_map`, for example `service_map: {prod-postgres: prod-eu}`. A service that is not mapped carries the address from its OpenMetadata connection as a host hint, and Marmot picks the zone that owns that address; with neither, no zone is used and two services holding the same table merge into one asset. The run logs what it merged. This plugin never puts `zone` into an MRN, because it does not own the assets it describes.
 
 Technologies Marmot has no plugin for yet, such as Snowflake or Looker, are imported under their own provider name. Nothing is invented: an entity is only imported when Marmot already has an asset type that means the same thing.
 

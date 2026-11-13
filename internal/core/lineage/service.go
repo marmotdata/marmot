@@ -2,6 +2,7 @@ package lineage
 
 import (
 	"context"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -84,7 +85,32 @@ func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, tar
 	return s.CreateDeclaredLineage(ctx, sourceMRN, targetMRN, lineageType, jobMRN, "", nil)
 }
 
+// resolve turns MRNs from callers, in either form or carrying a host hint, into the MRNs of the assets they name. Without an asset service it only canonicalises.
+func (s *service) resolve(ctx context.Context, mrns ...string) ([]string, error) {
+	if s.assetSvc == nil {
+		out := make([]string, len(mrns))
+		for i, m := range mrns {
+			out[i] = mrn.MustCanonical(m)
+		}
+		return out, nil
+	}
+	return s.assetSvc.ResolveMRNs(ctx, mrns)
+}
+
 func (s *service) CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string, columnLineage []ColumnEdge) (string, error) {
+	refs := []string{sourceMRN, targetMRN}
+	if jobMRN != "" {
+		refs = append(refs, jobMRN)
+	}
+	resolved, err := s.resolve(ctx, refs...)
+	if err != nil {
+		return "", err
+	}
+	sourceMRN, targetMRN = resolved[0], resolved[1]
+	if jobMRN != "" {
+		jobMRN = resolved[2]
+	}
+
 	existed, err := s.repo.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
 		return "", err
@@ -126,15 +152,36 @@ func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error 
 }
 
 func (s *service) EdgeExists(ctx context.Context, source, target string) (bool, error) {
-	return s.repo.EdgeExists(ctx, source, target)
+	resolved, err := s.resolve(ctx, source, target)
+	if err != nil {
+		return false, err
+	}
+	return s.repo.EdgeExists(ctx, resolved[0], resolved[1])
 }
 
 func (s *service) BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error {
-	return s.repo.BatchObservedLineage(ctx, edges)
+	refs := make([]string, 0, len(edges)*2)
+	for _, e := range edges {
+		refs = append(refs, e.Source, e.Target)
+	}
+	resolved, err := s.resolve(ctx, refs...)
+	if err != nil {
+		return err
+	}
+	out := make([]ObservedEdge, len(edges))
+	for i, e := range edges {
+		e.Source, e.Target = resolved[2*i], resolved[2*i+1]
+		out[i] = e
+	}
+	return s.repo.BatchObservedLineage(ctx, out)
 }
 
 func (s *service) GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error) {
-	return s.repo.GetImmediateNeighbors(ctx, assetMRN, direction)
+	resolved, err := s.resolve(ctx, assetMRN)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetImmediateNeighbors(ctx, resolved[0], direction)
 }
 
 // SetLineageChangeObserver registers an observer for lineage mutations.

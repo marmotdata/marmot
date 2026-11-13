@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/solace"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createSolaceAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) []pluginsdk.Asset {
@@ -44,7 +43,7 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 		description = fmt.Sprintf("Solace queue for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Queue", "Solace", name)
+	mrnValue := s.brokerMRN(doc, channel, "Queue", "Solace", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -114,7 +113,7 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 		description = fmt.Sprintf("Solace topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "Solace", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "Solace", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -175,7 +174,7 @@ func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName s
 		description = fmt.Sprintf("Solace topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "Solace", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "Solace", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

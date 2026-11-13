@@ -8,7 +8,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config) pluginsdk.Asset {
@@ -66,10 +65,8 @@ func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config)
 		}
 	}
 
-	// The server rebuilds identity from (Type, Providers[0], Name), so the
-	// service here has to be the same "Delta Lake" the asset carries below
-	// rather than a slug of it. mrn.New dashes the space for both.
-	mrnValue := mrn.New("Table", "Delta Lake", tableName)
+	// A table is named by its directory because the log carries no catalog or schema, so two directories with the same name need different zones to stay apart.
+	mrnValue := config.AssetMRN("Table", "Delta Lake", tableName)
 	processedTags := pluginsdk.InterpolateTags(config.Tags, metadata)
 
 	return pluginsdk.Asset{

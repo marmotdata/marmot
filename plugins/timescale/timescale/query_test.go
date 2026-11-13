@@ -195,20 +195,20 @@ func TestQuery_Integration(t *testing.T) {
 	t.Run("hypertable chunks resolve to the hypertable's own MRN", func(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: `SELECT * FROM ` + schemaName + `.readings`})
 		require.NoError(t, err)
-		assert.Equal(t, []string{assetMRN("Table", "readings")}, plan.ReferencedMRNs)
+		assert.Equal(t, []string{assetMRN(&Config{}, "Table", connConfig.Database, schemaName, "readings")}, plan.ReferencedMRNs)
 		assert.False(t, plan.Incomplete)
 	})
 
 	t.Run("plain table keeps its own MRN", func(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: `SELECT * FROM ` + schemaName + `.devices`})
 		require.NoError(t, err)
-		assert.Equal(t, []string{assetMRN("Table", "devices")}, plan.ReferencedMRNs)
+		assert.Equal(t, []string{assetMRN(&Config{}, "Table", connConfig.Database, schemaName, "devices")}, plan.ReferencedMRNs)
 	})
 
 	t.Run("a view expands to the hypertable and the table it joins", func(t *testing.T) {
 		plan, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: `SELECT * FROM ` + schemaName + `.readings_with_device`})
 		require.NoError(t, err)
-		assert.ElementsMatch(t, []string{assetMRN("Table", "readings"), assetMRN("Table", "devices")}, plan.ReferencedMRNs)
+		assert.ElementsMatch(t, []string{assetMRN(&Config{}, "Table", connConfig.Database, schemaName, "readings"), assetMRN(&Config{}, "Table", connConfig.Database, schemaName, "devices")}, plan.ReferencedMRNs)
 	})
 
 	refused := []string{

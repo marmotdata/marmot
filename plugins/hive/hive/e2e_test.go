@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -56,7 +57,9 @@ func discoverSales(t *testing.T) *pluginsdk.DiscoveryResult {
 	return result
 }
 
+// findAsset looks an asset up by its own name; a db.table argument is matched on the table part.
 func findAsset(result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset {
+	name = strings.TrimPrefix(name, "sales.")
 	for i := range result.Assets {
 		if result.Assets[i].Name != nil && *result.Assets[i].Name == name {
 			return &result.Assets[i]
@@ -136,7 +139,7 @@ func TestE2E_DiscoverDatabaseAsset(t *testing.T) {
 	require.NotNil(t, db)
 	assert.Equal(t, "Database", db.Type)
 	assert.Equal(t, []string{"Hive"}, db.Providers)
-	assert.Equal(t, "mrn://database/hive/sales", *db.MRN)
+	assert.Equal(t, "mrn://asset/database/hive/sales", *db.MRN)
 	require.NotNil(t, db.Description)
 	assert.Equal(t, "Sales data", *db.Description)
 	assert.Equal(t, "hive", db.Metadata["owner"])
@@ -158,7 +161,7 @@ func TestE2E_DiscoverTableColumnsAndComments(t *testing.T) {
 	customers := findAsset(result, "sales.customers")
 	require.NotNil(t, customers)
 	assert.Equal(t, "Table", customers.Type)
-	assert.Equal(t, "mrn://table/hive/sales.customers", *customers.MRN)
+	assert.Equal(t, "mrn://asset/table/hive/sales.customers", *customers.MRN)
 	assert.Equal(t, "external", customers.Metadata["object_type"], "Hive 4 translates plain managed tables to external")
 	require.NotNil(t, customers.Description)
 	assert.Equal(t, "Customer master data", *customers.Description)
@@ -200,7 +203,7 @@ func TestE2E_DiscoverBucketedTableAndForeignKey(t *testing.T) {
 	assert.Equal(t, []any{"customer_id"}, orders.Metadata["bucket_columns"])
 	assert.Contains(t, orders.Metadata["serde"], "OrcSerde")
 
-	assert.True(t, hasEdge(result, "mrn://table/hive/sales.orders", "mrn://table/hive/sales.customers", "FOREIGN_KEY"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/hive/sales.orders", "mrn://asset/table/hive/sales.customers", "FOREIGN_KEY"),
 		"orders.customer_id references customers.id")
 }
 
@@ -224,7 +227,7 @@ func TestE2E_DiscoverViewWithQueryAndLineage(t *testing.T) {
 	view := findAsset(result, "sales.daily_totals")
 	require.NotNil(t, view)
 	assert.Equal(t, "View", view.Type)
-	assert.Equal(t, "mrn://view/hive/sales.daily_totals", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/hive/sales.daily_totals", *view.MRN)
 	assert.Equal(t, "view", view.Metadata["object_type"])
 	require.NotNil(t, view.Query)
 	assert.Contains(t, *view.Query, "FROM sales.orders o")
@@ -234,8 +237,8 @@ func TestE2E_DiscoverViewWithQueryAndLineage(t *testing.T) {
 	require.NotNil(t, view.Description)
 	assert.Equal(t, "Order totals per customer", *view.Description)
 
-	assert.True(t, hasEdge(result, "mrn://table/hive/sales.orders", "mrn://view/hive/sales.daily_totals", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/hive/sales.customers", "mrn://view/hive/sales.daily_totals", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/hive/sales.orders", "mrn://asset/view/hive/sales.daily_totals", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/hive/sales.customers", "mrn://asset/view/hive/sales.daily_totals", "VIEW_OF"))
 }
 
 func TestE2E_DiscoverMaterializedView(t *testing.T) {
@@ -248,33 +251,33 @@ func TestE2E_DiscoverMaterializedView(t *testing.T) {
 	require.NotNil(t, mv.Query)
 	assert.Contains(t, *mv.Query, "FROM sales.stock")
 
-	assert.True(t, hasEdge(result, "mrn://table/hive/sales.stock", "mrn://view/hive/sales.stock_totals", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/hive/sales.stock", "mrn://asset/view/hive/sales.stock_totals", "VIEW_OF"))
 }
 
 func TestE2E_DiscoverContainsEdges(t *testing.T) {
 	result := discoverSales(t)
 
 	for _, target := range []string{
-		"mrn://table/hive/sales.customers",
-		"mrn://table/hive/sales.events",
-		"mrn://table/hive/sales.orders",
-		"mrn://table/hive/sales.stock",
-		"mrn://view/hive/sales.daily_totals",
-		"mrn://view/hive/sales.stock_totals",
+		"mrn://asset/table/hive/sales.customers",
+		"mrn://asset/table/hive/sales.events",
+		"mrn://asset/table/hive/sales.orders",
+		"mrn://asset/table/hive/sales.stock",
+		"mrn://asset/view/hive/sales.daily_totals",
+		"mrn://asset/view/hive/sales.stock_totals",
 	} {
-		assert.True(t, hasEdge(result, "mrn://database/hive/sales", target, "CONTAINS"), target)
+		assert.True(t, hasEdge(result, "mrn://asset/database/hive/sales", target, "CONTAINS"), target)
 	}
 }
 
 func TestE2E_DiscoverStatistics(t *testing.T) {
 	result := discoverSales(t)
 
-	customers := statsOf(result, "mrn://table/hive/sales.customers")
+	customers := statsOf(result, "mrn://asset/table/hive/sales.customers")
 	assert.Equal(t, float64(2), customers["asset.row_count"], "two rows inserted then ANALYZE TABLE")
 	assert.Equal(t, float64(6), customers["asset.column_count"])
 	assert.Greater(t, customers["asset.size_bytes"], float64(0))
 
-	events := statsOf(result, "mrn://table/hive/sales.events")
+	events := statsOf(result, "mrn://asset/table/hive/sales.events")
 	assert.Equal(t, float64(4), events["asset.column_count"], "three columns plus the partition column")
 }
 

@@ -15,7 +15,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -251,6 +250,10 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	if err != nil {
 		return nil, err
 	}
+	config, err := parseConfig(raw)
+	if err != nil {
+		return nil, err
+	}
 
 	plan := &pluginsdk.QueryPlan{}
 	err = readOnly(ctx, pool, func(tx pgx.Tx) error {
@@ -270,7 +273,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 			log.Info().Strs("functions", summary.opaqueCalls).Msg("Statement calls functions that may read unlisted tables; it needs access to the whole source")
 		}
 		for _, r := range summary.relations {
-			plan.ReferencedMRNs = append(plan.ReferencedMRNs, mrn.New(relationType(ctx, tx, r), "PostgreSQL", r.name))
+			plan.ReferencedMRNs = append(plan.ReferencedMRNs, assetMRN(config, relationType(ctx, tx, r), config.QueryDatabase, r.schema, r.name))
 		}
 		return nil
 	})

@@ -56,7 +56,7 @@ func runsFor(result *pluginsdk.DiscoveryResult, assetMRN string) []pluginsdk.Run
 func TestDiscover_CreatesOnePipelinePerWorkflow(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "Pipeline", pipeline.Type)
 	assert.Equal(t, []string{"Glue"}, pipeline.Providers)
 	assert.Equal(t, "daily-etl", *pipeline.Name)
@@ -65,7 +65,7 @@ func TestDiscover_CreatesOnePipelinePerWorkflow(t *testing.T) {
 func TestDiscover_PipelineDescriptionComesFromTheWorkflow(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	require.NotNil(t, pipeline.Description)
 	assert.Equal(t, "Daily ETL", *pipeline.Description)
 }
@@ -73,7 +73,7 @@ func TestDiscover_PipelineDescriptionComesFromTheWorkflow(t *testing.T) {
 func TestDiscover_PipelineCountsItsSteps(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, 5, pipeline.Metadata["node_count"])
 	assert.Equal(t, 2, pipeline.Metadata["job_count"])
 	assert.Equal(t, 1, pipeline.Metadata["crawler_count"])
@@ -83,7 +83,7 @@ func TestDiscover_PipelineCountsItsSteps(t *testing.T) {
 func TestDiscover_PipelineRecordsTheLastRun(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "wr_1", pipeline.Metadata["last_run_id"])
 	assert.Equal(t, "COMPLETED", pipeline.Metadata["last_run_status"])
 	assert.Equal(t, "2026-09-07T02:00:00Z", pipeline.Metadata["last_run_started"])
@@ -94,14 +94,14 @@ func TestDiscover_PipelineRecordsTheLastRun(t *testing.T) {
 func TestDiscover_PipelineFlattensDefaultRunProperties(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "env=prod, team=data", pipeline.Metadata["default_run_properties"])
 }
 
 func TestDiscover_PipelineLinksToTheAWSConsole(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	require.Len(t, pipeline.ExternalLinks, 1)
 	assert.Equal(t, "Open in AWS Console", pipeline.ExternalLinks[0].Name)
 	assert.Equal(t, "https://us-east-1.console.aws.amazon.com/glue/home?region=us-east-1#/v2/etl-configuration/workflows/view/daily-etl", pipeline.ExternalLinks[0].URL)
@@ -117,18 +117,18 @@ func TestDiscover_CreatesATaskPerGraphNode(t *testing.T) {
 		}
 	}
 	assert.ElementsMatch(t, []string{
-		"daily-etl/start-crawler",
-		"daily-etl/orders-crawler",
-		"daily-etl/after-crawl",
-		"daily-etl/load-orders",
-		"daily-etl/aggregate-orders",
+		"start-crawler",
+		"orders-crawler",
+		"after-crawl",
+		"load-orders",
+		"aggregate-orders",
 	}, tasks)
 }
 
 func TestDiscover_TaskRecordsItsNodeType(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-load-orders")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.load-orders")
 	assert.Equal(t, "job", task.Metadata["node_type"])
 	assert.Equal(t, "daily-etl", task.Metadata["workflow"])
 	assert.Equal(t, "load-orders", task.Metadata["node_name"])
@@ -138,7 +138,7 @@ func TestDiscover_TaskRecordsItsNodeType(t *testing.T) {
 func TestDiscover_JobTaskRecordsTheJobCommand(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-load-orders")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.load-orders")
 	assert.Equal(t, "load-orders", task.Metadata["job"])
 	assert.Equal(t, "glueetl", task.Metadata["job_type"])
 	assert.Equal(t, "s3://marmot-lake/scripts/load_orders.py", task.Metadata["job_script_location"])
@@ -147,7 +147,7 @@ func TestDiscover_JobTaskRecordsTheJobCommand(t *testing.T) {
 func TestDiscover_CrawlerTaskRecordsTheCrawler(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-orders-crawler")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.orders-crawler")
 	assert.Equal(t, "crawler", task.Metadata["node_type"])
 	assert.Equal(t, "orders-crawler", task.Metadata["crawler"])
 }
@@ -155,7 +155,7 @@ func TestDiscover_CrawlerTaskRecordsTheCrawler(t *testing.T) {
 func TestDiscover_TriggerTaskRecordsItsSchedule(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-start-crawler")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.start-crawler")
 	assert.Equal(t, "trigger", task.Metadata["node_type"])
 	assert.Equal(t, "SCHEDULED", task.Metadata["trigger_type"])
 	assert.Equal(t, "cron(0 2 * * ? *)", task.Metadata["trigger_schedule"])
@@ -166,14 +166,14 @@ func TestDiscover_TriggerTaskRecordsItsSchedule(t *testing.T) {
 func TestDiscover_TriggerTaskRecordsItsPredicate(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-after-crawl")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.after-crawl")
 	assert.Equal(t, "ANY: crawler orders-crawler SUCCEEDED", task.Metadata["trigger_predicate"])
 }
 
 func TestDiscover_TriggerTaskTakesItsDescription(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	task := assetByMRN(t, result, "mrn://task/glue/daily-etl-start-crawler")
+	task := assetByMRN(t, result, "mrn://asset/task/glue/daily-etl.start-crawler")
 	require.NotNil(t, task.Description)
 	assert.Equal(t, "Kick off the crawler", *task.Description)
 }
@@ -192,51 +192,51 @@ func TestDiscover_DoesNotCreateJobCrawlerOrDatabaseAssets(t *testing.T) {
 func TestDiscover_PipelineContainsItsTasks(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://pipeline/glue/daily-etl", "mrn://task/glue/daily-etl-load-orders", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://pipeline/glue/daily-etl", "mrn://task/glue/daily-etl-orders-crawler", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/pipeline/glue/daily-etl", "mrn://asset/task/glue/daily-etl.load-orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/pipeline/glue/daily-etl", "mrn://asset/task/glue/daily-etl.orders-crawler", "CONTAINS"))
 }
 
 func TestDiscover_GraphEdgesBecomeTaskDependencies(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-start-crawler", "mrn://task/glue/daily-etl-orders-crawler", "DEPENDS_ON"))
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-load-orders", "mrn://task/glue/daily-etl-aggregate-orders", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.start-crawler", "mrn://asset/task/glue/daily-etl.orders-crawler", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.load-orders", "mrn://asset/task/glue/daily-etl.aggregate-orders", "DEPENDS_ON"))
 }
 
 func TestDiscover_JobTaskDependsOnTheGlueJobAsset(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-load-orders", "mrn://job/glue/load-orders", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.load-orders", "mrn://asset/job/glue/load-orders", "DEPENDS_ON"))
 }
 
 func TestDiscover_CrawlerTaskDependsOnTheGlueCrawlerAsset(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-orders-crawler", "mrn://crawler/glue/orders-crawler", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.orders-crawler", "mrn://asset/crawler/glue/orders-crawler", "DEPENDS_ON"))
 }
 
 func TestDiscover_TriggerLinksToTheJobItStarts(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-after-crawl", "mrn://job/glue/load-orders", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.after-crawl", "mrn://asset/job/glue/load-orders", "DEPENDS_ON"))
 }
 
 func TestDiscover_TriggerLinksFromWhatItWaitsFor(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://crawler/glue/orders-crawler", "mrn://task/glue/daily-etl-after-crawl", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/crawler/glue/orders-crawler", "mrn://asset/task/glue/daily-etl.after-crawl", "DEPENDS_ON"))
 }
 
 func TestDiscover_CrawlerReadsItsBucket(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", "mrn://crawler/glue/orders-crawler", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", "mrn://asset/crawler/glue/orders-crawler", "FEEDS"))
 }
 
 func TestDiscover_CrawlerProducesItsDatabase(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	assert.True(t, hasEdge(result, "mrn://crawler/glue/orders-crawler", "mrn://database/glue/shop", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/crawler/glue/orders-crawler", "mrn://asset/database/glue/shop", "PRODUCES"))
 }
 
 // Without the run graph, which some Glue endpoints and moto do not return,
@@ -253,7 +253,7 @@ func TestDiscover_FallsBackToTriggersWhenTheGraphIsMissing(t *testing.T) {
 			tasks = append(tasks, *asset.Name)
 		}
 	}
-	assert.ElementsMatch(t, []string{"daily-etl/start-crawler", "daily-etl/after-crawl"}, tasks)
+	assert.ElementsMatch(t, []string{"start-crawler", "after-crawl"}, tasks)
 }
 
 func TestDiscover_TriggerFallbackStillLinksTheJob(t *testing.T) {
@@ -262,8 +262,8 @@ func TestDiscover_TriggerFallbackStillLinksTheJob(t *testing.T) {
 
 	result := discover(t, newSource(client))
 
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-after-crawl", "mrn://job/glue/load-orders", "DEPENDS_ON"))
-	assert.True(t, hasEdge(result, "mrn://task/glue/daily-etl-start-crawler", "mrn://crawler/glue/orders-crawler", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.after-crawl", "mrn://asset/job/glue/load-orders", "DEPENDS_ON"))
+	assert.True(t, hasEdge(result, "mrn://asset/task/glue/daily-etl.start-crawler", "mrn://asset/crawler/glue/orders-crawler", "DEPENDS_ON"))
 }
 
 func TestDiscover_TriggerFallbackIsEmptyWithoutTriggers(t *testing.T) {
@@ -282,7 +282,7 @@ func TestDiscover_TriggerFallbackIsEmptyWithoutTriggers(t *testing.T) {
 func TestDiscover_AttachesJobRunsToTheGlueJobAsset(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	runs := runsFor(result, "mrn://job/glue/load-orders")
+	runs := runsFor(result, "mrn://asset/job/glue/load-orders")
 	require.Len(t, runs, 4, "two events per run")
 	assert.Equal(t, "jr_1", runs[0].RunID)
 	assert.Equal(t, "glue", runs[0].JobNamespace)
@@ -295,7 +295,7 @@ func TestDiscover_AttachesJobRunsToTheGlueJobAsset(t *testing.T) {
 func TestDiscover_AttachesWorkflowRunsToThePipeline(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	runs := runsFor(result, "mrn://pipeline/glue/daily-etl")
+	runs := runsFor(result, "mrn://asset/pipeline/glue/daily-etl")
 	require.Len(t, runs, 2)
 	assert.Equal(t, "wr_1", runs[0].RunID)
 	assert.Equal(t, "daily-etl", runs[0].JobName)
@@ -306,7 +306,7 @@ func TestDiscover_AttachesWorkflowRunsToThePipeline(t *testing.T) {
 func TestDiscover_AttachesCrawlsToTheGlueCrawlerAsset(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 
-	runs := runsFor(result, "mrn://crawler/glue/orders-crawler")
+	runs := runsFor(result, "mrn://asset/crawler/glue/orders-crawler")
 	require.Len(t, runs, 2)
 	assert.Equal(t, "crawl_1", runs[0].RunID)
 	assert.Equal(t, "COMPLETE", runs[1].EventType)
@@ -318,7 +318,7 @@ func TestDiscover_LimitsRunHistoryToTheConfiguredCount(t *testing.T) {
 
 	result := discover(t, source)
 
-	assert.Len(t, runsFor(result, "mrn://job/glue/load-orders"), 2, "one run, two events")
+	assert.Len(t, runsFor(result, "mrn://asset/job/glue/load-orders"), 2, "one run, two events")
 }
 
 func TestDiscover_SkipsRunHistoryWhenDisabled(t *testing.T) {
@@ -345,7 +345,7 @@ func TestDiscover_SkipsCrawlerLineageWhenDisabled(t *testing.T) {
 
 	result := discover(t, source)
 
-	assert.False(t, hasEdge(result, "mrn://crawler/glue/orders-crawler", "mrn://database/glue/shop", "PRODUCES"))
+	assert.False(t, hasEdge(result, "mrn://asset/crawler/glue/orders-crawler", "mrn://asset/database/glue/shop", "PRODUCES"))
 }
 
 // One job whose runs cannot be read must not lose the rest of the run
@@ -356,8 +356,8 @@ func TestDiscover_ContinuesWhenJobRunsCannotBeRead(t *testing.T) {
 
 	result := discover(t, newSource(client))
 
-	assert.Empty(t, runsFor(result, "mrn://job/glue/load-orders"))
-	assert.NotEmpty(t, runsFor(result, "mrn://pipeline/glue/daily-etl"))
+	assert.Empty(t, runsFor(result, "mrn://asset/job/glue/load-orders"))
+	assert.NotEmpty(t, runsFor(result, "mrn://asset/pipeline/glue/daily-etl"))
 }
 
 func TestDiscover_ReturnsErrorWhenGlueIsUnreachable(t *testing.T) {
@@ -377,8 +377,8 @@ func TestDiscover_FollowsPaginationToTheEnd(t *testing.T) {
 
 	result := discover(t, newSource(client))
 
-	assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
-	assetByMRN(t, result, "mrn://pipeline/glue/hourly-etl")
+	assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
+	assetByMRN(t, result, "mrn://asset/pipeline/glue/hourly-etl")
 }
 
 func TestDiscover_ReadsWorkflowTagsWhenAsked(t *testing.T) {
@@ -388,7 +388,7 @@ func TestDiscover_ReadsWorkflowTagsWhenAsked(t *testing.T) {
 
 	result := discover(t, source)
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.Equal(t, "data", pipeline.Metadata["tag_team"])
 	assert.Equal(t, []string{"arn:aws:glue:us-east-1:123456789012:workflow/daily-etl"}, client.taggedARNs)
 }
@@ -398,7 +398,7 @@ func TestDiscover_SkipsTagsByDefault(t *testing.T) {
 
 	result := discover(t, newSource(client))
 
-	pipeline := assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	pipeline := assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 	assert.NotContains(t, pipeline.Metadata, "tag_team")
 	assert.Empty(t, client.taggedARNs)
 }
@@ -436,5 +436,5 @@ func TestDiscover_RunsWithoutAnAWSSectionInTheConfig(t *testing.T) {
 
 	result := discover(t, source)
 
-	assetByMRN(t, result, "mrn://pipeline/glue/daily-etl")
+	assetByMRN(t, result, "mrn://asset/pipeline/glue/daily-etl")
 }

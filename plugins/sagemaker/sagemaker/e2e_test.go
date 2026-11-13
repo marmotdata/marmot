@@ -287,7 +287,7 @@ func TestE2E_DiscoversTheModel(t *testing.T) {
 	model := assetNamed(t, result, "Model", "churn-xgb")
 
 	assert.Equal(t, []string{"SageMaker"}, model.Providers)
-	assert.Equal(t, "mrn://model/sagemaker/churn-xgb", *model.MRN)
+	assert.Equal(t, "mrn://asset/model/sagemaker/churn-xgb", *model.MRN)
 	assert.Equal(t, "123.dkr.ecr.us-east-1.amazonaws.com/xgboost:1", model.Metadata["image"])
 	assert.Equal(t, "s3://ml-artifacts/churn/model.tar.gz", model.Metadata["model_data_url"])
 }
@@ -316,7 +316,7 @@ func TestE2E_DiscoversTheEndpointAndItsVariant(t *testing.T) {
 
 	endpoint := assetNamed(t, result, "Endpoint", "churn-prod")
 
-	assert.Equal(t, "mrn://endpoint/sagemaker/churn-prod", *endpoint.MRN)
+	assert.Equal(t, "mrn://asset/endpoint/sagemaker/churn-prod", *endpoint.MRN)
 	assert.Equal(t, "InService", endpoint.Metadata["status"])
 	assert.Equal(t, "churn-cfg", endpoint.Metadata["endpoint_config"])
 	assert.Equal(t, "s3://ml-capture/churn", endpoint.Metadata["data_capture_s3_uri"])
@@ -335,13 +335,13 @@ func TestE2E_DiscoversTheEndpointAndItsVariant(t *testing.T) {
 func TestE2E_LinksTheModelToTheEndpoint(t *testing.T) {
 	result := discoverSeeded(t)
 
-	assert.True(t, hasEdge(result, "mrn://model/sagemaker/churn-xgb", "mrn://endpoint/sagemaker/churn-prod", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/model/sagemaker/churn-xgb", "mrn://asset/endpoint/sagemaker/churn-prod", "FEEDS"))
 }
 
 func TestE2E_LinksTheArtifactBucketToTheModel(t *testing.T) {
 	result := discoverSeeded(t)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-artifacts", "mrn://model/sagemaker/churn-xgb", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-artifacts", "mrn://asset/model/sagemaker/churn-xgb", "FEEDS"))
 }
 
 func TestE2E_DiscoversTheModelPackageGroup(t *testing.T) {
@@ -361,7 +361,7 @@ func TestE2E_DiscoversTheTrainingJob(t *testing.T) {
 
 	job := assetNamed(t, result, "Job", "churn-train-1")
 
-	assert.Equal(t, "mrn://job/sagemaker/churn-train-1", *job.MRN)
+	assert.Equal(t, "mrn://asset/job/sagemaker/churn-train-1", *job.MRN)
 	assert.Equal(t, "Completed", job.Metadata["status"])
 	assert.Equal(t, "123.dkr.ecr.us-east-1.amazonaws.com/xgboost:1", job.Metadata["algorithm_image"])
 	assert.Equal(t, "s3://ml-artifacts/churn", job.Metadata["output_s3_path"])
@@ -374,15 +374,15 @@ func TestE2E_DiscoversTheTrainingJob(t *testing.T) {
 func TestE2E_LinksTheTrainingDataBucketToTheJob(t *testing.T) {
 	result := discoverSeeded(t)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-data", "mrn://job/sagemaker/churn-train-1", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-data", "mrn://asset/job/sagemaker/churn-train-1", "FEEDS"))
 }
 
 func TestE2E_LinksTheTrainingJobToTheModelItProduced(t *testing.T) {
 	result := discoverSeeded(t)
 
 	assert.True(t, hasEdge(result,
-		"mrn://job/sagemaker/churn-train-1",
-		"mrn://model/sagemaker/"+trainedModel,
+		"mrn://asset/job/sagemaker/churn-train-1",
+		"mrn://asset/model/sagemaker/"+trainedModel,
 		"PRODUCES"))
 }
 
@@ -391,7 +391,7 @@ func TestE2E_EmitsRunHistoryForTheTrainingJob(t *testing.T) {
 
 	var history *pluginsdk.AssetRunHistory
 	for i := range result.RunHistory {
-		if result.RunHistory[i].AssetMRN == "mrn://job/sagemaker/churn-train-1" {
+		if result.RunHistory[i].AssetMRN == "mrn://asset/job/sagemaker/churn-train-1" {
 			history = &result.RunHistory[i]
 		}
 	}

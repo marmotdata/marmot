@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *kafka.ChannelBinding) pluginsdk.Asset {
@@ -22,7 +21,7 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 		description = fmt.Sprintf("Kafka topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "Kafka", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "Kafka", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

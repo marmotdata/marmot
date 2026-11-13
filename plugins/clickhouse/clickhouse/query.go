@@ -17,7 +17,6 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -344,8 +343,8 @@ func parsePlan(planJSON []byte) (*planSummary, error) {
 }
 
 // relationMRN reproduces the MRN discovery gives a table, so grants written against catalog assets bind on the query path too. ReadFromMergeTree only ever backs a Table asset; a view never reaches this node because the planner expands it into its underlying tables first.
-func relationMRN(r relation) string {
-	return mrn.New("Table", "ClickHouse", r.database+"."+r.table)
+func relationMRN(cfg *Config, r relation) string {
+	return assetMRN(cfg, "Table", r.database, r.table)
 }
 
 // PlanQuery asks ClickHouse what a statement would read via EXPLAIN PLAN,
@@ -366,6 +365,10 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	if err != nil {
 		return nil, err
 	}
+	config, err := parseConfig(raw)
+	if err != nil {
+		return nil, err
+	}
 
 	var planJSON string
 	if err := conn.QueryRow(readOnlyContext(ctx, req.MaxRows), "EXPLAIN PLAN json=1 "+req.Statement).Scan(&planJSON); err != nil {
@@ -382,7 +385,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 		log.Info().Strs("node_types", summary.unresolvedNodeTypes).Msg("Statement reads storage the plan cannot name as a table; it needs access to the whole source")
 	}
 	for _, r := range summary.relations {
-		plan.ReferencedMRNs = append(plan.ReferencedMRNs, relationMRN(r))
+		plan.ReferencedMRNs = append(plan.ReferencedMRNs, relationMRN(config, r))
 	}
 	return plan, nil
 }

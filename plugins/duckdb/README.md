@@ -1,4 +1,6 @@
 The DuckDB plugin discovers schemas, tables, views and foreign key relationships from DuckDB database files.
+Tables are identified in their MRN by the database name, schema and table, for example `mrn://asset/table/duckdb/analytics.main.orders`. The database name is the file name without its extension, as DuckDB names the catalog, and the identity is tied to the file, so set `zone` when several machines hold their own copy of the same file name and you want them kept apart or shared deliberately. The name is one you choose, not a cloud availability zone.
+
 
 ## File Sources
 

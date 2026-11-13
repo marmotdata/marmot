@@ -65,7 +65,7 @@ func (c *collector) discoverContainers(ctx context.Context, client *client) erro
 
 		name := strings.Join(parts, "/")
 
-		asset := c.newAsset(ct.entityBase, "container", assetType, p, c.mrnName(name, ct.FullyQualifiedName), metadata)
+		asset := c.newAsset(ct.entityBase, "container", assetType, p, storageIdent(parts, name), metadata)
 		if ct.DataModel != nil && c.config.IncludeColumns {
 			setColumns(&asset, ct.DataModel.Columns)
 		}
@@ -111,4 +111,13 @@ func isRootContainer(ct container, parts []string) bool {
 		return false
 	}
 	return len(parts) == 1
+}
+
+// storageIdent names a container by its bucket and, for a prefix inside it, the key below the bucket. The name is the last level of that, and earlier releases built the MRN from the whole slash-joined path.
+func storageIdent(parts []string, legacy string) identity {
+	path := []string{parts[0]}
+	if len(parts) > 1 {
+		path = append(path, strings.Join(parts[1:], "/"))
+	}
+	return identity{Name: parts[len(parts)-1], Path: path, Legacy: legacy}
 }

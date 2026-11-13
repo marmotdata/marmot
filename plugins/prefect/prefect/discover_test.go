@@ -191,14 +191,14 @@ func TestDiscover_CreatesOneTaskPerDistinctTaskKey(t *testing.T) {
 
 	// Four task runs, three task keys: load ran twice.
 	assert.ElementsMatch(t,
-		[]string{"nightly-etl/load", "nightly-etl/transform", "nightly-etl/extract"},
+		[]string{"load", "transform", "extract"},
 		tasks)
 }
 
 func TestDiscover_TaskNameDropsThePrefectHashSuffix(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	task := assetByName(t, result, "nightly-etl/extract")
+	task := assetByName(t, result, "extract")
 	assert.Equal(t, "Task", task.Type)
 	assert.Equal(t, "extract-bf522387", task.Metadata["task_key"], "the raw key stays in metadata")
 }
@@ -206,7 +206,7 @@ func TestDiscover_TaskNameDropsThePrefectHashSuffix(t *testing.T) {
 func TestDiscover_TaskRecordsItsFlowAndLastState(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	task := assetByName(t, result, "nightly-etl/transform")
+	task := assetByName(t, result, "transform")
 	assert.Equal(t, "nightly-etl", task.Metadata["flow"])
 	assert.Equal(t, "COMPLETED", task.Metadata["last_state"])
 	assert.Equal(t, "2026-09-08T07:40:29.425084Z", task.Metadata["last_run_at"])
@@ -215,14 +215,14 @@ func TestDiscover_TaskRecordsItsFlowAndLastState(t *testing.T) {
 func TestDiscover_TaskRunCountCountsRepeatedCalls(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	assert.Equal(t, 2, assetByName(t, result, "nightly-etl/load").Metadata["run_count"])
-	assert.Equal(t, 1, assetByName(t, result, "nightly-etl/extract").Metadata["run_count"])
+	assert.Equal(t, 2, assetByName(t, result, "load").Metadata["run_count"])
+	assert.Equal(t, 1, assetByName(t, result, "extract").Metadata["run_count"])
 }
 
 func TestDiscover_TaskKeepsTheTagsFromItsRuns(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	task := assetByName(t, result, "nightly-etl/transform")
+	task := assetByName(t, result, "transform")
 	assert.Equal(t, []string{"shaping"}, task.Metadata["tags"])
 	assert.Contains(t, task.Tags, "shaping")
 }
@@ -231,8 +231,8 @@ func TestDiscover_PipelineContainsItsTasks(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/prefect/nightly-etl",
-		"mrn://task/prefect/nightly-etl-extract",
+		"mrn://asset/pipeline/prefect/nightly-etl",
+		"mrn://asset/task/prefect/nightly-etl.extract",
 		"CONTAINS"))
 }
 
@@ -240,12 +240,12 @@ func TestDiscover_TaskDependsOnTheTaskItConsumed(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://task/prefect/nightly-etl-extract",
-		"mrn://task/prefect/nightly-etl-transform",
+		"mrn://asset/task/prefect/nightly-etl.extract",
+		"mrn://asset/task/prefect/nightly-etl.transform",
 		"DEPENDS_ON"))
 	assert.True(t, hasEdge(result,
-		"mrn://task/prefect/nightly-etl-transform",
-		"mrn://task/prefect/nightly-etl-load",
+		"mrn://asset/task/prefect/nightly-etl.transform",
+		"mrn://asset/task/prefect/nightly-etl.load",
 		"DEPENDS_ON"))
 }
 
@@ -256,7 +256,7 @@ func TestDiscover_TaskCalledTwiceGivesOneEdgePerUpstream(t *testing.T) {
 	// both, but each pair is stated once.
 	count := 0
 	for _, edge := range result.Lineage {
-		if edge.Type == "DEPENDS_ON" && edge.Target == "mrn://task/prefect/nightly-etl-load" {
+		if edge.Type == "DEPENDS_ON" && edge.Target == "mrn://asset/task/prefect/nightly-etl.load" {
 			count++
 		}
 	}
@@ -266,7 +266,7 @@ func TestDiscover_TaskCalledTwiceGivesOneEdgePerUpstream(t *testing.T) {
 func TestDiscover_EmitsStartAndCompleteForASuccessfulRun(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	history := runHistoryFor(t, result, "mrn://pipeline/prefect/nightly-etl")
+	history := runHistoryFor(t, result, "mrn://asset/pipeline/prefect/nightly-etl")
 	require.Len(t, history.Runs, 2)
 
 	assert.Equal(t, "START", history.Runs[0].EventType)
@@ -278,7 +278,7 @@ func TestDiscover_EmitsStartAndCompleteForASuccessfulRun(t *testing.T) {
 func TestDiscover_EmitsFailForAFailedRun(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	history := runHistoryFor(t, result, "mrn://pipeline/prefect/broken-report")
+	history := runHistoryFor(t, result, "mrn://asset/pipeline/prefect/broken-report")
 	require.Len(t, history.Runs, 2)
 	assert.Equal(t, "FAIL", history.Runs[1].EventType)
 }
@@ -286,7 +286,7 @@ func TestDiscover_EmitsFailForAFailedRun(t *testing.T) {
 func TestDiscover_RunHistoryIsFiledUnderThePrefectNamespace(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	event := runHistoryFor(t, result, "mrn://pipeline/prefect/nightly-etl").Runs[0]
+	event := runHistoryFor(t, result, "mrn://asset/pipeline/prefect/nightly-etl").Runs[0]
 	assert.Equal(t, "prefect", event.JobNamespace)
 	assert.Equal(t, "nightly-etl", event.JobName)
 	assert.Equal(t, nightlyRunID, event.RunID)
@@ -295,7 +295,7 @@ func TestDiscover_RunHistoryIsFiledUnderThePrefectNamespace(t *testing.T) {
 func TestDiscover_RunFacetsNameTheDeploymentThatStartedTheRun(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	facets := runHistoryFor(t, result, "mrn://pipeline/prefect/nightly-etl").Runs[0].RunFacets
+	facets := runHistoryFor(t, result, "mrn://asset/pipeline/prefect/nightly-etl").Runs[0].RunFacets
 	assert.Equal(t, "nightly", facets["deployment"])
 	assert.Equal(t, "papaya-mayfly", facets["run_name"])
 	assert.Equal(t, "Completed", facets["state_name"])
@@ -306,7 +306,7 @@ func TestDiscover_RunFacetsNameTheDeploymentThatStartedTheRun(t *testing.T) {
 func TestDiscover_RunFacetsOmitTheDeploymentForAManualRun(t *testing.T) {
 	result := discover(t, seededPrefect(t), nil)
 
-	facets := runHistoryFor(t, result, "mrn://pipeline/prefect/broken-report").Runs[0].RunFacets
+	facets := runHistoryFor(t, result, "mrn://asset/pipeline/prefect/broken-report").Runs[0].RunFacets
 	assert.NotContains(t, facets, "deployment", "the failed run was started by hand")
 }
 
@@ -365,7 +365,7 @@ func TestDiscover_StillReadsOneRunForTasksWhenRunHistoryIsOff(t *testing.T) {
 
 	// Tasks come from the latest run, so that one run is still fetched.
 	assert.Equal(t, float64(1), fake.filters("flow_runs")[0]["limit"])
-	assert.Equal(t, "Task", assetByName(t, result, "nightly-etl/extract").Type)
+	assert.Equal(t, "Task", assetByName(t, result, "extract").Type)
 }
 
 func TestDiscover_ReadsNoRunsWhenTasksAndRunHistoryAreBothOff(t *testing.T) {

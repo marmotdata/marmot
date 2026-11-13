@@ -144,11 +144,22 @@ func discoverShop(t *testing.T) *pluginsdk.DiscoveryResult {
 
 func findAsset(result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset {
 	for i := range result.Assets {
-		if result.Assets[i].Name != nil && *result.Assets[i].Name == name {
+		if assetKey(result.Assets[i]) == name {
 			return &result.Assets[i]
 		}
 	}
 	return nil
+}
+
+// assetKey is the keyspace.name path of a table or view, or the bare name of a keyspace.
+func assetKey(a pluginsdk.Asset) string {
+	if a.Name == nil {
+		return ""
+	}
+	if keyspace, _ := a.Metadata["keyspace"].(string); keyspace != "" && a.Type != "Keyspace" {
+		return keyspace + "." + *a.Name
+	}
+	return *a.Name
 }
 
 func requireAsset(t *testing.T, result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset {
@@ -238,7 +249,7 @@ func TestE2E_DiscoverFindsKeyspaceTablesAndView(t *testing.T) {
 	types := make(map[string]string)
 	for _, a := range result.Assets {
 		require.NotNil(t, a.Name)
-		types[*a.Name] = a.Type
+		types[assetKey(a)] = a.Type
 		assert.Equal(t, []string{"Cassandra"}, a.Providers)
 	}
 
@@ -253,7 +264,7 @@ func TestE2E_DiscoverFindsKeyspaceTablesAndView(t *testing.T) {
 func TestE2E_KeyspaceAssetCarriesReplicationAndUserTypes(t *testing.T) {
 	ks := requireAsset(t, discoverShop(t), "shop")
 
-	assert.Equal(t, "mrn://keyspace/cassandra/shop", *ks.MRN)
+	assert.Equal(t, "mrn://asset/keyspace/cassandra/shop", *ks.MRN)
 	assert.Equal(t, "SimpleStrategy", ks.Metadata["replication_class"])
 	assert.EqualValues(t, 1, ks.Metadata["replication_factor"])
 	assert.Equal(t, true, ks.Metadata["durable_writes"])
@@ -268,7 +279,7 @@ func TestE2E_KeyspaceAssetCarriesReplicationAndUserTypes(t *testing.T) {
 func TestE2E_TableCarriesOptionsAndKeyLayout(t *testing.T) {
 	orders := requireAsset(t, discoverShop(t), "shop.orders")
 
-	assert.Equal(t, "mrn://table/cassandra/shop.orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/cassandra/shop.orders", *orders.MRN)
 	require.NotNil(t, orders.Description)
 	assert.Equal(t, "Customer orders", *orders.Description)
 	assert.Equal(t, "shop", orders.Metadata["keyspace"])
@@ -342,7 +353,7 @@ func TestE2E_SecondaryIndexIsRecorded(t *testing.T) {
 func TestE2E_ViewCarriesItsDefinition(t *testing.T) {
 	view := requireAsset(t, discoverShop(t), "shop.orders_by_status")
 
-	assert.Equal(t, "mrn://view/cassandra/shop.orders_by_status", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/cassandra/shop.orders_by_status", *view.MRN)
 	assert.Equal(t, "orders", view.Metadata["base_table"])
 	assert.Equal(t, false, view.Metadata["include_all_columns"])
 	assert.Equal(t, "status IS NOT NULL AND customer_id IS NOT NULL AND order_id IS NOT NULL", view.Metadata["where_clause"])
@@ -365,16 +376,16 @@ func TestE2E_LineageLinksKeyspaceToItsObjectsAndViewToBaseTable(t *testing.T) {
 	result := discoverShop(t)
 
 	contains := func(target string) pluginsdk.LineageEdge {
-		return pluginsdk.LineageEdge{Source: "mrn://keyspace/cassandra/shop", Target: target, Type: "CONTAINS"}
+		return pluginsdk.LineageEdge{Source: "mrn://asset/keyspace/cassandra/shop", Target: target, Type: "CONTAINS"}
 	}
-	assert.Contains(t, result.Lineage, contains("mrn://table/cassandra/shop.customers"))
-	assert.Contains(t, result.Lineage, contains("mrn://table/cassandra/shop.orders"))
-	assert.Contains(t, result.Lineage, contains("mrn://table/cassandra/shop.page_views"))
-	assert.Contains(t, result.Lineage, contains("mrn://view/cassandra/shop.orders_by_status"))
+	assert.Contains(t, result.Lineage, contains("mrn://asset/table/cassandra/shop.customers"))
+	assert.Contains(t, result.Lineage, contains("mrn://asset/table/cassandra/shop.orders"))
+	assert.Contains(t, result.Lineage, contains("mrn://asset/table/cassandra/shop.page_views"))
+	assert.Contains(t, result.Lineage, contains("mrn://asset/view/cassandra/shop.orders_by_status"))
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://table/cassandra/shop.orders",
-		Target: "mrn://view/cassandra/shop.orders_by_status",
+		Source: "mrn://asset/table/cassandra/shop.orders",
+		Target: "mrn://asset/view/cassandra/shop.orders_by_status",
 		Type:   "VIEW_OF",
 	})
 	assert.Len(t, result.Lineage, 5)
@@ -392,12 +403,12 @@ func TestE2E_StatisticsCountColumnsAndIndexesButNeverRows(t *testing.T) {
 		assert.NotEqual(t, "asset.row_count", st.MetricName, "a row count would be a full scan")
 	}
 
-	assert.Equal(t, float64(8), stats["mrn://table/cassandra/shop.orders"]["asset.column_count"])
-	assert.Equal(t, float64(1), stats["mrn://table/cassandra/shop.orders"]["asset.index_count"])
-	assert.Equal(t, float64(6), stats["mrn://table/cassandra/shop.customers"]["asset.column_count"])
-	assert.Equal(t, float64(2), stats["mrn://table/cassandra/shop.page_views"]["asset.column_count"])
-	assert.Equal(t, float64(5), stats["mrn://view/cassandra/shop.orders_by_status"]["asset.column_count"])
-	assert.NotContains(t, stats["mrn://table/cassandra/shop.customers"], "asset.index_count")
+	assert.Equal(t, float64(8), stats["mrn://asset/table/cassandra/shop.orders"]["asset.column_count"])
+	assert.Equal(t, float64(1), stats["mrn://asset/table/cassandra/shop.orders"]["asset.index_count"])
+	assert.Equal(t, float64(6), stats["mrn://asset/table/cassandra/shop.customers"]["asset.column_count"])
+	assert.Equal(t, float64(2), stats["mrn://asset/table/cassandra/shop.page_views"]["asset.column_count"])
+	assert.Equal(t, float64(5), stats["mrn://asset/view/cassandra/shop.orders_by_status"]["asset.column_count"])
+	assert.NotContains(t, stats["mrn://asset/table/cassandra/shop.customers"], "asset.index_count")
 }
 
 func sampleRows(t *testing.T, name string) ([]string, [][]interface{}) {

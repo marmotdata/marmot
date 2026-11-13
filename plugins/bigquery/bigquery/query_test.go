@@ -67,7 +67,7 @@ func TestClassifyMetadata(t *testing.T) {
 func TestReferencedMRNs(t *testing.T) {
 	tables := []*bigquery.Table{
 		{ProjectID: "proj", DatasetID: "staging", TableID: "orders"},
-		{ProjectID: "proj", DatasetID: "prod", TableID: "orders"}, // same bare table id, different dataset
+		{ProjectID: "proj", DatasetID: "prod", TableID: "orders"}, // same table id, different dataset
 		{ProjectID: "proj", DatasetID: "prod", TableID: "customers"},
 	}
 	classify := func(_ context.Context, t *bigquery.Table) string {
@@ -77,16 +77,17 @@ func TestReferencedMRNs(t *testing.T) {
 		return "Table"
 	}
 
-	mrns := referencedMRNs(context.Background(), tables, classify)
+	mrns := referencedMRNs(context.Background(), &Config{}, tables, classify)
 
-	// staging.orders and prod.orders both sanitise to the same MRN, so they
-	// are deduplicated into one entry, matching discovery's own bare-table-id
-	// scheme.
-	assert.Equal(t, []string{"mrn://table/bigquery/orders", "mrn://view/bigquery/customers"}, mrns)
+	assert.Equal(t, []string{
+		"mrn://asset/table/bigquery/proj.staging.orders",
+		"mrn://asset/table/bigquery/proj.prod.orders",
+		"mrn://asset/view/bigquery/proj.prod.customers",
+	}, mrns)
 }
 
 func TestReferencedMRNsWithNoTables(t *testing.T) {
-	mrns := referencedMRNs(context.Background(), nil, classifyTable)
+	mrns := referencedMRNs(context.Background(), &Config{}, nil, classifyTable)
 	assert.Empty(t, mrns, "the host then falls back to a whole-source grant")
 }
 

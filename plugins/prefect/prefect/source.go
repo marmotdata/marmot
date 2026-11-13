@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"regexp"
 	"strings"
@@ -52,7 +53,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "prefect",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Prefect",
 		Description:   "Discover flows, tasks and run history from Prefect Cloud or a self-hosted Prefect server",
 		Icon:          "prefect",
@@ -145,9 +146,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Prefect discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     run.assets,
-		Lineage:    run.lineage,
-		RunHistory: run.runHistory,
+		Assets:       run.assets,
+		Lineage:      run.lineage,
+		RunHistory:   run.runHistory,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -247,12 +249,14 @@ func (s *Source) runsToFetch() int {
 	return 0
 }
 
-// assetMRN builds the MRN for one of this plugin's assets. Every MRN,
-// including the ends of lineage edges, goes through here so it always
-// matches what the Marmot server rebuilds from Type, Providers[0] and
-// Name.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// pipelineMRN builds the MRN of a flow. Every MRN, including the ends of lineage edges, goes through these helpers so it always matches the asset it names.
+func (s *Source) pipelineMRN(flowName string) string {
+	return s.config.AssetMRN("Pipeline", provider, flowName)
+}
+
+// taskMRN builds the MRN of a task, which is addressed by its flow and its cleaned name.
+func (s *Source) taskMRN(flowName, task string) string {
+	return s.config.AssetMRN("Task", provider, flowName, task)
 }
 
 // pipelineAsset builds the Pipeline asset for one flow.
@@ -310,7 +314,7 @@ func (s *Source) pipelineAsset(flow Flow, deployments []Deployment, runs []FlowR
 	addNonEmpty(metadata, "url", link)
 
 	name := flow.Name
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := s.pipelineMRN(name)
 
 	asset := pluginsdk.Asset{
 		Name:        &name,
@@ -350,7 +354,7 @@ type discoveredTask struct {
 // the edges that hold the flow together: the Pipeline contains each task,
 // and a task that consumed another task's result depends on it.
 func (s *Source) taskAssets(flowName, pipelineMRN string, taskRuns []TaskRun) ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
-	tasks, namesByRunID := foldTaskRuns(flowName, taskRuns)
+	tasks, namesByRunID := foldTaskRuns(taskRuns)
 
 	assets := make([]pluginsdk.Asset, 0, len(tasks))
 	edges := make([]pluginsdk.LineageEdge, 0, len(tasks))
@@ -359,12 +363,12 @@ func (s *Source) taskAssets(flowName, pipelineMRN string, taskRuns []TaskRun) ([
 		assets = append(assets, s.taskAsset(flowName, task))
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: pipelineMRN,
-			Target: assetMRN("Task", task.Name),
+			Target: s.taskMRN(flowName, task.Name),
 			Type:   "CONTAINS",
 		})
 	}
 
-	return assets, append(edges, dependencyEdges(taskRuns, namesByRunID)...)
+	return assets, append(edges, s.dependencyEdges(flowName, taskRuns, namesByRunID)...)
 }
 
 // taskAsset builds the Task asset for one task of a flow.
@@ -381,15 +385,16 @@ func (s *Source) taskAsset(flowName string, task discoveredTask) pluginsdk.Asset
 	}
 
 	name := task.Name
-	mrnValue := assetMRN("Task", name)
+	mrnValue := s.taskMRN(flowName, name)
 
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      "Task",
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Tags:      append(append([]string{}, task.Tags...), pluginsdk.InterpolateTags(s.config.Tags, metadata)...),
+		Name:         &name,
+		MRN:          &mrnValue,
+		PreviousMRNs: []string{mrn.New("Task", provider, legacyTaskName(flowName, task.Name))},
+		Type:         "Task",
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Tags:         append(append([]string{}, task.Tags...), pluginsdk.InterpolateTags(s.config.Tags, metadata)...),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -463,22 +468,27 @@ var taskKeyHash = regexp.MustCompile(`-[0-9a-f]{8}$`)
 // asset every time somebody edits the task, so they are dropped. Two tasks
 // whose functions share a name therefore land on one asset; their task
 // keys stay in metadata.
-func taskName(flowName, taskKey string) string {
-	return flowName + "/" + taskKeyHash.ReplaceAllString(taskKey, "")
+func taskName(taskKey string) string {
+	return taskKeyHash.ReplaceAllString(taskKey, "")
+}
+
+// legacyTaskName is the name earlier releases gave a task, with the flow folded in.
+func legacyTaskName(flowName, task string) string {
+	return flowName + "/" + task
 }
 
 // foldTaskRuns groups a flow run's task runs into one entry per task,
 // and maps each task run id to the task name it belongs to so inputs can
 // be resolved. A task called several times in one run contributes one
 // task, the way a flow stays one Pipeline across many runs.
-func foldTaskRuns(flowName string, taskRuns []TaskRun) ([]discoveredTask, map[string]string) {
+func foldTaskRuns(taskRuns []TaskRun) ([]discoveredTask, map[string]string) {
 	namesByRunID := make(map[string]string, len(taskRuns))
 	byName := make(map[string]*discoveredTask, len(taskRuns))
 	var order []string
 
 	for _, taskRun := range taskRuns {
 		key := firstNonEmpty(taskRun.TaskKey, taskRun.Name, taskRun.ID)
-		name := taskName(flowName, key)
+		name := taskName(key)
 		namesByRunID[taskRun.ID] = name
 
 		task, seen := byName[name]
@@ -509,7 +519,7 @@ func foldTaskRuns(flowName string, taskRuns []TaskRun) ([]discoveredTask, map[st
 
 // dependencyEdges reads each task run's inputs and emits an edge from the
 // task that produced a value to the task that consumed it.
-func dependencyEdges(taskRuns []TaskRun, namesByRunID map[string]string) []pluginsdk.LineageEdge {
+func (s *Source) dependencyEdges(flowName string, taskRuns []TaskRun, namesByRunID map[string]string) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 	seen := make(map[string]struct{})
 
@@ -535,8 +545,8 @@ func dependencyEdges(taskRuns []TaskRun, namesByRunID map[string]string) []plugi
 				seen[pair] = struct{}{}
 
 				edges = append(edges, pluginsdk.LineageEdge{
-					Source: assetMRN("Task", source),
-					Target: assetMRN("Task", target),
+					Source: s.taskMRN(flowName, source),
+					Target: s.taskMRN(flowName, target),
 					Type:   "DEPENDS_ON",
 				})
 			}
@@ -687,31 +697,20 @@ func normaliseHost(host string) (string, error) {
 }
 
 // nameShape says how much of a table's path belongs in its Marmot name.
-// Marmot names a PostgreSQL table by the bare table name but a Snowflake
-// table by database.schema.table, so an edge has to follow whichever
-// shape the owning plugin uses or the server drops it.
-type nameShape int
-
-const (
-	bareName nameShape = iota
-	qualifiedName
-)
-
-// assetKeySchemes maps a Prefect asset key scheme to the Marmot provider
-// that owns the table and the name shape that provider uses.
+// assetKeySchemes maps a Prefect asset key scheme to the Marmot provider that owns the table, the server port to use in a host hint and the number of path levels the provider names a table by. A zero port means the key does not name a server whose address the owning plugin would know, as for cloud warehouses. The levels are counted from the end of the key, so the database comes first.
 var assetKeySchemes = map[string]struct {
 	provider string
-	shape    nameShape
+	port     string
+	levels   int
 }{
-	"postgres":   {"PostgreSQL", bareName},
-	"postgresql": {"PostgreSQL", bareName},
-	"mysql":      {"MySQL", bareName},
-	"mariadb":    {"MariaDB", bareName},
-	"clickhouse": {"ClickHouse", bareName},
-	"bigquery":   {"BigQuery", bareName},
-	"snowflake":  {"Snowflake", qualifiedName},
-	"redshift":   {"Redshift", qualifiedName},
-	"databricks": {"Databricks", qualifiedName},
+	"postgres":   {"PostgreSQL", "5432", 3},
+	"postgresql": {"PostgreSQL", "5432", 3},
+	"mysql":      {"MySQL", "3306", 2},
+	"mariadb":    {"MariaDB", "3306", 2},
+	"clickhouse": {"ClickHouse", "9000", 2},
+	"snowflake":  {"Snowflake", "", 3},
+	"redshift":   {"Redshift", "", 3},
+	"databricks": {"Databricks", "", 3},
 }
 
 // bucketSchemes maps an object store scheme to its Marmot provider.
@@ -721,23 +720,21 @@ var bucketSchemes = map[string]struct{ provider, assetType string }{
 	"gcs": {"GCS", "Bucket"},
 }
 
-// assetKeyTarget is the asset another Marmot plugin owns that a Prefect
-// asset key points at.
+// assetKeyTarget is the asset another Marmot plugin owns that a Prefect asset key points at.
 type assetKeyTarget struct {
 	Provider string
 	Type     string
-	Name     string
+	Path     []string
+	// Host is the server the key names as host:port, empty when the key does not carry one.
+	Host string
 }
 
-// MRN is the identity the owning plugin gives this asset.
+// MRN is the identity the owning plugin gives this asset, with a host hint when the key names the server.
 func (t assetKeyTarget) MRN() string {
-	return mrn.New(t.Type, t.Provider, t.Name)
+	return mrn.Asset(t.Type, t.Provider, t.Path...).WithHost(t.Host).String()
 }
 
-// parseAssetKey turns a Prefect asset key URI into the asset it names.
-// A scheme this plugin does not know, or a path too short to identify a
-// table, is skipped rather than guessed at: a wrong name produces an edge
-// the server silently drops.
+// parseAssetKey turns a Prefect asset key URI into the asset it names. A scheme this plugin does not know, or a path too short to identify a table, is skipped rather than guessed at because a wrong name produces an edge the server silently drops.
 func parseAssetKey(key string) (assetKeyTarget, bool) {
 	scheme, rest, found := strings.Cut(strings.TrimSpace(key), "://")
 	if !found || rest == "" {
@@ -750,7 +747,19 @@ func parseAssetKey(key string) (assetKeyTarget, bool) {
 		if name == "" {
 			return assetKeyTarget{}, false
 		}
-		return assetKeyTarget{Provider: bucket.provider, Type: bucket.assetType, Name: name}, true
+		return assetKeyTarget{Provider: bucket.provider, Type: bucket.assetType, Path: []string{name}}, true
+	}
+
+	// BigQuery keys are bigquery://<project>/<dataset>/<table>, and some writers put the API host in front of the project.
+	if scheme == "bigquery" {
+		segments := nonEmpty(strings.Split(rest, "/"))
+		if len(segments) == 4 {
+			segments = segments[1:]
+		}
+		if len(segments) != 3 {
+			return assetKeyTarget{}, false
+		}
+		return assetKeyTarget{Provider: "BigQuery", Type: "Table", Path: segments}, true
 	}
 
 	table, ok := assetKeySchemes[scheme]
@@ -758,21 +767,33 @@ func parseAssetKey(key string) (assetKeyTarget, bool) {
 		return assetKeyTarget{}, false
 	}
 
-	// A database asset key is <scheme>://<host>/<database>/<schema>/<table>,
-	// so the first segment is the server and not part of the identity.
-	segments := nonEmpty(strings.Split(rest, "/")[1:])
-	if len(segments) == 0 {
+	// A database asset key is <scheme>://<host>/<database>/<schema>/<table>, so the first segment is the server and not part of the identity.
+	server, path, _ := strings.Cut(rest, "/")
+	segments := nonEmpty(strings.Split(path, "/"))
+	if len(segments) != table.levels {
 		return assetKeyTarget{}, false
 	}
 
-	if table.shape == qualifiedName {
-		if len(segments) != 3 {
-			return assetKeyTarget{}, false
-		}
-		return assetKeyTarget{Provider: table.provider, Type: "Table", Name: strings.Join(segments, ".")}, true
+	target := assetKeyTarget{Provider: table.provider, Type: "Table", Path: segments}
+	if table.port != "" {
+		target.Host = serverHost(server, table.port)
 	}
+	return target, true
+}
 
-	return assetKeyTarget{Provider: table.provider, Type: "Table", Name: segments[len(segments)-1]}, true
+// serverHost lowercases a key's server and adds the default port when it has none.
+func serverHost(server, defaultPort string) string {
+	server = strings.ToLower(strings.TrimSpace(server))
+	if server == "" {
+		return ""
+	}
+	if at := strings.LastIndex(server, "@"); at >= 0 {
+		server = server[at+1:]
+	}
+	if _, _, err := net.SplitHostPort(server); err == nil {
+		return server
+	}
+	return net.JoinHostPort(server, defaultPort)
 }
 
 // materializationEdges turns the assets a flow run read and wrote into
@@ -872,4 +893,21 @@ func parseTime(value string) time.Time {
 	}
 
 	return parsed
+}
+
+// zoneBindings tells Marmot which zone the server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	host := net.JoinHostPort(strings.ToLower(u.Hostname()), port)
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: host, Zone: cfg.Zone}}
 }

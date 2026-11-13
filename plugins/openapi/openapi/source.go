@@ -12,7 +12,6 @@ import (
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/filesource"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
@@ -23,7 +22,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "openapi",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "OpenAPI",
 		Description:   "Discover OpenAPI v3 specifications",
 		Icon:          "openapi",
@@ -163,7 +162,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		description = fmt.Sprintf("OpenAPI service: %s", serviceName)
 	}
 
-	mrnValue := serviceMrnValue(spec)
+	mrnValue := s.serviceMRN(spec)
 	openapiVersion := spec.Model.Version
 
 	var servers []string
@@ -238,18 +237,14 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 
 func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) []pluginsdk.Asset {
 	assets := []pluginsdk.Asset{}
-	parentMrn := serviceMrnValue(spec)
+	parentMrn := s.serviceMRN(spec)
 	serviceName := spec.Model.Info.Title
 
 	for path, item := range spec.Model.Paths.PathItems.FromOldest() {
 		for httpMethod, op := range item.GetOperations().FromOldest() {
 			pathWithMethod := fmt.Sprintf("%s %s", strings.ToUpper(httpMethod), path)
-			// The service component is the literal "openapi", the same word
-			// serviceMrnValue uses for the Service asset these endpoints hang
-			// off. The spec title is operator-supplied prose: a space in it
-			// would land in the MRN and a slash would make mrn.Parse reject
-			// the MRN outright, leaving the asset unreachable from the UI.
-			mrnValue := mrn.New(typeEndpoint, "openapi", pathWithMethod)
+			// The provider is the literal "openapi", the same word serviceMRN uses for the Service asset these endpoints hang off. The spec title is operator-supplied prose, so mrn.Asset sanitises it and a slash in the path cannot make the MRN unparseable.
+			mrnValue := s.endpointMRN(serviceName, pathWithMethod)
 			description := op.Summary
 			if len(description) == 0 {
 				description = op.Description
@@ -354,9 +349,13 @@ func addUniqueAsset(assets *[]pluginsdk.Asset, newAsset pluginsdk.Asset, seen ma
 		Msg("Added new asset")
 }
 
-func serviceMrnValue(spec *libopenapi.DocumentModel[v3.Document]) string {
-	serviceName := spec.Model.Info.Title
-	return mrn.New(typeService, "openapi", serviceName)
+func (s *Source) serviceMRN(spec *libopenapi.DocumentModel[v3.Document]) string {
+	return s.config.AssetMRN(typeService, openapiProvider, spec.Model.Info.Title)
+}
+
+// endpointMRN qualifies an endpoint by its service, so the same operation in two services gets two MRNs.
+func (s *Source) endpointMRN(serviceName, endpoint string) string {
+	return s.config.AssetMRN(typeEndpoint, openapiProvider, serviceName, endpoint)
 }
 
 func isJSON(path string) bool {

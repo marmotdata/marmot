@@ -160,6 +160,21 @@ resource "marmot_asset" "orders" {
 }
 ```
 
+#### Choose the asset's MRN
+
+Marmot builds each asset's [MRN](../MRNs/index.md) from `type`, the first of `services`, `zone` and `name`. Set `zone` to keep apart two systems of the same technology, or set `mrn` to give the asset the identity a plugin would, so the two describe one asset:
+
+```hcl
+resource "marmot_asset" "orders_eu" {
+  name     = "orders"
+  type     = "Table"
+  services = ["PostgreSQL"]
+  mrn      = "mrn://asset/table/postgresql@prod-eu/analytics.public.orders"
+}
+```
+
+`mrn` accepts the kinded form or the older form without a kind, and switching between the two isn't a change. If an asset already has the MRN, the apply fails with that asset's ID and MRN. Import it with `terraform import marmot_asset.orders_eu <asset-id>`, or set `mrn` or `zone` to create a separate asset.
+
 See the [`marmot_asset` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/asset) for all available configuration options.
 
 ### Lineage
@@ -179,7 +194,23 @@ resource "marmot_lineage" "orders_to_processor" {
 }
 ```
 
+`source` and `target` also take an MRN written as a string, such as `mrn://asset/table/postgresql/analytics.public.orders`. An MRN in the older form without a kind names the same asset, so it doesn't show as a diff.
+
 See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/lineage) for all available configuration options.
+
+### Zone bindings
+
+Pin the host a provider is reached at to a [zone](../MRNs/zones.md#pin-a-binding), so lineage from a Kafka Connect sink or an OpenLineage event that only names the host lands on that zone's assets:
+
+```hcl
+resource "marmot_zone_binding" "orders_eu" {
+  provider_name = "postgresql"
+  host          = "pg-eu:5432"
+  zone          = "prod-eu"
+}
+```
+
+Import an existing binding with `terraform import marmot_zone_binding.orders_eu postgresql/pg-eu:5432`. See the [`marmot_zone_binding` documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/zone_binding).
 
 ### Glossary terms
 

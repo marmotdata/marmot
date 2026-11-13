@@ -265,7 +265,7 @@ func (s *Source) discoverDatabase(ctx context.Context, dbName string) (*database
 	}
 
 	if s.config.DiscoverForeignKeys {
-		edges, err := listForeignKeys(ctx, conn, dbName, byKey)
+		edges, err := listForeignKeys(ctx, s.config, conn, dbName, byKey)
 		if err != nil {
 			log.Warn().Err(err).Str("database", dbName).Msg("Failed to discover foreign keys")
 		} else {
@@ -274,7 +274,7 @@ func (s *Source) discoverDatabase(ctx context.Context, dbName string) (*database
 	}
 
 	if s.config.IncludeViews {
-		result.lineage = append(result.lineage, viewLineage(dbName, relations, definitions, byKey)...)
+		result.lineage = append(result.lineage, viewLineage(s.config, dbName, relations, definitions, byKey)...)
 	}
 
 	return result, nil
@@ -617,7 +617,7 @@ func listColumnCounts(ctx context.Context, conn *pgx.Conn, dbName string) (map[s
 // listForeignKeys turns every foreign key into an edge from the referencing
 // table to the referenced one. CockroachDB cannot reference a table in
 // another database, so both ends are always in the relations just listed.
-func listForeignKeys(ctx context.Context, conn *pgx.Conn, dbName string, known map[string]relation) ([]pluginsdk.LineageEdge, error) {
+func listForeignKeys(ctx context.Context, cfg *Config, conn *pgx.Conn, dbName string, known map[string]relation) ([]pluginsdk.LineageEdge, error) {
 	rows, err := conn.Query(ctx, `
 		SELECT ns.nspname, s.relname, nt.nspname, t.relname
 		FROM pg_catalog.pg_constraint con
@@ -652,8 +652,8 @@ func listForeignKeys(ctx context.Context, conn *pgx.Conn, dbName string, known m
 		}
 
 		edge := pluginsdk.LineageEdge{
-			Source: assetMRN(source.assetType(), qualifiedName(dbName, source.Schema, source.Name)),
-			Target: assetMRN(target.assetType(), qualifiedName(dbName, target.Schema, target.Name)),
+			Source: assetMRN(cfg, source.assetType(), dbName, source.Schema, source.Name),
+			Target: assetMRN(cfg, target.assetType(), dbName, target.Schema, target.Name),
 			Type:   "FOREIGN_KEY",
 		}
 		if edge.Source == edge.Target {
@@ -676,7 +676,7 @@ func listForeignKeys(ctx context.Context, conn *pgx.Conn, dbName string, known m
 // viewLineage links every view to the relations its definition reads from.
 // Edges run in the direction the data flows, base relation to view, the
 // same way the MongoDB plugin draws its VIEW_OF edges.
-func viewLineage(dbName string, relations []relation, definitions map[string]string, known map[string]relation) []pluginsdk.LineageEdge {
+func viewLineage(cfg *Config, dbName string, relations []relation, definitions map[string]string, known map[string]relation) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 	seen := make(map[string]struct{})
 
@@ -689,7 +689,7 @@ func viewLineage(dbName string, relations []relation, definitions map[string]str
 			continue
 		}
 
-		viewMRN := assetMRN(view.assetType(), qualifiedName(dbName, view.Schema, view.Name))
+		viewMRN := assetMRN(cfg, view.assetType(), dbName, view.Schema, view.Name)
 
 		for _, ref := range viewReferences(definition) {
 			base, ok := resolveReference(ref, dbName, view.Schema, known)
@@ -699,7 +699,7 @@ func viewLineage(dbName string, relations []relation, definitions map[string]str
 			}
 
 			edge := pluginsdk.LineageEdge{
-				Source: assetMRN(base.assetType(), qualifiedName(dbName, base.Schema, base.Name)),
+				Source: assetMRN(cfg, base.assetType(), dbName, base.Schema, base.Name),
 				Target: viewMRN,
 				Type:   "VIEW_OF",
 			}

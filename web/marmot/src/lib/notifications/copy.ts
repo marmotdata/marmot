@@ -1,5 +1,6 @@
 import { m } from '$lib/paraglide/messages';
 import { formatList } from '$lib/utils/format';
+import { discoverPath } from '$lib/mrn';
 import type { Notification } from '$lib/stores/notifications';
 import { accessExpiryCopy } from './accessExpiry';
 
@@ -151,7 +152,7 @@ export function notificationPath(notification: Notification): string | null {
 	if (notification.type === 'asset_deleted') return null;
 	const data = notification.data;
 	if (typeof data?.link === 'string' && data.link.startsWith('/')) return data.link;
-	if (typeof data?.asset_mrn === 'string') return `/discover/${encodeURIComponent(data.asset_mrn)}`;
+	if (typeof data?.asset_mrn === 'string') return discoverPath(data.asset_mrn);
 	if (data?.team_id) return `/settings/teams/${String(data.team_id)}`;
 	return null;
 }

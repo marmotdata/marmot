@@ -18,7 +18,7 @@ Native (SQL) cards carry their query. Every asset links back to Metabase.
 - Table FEEDS card, and Table FEEDS every dashboard showing the card. Query builder cards name their source table and joins by id; native cards are scanned for the tables after `FROM` and `JOIN`, with `[[optional clauses]]`, CTEs, subqueries and comments ignored, and matched against the tables Metabase has synced for the card's database.
 - Model or question FEEDS the cards built on it, including `{{#id}}` references in native SQL.
 
-Tables are addressed exactly as the warehouse's own Marmot plugin addresses them (for example `mrn://table/postgresql/orders` for a Postgres table), so the edges land on the assets that plugin creates. No table assets are created by this plugin; until the warehouse plugin has run, the server drops those edges.
+Tables are addressed exactly as the warehouse's own Marmot plugin addresses them (for example `mrn://asset/table/postgresql/shop.public.orders` for a Postgres table, with the database host and port as a hint for picking the zone), so the edges land on the assets that plugin creates. No table assets are created by this plugin; until the warehouse plugin has run, the server drops those edges.
 
 | Metabase engine | Provider | Table name |
 |-----------------|----------|------------|
@@ -48,3 +48,7 @@ include_models: true
 discover_lineage: true
 include_archived: false
 ```
+
+## Naming
+
+Dashboards, charts and models are named by their own name, and their MRN carries one level per collection holding them, for example `mrn://asset/dashboard/metabase/marketing.finance.overview`. Set `zone` when you catalogue more than one Metabase.

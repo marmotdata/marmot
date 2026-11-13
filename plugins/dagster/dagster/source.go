@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -66,7 +68,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "dagster",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Dagster",
 		Description:   "Discover jobs, ops and software-defined assets from Dagster",
 		Icon:          "dagster",
@@ -177,9 +179,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Dagster discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineage,
-		RunHistory: runHistory,
+		Assets:       assets,
+		Lineage:      lineage,
+		RunHistory:   runHistory,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -309,7 +312,7 @@ func (s *Source) pipelineAsset(repo Repository, job Job, name string, handles []
 	}
 
 	metadata = cleanMetadata(metadata)
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := s.pipelineMRN(name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -343,7 +346,7 @@ func (s *Source) taskAssets(repo Repository, pipelineName string, handles []Soli
 	var assets []pluginsdk.Asset
 	var lineage []pluginsdk.LineageEdge
 
-	pipelineMRN := assetMRN("Pipeline", pipelineName)
+	pipelineMRN := s.pipelineMRN(pipelineName)
 
 	// An op is addressed by its handle, so upstream names from dependsOn are
 	// resolved through this map rather than assumed to be top level handles.
@@ -353,7 +356,8 @@ func (s *Source) taskAssets(repo Repository, pipelineName string, handles []Soli
 	}
 
 	for _, handle := range handles {
-		name := taskName(pipelineName, handle.HandleID)
+		name := handle.HandleID
+		legacyName := taskName(pipelineName, handle.HandleID)
 		taskURL := fmt.Sprintf("%s/locations/%s/jobs/%s/%s", s.config.Host, repo.Location.Name, splitPipelineName(pipelineName), handle.HandleID)
 
 		metadata := map[string]any{
@@ -369,16 +373,17 @@ func (s *Source) taskAssets(repo Repository, pipelineName string, handles []Soli
 		}
 
 		metadata = cleanMetadata(metadata)
-		mrnValue := assetMRN("Task", name)
+		mrnValue := s.taskMRN(pipelineName, handle.HandleID)
 
 		asset := pluginsdk.Asset{
-			Name:      &name,
-			MRN:       &mrnValue,
-			Type:      "Task",
-			Providers: []string{provider},
-			Metadata:  metadata,
-			Schema:    make(map[string]string),
-			Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+			Name:         &name,
+			MRN:          &mrnValue,
+			PreviousMRNs: []string{mrn.New("Task", provider, legacyName)},
+			Type:         "Task",
+			Providers:    []string{provider},
+			Metadata:     metadata,
+			Schema:       make(map[string]string),
+			Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 			ExternalLinks: []pluginsdk.AssetExternalLink{{
 				Name: "Open in Dagster",
 				URL:  taskURL,
@@ -409,7 +414,7 @@ func (s *Source) taskAssets(repo Repository, pipelineName string, handles []Soli
 				if !ok {
 					continue
 				}
-				upstreamMRN := assetMRN("Task", taskName(pipelineName, upstreamHandle))
+				upstreamMRN := s.taskMRN(pipelineName, upstreamHandle)
 				if upstreamMRN == mrnValue {
 					continue
 				}
@@ -498,7 +503,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 		}
 
 		metadata = cleanMetadata(metadata)
-		mrnValue := assetMRN("Dataset", name)
+		mrnValue := s.datasetMRN(node.AssetKey)
 
 		asset := pluginsdk.Asset{
 			Name:      &name,
@@ -539,7 +544,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 				continue
 			}
 			lineage = append(lineage, pluginsdk.LineageEdge{
-				Source: assetMRN("Dataset", upstream),
+				Source: s.datasetMRN(dependency.Asset.AssetKey),
 				Target: mrnValue,
 				Type:   "FEEDS",
 			})
@@ -551,7 +556,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 				continue
 			}
 			lineage = append(lineage, pluginsdk.LineageEdge{
-				Source: assetMRN("Pipeline", pipelineName),
+				Source: s.pipelineMRN(pipelineName),
 				Target: mrnValue,
 				Type:   "PRODUCES",
 			})
@@ -560,7 +565,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 		if target, ok := warehouseTarget(node); ok {
 			lineage = append(lineage, pluginsdk.LineageEdge{
 				Source: mrnValue,
-				Target: mrn.New("Table", target.Provider, target.Name),
+				Target: mrn.Asset("Table", target.Provider, target.Path...).String(),
 				Type:   "PRODUCES",
 			})
 		}
@@ -572,7 +577,7 @@ func (s *Source) discoverDatasets(repo Repository, nodes []AssetNode, names map[
 // WarehouseTable is the native table a software-defined asset writes to.
 type WarehouseTable struct {
 	Provider string
-	Name     string
+	Path     []string
 }
 
 // warehouseProviders maps a Dagster compute kind onto the provider string the
@@ -605,14 +610,8 @@ func warehouseTarget(node AssetNode) (WarehouseTable, bool) {
 		return WarehouseTable{}, false
 	}
 
-	// Each plugin names its tables its own way, and an edge only lands if the
-	// name matches exactly.
-	switch target {
-	case "Snowflake":
-		return WarehouseTable{Provider: target, Name: fmt.Sprintf("%s.%s.%s", database, schema, table)}, true
-	default:
-		return WarehouseTable{Provider: target, Name: table}, true
-	}
+	// Every warehouse the table is filed under names it database, schema and table, or project, dataset and table for BigQuery.
+	return WarehouseTable{Provider: target, Path: []string{database, schema, table}}, true
 }
 
 // tableTriple reads the database, schema and table an asset writes to. Dagster
@@ -981,9 +980,41 @@ func cleanMetadata(metadata map[string]any) map[string]any {
 	return cleaned
 }
 
-// assetMRN is the single place a Dagster MRN is built. Asset creation and
-// every lineage edge go through it so the two can never drift into addressing
-// the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// pipelineMRN is the MRN of a job. Asset creation and every lineage edge go through these helpers so the two can never drift into addressing the same object differently.
+func (s *Source) pipelineMRN(name string) string {
+	return s.config.AssetMRN("Pipeline", provider, name)
+}
+
+// taskMRN is the MRN of an op, addressed by its job and its handle within the job.
+func (s *Source) taskMRN(pipelineName, handleID string) string {
+	return s.config.AssetMRN("Task", provider, pipelineName, handleID)
+}
+
+// datasetMRN is the MRN of a software-defined asset, one level per segment of its asset key.
+func (s *Source) datasetMRN(key AssetKey) string {
+	return s.config.AssetMRN("Dataset", provider, key.Path...)
+}
+
+// hostPort returns the lowercase host and port of a URL, with the scheme's default port when it has none.
+func hostPort(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Hostname() == "" {
+		return ""
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return net.JoinHostPort(strings.ToLower(u.Hostname()), port)
+}
+
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	host := hostPort(cfg.Host)
+	if host == "" {
+		return nil
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: host, Zone: cfg.Zone}}
 }

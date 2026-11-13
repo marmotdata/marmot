@@ -4,7 +4,7 @@ It uses the pure-Go `github.com/sijms/go-ora/v2` driver, so it needs no Oracle I
 
 ## Naming
 
-Oracle users treat a schema as the database, so each schema becomes a `Database` asset named after the schema (`HR`). Tables, views and procedures are named `SCHEMA.OBJECT` (`HR.EMPLOYEES`), the same shape the OpenMetadata and Trino plugins use for Oracle, so the three land on one asset. Identifiers keep the case Oracle stores them in, which is upper case unless they were created quoted.
+Oracle users treat a schema as the database, so each schema becomes a `Database` asset named after the schema (`HR`). Tables, views and procedures are named after the object (`EMPLOYEES`), and their MRN is rooted in the service name or SID and the schema, for example `mrn://asset/table/oracle/freepdb1.hr.employees`, so the same table name in two schemas or two databases never collides. Identifiers keep the case Oracle stores them in, which is upper case unless they were created quoted, while the MRN is lowercase. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone.
 
 Sequences are not discovered.
 

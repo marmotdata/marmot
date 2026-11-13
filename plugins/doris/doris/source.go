@@ -24,7 +24,7 @@ const provider = "Doris"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "doris",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Doris",
 		Description:   "Discover databases, tables, views and materialized views from Apache Doris clusters",
 		Icon:          "doris",
@@ -160,10 +160,19 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(statistics)).
 		Msg("Doris discovery completed")
 
+	port := s.config.Port
+	if port == 0 {
+		port = 9030
+	}
 	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -568,7 +577,8 @@ func classify(row tableRow, mvs map[string]materializedView) string {
 }
 
 func (s *Source) buildObject(ctx context.Context, dbName string, row tableRow, objectType string, mv materializedView) (pluginsdk.Asset, []pendingEdge, []pluginsdk.Statistic) {
-	name := dbName + "." + row.name
+	name := row.name
+	qualified := dbName + "." + row.name
 
 	assetType := "Table"
 	if objectType == "view" || objectType == "materialized_view" {
@@ -642,14 +652,14 @@ func (s *Source) buildObject(ctx context.Context, dbName string, row tableRow, o
 				}
 				pending = append(pending, pendingEdge{
 					ref:      ref,
-					otherMRN: assetMRN(assetType, name),
+					otherMRN: assetMRN(s.config, assetType, dbName, row.name),
 					edgeType: "FOREIGN_KEY",
 				})
 			}
 		}
 	}
 
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := assetMRN(s.config, assetType, dbName, row.name)
 
 	for _, ref := range refs {
 		if ref.Database == "" {
@@ -681,6 +691,10 @@ func (s *Source) buildObject(ctx context.Context, dbName string, row tableRow, o
 			Priority:   1,
 		}},
 	}
+	// Earlier releases named the asset database.table and had no zone, so the old MRN only differs once a zone is set.
+	if previous := mrn.New(assetType, provider, qualified); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
+	}
 	if description != "" {
 		asset.Description = &description
 	}
@@ -695,11 +709,11 @@ func (s *Source) buildObject(ctx context.Context, dbName string, row tableRow, o
 		keyModel, _ := metadata["key_model"].(string)
 		columns, err := s.columns(ctx, dbName, row.name, keyModel)
 		if err != nil {
-			log.Warn().Err(err).Str("table", name).Msg("Failed to read columns")
+			log.Warn().Err(err).Str("table", qualified).Msg("Failed to read columns")
 		} else {
 			columnCount = len(columns)
 			if err := pluginsdk.SetColumns(&asset, columns); err != nil {
-				log.Warn().Err(err).Str("table", name).Msg("Failed to set columns")
+				log.Warn().Err(err).Str("table", qualified).Msg("Failed to set columns")
 			}
 		}
 	}
@@ -1006,7 +1020,7 @@ func objectKey(dbName, tableName string) string {
 // service, where the Doris database is the schema level.
 func (s *Source) databaseAsset(dbName, version string, tableCount, viewCount int) pluginsdk.Asset {
 	name := dbName
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	metadata := map[string]any{
 		"host":        s.config.Host,
@@ -1137,10 +1151,7 @@ func quoteString(value string) string {
 	return `"` + strings.ReplaceAll(value, `"`, `\"`) + `"`
 }
 
-// assetMRN is the single place a Doris MRN is built. Objects are named
-// database.table: the Doris database is the level that keeps two same
-// named tables apart, and it is the schema level of an OpenMetadata
-// import, so both routes land on one asset.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Doris MRN is built. The path runs database, table: the Doris database is the level that keeps two same named tables apart, and it is the schema level of an OpenMetadata import, so both routes land on one asset.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }

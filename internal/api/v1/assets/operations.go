@@ -14,7 +14,6 @@ import (
 	"github.com/marmotdata/marmot/internal/core/limits"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,7 +33,11 @@ type AssetResponse struct {
 }
 
 type CreateRequest struct {
-	Name          string                       `json:"name" validate:"required"`
+	Name string `json:"name" validate:"required"`
+	// MRN sets the asset's identity explicitly, for example mrn://asset/table/postgresql@prod-eu/analytics.public.orders. Without it the MRN is built from type, the first provider, zone and name.
+	MRN *string `json:"mrn,omitempty"`
+	// Zone tells apart two systems of the same provider when the MRN is built from the name; ignored when MRN is set.
+	Zone          string                       `json:"zone,omitempty"`
 	Type          string                       `json:"type" validate:"required"`
 	Providers     []string                     `json:"providers" validate:"required"`
 	Description   *string                      `json:"description"`
@@ -104,7 +107,11 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mrn := mrn.New(req.Type, req.Providers[0], req.Name)
+	mrn, err := requestedMRN(req)
+	if err != nil {
+		common.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	input := asset.CreateInput{
 		Name:          &req.Name,
 		Type:          req.Type,
@@ -118,6 +125,8 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 		ExternalLinks: req.ExternalLinks,
 		MRN:           &mrn,
 		CreatedBy:     principal.DisplayName(),
+		Writer:        apiWriter(principal),
+		Role:          asset.RoleManual,
 	}
 
 	log.Info().Interface("input", input).Msg("createAsset: Input to assetService.Create")
@@ -135,8 +144,7 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 			log.Error().Err(err).Interface("request", req).Msg("Invalid input")
 			common.RespondError(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, asset.ErrAlreadyExists):
-			log.Error().Err(err).Str("mrn", mrn).Msg("Asset already exists")
-			common.RespondError(w, http.StatusConflict, "Asset already exists")
+			respondExists(w, err, mrn)
 		default:
 			log.Error().Err(err).Interface("input", input).Msg("Failed to create asset")
 			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
@@ -330,21 +338,7 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := asset.UpdateInput{
-		Name:            req.Name,
-		Description:     req.Description,
-		UserDescription: req.UserDescription,
-		Type:            req.Type,
-		Providers:       req.Providers,
-		Metadata:        req.Metadata,
-		Schema:          req.Schema,
-		Tags:            req.Tags,
-		Sources:         req.Sources,
-		Environments:    req.Environments,
-		ExternalLinks:   req.ExternalLinks,
-	}
-
-	updated, err := h.assetService.Update(r.Context(), id, input)
+	updated, err := h.applyManualUpdate(r, id, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, asset.ErrAssetNotFound):

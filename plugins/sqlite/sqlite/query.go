@@ -342,6 +342,10 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	if err != nil {
 		return nil, err
 	}
+	config, err := parseConfig(raw)
+	if err != nil {
+		return nil, err
+	}
 
 	program, err := explainProgram(ctx, db, req.Statement)
 	if err != nil {
@@ -371,7 +375,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 		if !ok {
 			continue
 		}
-		tableMRN := assetMRN("Table", table)
+		tableMRN := assetMRN(config, "Table", table)
 		if !seen[tableMRN] {
 			seen[tableMRN] = true
 			plan.ReferencedMRNs = append(plan.ReferencedMRNs, tableMRN)

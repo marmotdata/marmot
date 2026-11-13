@@ -107,7 +107,7 @@ func TestE2E_DiscoverModelsOverTheWire(t *testing.T) {
 
 	churn := findAsset(result, "Model", "churn-predictor")
 	require.NotNil(t, churn)
-	assert.Equal(t, "mrn://model/mlflow/churn-predictor", *churn.MRN)
+	assert.Equal(t, "mrn://asset/model/mlflow/churn-predictor", *churn.MRN)
 	assert.Equal(t, []string{"MLflow"}, churn.Providers)
 	require.NotNil(t, churn.Description)
 	assert.Equal(t, "Predicts churn", *churn.Description)
@@ -185,7 +185,7 @@ func TestE2E_DiscoverEmitsMetricStatistics(t *testing.T) {
 
 	stats := make(map[string]float64)
 	for _, st := range result.Statistics {
-		if st.AssetMRN == "mrn://model/mlflow/churn-predictor" {
+		if st.AssetMRN == "mrn://asset/model/mlflow/churn-predictor" {
 			stats[st.MetricName] = st.Value
 		}
 	}
@@ -208,7 +208,7 @@ func TestE2E_DiscoverExperimentsOverTheWire(t *testing.T) {
 
 	churn := findAsset(result, "Experiment", "churn")
 	require.NotNil(t, churn)
-	assert.Equal(t, "mrn://experiment/mlflow/churn", *churn.MRN)
+	assert.Equal(t, "mrn://asset/experiment/mlflow/churn", *churn.MRN)
 	assert.Equal(t, "active", churn.Metadata["lifecycle_stage"])
 	assert.NotEmpty(t, churn.Metadata["experiment_id"])
 	assert.Equal(t, uri+"/#/experiments/"+churn.Metadata["experiment_id"].(string), churn.Metadata["url"])
@@ -219,8 +219,8 @@ func TestE2E_DiscoverExperimentsOverTheWire(t *testing.T) {
 
 	assert.Nil(t, findAsset(result, "Experiment", "old"), "deleted experiments stay out")
 
-	assert.True(t, hasEdge(result, "mrn://experiment/mlflow/churn", "mrn://model/mlflow/churn-predictor", "PRODUCES"))
-	assert.True(t, hasEdge(result, "mrn://experiment/mlflow/fraud", "mrn://model/mlflow/fraud-detector", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/experiment/mlflow/churn", "mrn://asset/model/mlflow/churn-predictor", "PRODUCES"))
+	assert.True(t, hasEdge(result, "mrn://asset/experiment/mlflow/fraud", "mrn://asset/model/mlflow/fraud-detector", "PRODUCES"))
 }
 
 func TestE2E_DiscoverDatasetsOverTheWire(t *testing.T) {
@@ -232,7 +232,7 @@ func TestE2E_DiscoverDatasetsOverTheWire(t *testing.T) {
 
 	customers := findAsset(result, "Dataset", "customers")
 	require.NotNil(t, customers)
-	assert.Equal(t, "mrn://dataset/mlflow/customers", *customers.MRN)
+	assert.Equal(t, "mrn://asset/dataset/mlflow/customers", *customers.MRN)
 	assert.Equal(t, "abc123", customers.Metadata["digest"])
 	assert.Equal(t, "s3", customers.Metadata["source_type"])
 	assert.Equal(t, "training", customers.Metadata["context"])
@@ -243,8 +243,8 @@ func TestE2E_DiscoverDatasetsOverTheWire(t *testing.T) {
 	assert.Equal(t, "long", columns["age"].DataType)
 	assert.True(t, columns["plan"].Nullable)
 
-	assert.True(t, hasEdge(result, "mrn://dataset/mlflow/customers", "mrn://model/mlflow/churn-predictor", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/ml-data", "mrn://dataset/mlflow/customers", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/mlflow/customers", "mrn://asset/model/mlflow/churn-predictor", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/ml-data", "mrn://asset/dataset/mlflow/customers", "FEEDS"))
 	assert.Nil(t, findAsset(result, "Bucket", "ml-data"))
 
 	// The seed logs transactions twice to the same run, but MLflow keeps
@@ -252,9 +252,9 @@ func TestE2E_DiscoverDatasetsOverTheWire(t *testing.T) {
 	transactions := findAsset(result, "Dataset", "transactions")
 	require.NotNil(t, transactions)
 	assert.Equal(t, "training", transactions.Metadata["context"])
-	assert.True(t, hasEdge(result, "mrn://bucket/gcs/fraud-data", "mrn://dataset/mlflow/transactions", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://dataset/mlflow/transactions", "mrn://model/mlflow/fraud-detector", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://dataset/mlflow/transactions", "mrn://model/mlflow/fraud-lm-reg", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/gcs/fraud-data", "mrn://asset/dataset/mlflow/transactions", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/mlflow/transactions", "mrn://asset/model/mlflow/fraud-detector", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dataset/mlflow/transactions", "mrn://asset/model/mlflow/fraud-lm-reg", "FEEDS"))
 }
 
 func TestE2E_DiscoverHonoursTheIncludeToggles(t *testing.T) {

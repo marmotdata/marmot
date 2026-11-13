@@ -1,4 +1,5 @@
 import { fetchApi } from '../api';
+import { assetRouteParamsFor, type AssetRouteParams } from '../mrn';
 
 /** An asset as the glossary shows it: in a term's linked list or the link drawer's results. */
 export interface LinkedAsset {
@@ -67,10 +68,6 @@ export async function unlinkAsset(assetId: string, termId: string): Promise<void
 }
 
 /** Route params for an asset's page, taken from its MRN when it has one. */
-export function assetRouteParams(a: LinkedAsset): { type: string; service: string; name: string } {
-	const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
-	if (parts.length >= 3) {
-		return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
-	}
-	return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
+export function assetRouteParams(a: LinkedAsset): AssetRouteParams {
+	return assetRouteParamsFor(a);
 }

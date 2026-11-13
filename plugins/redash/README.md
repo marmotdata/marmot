@@ -26,3 +26,7 @@ Table lineage rides on the Data Model Object assets, so it needs `include_querie
 The dashboard URL changed in Redash 10, so the plugin reads the version from `/api/session` and picks the matching form. A Redash that does not report its version is treated as current.
 
 Archived dashboards are never returned by the Redash API, so `include_archived` only affects queries.
+
+## Naming
+
+Table MRNs follow the owning plugin's naming, for example `mrn://asset/table/postgresql/shop.public.orders` for PostgreSQL and `<project>.<dataset>.<table>` for BigQuery. The data source's host and port are passed on as a hint so Marmot picks the zone that owns that server. Set `zone` when you catalogue more than one Redash; it becomes part of the MRN of every Redash asset.

@@ -17,17 +17,14 @@ import (
 // the jobs it runs and the tables they read all live in one namespace.
 const provider = "Glue"
 
-// assetMRN is the single place identity is built. The Marmot server rebuilds
-// it from the asset's type, provider and name, so every reference to an
-// asset, including lineage to assets the Glue plugin owns, goes through here.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place identity is built. Every reference to an asset, including lineage to the jobs, crawlers and databases the Glue plugin owns, goes through here. The Glue plugin's zone is expected to match this plugin's, since both read the same account.
+func (s *Source) assetMRN(assetType string, path ...string) string {
+	return s.config.AssetMRN(assetType, provider, path...)
 }
 
-// taskName qualifies a workflow step with its workflow, which is what makes
-// it unique across the account.
-func taskName(workflow, node string) string {
-	return workflow + "/" + node
+// previousTaskMRN is the MRN earlier releases gave a task, which folded the workflow into a single name.
+func previousTaskMRN(workflow, node string) string {
+	return mrn.Asset("Task", provider, workflow+"/"+node).LegacyString()
 }
 
 // node is one step of a workflow: a job, a crawler or a trigger.
@@ -139,7 +136,7 @@ func (s *Source) pipelineAsset(ctx context.Context, workflow types.Workflow, nod
 		description = &value
 	}
 
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := s.assetMRN("Pipeline", name)
 	asset := pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
@@ -163,7 +160,7 @@ func (s *Source) pipelineAsset(ctx context.Context, workflow types.Workflow, nod
 
 // taskAsset builds the Task asset for one workflow step.
 func (s *Source) taskAsset(workflow string, n node, jobs map[string]types.Job) pluginsdk.Asset {
-	name := taskName(workflow, n.Name)
+	name := n.Name
 	metadata := map[string]interface{}{
 		"workflow":  workflow,
 		"node_name": n.Name,
@@ -218,15 +215,16 @@ func (s *Source) taskAsset(workflow string, n node, jobs map[string]types.Job) p
 		}
 	}
 
-	mrnValue := assetMRN("Task", name)
+	mrnValue := s.assetMRN("Task", workflow, name)
 	return pluginsdk.Asset{
-		Name:        &name,
-		MRN:         &mrnValue,
-		Type:        "Task",
-		Providers:   []string{provider},
-		Description: description,
-		Metadata:    metadata,
-		Tags:        pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		PreviousMRNs: []string{previousTaskMRN(workflow, name)},
+		Type:         "Task",
+		Providers:    []string{provider},
+		Description:  description,
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -239,13 +237,13 @@ func (s *Source) taskAsset(workflow string, n node, jobs map[string]types.Job) p
 // workflowLineage links a workflow to its steps, the steps to each other and
 // each step to the Glue job or crawler it runs. Job and Crawler assets are
 // owned by the Glue plugin, so only the edges are emitted here.
-func workflowLineage(workflow string, nodes []node, graph *types.WorkflowGraph) []pluginsdk.LineageEdge {
-	pipeline := assetMRN("Pipeline", workflow)
+func (s *Source) workflowLineage(workflow string, nodes []node, graph *types.WorkflowGraph) []pluginsdk.LineageEdge {
+	pipeline := s.assetMRN("Pipeline", workflow)
 	var edges []pluginsdk.LineageEdge
 
 	taskByID := make(map[string]string, len(nodes))
 	for _, n := range nodes {
-		task := assetMRN("Task", taskName(workflow, n.Name))
+		task := s.assetMRN("Task", workflow, n.Name)
 		if n.UniqueID != "" {
 			taskByID[n.UniqueID] = task
 		}
@@ -254,12 +252,12 @@ func workflowLineage(workflow string, nodes []node, graph *types.WorkflowGraph) 
 
 		switch n.Type {
 		case "job":
-			edges = append(edges, pluginsdk.LineageEdge{Source: task, Target: assetMRN("Job", n.Name), Type: "DEPENDS_ON"})
+			edges = append(edges, pluginsdk.LineageEdge{Source: task, Target: s.assetMRN("Job", n.Name), Type: "DEPENDS_ON"})
 		case "crawler":
-			edges = append(edges, pluginsdk.LineageEdge{Source: task, Target: assetMRN("Crawler", n.Name), Type: "DEPENDS_ON"})
+			edges = append(edges, pluginsdk.LineageEdge{Source: task, Target: s.assetMRN("Crawler", n.Name), Type: "DEPENDS_ON"})
 		}
 
-		edges = append(edges, triggerLineage(task, n.Trigger)...)
+		edges = append(edges, s.triggerLineage(task, n.Trigger)...)
 	}
 
 	if graph != nil {
@@ -278,21 +276,21 @@ func workflowLineage(workflow string, nodes []node, graph *types.WorkflowGraph) 
 
 // triggerLineage links a trigger step to the jobs and crawlers it starts,
 // and to the ones it waits for.
-func triggerLineage(task string, trigger *types.Trigger) []pluginsdk.LineageEdge {
+func (s *Source) triggerLineage(task string, trigger *types.Trigger) []pluginsdk.LineageEdge {
 	if trigger == nil {
 		return nil
 	}
 
 	var edges []pluginsdk.LineageEdge
 	for _, action := range trigger.Actions {
-		if target := resourceMRN(action.JobName, action.CrawlerName); target != "" {
+		if target := s.resourceMRN(action.JobName, action.CrawlerName); target != "" {
 			edges = append(edges, pluginsdk.LineageEdge{Source: task, Target: target, Type: "DEPENDS_ON"})
 		}
 	}
 
 	if trigger.Predicate != nil {
 		for _, condition := range trigger.Predicate.Conditions {
-			if source := resourceMRN(condition.JobName, condition.CrawlerName); source != "" {
+			if source := s.resourceMRN(condition.JobName, condition.CrawlerName); source != "" {
 				edges = append(edges, pluginsdk.LineageEdge{Source: source, Target: task, Type: "DEPENDS_ON"})
 			}
 		}
@@ -302,25 +300,25 @@ func triggerLineage(task string, trigger *types.Trigger) []pluginsdk.LineageEdge
 }
 
 // resourceMRN returns the MRN of the Glue job or crawler a trigger refers to.
-func resourceMRN(jobName, crawlerName *string) string {
+func (s *Source) resourceMRN(jobName, crawlerName *string) string {
 	if name := safeStr(jobName); name != "" {
-		return assetMRN("Job", name)
+		return s.assetMRN("Job", name)
 	}
 	if name := safeStr(crawlerName); name != "" {
-		return assetMRN("Crawler", name)
+		return s.assetMRN("Crawler", name)
 	}
 	return ""
 }
 
 // crawlerLineage links a crawler to the buckets it reads and the database it
 // writes. The Crawler, Bucket and Database assets belong to other plugins.
-func crawlerLineage(crawler types.Crawler) []pluginsdk.LineageEdge {
+func (s *Source) crawlerLineage(crawler types.Crawler) []pluginsdk.LineageEdge {
 	name := safeStr(crawler.Name)
 	if name == "" {
 		return nil
 	}
 
-	crawlerMRN := assetMRN("Crawler", name)
+	crawlerMRN := s.assetMRN("Crawler", name)
 	var edges []pluginsdk.LineageEdge
 
 	if crawler.Targets != nil {
@@ -330,7 +328,7 @@ func crawlerLineage(crawler types.Crawler) []pluginsdk.LineageEdge {
 				continue
 			}
 			edges = append(edges, pluginsdk.LineageEdge{
-				Source: mrn.New("Bucket", "S3", bucket),
+				Source: mrn.Asset("Bucket", "S3", bucket).String(),
 				Target: crawlerMRN,
 				Type:   "FEEDS",
 			})
@@ -340,7 +338,7 @@ func crawlerLineage(crawler types.Crawler) []pluginsdk.LineageEdge {
 	if database := safeStr(crawler.DatabaseName); database != "" {
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: crawlerMRN,
-			Target: assetMRN("Database", database),
+			Target: s.assetMRN("Database", database),
 			Type:   "PRODUCES",
 		})
 	}

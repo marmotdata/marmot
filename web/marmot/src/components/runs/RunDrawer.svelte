@@ -6,6 +6,7 @@
 	import { dump as dumpYaml } from 'js-yaml';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { assetRouteParams } from '$lib/mrn';
 	import { formatNumber } from '$lib/utils/format';
 	import {
 		formatRunDuration,
@@ -173,13 +174,8 @@
 	function assetHref(entity: RunEntity): string | undefined {
 		if (entity.entity_type !== 'asset' || entity.status === 'deleted' || !entity.entity_mrn)
 			return undefined;
-		const parts = entity.entity_mrn.replace('mrn://', '').split('/');
-		if (parts.length < 3) return undefined;
-		return resolve('/discover/[type]/[service]/[name]', {
-			type: parts[0],
-			service: parts[1],
-			name: parts.slice(2).join('/')
-		});
+		const route = assetRouteParams(entity.entity_mrn);
+		return route ? resolve('/discover/[type]/[service]/[name]', route) : undefined;
 	}
 
 	async function loadEntities(id: string, pageNumber: number) {

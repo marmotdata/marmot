@@ -1,6 +1,6 @@
 The Redpanda plugin discovers topics from Redpanda clusters. It uses the same discovery engine as the Kafka plugin since Redpanda is Kafka API-compatible.
 
-Because it is the same engine, topics are catalogued under the Kafka provider and addressed as `mrn://topic/kafka/<topic>`, not under a Redpanda provider. Running Kafka, Redpanda and Confluent Cloud against clusters that share a topic name will therefore land them on one asset.
+Because it is the same engine, topics are catalogued under the Kafka provider and addressed as `mrn://asset/topic/kafka@<zone>/<topic>`, not under a Redpanda provider. Set `zone` to tell clusters apart (a name you choose, not a cloud availability zone); clusters left without a zone that share a topic name will land on one asset.
 
 ## Connection
 

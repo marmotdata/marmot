@@ -174,7 +174,7 @@ func TestDiscover_CreatesADashboardAsset(t *testing.T) {
 	dashboard := assetNamed(t, result, "Dashboard", "Revenue")
 
 	assert.Equal(t, []string{"Redash"}, dashboard.Providers)
-	assert.Equal(t, "mrn://dashboard/redash/revenue", *dashboard.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/redash/revenue", *dashboard.MRN)
 	assert.Equal(t, 1, dashboard.Metadata["id"])
 	assert.Equal(t, "revenue", dashboard.Metadata["slug"])
 	assert.Equal(t, "Marmot Admin", dashboard.Metadata["owner"])
@@ -273,7 +273,7 @@ func TestDiscover_CreatesAChartNamedByDashboardAndVisualization(t *testing.T) {
 
 	chart := assetNamed(t, result, "Chart", "Revenue/Orders by day")
 
-	assert.Equal(t, "mrn://chart/redash/revenue-orders-by-day", *chart.MRN)
+	assert.Equal(t, "mrn://asset/chart/redash/revenue-orders-by-day", *chart.MRN)
 	assert.Equal(t, 4, chart.Metadata["visualization_id"])
 	assert.Equal(t, 1, chart.Metadata["widget_id"])
 }
@@ -376,7 +376,7 @@ func TestDiscover_CreatesAQueryAsADataModelObject(t *testing.T) {
 
 	query := assetNamed(t, result, "Data Model Object", "Orders by day")
 
-	assert.Equal(t, "mrn://data-model-object/redash/orders-by-day", *query.MRN)
+	assert.Equal(t, "mrn://asset/data-model-object/redash/orders-by-day", *query.MRN)
 	assert.Equal(t, 1, query.Metadata["id"])
 	assert.Equal(t, "shop", query.Metadata["data_source"])
 }
@@ -474,7 +474,7 @@ func TestDiscover_CreatesADataSourceAsset(t *testing.T) {
 
 	source := assetNamed(t, result, "DataSource", "shop")
 
-	assert.Equal(t, "mrn://datasource/redash/shop", *source.MRN)
+	assert.Equal(t, "mrn://asset/datasource/redash/shop", *source.MRN)
 	assert.Equal(t, "pg", source.Metadata["type"])
 	assert.Equal(t, "sql", source.Metadata["syntax"])
 	assert.Equal(t, "db.internal", source.Metadata["host"])
@@ -596,19 +596,19 @@ func TestDiscover_ReadsTheArchiveEndpointWhenArchivedIsIncluded(t *testing.T) {
 func TestDiscover_DashboardContainsItsCharts(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://dashboard/redash/revenue", "mrn://chart/redash/revenue-orders-by-day", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/redash/revenue", "mrn://asset/chart/redash/revenue-orders-by-day", "CONTAINS"))
 }
 
 func TestDiscover_QueryFeedsTheChartThatRendersIt(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://data-model-object/redash/orders-by-day", "mrn://chart/redash/revenue-orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/data-model-object/redash/orders-by-day", "mrn://asset/chart/redash/revenue-orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_DataSourceFeedsTheQueriesThatRunOnIt(t *testing.T) {
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://datasource/redash/shop", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/redash/shop", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_TablesFeedTheQueryThatReadsThem(t *testing.T) {
@@ -616,8 +616,8 @@ func TestDiscover_TablesFeedTheQueryThatReadsThem(t *testing.T) {
 	// lands on that plugin's asset instead of minting a second one.
 	result := discoverAgainst(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=db.internal:5432/shop.public.orders", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=db.internal:5432/shop.public.customers", "mrn://asset/data-model-object/redash/orders-by-day", "FEEDS"))
 }
 
 func TestDiscover_EmitsNoLineageWhenTurnedOff(t *testing.T) {
@@ -655,7 +655,7 @@ func TestDiscover_EveryLineageEndpointIsAnAssetOfThisRunOrAnotherPluginsTable(t 
 			if own[endpoint] {
 				continue
 			}
-			assert.Contains(t, endpoint, "mrn://table/postgresql/", "edge endpoint %q is neither ours nor a known table", endpoint)
+			assert.Contains(t, endpoint, "mrn://asset/table/postgresql@host=", "edge endpoint %q is neither ours nor a known table", endpoint)
 		}
 	}
 }

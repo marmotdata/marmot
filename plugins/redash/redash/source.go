@@ -5,6 +5,8 @@ package redash
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -53,7 +55,7 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "redash",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Redash",
 		Description:   "Discover dashboards, charts, queries and data sources from Redash",
 		Icon:          "redash",
@@ -152,8 +154,9 @@ func (s *Source) discover(ctx context.Context, client *Client) (*pluginsdk.Disco
 		Msg("Redash discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  collector.assets,
-		Lineage: collector.lineage,
+		Assets:       collector.assets,
+		Lineage:      collector.lineage,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -248,7 +251,7 @@ func (c *collector) dataSourceAsset(source DataSource) pluginsdk.Asset {
 	}
 
 	name := c.takeName("DataSource", source.Name, source.ID)
-	mrnValue := assetMRN("DataSource", name)
+	mrnValue := c.assetMRN("DataSource", name)
 
 	return pluginsdk.Asset{
 		Name:      &name,
@@ -339,7 +342,7 @@ func (c *collector) addQuery(query Query) {
 	}
 
 	name := c.takeName("Data Model Object", query.Name, query.ID)
-	mrnValue := assetMRN("Data Model Object", name)
+	mrnValue := c.assetMRN("Data Model Object", name)
 	c.queries[query.ID] = mrnValue
 
 	asset := pluginsdk.Asset{
@@ -380,7 +383,7 @@ func (c *collector) addQuery(query Query) {
 		return
 	}
 	if c.config.IncludeDataSources && hasSource {
-		c.addEdge(assetMRN("DataSource", source.Name), mrnValue, "FEEDS")
+		c.addEdge(c.assetMRN("DataSource", source.Name), mrnValue, "FEEDS")
 	}
 	if hasSource {
 		c.addTableLineage(query, source, mrnValue)
@@ -399,12 +402,12 @@ func (c *collector) addTableLineage(query Query, source DataSource, queryMRN str
 	}
 
 	for _, ref := range extractTableRefs(query.Query) {
-		name, ok := target.assetName(source.Options, ref)
+		path, ok := target.assetPath(source.Options, ref)
 		if !ok {
 			log.Debug().Str("table", ref.String()).Str("data_source_type", source.Type).Msg("Table reference is missing a qualifier the owning plugin needs, skipping")
 			continue
 		}
-		c.addEdge(mrn.New("Table", target.Provider, name), queryMRN, "FEEDS")
+		c.addEdge(mrn.Asset("Table", target.Provider, path...).WithHost(target.host(source.Options)).String(), queryMRN, "FEEDS")
 	}
 }
 
@@ -504,7 +507,7 @@ func (c *collector) addDashboard(dashboard Dashboard) {
 	setIf(metadata, "notes", strings.Join(notes, "\n\n"))
 
 	name := c.takeName("Dashboard", dashboard.Name, dashboard.ID)
-	mrnValue := assetMRN("Dashboard", name)
+	mrnValue := c.assetMRN("Dashboard", name)
 
 	c.assets = append(c.assets, pluginsdk.Asset{
 		Name:      &name,
@@ -558,7 +561,7 @@ func (c *collector) addChart(dashboardName, dashboardMRN string, widget Widget) 
 	}
 
 	name := c.takeName("Chart", dashboardName+"/"+visualizationName(widget), widget.ID)
-	mrnValue := assetMRN("Chart", name)
+	mrnValue := c.assetMRN("Chart", name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -666,8 +669,8 @@ func (c *collector) tagsFor(sourceTags []string, metadata map[string]any) []stri
 
 // assetMRN is the single place a Redash MRN is built, so the asset pass and
 // the lineage pass can never address the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+func (c *collector) assetMRN(assetType, name string) string {
+	return c.config.AssetMRN(assetType, provider, name)
 }
 
 // chartType translates a Redash visualization into Marmot's chart
@@ -839,4 +842,20 @@ func parseVersion(raw string) version {
 // version gets today's behaviour rather than a decade-old fallback.
 func (v version) atLeast(major int) bool {
 	return v.major == 0 || v.major >= major
+}
+
+// zoneBindings tells Marmot which zone the Redash server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

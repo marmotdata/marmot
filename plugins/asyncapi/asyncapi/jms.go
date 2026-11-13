@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/jms"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createJMSDestination(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *jms.ChannelBinding) pluginsdk.Asset {
@@ -29,7 +28,7 @@ func (s *Source) createJMSDestination(doc *asyncapi3.Document, channelName strin
 		description = fmt.Sprintf("JMS %s for channel %s", assetType, channelName)
 	}
 
-	mrnValue := mrn.New(assetType, "JMS", name)
+	mrnValue := s.brokerMRN(doc, channel, assetType, "JMS", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

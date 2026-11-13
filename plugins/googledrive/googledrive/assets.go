@@ -8,7 +8,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -214,7 +213,7 @@ func (c *collector) newAsset(f driveItem, assetType, name string, metadata map[s
 	// Name and MRN are the same string on purpose. name is the item's
 	// path, which is what identifies it: two folders can each hold a
 	// "notes.md". The Contents tab supplies the folder it sits in.
-	mrnValue := mrn.New(assetType, provider, name)
+	mrnValue := c.config.AssetMRN(assetType, provider, name)
 
 	if metadata == nil {
 		metadata = map[string]interface{}{}

@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/ibmmq"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createIBMMQAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) []pluginsdk.Asset {
@@ -44,7 +43,7 @@ func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, c
 		description = fmt.Sprintf("IBM MQ queue for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Queue", "IBMMQ", name)
+	mrnValue := s.brokerMRN(doc, channel, "Queue", "IBMMQ", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -109,7 +108,7 @@ func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, c
 		description = fmt.Sprintf("IBM MQ topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "IBMMQ", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "IBMMQ", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -178,7 +177,7 @@ func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName st
 		description = fmt.Sprintf("IBM MQ queue for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Queue", "IBMMQ", name)
+	mrnValue := s.brokerMRN(doc, channel, "Queue", "IBMMQ", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -235,7 +234,7 @@ func (s *Source) createIBMMQGenericTopic(doc *asyncapi3.Document, channelName st
 		description = fmt.Sprintf("IBM MQ topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "IBMMQ", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "IBMMQ", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

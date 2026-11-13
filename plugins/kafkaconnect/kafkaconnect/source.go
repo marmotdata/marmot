@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"sort"
 	"strconv"
@@ -33,6 +34,9 @@ type Config struct {
 	IncludeTopics   bool `json:"include_topics" group:"Discovery" description:"Whether to discover the topics connectors read and write as Topic assets" default:"true"`
 	IncludeConfig   bool `json:"include_config" group:"Discovery" description:"Whether to store each connector's config in its metadata, with credentials masked" default:"true"`
 	DiscoverLineage bool `json:"discover_lineage" group:"Discovery" description:"Whether to link connectors to the topics and datasets they move data between" default:"true"`
+
+	BootstrapServers string                       `json:"bootstrap_servers,omitempty" group:"Discovery" description:"Bootstrap servers of the Kafka cluster behind this Connect cluster, for example broker:9092. Lets Marmot match the topics to the right Kafka zone"`
+	ConnectorMap     map[string]map[string]string `json:"connector_map,omitempty" group:"Advanced" description:"Marmot zone of the systems a connector reads or writes, as connector name to provider to zone, for example orders-sink: {PostgreSQL: prod-eu}. Takes precedence over the address in the connector's config"`
 }
 
 // Example configuration for the plugin
@@ -53,7 +57,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "kafkaconnect",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Kafka Connect",
 		Description:   "Discover connectors, tasks and topics from Kafka Connect clusters with lineage to the systems they move data between",
 		Icon:          "kafka",
@@ -160,8 +164,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Kafka Connect discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  d.assets,
-		Lineage: d.lineage,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -185,6 +190,8 @@ type discovery struct {
 }
 
 type topicUsage struct {
+	name      string
+	mrn       string
 	producers []string
 	consumers []string
 }
@@ -216,11 +223,13 @@ func (d *discovery) discoverConnector(ctx context.Context, conn connector) {
 	switch connectorType {
 	case "source":
 		for _, topic := range topics {
-			d.useTopic(topic).producers = append(d.useTopic(topic).producers, name)
+			usage := d.useTopic(name, cfg, topic)
+			usage.producers = append(usage.producers, name)
 		}
 	case "sink":
 		for _, topic := range topics {
-			d.useTopic(topic).consumers = append(d.useTopic(topic).consumers, name)
+			usage := d.useTopic(name, cfg, topic)
+			usage.consumers = append(usage.consumers, name)
 		}
 	}
 
@@ -237,15 +246,15 @@ func (d *discovery) discoverConnector(ctx context.Context, conn connector) {
 	case "source":
 		if known && r.sources != nil {
 			for _, ds := range r.sources(cfg) {
-				d.link(datasetMRN(ds), pipelineMRN, "FEEDS")
+				d.link(d.datasetMRN(name, ds), pipelineMRN, "FEEDS")
 			}
 		}
 		for _, topic := range topics {
-			d.link(pipelineMRN, topicMRN(topic), "PRODUCES")
+			d.link(pipelineMRN, d.topicMRN(name, cfg, topic), "PRODUCES")
 		}
 	case "sink":
 		for _, topic := range topics {
-			d.link(topicMRN(topic), pipelineMRN, "FEEDS")
+			d.link(d.topicMRN(name, cfg, topic), pipelineMRN, "FEEDS")
 		}
 		if known && r.targets != nil {
 			// A sink sees the topic name after its own transforms, and
@@ -255,7 +264,7 @@ func (d *discovery) discoverConnector(ctx context.Context, conn connector) {
 				routed = append(routed, route(routers, topic))
 			}
 			for _, ds := range r.targets(cfg, routed) {
-				d.link(pipelineMRN, datasetMRN(ds), "PRODUCES")
+				d.link(pipelineMRN, d.datasetMRN(name, ds), "PRODUCES")
 			}
 		}
 	}
@@ -373,11 +382,12 @@ func isInternalTopic(cfg connectorConfig, topic string) bool {
 	return false
 }
 
-func (d *discovery) useTopic(topic string) *topicUsage {
-	usage, ok := d.topics[topic]
+func (d *discovery) useTopic(connectorName string, cfg connectorConfig, topic string) *topicUsage {
+	key := d.topicMRN(connectorName, cfg, topic)
+	usage, ok := d.topics[key]
 	if !ok {
-		usage = &topicUsage{}
-		d.topics[topic] = usage
+		usage = &topicUsage{name: topic, mrn: key}
+		d.topics[key] = usage
 	}
 	return usage
 }
@@ -453,7 +463,7 @@ func (d *discovery) pipelineAsset(conn connector, cfg connectorConfig, class, co
 		description = &desc
 	}
 
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := d.config.AssetMRN("Pipeline", provider, name)
 	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
@@ -472,7 +482,7 @@ func (d *discovery) pipelineAsset(conn connector, cfg connectorConfig, class, co
 }
 
 func (d *discovery) taskAsset(connectorName string, task taskStatus) pluginsdk.Asset {
-	name := taskName(connectorName, task.ID)
+	name := fmt.Sprintf("task-%d", task.ID)
 
 	metadata := map[string]any{
 		"task_id":   task.ID,
@@ -484,14 +494,19 @@ func (d *discovery) taskAsset(connectorName string, task taskStatus) pluginsdk.A
 		putIf(metadata, "error", trimTrace(task.Trace))
 	}
 
-	mrnValue := assetMRN("Task", name)
+	mrnValue := d.config.AssetMRN("Task", provider, connectorName, name)
+	var previous []string
+	if old := mrn.New("Task", provider, taskName(connectorName, task.ID)); old != mrnValue {
+		previous = []string{old}
+	}
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      "Task",
-		Providers: []string{provider},
-		Metadata:  metadata,
-		Tags:      pluginsdk.InterpolateTags(d.config.Tags, metadata),
+		Name:         &name,
+		MRN:          &mrnValue,
+		PreviousMRNs: previous,
+		Type:         "Task",
+		Providers:    []string{provider},
+		Metadata:     metadata,
+		Tags:         pluginsdk.InterpolateTags(d.config.Tags, metadata),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       provider,
 			LastSyncAt: time.Now(),
@@ -505,15 +520,16 @@ func (d *discovery) taskAsset(connectorName string, task taskStatus) pluginsdk.A
 // the one the Kafka plugin uses, so a topic it already catalogued gains
 // this plugin as a second source instead of a duplicate asset.
 func (d *discovery) topicAssets() []pluginsdk.Asset {
-	names := make([]string, 0, len(d.topics))
-	for name := range d.topics {
-		names = append(names, name)
+	keys := make([]string, 0, len(d.topics))
+	for key := range d.topics {
+		keys = append(keys, key)
 	}
-	sort.Strings(names)
+	sort.Strings(keys)
 
-	assets := make([]pluginsdk.Asset, 0, len(names))
-	for _, name := range names {
-		usage := d.topics[name]
+	assets := make([]pluginsdk.Asset, 0, len(keys))
+	for _, key := range keys {
+		usage := d.topics[key]
+		name := usage.name
 		metadata := map[string]any{"topic_name": name}
 		if len(usage.producers) > 0 {
 			metadata["producers"] = dedupe(usage.producers)
@@ -523,7 +539,7 @@ func (d *discovery) topicAssets() []pluginsdk.Asset {
 		}
 
 		topic := name
-		mrnValue := topicMRN(name)
+		mrnValue := usage.mrn
 		assets = append(assets, pluginsdk.Asset{
 			Name:      &topic,
 			MRN:       &mrnValue,
@@ -554,19 +570,60 @@ func taskName(connectorName string, id int) string {
 	return fmt.Sprintf("%s.task-%d", connectorName, id)
 }
 
-// assetMRN is the single place a Kafka Connect MRN is built, for the
-// Pipeline and Task assets this plugin owns.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// reference builds the MRN of an asset another plugin owns. A zone mapped for the connector and provider in connector_map wins, then the address the connector was configured with as a host hint, then no zone.
+func (d *discovery) reference(connectorName, assetType, otherProvider, host string, path ...string) string {
+	m := mrn.Asset(assetType, otherProvider, path...)
+	if zone := d.mappedZone(connectorName, otherProvider); zone != "" {
+		return m.WithZone(zone).String()
+	}
+	return m.WithHost(host).String()
 }
 
-// topicMRN builds the identity the Kafka plugin gives a topic.
-func topicMRN(topic string) string {
-	return mrn.New("Topic", "Kafka", topic)
+// mappedZone looks a connector and provider up in connector_map, ignoring case so the map can be written the way people say the names.
+func (d *discovery) mappedZone(connectorName, otherProvider string) string {
+	for name, providers := range d.config.ConnectorMap {
+		if !strings.EqualFold(name, connectorName) {
+			continue
+		}
+		for p, zone := range providers {
+			if strings.EqualFold(p, otherProvider) {
+				return strings.TrimSpace(zone)
+			}
+		}
+	}
+	return ""
 }
 
-// datasetMRN builds the identity the owning plugin gives a table,
-// collection or bucket.
-func datasetMRN(ds dataset) string {
-	return mrn.New(ds.Type, ds.Provider, ds.Name)
+// topicMRN builds the identity the Kafka plugin gives a topic. The connector's own bootstrap override, or else the Connect cluster's, tells which Kafka it is.
+func (d *discovery) topicMRN(connectorName string, cfg connectorConfig, topic string) string {
+	servers := cfg.get("producer.override.bootstrap.servers", "consumer.override.bootstrap.servers", "admin.override.bootstrap.servers", "bootstrap.servers")
+	if servers == "" {
+		servers = d.config.BootstrapServers
+	}
+	host := ""
+	if first := splitList(servers); len(first) > 0 {
+		host = hostPort(first[0], "", "9092")
+	}
+	return d.reference(connectorName, "Topic", "Kafka", host, topic)
+}
+
+// datasetMRN builds the identity the owning plugin gives a table, collection or bucket.
+func (d *discovery) datasetMRN(connectorName string, ds dataset) string {
+	return d.reference(connectorName, ds.Type, ds.Provider, ds.Host, ds.Path...)
+}
+
+// zoneBindings tells Marmot which zone the Connect worker this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

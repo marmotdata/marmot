@@ -169,8 +169,8 @@ func (c *collector) discoverTables(ctx context.Context, r reader) error {
 
 func (c *collector) addTable(table tableRow, use usage) bool {
 	p := projectionFor(table.Database)
-	name := p.TableName(table.Database, table.Cluster, table.Schema, table.Name)
-	if name == "" {
+	legacy := p.TableName(table.Database, table.Cluster, table.Schema, table.Name)
+	if legacy == "" {
 		log.Warn().Str("key", table.Key).Msg("Skipping an Amundsen table whose projected name is empty")
 		return false
 	}
@@ -218,7 +218,7 @@ func (c *collector) addTable(table tableRow, use usage) bool {
 		putIf(metadata, "owner_teams", teams)
 	}
 
-	asset := c.newAsset(table.assetType(), p.Provider, name, table.Description, c.assetTags(table.Tags), metadata)
+	asset := c.newAsset(table.assetType(), p.Provider, identity{Name: table.Name, Path: p.tablePath(table.Cluster, table.Schema, table.Name), Legacy: legacy}, table.Description, c.assetTags(table.Tags), metadata)
 
 	if columns := table.assetColumns(c.config.IncludeDescriptions); len(columns) > 0 {
 		if err := pluginsdk.SetColumns(&asset, columns); err != nil {
@@ -307,11 +307,10 @@ func (c *collector) tableMRN(key string) string {
 	}
 
 	p := projectionFor(parts.Database)
-	name := p.TableName(parts.Database, parts.Cluster, parts.Schema, parts.Table)
-	if name == "" {
+	if p.TableName(parts.Database, parts.Cluster, parts.Schema, parts.Table) == "" {
 		return ""
 	}
-	return assetMRN("Table", p.Provider, name)
+	return assetMRN("Table", p.Provider, p.tablePath(parts.Cluster, parts.Schema, parts.Table)...)
 }
 
 // tableKey is an Amundsen table key split into its levels.

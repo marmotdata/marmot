@@ -108,7 +108,7 @@ func TestE2E_DiscoversTheDatabase(t *testing.T) {
 
 	database := assetNamed(t, result, "shop")
 	assert.Equal(t, "Database", database.Type)
-	assert.Equal(t, "mrn://database/postgresql/shop", *database.MRN)
+	assert.Equal(t, "mrn://asset/database/postgresql/shop", *database.MRN)
 	assert.Equal(t, []string{"PostgreSQL"}, database.Providers)
 }
 
@@ -117,7 +117,7 @@ func TestE2E_DiscoversThePlainTable(t *testing.T) {
 
 	customers := assetNamed(t, result, "customers")
 	assert.Equal(t, "Table", customers.Type)
-	assert.Equal(t, "mrn://table/postgresql/customers", *customers.MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.customers", *customers.MRN)
 	assert.Equal(t, "Shop customers", customers.Metadata["comment"])
 	assert.Equal(t, "public", customers.Metadata["schema"])
 }
@@ -156,7 +156,7 @@ func TestE2E_HypertableIsMarkedAndCarriesItsTimeDimension(t *testing.T) {
 
 	conditions := assetNamed(t, result, "conditions")
 	assert.Equal(t, "Table", conditions.Type)
-	assert.Equal(t, "mrn://table/postgresql/conditions", *conditions.MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.conditions", *conditions.MRN)
 	assert.Equal(t, true, conditions.Metadata["hypertable"])
 	assert.Equal(t, "time", conditions.Metadata["time_column"])
 	assert.Equal(t, "1 day", conditions.Metadata["time_interval"])
@@ -224,7 +224,7 @@ func TestE2E_ContinuousAggregateIsAViewWithItsOriginalQuery(t *testing.T) {
 
 	daily := assetNamed(t, result, "conditions_daily")
 	assert.Equal(t, "View", daily.Type)
-	assert.Equal(t, "mrn://view/postgresql/conditions_daily", *daily.MRN)
+	assert.Equal(t, "mrn://asset/view/postgresql/shop.public.conditions_daily", *daily.MRN)
 	assert.Equal(t, true, daily.Metadata["continuous_aggregate"])
 	assert.Equal(t, "public.conditions", daily.Metadata["source_hypertable"])
 
@@ -250,8 +250,8 @@ func TestE2E_ContinuousAggregateHasAViewOfEdgeFromItsHypertable(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/conditions",
-		Target: "mrn://view/postgresql/conditions_daily",
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/view/postgresql/shop.public.conditions_daily",
 		Type:   "VIEW_OF",
 	})
 }
@@ -263,13 +263,13 @@ func TestE2E_DiscoversThePlainViewAndItsSources(t *testing.T) {
 	assert.Equal(t, "View", readings.Type)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/customers",
-		Target: "mrn://view/postgresql/customer_readings",
+		Source: "mrn://asset/table/postgresql/shop.public.customers",
+		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
 		Type:   "VIEW_OF",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/conditions",
-		Target: "mrn://view/postgresql/customer_readings",
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/view/postgresql/shop.public.customer_readings",
 		Type:   "VIEW_OF",
 	})
 }
@@ -278,8 +278,8 @@ func TestE2E_ForeignKeyBecomesAnEdge(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://table/postgresql/conditions",
-		Target: "mrn://table/postgresql/customers",
+		Source: "mrn://asset/table/postgresql/shop.public.conditions",
+		Target: "mrn://asset/table/postgresql/shop.public.customers",
 		Type:   "FOREIGN_KEY",
 	})
 }
@@ -288,8 +288,8 @@ func TestE2E_DatabaseContainsItsObjects(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://database/postgresql/shop",
-		Target: "mrn://table/postgresql/conditions",
+		Source: "mrn://asset/database/postgresql/shop",
+		Target: "mrn://asset/table/postgresql/shop.public.conditions",
 		Type:   "CONTAINS",
 	})
 }
@@ -333,7 +333,7 @@ func TestE2E_HypertableStatisticsComeFromTimescale(t *testing.T) {
 
 	statistics := make(map[string]float64)
 	for _, statistic := range result.Statistics {
-		if statistic.AssetMRN == "mrn://table/postgresql/conditions" {
+		if statistic.AssetMRN == "mrn://asset/table/postgresql/shop.public.conditions" {
 			statistics[statistic.MetricName] = statistic.Value
 		}
 	}
@@ -349,7 +349,7 @@ func TestE2E_PlainTableStatisticsComeFromPostgreSQL(t *testing.T) {
 
 	statistics := make(map[string]float64)
 	for _, statistic := range result.Statistics {
-		if statistic.AssetMRN == "mrn://table/postgresql/customers" {
+		if statistic.AssetMRN == "mrn://asset/table/postgresql/shop.public.customers" {
 			statistics[statistic.MetricName] = statistic.Value
 		}
 	}

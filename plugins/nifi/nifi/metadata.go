@@ -18,7 +18,7 @@ type NiFiPipelineFields struct {
 	ConnectionCount  int    `json:"connection_count" metadata:"connection_count" description:"Connections directly in the group"`
 	InputPortCount   int    `json:"input_port_count" metadata:"input_port_count" description:"Input ports of the group"`
 	OutputPortCount  int    `json:"output_port_count" metadata:"output_port_count" description:"Output ports of the group"`
-	NiFiVersion      string `json:"nifi_version" metadata:"nifi_version" description:"NiFi release the instance runs"`
+	NiFiVersion      string `json:"nifi_version" metadata:"nifi_version" description:"NiFi release the zone runs"`
 	URL              string `json:"url" metadata:"url" description:"Link to the group in the NiFi UI"`
 }
 

@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,7 +17,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "s3",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS S3",
 		Description:   "Discover S3 buckets from AWS accounts",
 		Icon:          "s3",
@@ -248,7 +248,7 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket types.Bucket) (pl
 		}
 	}
 
-	mrnValue := mrn.New("Bucket", "S3", bucketName)
+	mrnValue := s.bucketMRN(bucketName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -266,4 +266,9 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket types.Bucket) (pl
 			Priority:   1,
 		}},
 	}, nil
+}
+
+// bucketMRN is the single place a S3 bucket MRN is built. The account is the zone, so the path is the bucket name alone.
+func (s *Source) bucketMRN(name string) string {
+	return s.config.AssetMRN("Bucket", "S3", name)
 }

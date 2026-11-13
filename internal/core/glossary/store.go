@@ -39,7 +39,8 @@ const termColumns = `id, name, definition, user_definition, description, parent_
 		metadata, tags, created_by,
 		(SELECT u.name FROM users u WHERE u.id = glossary_terms.created_by) AS created_by_name,
 		created_at, updated_at, deleted_at,
-		(SELECT COUNT(*) FROM asset_terms at WHERE at.glossary_term_id = glossary_terms.id) AS linked_asset_count`
+		(SELECT COUNT(*) FROM asset_terms at WHERE at.glossary_term_id = glossary_terms.id) AS linked_asset_count,
+		COALESCE(mrn, '') AS mrn`
 
 func scanTerm(row pgx.Row) (*GlossaryTerm, error) {
 	var term GlossaryTerm
@@ -48,7 +49,7 @@ func scanTerm(row pgx.Row) (*GlossaryTerm, error) {
 		&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
 		&term.Description, &term.ParentTermID,
 		&metadataJSON, &term.Tags, &term.CreatedBy, &term.CreatedByName,
-		&term.CreatedAt, &term.UpdatedAt, &term.DeletedAt, &term.LinkedAssetCount,
+		&term.CreatedAt, &term.UpdatedAt, &term.DeletedAt, &term.LinkedAssetCount, &term.MRN,
 	); err != nil {
 		return nil, err
 	}

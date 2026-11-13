@@ -14,7 +14,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -552,7 +551,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 			if isView(ctx, tx, schema, ref.table) {
 				assetType = "View"
 			}
-			tableMRN := mrn.New(assetType, "MySQL", ref.table)
+			tableMRN := assetMRN(config, assetType, schema, ref.table)
 			if !seen[tableMRN] {
 				seen[tableMRN] = true
 				plan.ReferencedMRNs = append(plan.ReferencedMRNs, tableMRN)

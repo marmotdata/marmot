@@ -643,7 +643,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder).WithDetails(assetdetail.NewStore(db)).WithSignals(assetsignal.New(db)),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder).WithDetails(assetdetail.NewStore(db)).WithSignals(assetsignal.New(db)).WithIdentity(db),
 		users.NewHandler(userSvc, authSvc, config).WithTeams(teamSvc),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
@@ -1402,9 +1402,7 @@ func (n *docsMentionNotifier) OnMention(ctx context.Context, mention docsService
 	var link string
 	switch entityType {
 	case "asset":
-		// Strip mrn:// prefix and add tab=documentation
-		assetPath := strings.TrimPrefix(entityID, "mrn://")
-		link = fmt.Sprintf("/discover/%s?page=%s&tab=documentation", assetPath, pageID)
+		link = fmt.Sprintf("%s?page=%s&tab=documentation", asset.DiscoverPath(entityID), pageID)
 	case "data_product":
 		link = fmt.Sprintf("/products/%s?page=%s&tab=documentation", entityID, pageID)
 	default:

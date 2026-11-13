@@ -23,6 +23,8 @@ type Owner struct {
 type GlossaryTerm struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	// MRN is mrn://glossary-term/<source>/<path>, kept up to date by the database as the term is renamed or moved.
+	MRN string `json:"mrn,omitempty"`
 	// Definition is what the last run wrote. On a term a person has
 	// worded themselves the read path serves UserDefinition here instead,
 	// so a caller always gets the wording the catalog stands behind.

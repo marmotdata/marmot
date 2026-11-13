@@ -5,13 +5,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,7 +20,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "mysql",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "MySQL",
 		Description:   "Discover databases and tables from MySQL instances",
 		Icon:          "mysql",
@@ -66,6 +67,11 @@ tags:
   - "mysql"
   - "ecommerce"
 `
+
+// assetMRN is the single place a MySQL MRN is built, so assets, foreign keys and query plans agree. The path runs from the database down.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, "MySQL", path...)
+}
 
 type Source struct {
 	config *Config
@@ -163,6 +169,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: "MySQL",
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -326,7 +337,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]p
 			assetDesc = fmt.Sprintf("MySQL table %s.%s in database %s", schemaName, objectName, dbName)
 		}
 
-		mrnValue := mrn.New(assetType, "MySQL", objectName)
+		mrnValue := assetMRN(s.config, assetType, dbName, objectName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -432,8 +443,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]plug
 
 		// Must match the identity the table assets were given above, or the
 		// edge points at an MRN that is never created.
-		sourceMRN := mrn.New("Table", "MySQL", sourceTable)
-		targetMRN := mrn.New("Table", "MySQL", targetTable.String)
+		sourceMRN := assetMRN(s.config, "Table", dbName, sourceTable)
+		targetMRN := assetMRN(s.config, "Table", dbName, targetTable.String)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -582,7 +593,7 @@ func convertMySQLValue(val interface{}) interface{} {
 // database, so the two land on one asset.
 func (s *Source) databaseAsset() pluginsdk.Asset {
 	name := s.config.Database
-	mrnValue := mrn.New("Database", "MySQL", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	metadata := map[string]interface{}{
 		"host":     s.config.Host,

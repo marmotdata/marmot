@@ -16,11 +16,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// previousTableMRNs returns the MRN earlier releases gave a table when it differs from the current one, which only happens for names holding a dot because those are quoted now.
+func previousTableMRNs(dbName, tableName string) []string {
+	joined := dbName + "." + tableName
+	if mrn.New("Table", "Glue", joined) == mrn.Asset("Table", "Glue", dbName, tableName).String() {
+		return nil
+	}
+	return []string{mrn.Asset("Table", "Glue", joined).LegacyString()}
+}
+
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "glue",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "AWS Glue",
 		Description:   "Discover jobs, databases, tables and crawlers from AWS Glue",
 		Icon:          "glue",
@@ -252,7 +261,7 @@ func (s *Source) createJobAsset(job types.Job) pluginsdk.Asset {
 		description = job.Description
 	}
 
-	mrnValue := mrn.New("Job", "Glue", name)
+	mrnValue := s.config.AssetMRN("Job", "Glue", name)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
@@ -329,7 +338,7 @@ func (s *Source) createDatabaseAsset(db types.Database) pluginsdk.Asset {
 		description = db.Description
 	}
 
-	mrnValue := mrn.New("Database", "Glue", name)
+	mrnValue := s.config.AssetMRN("Database", "Glue", name)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
@@ -455,19 +464,20 @@ func (s *Source) createTableAsset(dbName string, table types.Table) pluginsdk.As
 		}
 	}
 
-	qualifiedName := dbName + "." + tableName
-	mrnValue := mrn.New("Table", "Glue", qualifiedName)
+	mrnValue := s.config.AssetMRN("Table", "Glue", dbName, tableName)
+	previous := previousTableMRNs(dbName, tableName)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
-		Name:        &tableName,
-		MRN:         &mrnValue,
-		Type:        "Table",
-		Providers:   []string{"Glue"},
-		Description: description,
-		Metadata:    metadata,
-		Schema:      schema,
-		Tags:        processedTags,
+		Name:         &tableName,
+		MRN:          &mrnValue,
+		PreviousMRNs: previous,
+		Type:         "Table",
+		Providers:    []string{"Glue"},
+		Description:  description,
+		Metadata:     metadata,
+		Schema:       schema,
+		Tags:         processedTags,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
@@ -556,7 +566,7 @@ func (s *Source) createCrawlerAsset(crawler types.Crawler) pluginsdk.Asset {
 		description = crawler.Description
 	}
 
-	mrnValue := mrn.New("Crawler", "Glue", name)
+	mrnValue := s.config.AssetMRN("Crawler", "Glue", name)
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{

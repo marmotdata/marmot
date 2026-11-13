@@ -30,9 +30,9 @@ import (
 // `docker rm -f qtest-clickhouse`.
 
 const (
-	ordersMRN         = "mrn://table/clickhouse/shop.orders"
-	customersMRN      = "mrn://table/clickhouse/shop.customers"
-	customerTotalsMRN = "mrn://view/clickhouse/shop.customer_totals"
+	ordersMRN         = "mrn://asset/table/clickhouse/shop.orders"
+	customersMRN      = "mrn://asset/table/clickhouse/shop.customers"
+	customerTotalsMRN = "mrn://asset/view/clickhouse/shop.customer_totals"
 )
 
 var seedStatements = []string{

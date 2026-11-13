@@ -12,16 +12,17 @@ import (
 // contains a space, which mrn.New lowercases and dashes to "sql-server".
 const providerName = "SQL Server"
 
-// assetMRN is the single place a SQL Server MRN is built. Every pass (assets,
-// foreign keys, view references, statistics) goes through it, so the passes
-// cannot drift into addressing the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, providerName, name)
+// assetMRN is the single place a SQL Server MRN is built. Every pass (assets, foreign keys, view references, statistics) goes through it, so the passes cannot drift into addressing the same object differently. The path runs from the database down.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, providerName, path...)
 }
 
-// qualifiedName is the name every table, view and function asset carries. One
-// SQL Server instance holds many databases and two databases can hold the same
-// schema and object name, so the name is fully qualified to stay unique.
+// previousMRN is the MRN earlier releases gave an object, when the asset name was the qualified name and no zone existed. It only differs from the current MRN once a zone is set.
+func previousMRN(assetType, database, schema, object string) string {
+	return mrn.New(assetType, providerName, qualifiedName(database, schema, object))
+}
+
+// qualifiedName joins a database, schema and object into the lowercase-comparable key discovery uses to look objects up. Two databases can hold the same schema and object name, so the database is part of the key.
 func qualifiedName(database, schema, object string) string {
 	return database + "." + schema + "." + object
 }

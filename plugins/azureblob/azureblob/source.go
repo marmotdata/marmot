@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/service"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,7 +17,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "azureblob",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Azure Blob Storage",
 		Description:   "Discover containers from Azure Blob Storage accounts",
 		Icon:          "azureblob",
@@ -241,7 +241,7 @@ func (s *Source) createContainerAsset(ctx context.Context, containerItem *servic
 		}
 	}
 
-	mrnValue := mrn.New("Container", "AzureBlob", containerName)
+	mrnValue := s.containerMRN(containerName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -282,4 +282,9 @@ func (s *Source) countBlobs(ctx context.Context, containerName string) (int64, e
 // shape, which knows how to federate.
 func (c *Config) azureCredentials() *pluginsdk.AzureCredentials {
 	return &pluginsdk.AzureCredentials{TenantID: c.TenantID, ClientID: c.ClientID}
+}
+
+// containerMRN is the single place a AzureBlob container MRN is built. The account is the zone, so the path is the container name alone.
+func (s *Source) containerMRN(name string) string {
+	return s.config.AssetMRN("Container", "AzureBlob", name)
 }

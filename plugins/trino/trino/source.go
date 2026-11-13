@@ -20,13 +20,14 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "trino",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Trino",
 		Description:   "Discover catalogs, schemas, and tables from Trino clusters",
 		Icon:          "trino",
 		Category:      "database",
 		Status:        "experimental",
 		Features:      []string{"Assets", "Lineage"},
+		Federates:     true,
 		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(TrinoCatalogFields{}, "Catalog",
@@ -39,92 +40,6 @@ func Meta() pluginsdk.Meta {
 				"Trino column metadata fields"),
 		},
 	}
-}
-
-// connectorInfo describes how to map a Trino connector's assets to native
-// provider MRNs so that assets merge with those discovered by native plugins.
-type connectorInfo struct {
-	Provider string
-	// MRNName formats the name component of the MRN to match the native plugin.
-	MRNName func(catalog, schema, table string) string
-}
-
-// defaultMRNName returns catalog.schema.table — used as the default for
-// connectors without a specific native MRN format.
-func defaultMRNName(catalog, schema, table string) string {
-	return catalog + "." + schema + "." + table
-}
-
-// internalConnectors lists Trino-native connectors that don't represent
-// external data sources. Catalogs using these are skipped entirely.
-var internalConnectors = map[string]bool{
-	"memory":    true,
-	"tpch":      true,
-	"tpcds":     true,
-	"blackhole": true,
-	"localfile": true,
-}
-
-// connectorMap maps known Trino connector_name values to their native provider
-// info. MRN names match the native plugin's format so assets merge correctly.
-// Connectors absent from this map (and not internal) use a default mapping.
-var connectorMap = map[string]connectorInfo{
-	// Relational databases
-	"postgresql":  {Provider: "PostgreSQL", MRNName: func(_, _, table string) string { return table }},
-	"mysql":       {Provider: "MySQL", MRNName: func(_, _, table string) string { return table }},
-	"mariadb":     {Provider: "MariaDB", MRNName: func(_, _, table string) string { return table }},
-	"sqlserver":   {Provider: "SQL Server", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"oracle":      {Provider: "Oracle", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"clickhouse":  {Provider: "ClickHouse", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"singlestore": {Provider: "SingleStore", MRNName: func(_, _, table string) string { return table }},
-	"redshift":    {Provider: "Redshift", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-
-	// Cloud warehouses / lakehouses
-	"snowflake":  {Provider: "Snowflake", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"bigquery":   {Provider: "BigQuery", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"iceberg":    {Provider: "Iceberg", MRNName: defaultMRNName},
-	"delta_lake": {Provider: "Delta Lake", MRNName: defaultMRNName},
-	"hive":       {Provider: "Hive", MRNName: defaultMRNName},
-	"hudi":       {Provider: "Hudi", MRNName: defaultMRNName},
-
-	// NoSQL / document / key-value
-	"mongodb":   {Provider: "MongoDB", MRNName: func(_, _, table string) string { return table }},
-	"cassandra": {Provider: "Cassandra", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"redis":     {Provider: "Redis", MRNName: func(_, _, table string) string { return table }},
-	"accumulo":  {Provider: "Accumulo", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-
-	// Search / analytics engines
-	"elasticsearch": {Provider: "Elasticsearch", MRNName: func(_, _, table string) string { return table }},
-	"opensearch":    {Provider: "OpenSearch", MRNName: func(_, _, table string) string { return table }},
-	"druid":         {Provider: "Druid", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"pinot":         {Provider: "Pinot", MRNName: func(_, _, table string) string { return table }},
-
-	// Streaming
-	"kafka":   {Provider: "Kafka", MRNName: func(_, _, table string) string { return table }},
-	"kinesis": {Provider: "Kinesis", MRNName: func(_, _, table string) string { return table }},
-
-	// Other
-	"prometheus":    {Provider: "Prometheus", MRNName: func(_, _, table string) string { return table }},
-	"google_sheets": {Provider: "Google Sheets", MRNName: func(_, _, table string) string { return table }},
-	"phoenix":       {Provider: "Phoenix", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"ignite":        {Provider: "Ignite", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"kudu":          {Provider: "Kudu", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-}
-
-// connectorInfoForCatalog returns the connectorInfo for the given catalog.
-// Returns false for internal connectors that should be skipped.
-func connectorInfoForName(connector string) (connectorInfo, bool) {
-	if internalConnectors[connector] {
-		return connectorInfo{}, false
-	}
-	if info, ok := connectorMap[connector]; ok {
-		return info, true
-	}
-	// Unknown external connector — use connector name as provider with default MRN naming.
-	return connectorInfo{
-		Provider: connector,
-		MRNName:  defaultMRNName,
-	}, true
 }
 
 // Config for Trino plugin
@@ -141,8 +56,9 @@ type Config struct {
 	AccessToken string `json:"access_token,omitempty" group:"Authentication" sensitive:"true" description:"JWT bearer token"`
 
 	// Scope
-	Catalog         string   `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
-	ExcludeCatalogs []string `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
+	CatalogMap      map[string]CatalogMapping `json:"catalog_map,omitempty" group:"Discovery" label:"Catalog Map" description:"Maps a catalog name to the native system it reads, as {zone, database}. A mapped catalog's tables get the MRN the native plugin gives them so both discover one asset; an unmapped catalog's tables stay Trino's own assets"`
+	Catalog         string                    `json:"catalog,omitempty" group:"Discovery" description:"Specific catalog to discover (all if empty)"`
+	ExcludeCatalogs []string                  `json:"exclude_catalogs,omitempty" group:"Discovery" default:"[\"system\",\"jmx\"]" description:"Catalogs to skip"`
 
 	// Discovery options
 	IncludeCatalogs bool `json:"include_catalogs" group:"Discovery" default:"true" description:"Create catalog-level assets"`
@@ -166,6 +82,10 @@ secure: false
 exclude_catalogs:
   - "system"
   - "jmx"
+catalog_map:
+  warehouse_pg:
+    zone: "prod-eu"
+    database: "shop"
 tags:
   - "trino"
   - "production"
@@ -252,7 +172,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	log.Debug().Int("count", len(catalogs)).Msg("Discovered catalogs")
 
 	for _, catalogName := range catalogs {
-		info, _ := connectorInfoForName(s.catalogConnectors[catalogName])
+		connector := s.catalogConnectors[catalogName]
+		if reason := s.config.unmappedReason(catalogName, connector); reason != "" {
+			log.Warn().Str("catalog", catalogName).Str("connector", connector).
+				Msgf("Catalog is unmapped because %s, so its tables are Trino assets and won't merge with the native plugin's", reason)
+		}
 
 		// Create catalog asset
 		if s.config.IncludeCatalogs {
@@ -269,7 +193,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		log.Debug().Str("catalog", catalogName).Int("count", len(schemas)).Msg("Discovered schemas")
 
 		for _, schemaName := range schemas {
-			tableAssets, err := s.discoverTables(ctx, catalogName, schemaName, info)
+			tableAssets, err := s.discoverTables(ctx, catalogName, schemaName, connector)
 			if err != nil {
 				log.Warn().Err(err).Str("catalog", catalogName).Str("schema", schemaName).Msg("Failed to discover tables")
 				continue
@@ -287,7 +211,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 			if s.config.IncludeCatalogs {
 				for i := range tableAssets {
 					lineages = append(lineages, pluginsdk.LineageEdge{
-						Source: mrn.New("Catalog", "Trino", catalogName),
+						Source: s.config.catalogMRN(catalogName),
 						Target: *tableAssets[i].MRN,
 						Type:   "CONTAINS",
 					})
@@ -311,6 +235,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: trinoProvider,
+			Host:     fmt.Sprintf("%s:%d", strings.ToLower(s.config.Host), s.config.Port),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -467,7 +396,7 @@ func (s *Source) discoverSchemas(ctx context.Context, catalog string) ([]string,
 	return schemas, nil
 }
 
-func (s *Source) discoverTables(ctx context.Context, catalog, schema string, info connectorInfo) ([]pluginsdk.Asset, error) {
+func (s *Source) discoverTables(ctx context.Context, catalog, schema, connector string) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -491,7 +420,7 @@ func (s *Source) discoverTables(ctx context.Context, catalog, schema string, inf
 			continue
 		}
 
-		a := s.createTableAsset(catalog, schema, tableName, tableType, info)
+		a := s.createTableAsset(catalog, schema, tableName, tableType, connector)
 		assets = append(assets, a)
 	}
 
@@ -841,7 +770,7 @@ func (s *Source) createCatalogAsset(catalogName string) pluginsdk.Asset {
 		"catalog_name": catalogName,
 	}
 
-	mrnValue := mrn.New("Catalog", "Trino", catalogName)
+	mrnValue := s.config.catalogMRN(catalogName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -891,7 +820,7 @@ func (s *Source) attachDDL(ctx context.Context, catalog, schema string, assets [
 	}
 }
 
-func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, info connectorInfo) pluginsdk.Asset {
+func (s *Source) createTableAsset(catalog, schema, tableName, tableType, connector string) pluginsdk.Asset {
 	metadata := map[string]interface{}{
 		"catalog":    catalog,
 		"schema":     schema,
@@ -904,20 +833,20 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 		assetType = "View"
 	}
 
-	// Name doubles as the MRN's name segment: asset identity is built
-	// from Name, so the two must carry the same string.
-	name := info.MRNName(catalog, schema, tableName)
-	mrnValue := mrn.New(assetType, info.Provider, name)
+	target := s.config.targetFor(catalog, connector, schema, tableName)
+	mrnValue := target.mrn(assetType)
+	name := tableName
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
-		Name:      &name,
-		MRN:       &mrnValue,
-		Type:      assetType,
-		Providers: []string{info.Provider},
-		Metadata:  metadata,
-		Tags:      processedTags,
+		Name:         &name,
+		MRN:          &mrnValue,
+		Type:         assetType,
+		Providers:    []string{target.Provider},
+		Metadata:     metadata,
+		Tags:         processedTags,
+		PreviousMRNs: previousMRNs(target, assetType, catalog, connector, schema, tableName),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "Trino",
 			LastSyncAt: time.Now(),
@@ -925,6 +854,26 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 			Priority:   1,
 		}},
 	}
+}
+
+// previousMRNs returns the MRN earlier releases gave a Trino-owned table when it was filed under a guessed provider with the catalog in its name, which is the only old identity that belonged to Trino alone. The guessed native names without a catalog were shared with the native plugin's own assets and are left alone.
+func previousMRNs(target tableTarget, assetType, catalog, connector, schema, table string) []string {
+	if target.Native {
+		return nil
+	}
+	provider := connector
+	if info, ok := connectorMap[connector]; ok {
+		switch connector {
+		case "iceberg", "delta_lake", "hive", "hudi":
+			provider = info.Provider
+		default:
+			return nil
+		}
+	}
+	if provider == "" || internalConnectors[connector] {
+		return nil
+	}
+	return []string{mrn.Asset(assetType, provider, catalog+"."+schema+"."+table).LegacyString()}
 }
 
 // buildColumnSummary creates a concise column list for AI prompts

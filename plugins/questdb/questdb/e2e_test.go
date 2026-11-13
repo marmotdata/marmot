@@ -243,7 +243,7 @@ func TestE2E_TableCarriesItsStorageLayout(t *testing.T) {
 
 	trades := findAsset(result, "trades")
 	require.NotNil(t, trades)
-	assert.Equal(t, "mrn://table/questdb/trades", *trades.MRN)
+	assert.Equal(t, "mrn://asset/table/questdb/trades", *trades.MRN)
 	assert.Equal(t, "trades", trades.Metadata["table_name"])
 	assert.Equal(t, "table", trades.Metadata["object_type"])
 	assert.Equal(t, "ts", trades.Metadata["designated_timestamp"])
@@ -325,7 +325,7 @@ func TestE2E_ColumnTypesAreKeptVerbatim(t *testing.T) {
 func TestE2E_EmitsRowColumnAndSizeStatistics(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	stats := statsOf(result, "mrn://table/questdb/trades")
+	stats := statsOf(result, "mrn://asset/table/questdb/trades")
 	assert.Equal(t, float64(3), stats["asset.row_count"])
 	assert.Equal(t, float64(6), stats["asset.column_count"])
 	assert.Greater(t, stats["asset.size_bytes"], float64(0))
@@ -337,7 +337,7 @@ func TestE2E_MaterializedViewCarriesQueryAndBaseTable(t *testing.T) {
 	view := findAsset(result, "trades_1h")
 	require.NotNil(t, view)
 	assert.Equal(t, "View", view.Type)
-	assert.Equal(t, "mrn://view/questdb/trades_1h", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/questdb/trades_1h", *view.MRN)
 	assert.Equal(t, "materialized_view", view.Metadata["object_type"])
 	assert.Equal(t, true, view.Metadata["materialized"])
 	assert.Equal(t, "trades", view.Metadata["base_table"])
@@ -351,14 +351,14 @@ func TestE2E_MaterializedViewCarriesQueryAndBaseTable(t *testing.T) {
 	require.NotNil(t, view.QueryLanguage)
 	assert.Equal(t, "SQL", *view.QueryLanguage)
 
-	assert.True(t, hasEdge(result, "mrn://table/questdb/trades", "mrn://view/questdb/trades_1h", "VIEW_OF"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/questdb/trades", "mrn://asset/view/questdb/trades_1h", "VIEW_OF"),
 		"expected trades -> trades_1h VIEW_OF edge, got %v", result.Lineage)
 }
 
 func TestE2E_MaterializedViewHasRowCount(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	stats := statsOf(result, "mrn://view/questdb/trades_1h")
+	stats := statsOf(result, "mrn://asset/view/questdb/trades_1h")
 	assert.Equal(t, float64(3), stats["asset.column_count"])
 	assert.Contains(t, stats, "asset.row_count")
 	assert.Greater(t, stats["asset.size_bytes"], float64(0))
@@ -376,10 +376,10 @@ func TestE2E_PlainViewLinksToEveryTableItReads(t *testing.T) {
 	require.NotNil(t, view.Query)
 	assert.Contains(t, *view.Query, "JOIN venues v")
 
-	assert.True(t, hasEdge(result, "mrn://table/questdb/trades", "mrn://view/questdb/recent_trades", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/questdb/venues", "mrn://view/questdb/recent_trades", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/questdb/trades", "mrn://asset/view/questdb/recent_trades", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/questdb/venues", "mrn://asset/view/questdb/recent_trades", "VIEW_OF"))
 
-	stats := statsOf(result, "mrn://view/questdb/recent_trades")
+	stats := statsOf(result, "mrn://asset/view/questdb/recent_trades")
 	assert.Equal(t, float64(4), stats["asset.column_count"])
 	assert.NotContains(t, stats, "asset.row_count", "counting a plain view would run its query")
 }

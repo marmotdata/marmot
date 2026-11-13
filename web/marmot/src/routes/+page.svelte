@@ -13,6 +13,7 @@
 	import { userProfile } from '$lib/stores/user';
 	import { setupHidden, setupRemoved, skippedSteps } from '$lib/stores/setup.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { assetRouteParamsFor, mrnShortName } from '$lib/mrn';
 	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
 	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
 	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
@@ -384,10 +385,7 @@
 	}
 
 	function myAssetParams(a: MyAsset) {
-		const parts = (a.mrn ?? '').replace('mrn://', '').split('/');
-		if (parts.length >= 3)
-			return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
-		return { type: a.type, service: a.providers?.[0] ?? '', name: a.name };
+		return assetRouteParamsFor(a);
 	}
 
 	// The first table a query read names it in the feed, falling back to its source
@@ -397,7 +395,7 @@
 		const context = q.context?.find((c) => c.mrn === mrn);
 		const route = context?.asset_id ? assetRouteParams(mrn) : null;
 		return {
-			name: context?.name || mrn.split('/').pop() || mrn,
+			name: context?.name || mrnShortName(mrn) || mrn,
 			href: route ? resolve('/discover/[type]/[service]/[name]', route) : ''
 		};
 	}

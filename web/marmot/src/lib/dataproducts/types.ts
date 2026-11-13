@@ -40,6 +40,7 @@ export interface RuleInput {
 
 export interface DataProduct {
 	id: string;
+	mrn: string;
 	name: string;
 	description?: string;
 	metadata: Record<string, unknown>;

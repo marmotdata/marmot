@@ -671,3 +671,30 @@ func TestDiscover_AnnotationsExcludeLastApplied(t *testing.T) {
 	assert.Equal(t, "payments", annotations["team"])
 	assert.NotContains(t, annotations, lastAppliedAnnotation)
 }
+
+func TestDiscover_ZoneAppearsInEveryMRN(t *testing.T) {
+	result := discover(t, pluginsdk.RawConfig{"cluster_name": "prod", "zone": "prod-eu"},
+		namespaceFixture("payments"),
+	)
+
+	require.NotEmpty(t, result.Assets)
+	for _, a := range result.Assets {
+		assert.Contains(t, *a.MRN, "/kubernetes@prod-eu/")
+	}
+	for _, e := range result.Lineage {
+		assert.Contains(t, e.Source, "/kubernetes@prod-eu/")
+		assert.Contains(t, e.Target, "/kubernetes@prod-eu/")
+	}
+}
+
+func TestAPIServerBinding(t *testing.T) {
+	cfg := &Config{Host: "https://API.example.com"}
+	cfg.Zone = "prod-eu"
+
+	binding, ok := apiServerBinding(cfg)
+	require.True(t, ok)
+	assert.Equal(t, pluginsdk.ZoneBinding{Provider: "Kubernetes", Host: "api.example.com:443", Zone: "prod-eu"}, binding)
+
+	_, ok = apiServerBinding(&Config{})
+	assert.False(t, ok)
+}

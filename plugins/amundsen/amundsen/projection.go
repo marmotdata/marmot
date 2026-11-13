@@ -26,12 +26,48 @@ type projection struct {
 	// MRN.
 	Provider string
 
-	// TableName builds the MRN name for a table from the parts of its
-	// Amundsen key. nil means schema.table.
-	//
-	// Where a native plugin exists this must match the Name that plugin
-	// sets, so both runs land on one asset.
+	// TableName is the single string earlier releases built the MRN of a
+	// table from. It is kept to work out the PreviousMRNs of a table
+	// whose MRN has since changed. nil means schema.table.
 	TableName func(database, cluster, schema, table string) string
+
+	// Path is how many levels of the Amundsen key make up the MRN of a
+	// table, following the naming table of the technology's own Marmot
+	// plugin so both runs land on one asset. Zero value is pathSchemaTable.
+	Path pathShape
+}
+
+// pathShape picks which levels of an Amundsen key go into a table's MRN.
+type pathShape int
+
+const (
+	// pathSchemaTable is schema and table.
+	pathSchemaTable pathShape = iota
+	// pathClusterSchemaTable is cluster, schema and table, for engines
+	// whose Amundsen cluster is the database, catalog or project.
+	pathClusterSchemaTable
+	// pathTable is the table alone.
+	pathTable
+)
+
+// tablePath returns the MRN path of a table.
+func (p projection) tablePath(cluster, schema, table string) []string {
+	var levels []string
+	switch p.Path {
+	case pathClusterSchemaTable:
+		levels = []string{cluster, schema, table}
+	case pathTable:
+		levels = []string{table}
+	default:
+		levels = []string{schema, table}
+	}
+	kept := levels[:0]
+	for _, l := range levels {
+		if l != "" {
+			kept = append(kept, l)
+		}
+	}
+	return kept
 }
 
 // Name components below the technology, by shape. Named so the table
@@ -80,44 +116,44 @@ func join(parts ...string) string {
 //     an environment label rather than a catalog, are not.
 var projections = map[string]projection{
 	// Relational databases
-	"postgres":   {Provider: "PostgreSQL", TableName: nameOnly},
-	"postgresql": {Provider: "PostgreSQL", TableName: nameOnly},
-	"mysql":      {Provider: "MySQL", TableName: nameOnly},
-	"mariadb":    {Provider: "MariaDB", TableName: nameOnly},
-	"clickhouse": {Provider: "ClickHouse", TableName: nameOnly},
-	"mssql":      {Provider: "SQL Server", TableName: clusterQualified},
-	"oracle":     {Provider: "Oracle", TableName: schemaQualified},
-	"db2":        {Provider: "Db2", TableName: clusterQualified},
-	"vertica":    {Provider: "Vertica", TableName: clusterQualified},
-	"teradata":   {Provider: "Teradata", TableName: schemaQualified},
+	"postgres":   {Provider: "PostgreSQL", TableName: nameOnly, Path: pathClusterSchemaTable},
+	"postgresql": {Provider: "PostgreSQL", TableName: nameOnly, Path: pathClusterSchemaTable},
+	"mysql":      {Provider: "MySQL", TableName: nameOnly, Path: pathSchemaTable},
+	"mariadb":    {Provider: "MariaDB", TableName: nameOnly, Path: pathSchemaTable},
+	"clickhouse": {Provider: "ClickHouse", TableName: nameOnly, Path: pathSchemaTable},
+	"mssql":      {Provider: "SQL Server", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"oracle":     {Provider: "Oracle", TableName: schemaQualified, Path: pathClusterSchemaTable},
+	"db2":        {Provider: "Db2", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"vertica":    {Provider: "Vertica", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"teradata":   {Provider: "Teradata", TableName: schemaQualified, Path: pathSchemaTable},
 
 	// Warehouses and lakehouses
-	"snowflake": {Provider: "Snowflake", TableName: clusterQualified},
-	"redshift":  {Provider: "Redshift", TableName: clusterQualified},
-	"bigquery":  {Provider: "BigQuery", TableName: nameOnly},
-	"hive":      {Provider: "Hive", TableName: schemaQualified},
-	"presto":    {Provider: "Presto", TableName: clusterQualified},
-	"trino":     {Provider: "Trino", TableName: clusterQualified},
-	"dremio":    {Provider: "Dremio", TableName: clusterQualified},
-	"delta":     {Provider: "Delta Lake", TableName: nameOnly},
-	"deltalake": {Provider: "Delta Lake", TableName: nameOnly},
+	"snowflake": {Provider: "Snowflake", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"redshift":  {Provider: "Redshift", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"bigquery":  {Provider: "BigQuery", TableName: nameOnly, Path: pathClusterSchemaTable},
+	"hive":      {Provider: "Hive", TableName: schemaQualified, Path: pathSchemaTable},
+	"presto":    {Provider: "Presto", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"trino":     {Provider: "Trino", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"dremio":    {Provider: "Dremio", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"delta":     {Provider: "Delta Lake", TableName: nameOnly, Path: pathTable},
+	"deltalake": {Provider: "Delta Lake", TableName: nameOnly, Path: pathTable},
 	// Athena keeps no catalog of its own: it reads the Glue Data
 	// Catalog, which plugins/glue already catalogues under the Glue
 	// provider, naming each table by its bare name. Naming it Athena
 	// would file one table twice, once per route.
-	"athena":     {Provider: "Glue", TableName: nameOnly},
-	"glue":       {Provider: "Glue", TableName: nameOnly},
-	"databricks": {Provider: "Databricks", TableName: clusterQualified},
-	"druid":      {Provider: "Druid", TableName: schemaQualified},
+	"athena":     {Provider: "Glue", TableName: nameOnly, Path: pathSchemaTable},
+	"glue":       {Provider: "Glue", TableName: nameOnly, Path: pathSchemaTable},
+	"databricks": {Provider: "Databricks", TableName: clusterQualified, Path: pathClusterSchemaTable},
+	"druid":      {Provider: "Druid", TableName: schemaQualified, Path: pathSchemaTable},
 
 	// Wide column stores
-	"cassandra": {Provider: "Cassandra", TableName: schemaQualified},
+	"cassandra": {Provider: "Cassandra", TableName: schemaQualified, Path: pathSchemaTable},
 
 	// Search
-	"elasticsearch": {Provider: "Elasticsearch", TableName: nameOnly},
+	"elasticsearch": {Provider: "Elasticsearch", TableName: nameOnly, Path: pathTable},
 
 	// SaaS
-	"salesforce": {Provider: "Salesforce", TableName: nameOnly},
+	"salesforce": {Provider: "Salesforce", TableName: nameOnly, Path: pathTable},
 }
 
 // projectionFor returns the projection for an Amundsen database name.

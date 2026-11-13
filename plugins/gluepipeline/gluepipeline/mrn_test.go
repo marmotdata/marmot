@@ -8,90 +8,101 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// This plugin shares the Glue provider with the Glue plugin, so a workflow
-// step that runs a job has to land on the job asset that plugin already
-// created rather than on a copy of it.
+func testSource(zone string) *Source {
+	cfg := &Config{}
+	cfg.Zone = zone
+	return &Source{config: cfg}
+}
 
 func TestPipelineMRN_IsTheWorkflowName(t *testing.T) {
-	assert.Equal(t, "mrn://pipeline/glue/daily-etl", assetMRN("Pipeline", "daily-etl"))
+	assert.Equal(t, "mrn://asset/pipeline/glue/daily-etl", testSource("").assetMRN("Pipeline", "daily-etl"))
 }
 
-func TestTaskMRN_IsTheWorkflowAndTheStep(t *testing.T) {
-	// mrn.New turns the slash into a hyphen, so the task of a workflow reads
-	// as one name.
-	assert.Equal(t, "mrn://task/glue/daily-etl-load-orders", assetMRN("Task", taskName("daily-etl", "load-orders")))
+func TestTaskMRN_IsWorkflowThenStep(t *testing.T) {
+	assert.Equal(t, "mrn://asset/task/glue/daily-etl.load-orders", testSource("").assetMRN("Task", "daily-etl", "load-orders"))
 }
 
-func TestJobMRN_MatchesTheOneTheGluePluginCreates(t *testing.T) {
-	// plugins/glue/glue/source.go createJobAsset: mrn.New("Job", "Glue", name)
-	// over the bare job name. Run history is attached to this MRN, so if the
-	// two ever disagree the runs land on nothing.
-	assert.Equal(t, "mrn://job/glue/load-orders", assetMRN("Job", "load-orders"))
-	assert.Equal(t, mrn.New("Job", "Glue", "load-orders"), assetMRN("Job", "load-orders"))
+func TestTaskMRN_SameStepNameInTwoWorkflowsDiffers(t *testing.T) {
+	s := testSource("")
+	assert.NotEqual(t, s.assetMRN("Task", "etl-a", "load"), s.assetMRN("Task", "etl-b", "load"))
 }
 
-func TestCrawlerMRN_MatchesTheOneTheGluePluginCreates(t *testing.T) {
-	// plugins/glue/glue/source.go createCrawlerAsset: type Crawler, bare name.
-	assert.Equal(t, "mrn://crawler/glue/orders-crawler", assetMRN("Crawler", "orders-crawler"))
+func TestPreviousTaskMRN_IsTheFoldedLegacyName(t *testing.T) {
+	assert.Equal(t, "mrn://task/glue/daily-etl-load-orders", previousTaskMRN("daily-etl", "load-orders"))
 }
 
-func TestDatabaseMRN_MatchesTheOneTheGluePluginCreates(t *testing.T) {
-	// plugins/glue/glue/source.go createDatabaseAsset: type Database, bare name.
-	assert.Equal(t, "mrn://database/glue/shop", assetMRN("Database", "shop"))
+func TestGlueOwnedMRNsMatchTheGluePlugin(t *testing.T) {
+	// These assets belong to plugins/glue, so the edges have to name them the way it does.
+	s := testSource("")
+	assert.Equal(t, "mrn://asset/job/glue/load-orders", s.assetMRN("Job", "load-orders"))
+	assert.Equal(t, "mrn://asset/crawler/glue/orders-crawler", s.assetMRN("Crawler", "orders-crawler"))
+	assert.Equal(t, "mrn://asset/database/glue/shop", s.assetMRN("Database", "shop"))
 }
 
-func TestBucketMRN_MatchesTheOneTheS3PluginCreates(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", mrn.New("Bucket", "S3", "marmot-lake"))
+func TestMRNs_CarryTheZone(t *testing.T) {
+	s := testSource("prod-eu")
+	assert.Equal(t, "mrn://asset/pipeline/glue@prod-eu/daily-etl", s.assetMRN("Pipeline", "daily-etl"))
+	assert.Equal(t, "mrn://asset/job/glue@prod-eu/load-orders", s.assetMRN("Job", "load-orders"))
 }
 
-func TestPipelineMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI.
-	original := assetMRN("Pipeline", "daily-etl")
+func TestBucketMRN_MatchesTheS3PluginIdentity(t *testing.T) {
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", mrn.Asset("Bucket", "S3", "marmot-lake").String())
+}
 
-	parsed, err := mrn.Parse(original)
+func TestPipelineMRN_IsStableUnderRoundTrip(t *testing.T) {
+	original := testSource("").assetMRN("Task", "daily-etl", "load-orders")
+
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, mrn.Asset(parsed.Type, parsed.Provider, parsed.Path()...).String())
 }
 
-func TestTaskMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Task", taskName("daily-etl", "load-orders"))
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestEveryAssetMRN_AgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so an
-	// asset whose MRN says anything else is stored under a name nobody can
-	// look up.
+func TestEveryAsset_NameIsItsOwnAndMRNsAreUnique(t *testing.T) {
 	result := discover(t, newSource(seededGlue()))
 	require.NotEmpty(t, result.Assets)
 
+	seen := map[string]bool{}
 	for _, asset := range result.Assets {
 		require.NotNil(t, asset.MRN)
 		require.NotNil(t, asset.Name)
 		require.NotEmpty(t, asset.Providers)
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+		assert.False(t, seen[*asset.MRN], *asset.MRN)
+		seen[*asset.MRN] = true
+
+		parsed, err := mrn.ParseMRN(*asset.MRN)
+		require.NoError(t, err)
+		path := parsed.Path()
+		assert.Equal(t, mrn.Asset(asset.Type, asset.Providers[0], path...).String(), *asset.MRN)
+		assert.Equal(t, mrn.Asset(asset.Type, asset.Providers[0], *asset.Name).String(), mrn.Asset(asset.Type, asset.Providers[0], path[len(path)-1]).String(), "the name is the last level of the path")
 	}
 }
 
+func TestTaskAssets_CarryTheirPreviousMRN(t *testing.T) {
+	result := discover(t, newSource(seededGlue()))
+
+	var tasks int
+	for _, asset := range result.Assets {
+		if asset.Type != "Task" {
+			continue
+		}
+		tasks++
+		require.Len(t, asset.PreviousMRNs, 1)
+		assert.Contains(t, asset.PreviousMRNs[0], "mrn://task/glue/")
+	}
+	assert.NotZero(t, tasks)
+}
+
 func TestEveryLineageEndpoint_IsAnMRNThisRunCanName(t *testing.T) {
-	// Edges that point at an asset another plugin owns are fine, but they
-	// still have to be built with that plugin's identity, so every endpoint
-	// must parse and round trip.
+	// Edges that point at an asset another plugin owns are fine, but they still have to be built with that plugin's identity, so every endpoint must parse and round trip.
 	result := discover(t, newSource(seededGlue()))
 	require.NotEmpty(t, result.Lineage)
 
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err, endpoint)
-			assert.Equal(t, endpoint, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+			assert.Equal(t, endpoint, mrn.Asset(parsed.Type, parsed.Provider, parsed.Path()...).String())
 		}
 	}
 }
@@ -103,7 +114,7 @@ func TestRunHistoryMRN_PointsAtAnAssetIdentityNotACopy(t *testing.T) {
 	for _, history := range result.RunHistory {
 		targets = append(targets, history.AssetMRN)
 	}
-	assert.Contains(t, targets, "mrn://job/glue/load-orders")
-	assert.Contains(t, targets, "mrn://crawler/glue/orders-crawler")
-	assert.Contains(t, targets, "mrn://pipeline/glue/daily-etl")
+	assert.Contains(t, targets, "mrn://asset/job/glue/load-orders")
+	assert.Contains(t, targets, "mrn://asset/crawler/glue/orders-crawler")
+	assert.Contains(t, targets, "mrn://asset/pipeline/glue/daily-etl")
 }

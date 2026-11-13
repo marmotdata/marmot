@@ -16,7 +16,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,7 +23,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "postgresql",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "PostgreSQL",
 		Description:   "Discover databases, schemas, and tables from PostgreSQL instances",
 		Icon:          "postgresql",
@@ -76,6 +75,11 @@ tags:
   - "postgres"
   - "production"
 `
+
+// assetMRN is the single place a PostgreSQL MRN is built, so assets, foreign keys, statistics and query plans agree. The path runs from the database down, with the schema and object following for anything inside a database.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, "PostgreSQL", path...)
+}
 
 // Source represents the PostgreSQL plugin
 type Source struct {
@@ -155,6 +159,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	var lineages []pluginsdk.LineageEdge
 	var statistics []pluginsdk.Statistic
 
+	bindings := []pluginsdk.ZoneBinding{{
+		Provider: "PostgreSQL",
+		Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))),
+		Zone:     s.config.Zone,
+	}}
+
 	log.Debug().Msg("Starting database discovery")
 
 	databaseAssets, err := s.discoverDatabases(ctx)
@@ -164,6 +174,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 			Assets:     assets,
 			Lineage:    lineages,
 			Statistics: statistics,
+
+			ZoneBindings: bindings,
 		}, fmt.Errorf("failed to discover databases: %w", err)
 	} else {
 		assets = append(assets, databaseAssets...)
@@ -230,6 +242,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+
+		ZoneBindings: bindings,
 	}, nil
 }
 
@@ -372,7 +386,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, erro
 			metadata["comment"] = description.String
 		}
 
-		mrnValue := mrn.New("Database", "PostgreSQL", name)
+		mrnValue := assetMRN(s.config, "Database", name)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -514,7 +528,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]p
 			continue
 		}
 
-		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
+		mrnValue := assetMRN(s.config, assetType, dbName, schemaName, objectName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -739,8 +753,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]plug
 
 		// Must match the identity the table assets were given above, or the
 		// edge points at an MRN that is never created.
-		sourceMRN := mrn.New("Table", "PostgreSQL", sourceTable)
-		targetMRN := mrn.New("Table", "PostgreSQL", targetTable)
+		sourceMRN := assetMRN(s.config, "Table", dbName, sourceSchema, sourceTable)
+		targetMRN := assetMRN(s.config, "Table", dbName, targetSchema, targetTable)
 
 		relationKey := fmt.Sprintf("%s:%s", sourceMRN, targetMRN)
 		if _, exists := uniqueRelations[relationKey]; exists {

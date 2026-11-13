@@ -3,94 +3,61 @@ package cockroachdb
 import (
 	"testing"
 
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// A table's MRN is built from database.schema.table. One cluster holds many
-// databases, so a bare name would fold shop.public.orders and
-// archive.public.orders into one asset.
+// A table's MRN is built from database.schema.table. One cluster holds many databases, so a bare name would fold shop.public.orders and archive.public.orders into one asset.
 
 func TestTableMRN_IsFullyQualified(t *testing.T) {
-	assert.Equal(t, "mrn://table/cockroachdb/shop.public.orders",
-		assetMRN("Table", qualifiedName("shop", "public", "orders")))
-}
+	cfg := newSource().config
 
-func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/cockroachdb/shop.public.customer_totals",
-		assetMRN("View", qualifiedName("shop", "public", "customer_totals")))
+	assert.Equal(t, "mrn://asset/table/cockroachdb/shop.public.orders", assetMRN(cfg, "Table", "shop", "public", "orders"))
+	assert.Equal(t, "mrn://asset/view/cockroachdb/shop.public.customer_totals", assetMRN(cfg, "View", "shop", "public", "customer_totals"))
+	assert.NotEqual(t, assetMRN(cfg, "Table", "shop", "public", "orders"), assetMRN(cfg, "Table", "shop", "sales", "orders"))
+	assert.NotEqual(t, assetMRN(cfg, "Table", "shop", "public", "orders"), assetMRN(cfg, "Table", "archive", "public", "orders"))
 }
 
 func TestDatabaseMRN_IsTheDatabaseName(t *testing.T) {
-	assert.Equal(t, "mrn://database/cockroachdb/shop", assetMRN("Database", "shop"))
+	assert.Equal(t, "mrn://asset/database/cockroachdb/shop", assetMRN(newSource().config, "Database", "shop"))
 }
 
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so it has to survive byte-identical, dots
-	// included.
-	original := assetMRN("Table", qualifiedName("shop", "public", "orders"))
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod-eu"}}
 
-	parsed, err := mrn.Parse(original)
+	got := assetMRN(cfg, "Table", "shop", "public", "orders")
+	assert.Equal(t, "mrn://asset/table/cockroachdb@prod-eu/shop.public.orders", got)
+
+	parsed, err := mrn.ParseMRN(got)
 	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, "prod-eu", parsed.Zone)
 }
 
-func TestDatabaseAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from Type, Providers[0] and Name, so the
-	// MRN the plugin sets has to be exactly mrn.New over those.
-	a := newSource().databaseAsset(database{Name: "shop", Owner: "root"}, "")
+func TestRelationAsset_ListsTheZonelessMRNAsPreviousOnlyWhenAnZoneIsSet(t *testing.T) {
+	r := relation{Schema: "public", Name: "orders", Kind: relkindTable}
 
-	require.NotNil(t, a.MRN)
-	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+	assert.Empty(t, newSource().relationAsset("shop", r, relationDetails{}).PreviousMRNs)
+
+	s := newSource()
+	s.config.Zone = "prod-eu"
+	a := s.relationAsset("shop", r, relationDetails{})
+	assert.Equal(t, []string{"mrn://asset/table/cockroachdb/shop.public.orders"}, a.PreviousMRNs)
 }
 
-func TestTableAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
+func TestTableAsset_NameIsTheOwnNameAndMRNKeepsTheQualification(t *testing.T) {
 	a := newSource().relationAsset("shop", relation{Schema: "public", Name: "orders", Kind: relkindTable}, relationDetails{})
 
 	require.NotNil(t, a.MRN)
-	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-}
-
-func TestViewAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	a := newSource().relationAsset("shop", relation{Schema: "public", Name: "order_summary", Kind: relkindMaterializedView}, relationDetails{})
-
-	require.NotNil(t, a.MRN)
-	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-}
-
-func TestTableAsset_MatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
-	// The OpenMetadata plugin projects a Cockroach service's tables onto
-	// provider CockroachDB with database.schema.table names. This plugin has
-	// to land on the same MRN or the two runs file one table twice.
-	a := newSource().relationAsset("shop", relation{Schema: "public", Name: "orders", Kind: relkindTable}, relationDetails{})
-
-	require.NotNil(t, a.MRN)
-	assert.Equal(t, "mrn://table/cockroachdb/shop.public.orders", *a.MRN)
+	assert.Equal(t, "orders", *a.Name)
+	assert.Equal(t, "mrn://asset/table/cockroachdb/shop.public.orders", *a.MRN)
 	assert.Equal(t, []string{"CockroachDB"}, a.Providers)
 }
 
-func TestDatabaseAsset_MatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
-	a := newSource().databaseAsset(database{Name: "shop"}, "")
-
-	require.NotNil(t, a.MRN)
-	assert.Equal(t, "mrn://database/cockroachdb/shop", *a.MRN)
-	assert.Equal(t, "Database", a.Type)
-}
-
 func TestTableMRN_UppercaseNamesAreLowercased(t *testing.T) {
-	// mrn.New lowercases the name, so a quoted mixed-case table still gets
-	// one stable MRN; the readable Name keeps its case.
 	a := newSource().relationAsset("shop", relation{Schema: "Sales", Name: "Regions", Kind: relkindTable}, relationDetails{})
 
-	assert.Equal(t, "shop.Sales.Regions", *a.Name)
-	assert.Equal(t, "mrn://table/cockroachdb/shop.sales.regions", *a.MRN)
+	assert.Equal(t, "Regions", *a.Name)
+	assert.Equal(t, "mrn://asset/table/cockroachdb/shop.sales.regions", *a.MRN)
 }

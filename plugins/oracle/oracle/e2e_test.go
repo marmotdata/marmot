@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
@@ -82,10 +83,22 @@ func discover(t *testing.T) *pluginsdk.DiscoveryResult {
 	return discoverResult
 }
 
+// assetKey is the SCHEMA.OBJECT path of an asset, or just the name for a schema's database asset.
+func assetKey(a pluginsdk.Asset) string {
+	if a.Name == nil {
+		return ""
+	}
+	schema, _ := a.Metadata["schema"].(string)
+	if a.Type == "Database" || schema == "" {
+		return *a.Name
+	}
+	return schema + "." + *a.Name
+}
+
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i := range result.Assets {
 		a := &result.Assets[i]
-		if a.Type == assetType && a.Name != nil && *a.Name == name {
+		if a.Type == assetType && assetKey(*a) == name {
 			return a
 		}
 	}
@@ -176,7 +189,7 @@ func TestE2E_Discover_EmitsADatabaseAssetPerSchema(t *testing.T) {
 	hr := findAsset(result, "Database", "HR")
 	require.NotNil(t, hr, "expected a Database asset for the HR schema")
 	assert.Equal(t, []string{"Oracle"}, hr.Providers)
-	assert.Equal(t, "mrn://database/oracle/hr", *hr.MRN)
+	assert.Equal(t, "mrn://asset/database/oracle/freepdb1.hr", *hr.MRN)
 	assert.Equal(t, "HR", hr.Metadata["schema"])
 	assert.Equal(t, "FREEPDB1", hr.Metadata["service_name"])
 	assert.Equal(t, "FREEPDB1", hr.Metadata["container"])
@@ -198,7 +211,7 @@ func TestE2E_Discover_ExcludesOracleMaintainedSchemas(t *testing.T) {
 	assert.Nil(t, findAsset(result, "Database", "SYSTEM"))
 	for _, a := range result.Assets {
 		if a.Type == "Table" {
-			assert.NotContains(t, *a.Name, "SYS.", "a SYS table leaked into results")
+			assert.NotContains(t, assetKey(a), "SYS.", "a SYS table leaked into results")
 		}
 	}
 }
@@ -208,7 +221,7 @@ func TestE2E_Discover_TablesAreSchemaQualified(t *testing.T) {
 
 	employees := findAsset(result, "Table", "HR.EMPLOYEES")
 	require.NotNil(t, employees)
-	assert.Equal(t, "mrn://table/oracle/hr.employees", *employees.MRN)
+	assert.Equal(t, "mrn://asset/table/oracle/freepdb1.hr.employees", *employees.MRN)
 	assert.Equal(t, "HR", employees.Metadata["schema"])
 	assert.Equal(t, "EMPLOYEES", employees.Metadata["table_name"])
 	assert.Equal(t, "table", employees.Metadata["object_type"])
@@ -283,17 +296,17 @@ func TestE2E_Discover_EmployeesColumns(t *testing.T) {
 func TestE2E_Discover_ForeignKeyEdge(t *testing.T) {
 	result := discover(t)
 
-	assert.True(t, hasEdge(result, "mrn://table/oracle/hr.employees", "mrn://table/oracle/hr.departments", "FOREIGN_KEY"),
+	assert.True(t, hasEdge(result, "mrn://asset/table/oracle/freepdb1.hr.employees", "mrn://asset/table/oracle/freepdb1.hr.departments", "FOREIGN_KEY"),
 		"expected HR.EMPLOYEES -> HR.DEPARTMENTS foreign key edge")
 }
 
 func TestE2E_Discover_ContainsEdges(t *testing.T) {
 	result := discover(t)
 
-	assert.True(t, hasEdge(result, "mrn://database/oracle/hr", "mrn://table/oracle/hr.employees", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://database/oracle/hr", "mrn://view/oracle/hr.emp_details", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://database/oracle/hr", "mrn://function/oracle/hr.raise_salary", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://database/oracle/marmot", "mrn://table/oracle/marmot.audit_log", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/oracle/freepdb1.hr", "mrn://asset/table/oracle/freepdb1.hr.employees", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/oracle/freepdb1.hr", "mrn://asset/view/oracle/freepdb1.hr.emp_details", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/oracle/freepdb1.hr", "mrn://asset/function/oracle/freepdb1.hr.raise_salary", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/oracle/freepdb1.marmot", "mrn://asset/table/oracle/freepdb1.marmot.audit_log", "CONTAINS"))
 }
 
 func TestE2E_Discover_ViewHasQueryAndLineage(t *testing.T) {
@@ -301,7 +314,7 @@ func TestE2E_Discover_ViewHasQueryAndLineage(t *testing.T) {
 
 	view := findAsset(result, "View", "HR.EMP_DETAILS")
 	require.NotNil(t, view)
-	assert.Equal(t, "mrn://view/oracle/hr.emp_details", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/oracle/freepdb1.hr.emp_details", *view.MRN)
 	assert.Equal(t, "view", view.Metadata["object_type"])
 	require.NotNil(t, view.Query)
 	assert.Contains(t, *view.Query, "FROM employees")
@@ -312,8 +325,8 @@ func TestE2E_Discover_ViewHasQueryAndLineage(t *testing.T) {
 	assert.Contains(t, columns, "DEPARTMENT_NAME")
 
 	// VIEW_OF runs base table -> view, the direction the data flows.
-	assert.True(t, hasEdge(result, "mrn://table/oracle/hr.employees", "mrn://view/oracle/hr.emp_details", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/oracle/hr.departments", "mrn://view/oracle/hr.emp_details", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/oracle/freepdb1.hr.employees", "mrn://asset/view/oracle/freepdb1.hr.emp_details", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/oracle/freepdb1.hr.departments", "mrn://asset/view/oracle/freepdb1.hr.emp_details", "VIEW_OF"))
 }
 
 func TestE2E_Discover_MaterializedView(t *testing.T) {
@@ -331,7 +344,7 @@ func TestE2E_Discover_MaterializedView(t *testing.T) {
 	require.NotNil(t, mview.Query)
 	assert.Contains(t, *mview.Query, "SUM(salary)")
 
-	assert.True(t, hasEdge(result, "mrn://table/oracle/hr.employees", "mrn://view/oracle/hr.dept_salaries", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/oracle/freepdb1.hr.employees", "mrn://asset/view/oracle/freepdb1.hr.dept_salaries", "VIEW_OF"))
 }
 
 func TestE2E_Discover_FunctionAssets(t *testing.T) {
@@ -339,7 +352,7 @@ func TestE2E_Discover_FunctionAssets(t *testing.T) {
 
 	procedure := findAsset(result, "Function", "HR.RAISE_SALARY")
 	require.NotNil(t, procedure)
-	assert.Equal(t, "mrn://function/oracle/hr.raise_salary", *procedure.MRN)
+	assert.Equal(t, "mrn://asset/function/oracle/freepdb1.hr.raise_salary", *procedure.MRN)
 	assert.Equal(t, "procedure", procedure.Metadata["object_type"])
 	assert.Equal(t, "VALID", procedure.Metadata["status"])
 	assert.NotEmpty(t, procedure.Metadata["created"])
@@ -353,25 +366,26 @@ func TestE2E_Discover_FunctionAssets(t *testing.T) {
 func TestE2E_Discover_Statistics(t *testing.T) {
 	result := discover(t)
 
-	stats := statisticsOf(result, "mrn://table/oracle/hr.employees")
+	stats := statisticsOf(result, "mrn://asset/table/oracle/freepdb1.hr.employees")
 	assert.Equal(t, float64(3), stats["asset.row_count"])
 	assert.Equal(t, float64(9), stats["asset.column_count"])
 	// 5 blocks of the default 8 KiB block size after DBMS_STATS ran.
 	assert.Equal(t, float64(5*8192), stats["asset.size_bytes"])
 
-	viewStats := statisticsOf(result, "mrn://view/oracle/hr.emp_details")
+	viewStats := statisticsOf(result, "mrn://asset/view/oracle/freepdb1.hr.emp_details")
 	assert.Equal(t, float64(4), viewStats["asset.column_count"])
 	assert.NotContains(t, viewStats, "asset.row_count", "views have no row estimate")
 }
 
-func TestE2E_Discover_EveryMRNMatchesTheServersDerivation(t *testing.T) {
+func TestE2E_Discover_EveryMRNIsRootedInTheService(t *testing.T) {
 	result := discover(t)
 
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.Equal(t, "oracle", parsed.Provider)
+		assert.True(t, strings.HasPrefix(parsed.Name, "freepdb1."), *a.MRN)
 	}
 }
 
@@ -411,7 +425,7 @@ func TestE2E_Discover_DBAViewsSeeTheSameObjects(t *testing.T) {
 	assert.NotNil(t, findAsset(result, "Table", "HR.EMPLOYEES"))
 	assert.NotNil(t, findAsset(result, "View", "HR.EMP_DETAILS"))
 	assert.NotNil(t, findAsset(result, "Function", "HR.RAISE_SALARY"))
-	assert.True(t, hasEdge(result, "mrn://table/oracle/hr.employees", "mrn://table/oracle/hr.departments", "FOREIGN_KEY"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/oracle/freepdb1.hr.employees", "mrn://asset/table/oracle/freepdb1.hr.departments", "FOREIGN_KEY"))
 }
 
 func TestE2E_Discover_FlagsTurnObjectKindsOff(t *testing.T) {

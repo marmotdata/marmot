@@ -298,7 +298,7 @@ func TestCreateTableAsset(t *testing.T) {
 	a := createTableAsset(snapshot, "/data/delta/events", config)
 
 	assert.Equal(t, "events", *a.Name)
-	assert.Equal(t, "mrn://table/delta-lake/events", *a.MRN)
+	assert.Equal(t, "mrn://asset/table/delta-lake/events", *a.MRN)
 	assert.Equal(t, "Table", a.Type)
 	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 	assert.Equal(t, "Test table description", *a.Description)
@@ -337,4 +337,13 @@ func writeLogFile(t *testing.T, logDir string, version int64, entries []logEntry
 		data = append(data, '\n')
 	}
 	require.NoError(t, os.WriteFile(filename, data, 0o644))
+}
+
+func TestCreateTableAsset_MRNCarriesTheZone(t *testing.T) {
+	config := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "lake-eu"}}
+
+	a := createTableAsset(&deltaSnapshot{}, "/data/delta/events", config)
+
+	assert.Equal(t, "mrn://asset/table/delta-lake@lake-eu/events", *a.MRN)
+	assert.Empty(t, a.PreviousMRNs, "the MRN without a zone is what earlier releases produced")
 }

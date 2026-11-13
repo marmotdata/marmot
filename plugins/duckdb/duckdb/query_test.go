@@ -103,12 +103,12 @@ func TestWalkPlanCollectsTablesFromJoin(t *testing.T) {
 	plan := &pluginsdk.QueryPlan{}
 	seen := map[tableRef]bool{}
 	for _, n := range nodes {
-		walkPlan(n, plan, seen)
+		walkPlan(&Config{}, "db", n, plan, seen)
 	}
 
 	assert.ElementsMatch(t, []string{
-		assetMRN("Table", "main", "orders"),
-		assetMRN("Table", "main", "customers"),
+		assetMRN(&Config{}, "db", "Table", "main", "orders"),
+		assetMRN(&Config{}, "db", "Table", "main", "customers"),
 	}, plan.ReferencedMRNs)
 	assert.False(t, plan.Incomplete)
 }
@@ -127,10 +127,10 @@ func TestWalkPlanDeduplicatesRepeatedTables(t *testing.T) {
 	plan := &pluginsdk.QueryPlan{}
 	seen := map[tableRef]bool{}
 	for _, n := range nodes {
-		walkPlan(n, plan, seen)
+		walkPlan(&Config{}, "db", n, plan, seen)
 	}
 
-	assert.Equal(t, []string{assetMRN("Table", "main", "orders")}, plan.ReferencedMRNs)
+	assert.Equal(t, []string{assetMRN(&Config{}, "db", "Table", "main", "orders")}, plan.ReferencedMRNs)
 }
 
 func TestWalkPlanIgnoresCTEScan(t *testing.T) {
@@ -148,10 +148,10 @@ func TestWalkPlanIgnoresCTEScan(t *testing.T) {
 	plan := &pluginsdk.QueryPlan{}
 	seen := map[tableRef]bool{}
 	for _, n := range nodes {
-		walkPlan(n, plan, seen)
+		walkPlan(&Config{}, "db", n, plan, seen)
 	}
 
-	assert.Equal(t, []string{assetMRN("Table", "main", "orders")}, plan.ReferencedMRNs)
+	assert.Equal(t, []string{assetMRN(&Config{}, "db", "Table", "main", "orders")}, plan.ReferencedMRNs)
 	assert.False(t, plan.Incomplete)
 }
 
@@ -162,7 +162,7 @@ func TestWalkPlanKnownGeneratorIsNotIncomplete(t *testing.T) {
 	plan := &pluginsdk.QueryPlan{}
 	seen := map[tableRef]bool{}
 	for _, n := range nodes {
-		walkPlan(n, plan, seen)
+		walkPlan(&Config{}, "db", n, plan, seen)
 	}
 
 	assert.Empty(t, plan.ReferencedMRNs)
@@ -176,7 +176,7 @@ func TestWalkPlanUnknownTableFunctionIsIncomplete(t *testing.T) {
 	plan := &pluginsdk.QueryPlan{}
 	seen := map[tableRef]bool{}
 	for _, n := range nodes {
-		walkPlan(n, plan, seen)
+		walkPlan(&Config{}, "db", n, plan, seen)
 	}
 
 	assert.Empty(t, plan.ReferencedMRNs)

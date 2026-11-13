@@ -11,7 +11,6 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 // Config for the Google Cloud Storage plugin
@@ -37,7 +36,8 @@ type Config struct {
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "gcs",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google Cloud Storage",
 		Description:   "Discover buckets from Google Cloud Storage",
 		Icon:          "gcs",
@@ -216,7 +216,7 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket *storage.BucketAt
 		}
 	}
 
-	mrnValue := mrn.New("Bucket", "GCS", bucketName)
+	mrnValue := s.bucketMRN(bucketName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -263,4 +263,9 @@ func (c *Config) gcpCredentials() *pluginsdk.GCPCredentials {
 		WorkloadIdentityProvider: c.WorkloadIdentityProvider,
 		ServiceAccount:           c.ServiceAccount,
 	}
+}
+
+// bucketMRN is the single place a GCS bucket MRN is built. The account is the zone, so the path is the bucket name alone.
+func (s *Source) bucketMRN(name string) string {
+	return s.config.AssetMRN("Bucket", "GCS", name)
 }

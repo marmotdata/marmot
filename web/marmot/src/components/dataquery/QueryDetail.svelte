@@ -5,6 +5,7 @@
 	import { BladeSlot } from '$lib/mm';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
+	import { mrnShortName } from '$lib/mrn';
 	import { getErrorMessage } from '$lib/stores/toast';
 	import { formatDateTime, formatNumber } from '$lib/utils/format';
 	import { getQueryRecord } from '$lib/dataquery/api';
@@ -73,7 +74,7 @@
 			const route = context?.asset_id ? assetRouteParams(mrn) : null;
 			return {
 				mrn,
-				name: context?.name || mrn.split('/').pop() || mrn,
+				name: context?.name || mrnShortName(mrn) || mrn,
 				wholeSource: mrn.startsWith('mrn://source/'),
 				href: route ? resolve('/discover/[type]/[service]/[name]', route) : ''
 			};

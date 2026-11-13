@@ -479,7 +479,7 @@ func canonicalRelations(ctx context.Context, tx *sql.Tx, statement string) ([]re
 // currently list cannot be guessed at either; either marks the plan
 // incomplete, since naming the wrong table in a grant check would be worse
 // than asking for a grant on the whole source.
-func resolveRelations(relations []relation, database string, objects map[string]string) (mrns []string, incomplete bool) {
+func resolveRelations(cfg *Config, relations []relation, database string, objects map[string]string) (mrns []string, incomplete bool) {
 	seen := map[string]bool{}
 	for _, r := range relations {
 		if !strings.EqualFold(r.database, database) {
@@ -498,7 +498,7 @@ func resolveRelations(relations []relation, database string, objects map[string]
 			continue
 		}
 
-		m := assetMRN(assetType, r.table)
+		m := assetMRN(cfg, assetType, database, r.table)
 		if !seen[m] {
 			seen[m] = true
 			mrns = append(mrns, m)
@@ -538,7 +538,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 			return err
 		}
 
-		mrns, incomplete := resolveRelations(relations, config.QueryDatabase, objects)
+		mrns, incomplete := resolveRelations(config, relations, config.QueryDatabase, objects)
 
 		// A table grant only means something if the statement's referenced
 		// tables cover everything it reads; a function that runs its own

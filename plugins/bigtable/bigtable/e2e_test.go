@@ -209,7 +209,7 @@ func TestE2E_DiscoversTheInstance(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	instance := assetByMRN(t, result, "mrn://instance/bigtable/test-instance")
+	instance := assetByMRN(t, result, "mrn://asset/instance/bigtable/test-instance")
 	assert.Equal(t, "Instance", instance.Type)
 	assert.Equal(t, []string{"Bigtable"}, instance.Providers)
 	assert.Equal(t, e2eProject, instance.Metadata["project_id"])
@@ -224,20 +224,18 @@ func TestE2E_DiscoversTheTables(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 	require.NotNil(t, events.Name)
-	assert.Equal(t, "test-instance.events", *events.Name)
+	assert.Equal(t, "events", *events.Name)
 	assert.Equal(t, "Table", events.Type)
 	assert.Equal(t, "events", events.Metadata["table_name"])
 	assert.Equal(t, e2eInstance, events.Metadata["instance_id"])
 
-	users := assetByMRN(t, result, "mrn://table/bigtable/test-instance.users")
+	users := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.users")
 	assert.Equal(t, "users", users.Metadata["table_name"])
 }
 
-func TestE2E_EveryAssetsMRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from Type, Providers[0] and Name, so an
-	// MRN that disagrees would create a second asset on ingest.
+func TestE2E_EveryAssetsMRNIsAnAssetMRNOfTheProvider(t *testing.T) {
 	host := emulatorHost(t)
 	seed(t, host)
 	bin := buildBinary(t)
@@ -247,9 +245,9 @@ func TestE2E_EveryAssetsMRNAgreesWithItsOwnFields(t *testing.T) {
 	require.NotEmpty(t, result.Assets)
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.Equal(t, "bigtable", parsed.Provider)
 	}
 }
 
@@ -260,7 +258,7 @@ func TestE2E_ReportsColumnFamiliesAndGCPolicies(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 	assert.ElementsMatch(t, []any{"d", "m"}, events.Metadata["column_families"])
 
 	policies, ok := events.Metadata["gc_policies"].(map[string]any)
@@ -276,7 +274,7 @@ func TestE2E_InfersColumnsFromSampledRows(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 	columns := columnsOf(t, events)
 
 	require.Contains(t, columns, "d:name")
@@ -306,7 +304,7 @@ func TestE2E_LeavesAnEmptyTableWithOnlyTheRowKey(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	users := assetByMRN(t, result, "mrn://table/bigtable/test-instance.users")
+	users := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.users")
 	columns := columnsOf(t, users)
 
 	assert.Len(t, columns, 1)
@@ -322,13 +320,13 @@ func TestE2E_LinksTheInstanceToItsTables(t *testing.T) {
 	result := discover(t, bin, baseConfig(host))
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://instance/bigtable/test-instance",
-		Target: "mrn://table/bigtable/test-instance.events",
+		Source: "mrn://asset/instance/bigtable/test-instance",
+		Target: "mrn://asset/table/bigtable/test-instance.events",
 		Type:   "CONTAINS",
 	})
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://instance/bigtable/test-instance",
-		Target: "mrn://table/bigtable/test-instance.users",
+		Source: "mrn://asset/instance/bigtable/test-instance",
+		Target: "mrn://asset/table/bigtable/test-instance.users",
 		Type:   "CONTAINS",
 	})
 }
@@ -341,12 +339,12 @@ func TestE2E_ReportsColumnCounts(t *testing.T) {
 	result := discover(t, bin, baseConfig(host))
 
 	assert.Contains(t, result.Statistics, pluginsdk.Statistic{
-		AssetMRN:   "mrn://table/bigtable/test-instance.events",
+		AssetMRN:   "mrn://asset/table/bigtable/test-instance.events",
 		MetricName: "asset.column_count",
 		Value:      4,
 	})
 	assert.Contains(t, result.Statistics, pluginsdk.Statistic{
-		AssetMRN:   "mrn://table/bigtable/test-instance.users",
+		AssetMRN:   "mrn://asset/table/bigtable/test-instance.users",
 		MetricName: "asset.column_count",
 		Value:      1,
 	})
@@ -363,7 +361,7 @@ func TestE2E_CountsRowsWhenStatisticsAreAskedFor(t *testing.T) {
 	result := discover(t, bin, config)
 
 	assert.Contains(t, result.Statistics, pluginsdk.Statistic{
-		AssetMRN:   "mrn://table/bigtable/test-instance.events",
+		AssetMRN:   "mrn://asset/table/bigtable/test-instance.events",
 		MetricName: "asset.row_count",
 		Value:      3,
 	})
@@ -383,7 +381,7 @@ func TestE2E_SkipsARowCountThatHitsTheLimit(t *testing.T) {
 	result := discover(t, bin, config)
 
 	for _, s := range result.Statistics {
-		if s.AssetMRN == "mrn://table/bigtable/test-instance.events" {
+		if s.AssetMRN == "mrn://asset/table/bigtable/test-instance.events" {
 			assert.NotEqual(t, "asset.row_count", s.MetricName)
 		}
 	}
@@ -399,7 +397,7 @@ func TestE2E_SkipsSamplingWhenColumnsAreTurnedOff(t *testing.T) {
 
 	result := discover(t, bin, config)
 
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 	assert.Len(t, columnsOf(t, events), 1, "only the row key, which needs no sample")
 	assert.NotContains(t, events.Metadata, "sampled_rows")
 }
@@ -411,7 +409,7 @@ func TestE2E_LeavesOutTheConsoleLinkForAnEmulator(t *testing.T) {
 
 	result := discover(t, bin, baseConfig(host))
 
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 	assert.Empty(t, events.ExternalLinks)
 	assert.NotContains(t, events.Metadata, "url")
 }
@@ -422,7 +420,7 @@ func TestE2E_FetchSampleDataOverTheWire(t *testing.T) {
 	bin := buildBinary(t)
 
 	result := discover(t, bin, baseConfig(host))
-	events := assetByMRN(t, result, "mrn://table/bigtable/test-instance.events")
+	events := assetByMRN(t, result, "mrn://asset/table/bigtable/test-instance.events")
 
 	columns, rows, err := bin.FetchSampleData(t.Context(), baseConfig(host), &events)
 	require.NoError(t, err)

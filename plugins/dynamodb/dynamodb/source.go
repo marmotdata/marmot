@@ -9,7 +9,6 @@ import (
 
 	awsdynamodb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,7 +16,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "dynamodb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "AWS DynamoDB",
 		Description:   "Discover DynamoDB tables from AWS accounts",
 		Icon:          "dynamodb",
@@ -254,7 +253,7 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (plugin
 		}
 	}
 
-	mrnValue := mrn.New("Table", "DynamoDB", tableName)
+	mrnValue := tableMRN(s.config, tableName)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -279,4 +278,9 @@ func boolToString(b *bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+// tableMRN names a table by its own name alone, because account and region are not part of it and the zone is what tells two accounts apart.
+func tableMRN(cfg *Config, tableName string) string {
+	return cfg.AssetMRN("Table", "DynamoDB", tableName)
 }

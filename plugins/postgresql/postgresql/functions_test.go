@@ -111,7 +111,7 @@ func TestPlanQueryMarksOpaqueCallsIncomplete(t *testing.T) {
 	leaky, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: `SELECT query_to_xml('select * from public.plan_payroll', true, false, '') FROM public.plan_orders`})
 	require.NoError(t, err)
 	assert.True(t, leaky.Incomplete)
-	assert.Equal(t, []string{"mrn://table/postgresql/plan_orders"}, leaky.ReferencedMRNs)
+	assert.Equal(t, []string{"mrn://asset/table/postgresql/" + cfg.Database + ".public.plan_orders"}, leaky.ReferencedMRNs)
 
 	plain, err := s.PlanQuery(ctx, raw, pluginsdk.QueryRequest{Statement: `SELECT count(*) FROM public.plan_orders`})
 	require.NoError(t, err)

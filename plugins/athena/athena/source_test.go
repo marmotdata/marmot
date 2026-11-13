@@ -141,7 +141,7 @@ func TestDiscover_TableIsFiledUnderTheGlueProviderByItsBareName(t *testing.T) {
 
 	assert.Equal(t, typeTable, orders.Type)
 	assert.Equal(t, []string{providerGlue}, orders.Providers)
-	assert.Equal(t, "mrn://table/glue/orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/glue/shop.orders", *orders.MRN)
 }
 
 func TestDiscover_TableCarriesTheAthenaStorageFacts(t *testing.T) {
@@ -214,7 +214,7 @@ func TestDiscover_VirtualViewBecomesAViewAsset(t *testing.T) {
 	view := findAsset(t, assets, "order_totals")
 
 	assert.Equal(t, typeView, view.Type)
-	assert.Equal(t, "mrn://view/glue/order_totals", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/glue/shop.order_totals", *view.MRN)
 }
 
 func TestDiscover_ViewCarriesTheDecodedSQL(t *testing.T) {
@@ -256,9 +256,9 @@ func TestDiscover_WorkGroupLinksToTheAthenaConsole(t *testing.T) {
 	assert.Contains(t, workGroup.ExternalLinks[0].URL, "#/workgroups/details/analytics")
 }
 
-func TestDiscover_SavedQueryIsNamedAfterItsWorkGroup(t *testing.T) {
+func TestDiscover_SavedQueryIsKeyedByItsWorkGroup(t *testing.T) {
 	assets := discoverAssets(t, pluginsdk.RawConfig{})
-	query := findAsset(t, assets, "analytics/daily-revenue")
+	query := findAsset(t, assets, "daily-revenue")
 
 	assert.Equal(t, typeSavedQuery, query.Type)
 	assert.Equal(t, []string{providerAthena}, query.Providers)
@@ -268,7 +268,7 @@ func TestDiscover_SavedQueryIsNamedAfterItsWorkGroup(t *testing.T) {
 
 func TestDiscover_SavedQueryCarriesItsSQL(t *testing.T) {
 	assets := discoverAssets(t, pluginsdk.RawConfig{})
-	query := findAsset(t, assets, "analytics/daily-revenue")
+	query := findAsset(t, assets, "daily-revenue")
 
 	require.NotNil(t, query.Query)
 	assert.Contains(t, *query.Query, "FROM orders o JOIN customers c")
@@ -279,14 +279,14 @@ func TestDiscover_SavedQueryCarriesItsSQL(t *testing.T) {
 func TestDiscover_CatalogContainsItsDatabase(t *testing.T) {
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
 
-	assert.Contains(t, lineage, edge(catalogMRN("AwsDataCatalog"), databaseMRN("shop"), "CONTAINS"))
+	assert.Contains(t, lineage, edge(ids.catalogMRN("AwsDataCatalog"), ids.databaseMRN("AwsDataCatalog", "shop"), "CONTAINS"))
 }
 
 func TestDiscover_DatabaseContainsItsTables(t *testing.T) {
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
 
-	assert.Contains(t, lineage, edge(databaseMRN("shop"), tableMRN(typeTable, "orders"), "CONTAINS"))
-	assert.Contains(t, lineage, edge(databaseMRN("shop"), tableMRN(typeView, "order_totals"), "CONTAINS"))
+	assert.Contains(t, lineage, edge(ids.databaseMRN("AwsDataCatalog", "shop"), ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"), "CONTAINS"))
+	assert.Contains(t, lineage, edge(ids.databaseMRN("AwsDataCatalog", "shop"), ids.tableMRN(typeView, "AwsDataCatalog", "shop", "order_totals"), "CONTAINS"))
 }
 
 func TestDiscover_BucketFeedsTheTableItStores(t *testing.T) {
@@ -294,30 +294,30 @@ func TestDiscover_BucketFeedsTheTableItStores(t *testing.T) {
 	// table, not out of it.
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
 
-	assert.Contains(t, lineage, edge(bucketMRN("marmot-lake"), tableMRN(typeTable, "orders"), "FEEDS"))
+	assert.Contains(t, lineage, edge(bucketMRN("marmot-lake"), ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"), "FEEDS"))
 }
 
 func TestDiscover_WorkGroupProducesItsResultBucket(t *testing.T) {
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
 
-	assert.Contains(t, lineage, edge(workGroupMRN("analytics"), bucketMRN("marmot-results"), "PRODUCES"))
+	assert.Contains(t, lineage, edge(ids.workGroupMRN("analytics"), bucketMRN("marmot-results"), "PRODUCES"))
 }
 
 func TestDiscover_WorkGroupContainsItsSavedQueries(t *testing.T) {
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
 
 	assert.Contains(t, lineage,
-		edge(workGroupMRN("analytics"), savedQueryMRN("analytics", "daily-revenue"), "CONTAINS"))
+		edge(ids.workGroupMRN("analytics"), ids.savedQueryMRN("analytics", "daily-revenue"), "CONTAINS"))
 }
 
 func TestDiscover_TablesASavedQueryReadsFeedIt(t *testing.T) {
 	// The query names orders and customers unqualified, so both resolve
 	// against its own database.
 	lineage := discoverLineage(t, pluginsdk.RawConfig{})
-	target := savedQueryMRN("analytics", "daily-revenue")
+	target := ids.savedQueryMRN("analytics", "daily-revenue")
 
-	assert.Contains(t, lineage, edge(tableMRN(typeTable, "orders"), target, "FEEDS"))
-	assert.Contains(t, lineage, edge(tableMRN(typeTable, "customers"), target, "FEEDS"))
+	assert.Contains(t, lineage, edge(ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"), target, "FEEDS"))
+	assert.Contains(t, lineage, edge(ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "customers"), target, "FEEDS"))
 }
 
 func TestDiscover_LineageOffEmitsNoEdges(t *testing.T) {
@@ -330,13 +330,13 @@ func TestDiscover_WorkGroupsOffDropsTheWorkGroupAssetButKeepsSavedQueries(t *tes
 	assets := discoverAssets(t, pluginsdk.RawConfig{"include_workgroups": false})
 
 	assert.Nil(t, lookupAsset(assets, "analytics"))
-	assert.NotNil(t, lookupAsset(assets, "analytics/daily-revenue"))
+	assert.NotNil(t, lookupAsset(assets, "daily-revenue"))
 }
 
 func TestDiscover_SavedQueriesOffDropsTheQueryAsset(t *testing.T) {
 	assets := discoverAssets(t, pluginsdk.RawConfig{"include_saved_queries": false})
 
-	assert.Nil(t, lookupAsset(assets, "analytics/daily-revenue"))
+	assert.Nil(t, lookupAsset(assets, "daily-revenue"))
 	assert.NotNil(t, lookupAsset(assets, "analytics"))
 }
 
@@ -395,7 +395,7 @@ func TestDiscover_ReadsTheCatalogThroughGlueWhenListTableMetadataFails(t *testin
 
 	orders := lookupAsset(result.Assets, "orders")
 	require.NotNil(t, orders)
-	assert.Equal(t, "mrn://table/glue/orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/glue/shop.orders", *orders.MRN)
 	assert.Equal(t, "s3://marmot-lake/orders/", athenaSection(t, *orders)["location"])
 }
 
@@ -432,7 +432,7 @@ func TestDiscover_FallsBackToGetNamedQueryWhenTheBatchCallIsUnavailable(t *testi
 	result, err := s.discover(t.Context())
 	require.NoError(t, err)
 
-	assert.NotNil(t, lookupAsset(result.Assets, "analytics/daily-revenue"))
+	assert.NotNil(t, lookupAsset(result.Assets, "daily-revenue"))
 	assert.Equal(t, 1, fake.getNamedQueryCalls)
 }
 
@@ -522,3 +522,6 @@ func TestDiscover_EveryAssetRecordsAthenaAsItsSource(t *testing.T) {
 		assert.Equal(t, "Athena", a.Sources[0].Name, "asset %s", *a.Name)
 	}
 }
+
+// ids builds the MRNs of no zone, which is what the seeded discovery runs use.
+var ids = &Source{config: &Config{}}

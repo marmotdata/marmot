@@ -21,7 +21,8 @@ const provider = "SageMaker"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "sagemaker",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS SageMaker",
 		Description:   "Discover models, endpoints, feature groups and training jobs from Amazon SageMaker",
 		Icon:          "sagemaker",
@@ -202,16 +203,9 @@ func (s *Source) discover(ctx context.Context) (*pluginsdk.DiscoveryResult, erro
 	return result, nil
 }
 
-// assetMRN builds the identity of every asset this plugin owns. The Marmot
-// server rebuilds an MRN from an asset's type, provider and name, so every
-// MRN and every lineage endpoint has to come from here.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
-}
-
 // newAsset fills in the parts every SageMaker asset shares.
 func (s *Source) newAsset(assetType, name, description string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := s.config.AssetMRN(assetType, provider, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -289,7 +283,7 @@ func artifactEdges(assets []pluginsdk.Asset) []pluginsdk.LineageEdge {
 				continue
 			}
 			edges = append(edges, pluginsdk.LineageEdge{
-				Source: mrn.New("Bucket", "S3", bucket),
+				Source: mrn.Asset("Bucket", "S3", bucket).String(),
 				Target: *a.MRN,
 				Type:   "FEEDS",
 			})

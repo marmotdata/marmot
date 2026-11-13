@@ -56,7 +56,7 @@ func TestRecordAndList(t *testing.T) {
 	require.Len(t, items, 4)
 	assert.Equal(t, "customers", items[0].Name)
 	assert.Equal(t, "snowflake", items[0].Provider)
-	assert.Equal(t, "mrn://table/snowflake/customers", items[0].MRN)
+	assert.Equal(t, "mrn://asset/table/snowflake/customers", items[0].MRN)
 	assert.Equal(t, KindSavedQuery, items[1].Kind)
 	assert.Equal(t, "Weekly refunds", items[1].Name)
 	assert.Equal(t, "GMV", items[2].Name)

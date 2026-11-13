@@ -440,7 +440,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("validating plugin config: %w", err)
 	}
 
-	pluginRun, err := w.runsService.StartRun(ctx, schedule.Name, schedule.PluginID, run.CreatedBy, validatedConfig)
+	pluginRun, err := w.runsService.StartRunAs(ctx, schedule.Name, schedule.PluginID, run.CreatedBy, "schedule:"+schedule.ID, validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to start run: %v", err)
 		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
@@ -488,6 +488,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		assetsInput = append(assetsInput, CreateAssetInput{
 			Name:          name,
 			MRN:           a.MRN,
+			PreviousMRNs:  a.PreviousMRNs,
 			Type:          a.Type,
 			Providers:     a.Providers,
 			Description:   a.Description,
@@ -545,6 +546,9 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	}
 
 	w.markPhase(ctx, run.ID, JobPhaseWriting)
+	if err := w.runsService.RecordZoneBindings(ctx, result.ZoneBindings); err != nil {
+		log.Warn().Err(err).Str("schedule", schedule.Name).Msg("Failed to record zone bindings")
+	}
 	response, err := w.runsService.ProcessEntities(
 		ctx,
 		pluginRun.RunID,

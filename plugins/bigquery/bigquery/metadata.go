@@ -49,4 +49,3 @@ type BigQueryExternalDataConfig struct {
 	SourceFormat string   `json:"source_format" metadata:"source_format" description:"Source data format (CSV, JSON, AVRO, etc.)"`
 	SourceURIs   []string `json:"source_uris" metadata:"source_uris" description:"Source URIs for external data"`
 }
-

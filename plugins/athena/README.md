@@ -1,6 +1,6 @@
 The Athena plugin discovers data catalogs, databases, tables, views, workgroups and saved queries from Amazon Athena.
 
-Athena keeps no catalog of its own: the tables it queries live in the Glue Data Catalog. Databases, tables and views are therefore filed under the `Glue` provider with the same names the Glue plugin uses, so an Athena run and a Glue run land on one asset. Workgroups, saved queries and data catalogs are Athena's own objects and are filed under `Athena`.
+Athena keeps no catalog of its own: the tables it queries live in the Glue Data Catalog. Databases, tables and views are therefore filed under the `Glue` provider with the same names the Glue plugin uses, so an Athena run and a Glue run land on one asset. Names are the full path, `<database>.<table>` for the default `AwsDataCatalog` and `<catalog>.<database>.<table>` for any other catalog. Set `zone` to tell two accounts or regions apart (a name you choose, not a cloud availability zone); it becomes part of every MRN, for example `mrn://asset/table/glue@prod-eu/shop.orders`, and must match the `zone` set on the Glue plugin for the two to share assets. Workgroups, saved queries and data catalogs are Athena's own objects and are filed under `Athena`.
 
 Databases and tables are read through the Athena metadata API, which also serves federated catalogs. When that API does not answer for a Glue-backed catalog, the plugin reads the Glue Data Catalog directly instead. Set `metadata_api` to `athena` or `glue` to pin the choice.
 

@@ -47,6 +47,9 @@ type GlossaryTerm struct {
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
+	// MRN is mrn://glossary-term/<source>/<path>, kept up to date by the database as the term is renamed or moved.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

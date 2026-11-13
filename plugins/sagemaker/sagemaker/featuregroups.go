@@ -149,7 +149,7 @@ func offlineStoreEdges(asset pluginsdk.Asset) []pluginsdk.LineageEdge {
 	if table, ok := asset.Metadata["glue_table"].(string); ok && table != "" {
 		edges = append(edges, pluginsdk.LineageEdge{
 			Source: *asset.MRN,
-			Target: mrn.New("Table", "Glue", bareTableName(table)),
+			Target: glueTableMRN(table),
 			Type:   "PRODUCES",
 		})
 	}
@@ -158,7 +158,7 @@ func offlineStoreEdges(asset pluginsdk.Asset) []pluginsdk.LineageEdge {
 		if bucket := s3Bucket(uri); bucket != "" {
 			edges = append(edges, pluginsdk.LineageEdge{
 				Source: *asset.MRN,
-				Target: mrn.New("Bucket", "S3", bucket),
+				Target: mrn.Asset("Bucket", "S3", bucket).String(),
 				Type:   "PRODUCES",
 			})
 		}
@@ -167,11 +167,11 @@ func offlineStoreEdges(asset pluginsdk.Asset) []pluginsdk.LineageEdge {
 	return edges
 }
 
-// bareTableName drops the database qualifier from a "database.table" name.
-// The Glue plugin names its table assets with the table alone.
-func bareTableName(qualified string) string {
-	if i := strings.LastIndex(qualified, "."); i >= 0 {
-		return qualified[i+1:]
+// glueTableMRN is the MRN the Glue plugin gives a table, which names it by database and table. The zone is the default one because a feature group only names the Glue catalog by its account.
+func glueTableMRN(qualified string) string {
+	database, table, ok := strings.Cut(qualified, ".")
+	if !ok {
+		return mrn.Asset("Table", "Glue", qualified).String()
 	}
-	return qualified
+	return mrn.Asset("Table", "Glue", database, table).String()
 }

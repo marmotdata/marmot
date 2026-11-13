@@ -117,7 +117,9 @@ func TestParseJDBCURL_OracleThin(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "oracle", conn.scheme)
-	assert.Empty(t, conn.database, "an Oracle service name is not a schema")
+	assert.Equal(t, "ORCLPDB1", conn.database, "the service name is the first level of an Oracle table path")
+	assert.Equal(t, "db", conn.host)
+	assert.Equal(t, "1521", conn.port)
 }
 
 func TestParseJDBCURL_SnowflakeDatabaseFromParameters(t *testing.T) {

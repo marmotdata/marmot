@@ -243,7 +243,7 @@ func TestDiscover_LeavesOutThePrefixesInsideAContainer(t *testing.T) {
 	result := discover(t, containerFixture(), nil)
 
 	require.Len(t, result.Assets, 1)
-	assert.Nil(t, findAsset(result, "Container", "raw/events"))
+	assert.Nil(t, findAsset(result, "Container", "events"))
 	assert.Empty(t, result.Lineage, "there is nothing left for the bucket to contain")
 }
 
@@ -253,8 +253,8 @@ func TestDiscover_CanImportThePrefixesInsideAContainer(t *testing.T) {
 	result := discover(t, containerFixture(), pluginsdk.RawConfig{"include_container_prefixes": true})
 
 	assert.NotNil(t, findAsset(result, "Bucket", "raw"))
-	assert.NotNil(t, findAsset(result, "Container", "raw/events"))
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/raw", "mrn://container/s3/raw-events", "CONTAINS"))
+	assert.NotNil(t, findAsset(result, "Container", "events"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/raw", "mrn://asset/container/s3/raw.events", "CONTAINS"))
 }
 
 func TestDiscover_TreatsAContainerWithNoParentButANestedPathAsNested(t *testing.T) {
@@ -285,7 +285,7 @@ func TestDiscover_LinksDashboardsToTheirCharts(t *testing.T) {
 		with("charts", entity("superset", "Superset", "superset.revenue")),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://dashboard/superset/sales", "mrn://chart/superset/revenue", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/superset/sales", "mrn://asset/chart/superset/revenue", "CONTAINS"))
 }
 
 func TestDiscover_LinksPipelineTasksInOrder(t *testing.T) {
@@ -298,11 +298,11 @@ func TestDiscover_LinksPipelineTasksInOrder(t *testing.T) {
 	result := discover(t, newFakeOM().with("pipelines", pipeline), nil)
 
 	// Task naming matches the Airflow plugin: <dag>.<task>.
-	assert.NotNil(t, findAsset(result, "Task", "orders_etl.extract"))
+	assert.NotNil(t, findAsset(result, "Task", "extract"))
 	assert.True(t, hasEdge(result,
-		"mrn://pipeline/airflow/orders_etl", "mrn://task/airflow/orders_etl.extract", "CONTAINS"))
+		"mrn://asset/pipeline/airflow/orders_etl", "mrn://asset/task/airflow/orders_etl.extract", "CONTAINS"))
 	assert.True(t, hasEdge(result,
-		"mrn://task/airflow/orders_etl.extract", "mrn://task/airflow/orders_etl.load", "DEPENDS_ON"))
+		"mrn://asset/task/airflow/orders_etl.extract", "mrn://asset/task/airflow/orders_etl.load", "DEPENDS_ON"))
 }
 
 func TestDiscover_CanLeaveOutPipelineTasks(t *testing.T) {
@@ -350,7 +350,7 @@ func TestDiscover_LinksATableWhoseDatabaseNameContainsADot(t *testing.T) {
 	result := discover(t, newFakeOM().with("databases", db).with("tables", orders), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://database/postgresql/my.shop", "mrn://table/postgresql/orders", "CONTAINS"))
+		"mrn://asset/database/postgresql/my.shop", `mrn://asset/table/postgresql/"my.shop".public.orders`, "CONTAINS"))
 }
 
 func TestDiscover_LinksToTheUIEvenWhenTheHostIsTheAPIRoot(t *testing.T) {
@@ -376,7 +376,7 @@ func TestDiscover_NamesAnIcebergNamespaceTheWayTheIcebergPluginDoes(t *testing.T
 
 	namespace := findAsset(result, "Namespace", "analytics")
 	require.NotNil(t, namespace)
-	assert.Equal(t, "mrn://namespace/iceberg/analytics", *namespace.MRN)
+	assert.Equal(t, "mrn://asset/namespace/iceberg/analytics", *namespace.MRN)
 }
 
 // Drive entities: OpenMetadata catalogues a drive as directories holding
@@ -427,14 +427,14 @@ func TestDiscover_CataloguesDriveEntities(t *testing.T) {
 func TestDiscover_NestsDriveEntities(t *testing.T) {
 	result := discover(t, driveFixture(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
-		"mrn://folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
-		"mrn://file/googledrive/marketing-plan.pdf", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
-		"mrn://spreadsheet/googledrive/marketing-annual_budget_2024", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://spreadsheet/googledrive/marketing-annual_budget_2024",
-		"mrn://table/googledrive/marketing-annual_budget_2024-q1", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/marketing",
+		"mrn://asset/folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/marketing",
+		"mrn://asset/file/googledrive/marketing-plan.pdf", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/marketing",
+		"mrn://asset/spreadsheet/googledrive/marketing-annual_budget_2024", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/spreadsheet/googledrive/marketing-annual_budget_2024",
+		"mrn://asset/table/googledrive/marketing-annual_budget_2024-q1", "CONTAINS"))
 }
 
 func TestDiscover_NestsADriveButNotABucket(t *testing.T) {
@@ -447,12 +447,12 @@ func TestDiscover_NestsADriveButNotABucket(t *testing.T) {
 
 	result := discover(t, driveFixture().with("containers", entity("s3", "S3", "s3.raw"), prefix), nil)
 
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
-		"mrn://folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/marketing",
+		"mrn://asset/folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
 	assert.NotNil(t, findAsset(result, "File", "Marketing/plan.pdf"))
 
 	assert.NotNil(t, findAsset(result, "Bucket", "raw"))
-	assert.Nil(t, findAsset(result, "Container", "raw/events"))
+	assert.Nil(t, findAsset(result, "Container", "events"))
 }
 
 func TestDiscover_RecordsWorksheetColumns(t *testing.T) {
@@ -517,8 +517,8 @@ func TestDiscover_NestsASpreadsheetUnderTheFolderItsPathPointsAt(t *testing.T) {
 		with("drives/spreadsheets", sheet),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/finance",
-		"mrn://spreadsheet/googledrive/finance-annual_budget", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/finance",
+		"mrn://asset/spreadsheet/googledrive/finance-annual_budget", "CONTAINS"))
 }
 
 func TestDiscover_KeepsAFileThatIsNotASpreadsheet(t *testing.T) {
@@ -550,10 +550,10 @@ func TestDiscover_CreatesFoldersOpenMetadataDoesNotDescribe(t *testing.T) {
 	assert.Equal(t, true, product.Metadata["inferred_from_path"])
 
 	assert.NotNil(t, findAsset(result, "Folder", "Product/Roadmaps"))
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/product",
-		"mrn://folder/googledrive/product-roadmaps", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/product-roadmaps",
-		"mrn://spreadsheet/googledrive/product-roadmaps-product_roadmap", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/product",
+		"mrn://asset/folder/googledrive/product-roadmaps", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/product-roadmaps",
+		"mrn://asset/spreadsheet/googledrive/product-roadmaps-product_roadmap", "CONTAINS"))
 }
 
 func TestDiscover_PrefersTheDescribedFolderOverAnInferredOne(t *testing.T) {
@@ -585,8 +585,8 @@ func TestDiscover_FilesAreNamedByTheirPathNotTheirOpenMetadataName(t *testing.T)
 	result := discover(t, newFakeOM().with("drives/files", file), nil)
 
 	assert.NotNil(t, findAsset(result, "File", "HR/handbook.pdf"))
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/hr",
-		"mrn://file/googledrive/hr-handbook.pdf", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/hr",
+		"mrn://asset/file/googledrive/hr-handbook.pdf", "CONTAINS"))
 }
 
 func TestDrivePathHelpers(t *testing.T) {
@@ -615,8 +615,8 @@ func TestDiscover_CataloguesTheDriveItself(t *testing.T) {
 		nil)
 
 	assert.NotNil(t, findAsset(result, "Drive", "gdrive"))
-	assert.True(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
-		"mrn://folder/googledrive/finance", "CONTAINS"),
+	assert.True(t, hasEdge(result, "mrn://asset/drive/googledrive/gdrive",
+		"mrn://asset/folder/googledrive/finance", "CONTAINS"),
 		"a top level folder belongs to the drive")
 }
 
@@ -632,13 +632,13 @@ func TestDiscover_OnlyTopLevelFoldersBelongToTheDrive(t *testing.T) {
 		with("drives/directories", top, nested),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
-		"mrn://folder/googledrive/finance", "CONTAINS"))
-	assert.False(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
-		"mrn://folder/googledrive/finance-q4", "CONTAINS"),
+	assert.True(t, hasEdge(result, "mrn://asset/drive/googledrive/gdrive",
+		"mrn://asset/folder/googledrive/finance", "CONTAINS"))
+	assert.False(t, hasEdge(result, "mrn://asset/drive/googledrive/gdrive",
+		"mrn://asset/folder/googledrive/finance-q4", "CONTAINS"),
 		"a nested folder belongs to its parent folder, not the drive")
-	assert.True(t, hasEdge(result, "mrn://folder/googledrive/finance",
-		"mrn://folder/googledrive/finance-q4", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/folder/googledrive/finance",
+		"mrn://asset/folder/googledrive/finance-q4", "CONTAINS"))
 }
 
 func TestDiscover_SurvivesADriveServiceEndpointThatIsAbsent(t *testing.T) {

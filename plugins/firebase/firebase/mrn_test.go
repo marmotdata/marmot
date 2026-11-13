@@ -9,65 +9,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A Firestore database id and a Realtime Database instance id can be the same
-// string, so the kind is folded into the asset name to keep the two apart.
-// mrn.New only lowercases and turns slashes and spaces into hyphens, so the
-// parentheses of the default database id survive into the MRN.
+// A Firestore database id and a Realtime Database instance id can be the same string, so the kind is folded into the asset name to keep the two apart. The project is not part of any name, so the zone option is what tells two projects apart. A name is one MRN level, and the MRN turns slashes and spaces into hyphens and lowercases it, so the parentheses of the default database id survive.
 
 func TestFirestoreDatabaseMRN_KeepsTheDefaultDatabaseParentheses(t *testing.T) {
 	name := firestoreDatabaseName("(default)")
 
 	assert.Equal(t, "firestore/(default)", name)
-	assert.Equal(t, "mrn://database/firebase/firestore-(default)", assetMRN("Database", name))
-}
-
-func TestFirestoreDatabaseMRN_NamedDatabase(t *testing.T) {
-	assert.Equal(t, "mrn://database/firebase/firestore-analytics",
-		assetMRN("Database", firestoreDatabaseName("analytics")))
+	assert.Equal(t, "mrn://asset/database/firebase/firestore-(default)", assetMRN(&Config{}, "Database", name))
 }
 
 func TestRealtimeDatabaseMRN_IsPrefixedWithItsKind(t *testing.T) {
-	assert.Equal(t, "mrn://database/firebase/rtdb-marmot-demo-default-rtdb",
-		assetMRN("Database", realtimeDatabaseName("marmot-demo-default-rtdb")))
+	assert.Equal(t, "mrn://asset/database/firebase/rtdb-marmot-demo-default-rtdb",
+		assetMRN(&Config{}, "Database", realtimeDatabaseName("marmot-demo-default-rtdb")))
 }
 
-func TestCollectionMRN_RootCollection(t *testing.T) {
-	assert.Equal(t, "mrn://collection/firebase/firestore-(default)-orders",
-		assetMRN("Collection", collectionName("(default)", "orders")))
+func TestCollectionMRN_RootCollectionAndSubcollection(t *testing.T) {
+	cfg := &Config{}
+
+	assert.Equal(t, "mrn://asset/collection/firebase/firestore-(default)-orders",
+		assetMRN(cfg, "Collection", collectionName("(default)", "orders")))
+	// The subcollection "lines" exists once per order document. They share a shape, so they are catalogued as one asset with the document id elided.
+	assert.Equal(t, "mrn://asset/collection/firebase/firestore-(default)-orders-lines",
+		assetMRN(cfg, "Collection", collectionName("(default)", "orders/lines")))
 }
 
-func TestCollectionMRN_SubcollectionLeavesOutTheParentDocumentID(t *testing.T) {
-	// The subcollection "lines" exists once per order document. They share a
-	// shape, so they are catalogued as one asset with the document id elided.
-	assert.Equal(t, "mrn://collection/firebase/firestore-(default)-orders-lines",
-		assetMRN("Collection", collectionName("(default)", "orders/lines")))
-}
+func TestAssetMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod"}}
 
-func TestDatabaseMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI. The parentheses are the risky
-	// part here.
-	original := assetMRN("Database", firestoreDatabaseName("(default)"))
+	got := assetMRN(cfg, "Collection", collectionName("(default)", "orders"))
+	assert.Equal(t, "mrn://asset/collection/firebase@prod/firestore-(default)-orders", got)
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(got)
 	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, "prod", parsed.Zone)
 }
 
-func TestCollectionMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Collection", collectionName("(default)", "orders/lines"))
+func TestPreviousMRNs_OnlyDifferOnceAnZoneIsSet(t *testing.T) {
+	name := collectionName("(default)", "orders")
 
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
+	plain := assetMRN(&Config{}, "Collection", name)
+	assert.Empty(t, previousMRNs("Collection", name, plain))
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	withZone := assetMRN(&Config{BaseConfig: pluginsdk.BaseConfig{Zone: "prod"}}, "Collection", name)
+	assert.Equal(t, []string{plain}, previousMRNs("Collection", name, withZone))
 }
 
-// The Marmot server rebuilds an asset's identity from its type, first
-// provider and name, so what the plugin sets has to agree with that.
-func TestCollectionAsset_MRNMatchesTheServersDerivation(t *testing.T) {
+func TestCollectionAsset_MRNFollowsItsName(t *testing.T) {
 	s := &Source{}
 	_, err := s.Validate(pluginsdk.RawConfig{"project_id": "marmot-demo"})
 	require.NoError(t, err)
@@ -76,9 +63,8 @@ func TestCollectionAsset_MRNMatchesTheServersDerivation(t *testing.T) {
 	asset, err := s.collectionAsset("(default)", group, 3, nil, nil)
 	require.NoError(t, err)
 
-	require.NotNil(t, asset.Name)
 	require.NotNil(t, asset.MRN)
-	assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN)
+	assert.Equal(t, "mrn://asset/collection/firebase/firestore-(default)-orders-lines", *asset.MRN)
 }
 
 func TestCollectionAsset_RecordsTheSubcollectionsGroupAndParent(t *testing.T) {

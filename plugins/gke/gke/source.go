@@ -51,7 +51,8 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "gke",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google GKE",
 		Description:   "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
 		Icon:          "gke",

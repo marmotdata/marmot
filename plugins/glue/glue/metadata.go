@@ -3,19 +3,19 @@ package glue
 // GlueJobFields represents Glue Job metadata fields
 // +marmot:metadata
 type GlueJobFields struct {
-	Role                  string `json:"role" metadata:"role" description:"IAM role ARN assigned to the job"`
-	Type                  string `json:"type" metadata:"type" description:"Job command type (glueetl, pythonshell, gluestreaming)"`
-	GlueVersion           string `json:"glue_version" metadata:"glue_version" description:"Glue version used by the job"`
-	WorkerType            string `json:"worker_type" metadata:"worker_type" description:"Worker type (Standard, G.1X, G.2X, etc.)"`
-	NumberOfWorkers       int32  `json:"number_of_workers" metadata:"number_of_workers" description:"Number of workers allocated to the job"`
+	Role                  string  `json:"role" metadata:"role" description:"IAM role ARN assigned to the job"`
+	Type                  string  `json:"type" metadata:"type" description:"Job command type (glueetl, pythonshell, gluestreaming)"`
+	GlueVersion           string  `json:"glue_version" metadata:"glue_version" description:"Glue version used by the job"`
+	WorkerType            string  `json:"worker_type" metadata:"worker_type" description:"Worker type (Standard, G.1X, G.2X, etc.)"`
+	NumberOfWorkers       int32   `json:"number_of_workers" metadata:"number_of_workers" description:"Number of workers allocated to the job"`
 	MaxCapacity           float64 `json:"max_capacity" metadata:"max_capacity" description:"Maximum number of DPU that can be allocated"`
-	Timeout               int32  `json:"timeout" metadata:"timeout" description:"Job timeout in minutes"`
-	MaxRetries            int    `json:"max_retries" metadata:"max_retries" description:"Maximum number of retries"`
-	ScriptLocation        string `json:"script_location" metadata:"script_location" description:"S3 location of the job script"`
-	Connections           string `json:"connections" metadata:"connections" description:"Connections used by the job"`
-	CreatedOn             string `json:"created_on" metadata:"created_on" description:"Date and time the job was created"`
-	LastModifiedOn        string `json:"last_modified_on" metadata:"last_modified_on" description:"Date and time the job was last modified"`
-	SecurityConfiguration string `json:"security_configuration" metadata:"security_configuration" description:"Security configuration applied to the job"`
+	Timeout               int32   `json:"timeout" metadata:"timeout" description:"Job timeout in minutes"`
+	MaxRetries            int     `json:"max_retries" metadata:"max_retries" description:"Maximum number of retries"`
+	ScriptLocation        string  `json:"script_location" metadata:"script_location" description:"S3 location of the job script"`
+	Connections           string  `json:"connections" metadata:"connections" description:"Connections used by the job"`
+	CreatedOn             string  `json:"created_on" metadata:"created_on" description:"Date and time the job was created"`
+	LastModifiedOn        string  `json:"last_modified_on" metadata:"last_modified_on" description:"Date and time the job was last modified"`
+	SecurityConfiguration string  `json:"security_configuration" metadata:"security_configuration" description:"Security configuration applied to the job"`
 }
 
 // GlueDatabaseFields represents Glue Database metadata fields
@@ -31,18 +31,18 @@ type GlueDatabaseFields struct {
 // GlueTableFields represents Glue Table metadata fields
 // +marmot:metadata
 type GlueTableFields struct {
-	DatabaseName string `json:"database_name" metadata:"database_name" description:"Name of the database containing the table"`
-	TableType    string `json:"table_type" metadata:"table_type" description:"Type of table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.)"`
+	DatabaseName   string `json:"database_name" metadata:"database_name" description:"Name of the database containing the table"`
+	TableType      string `json:"table_type" metadata:"table_type" description:"Type of table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.)"`
 	Classification string `json:"classification" metadata:"classification" description:"Classification of the table data (csv, parquet, json, etc.)"`
-	Owner        string `json:"owner" metadata:"owner" description:"Owner of the table"`
-	Location     string `json:"location" metadata:"location" description:"S3 location of the table data"`
-	InputFormat  string `json:"input_format" metadata:"input_format" description:"Hadoop input format class"`
-	OutputFormat string `json:"output_format" metadata:"output_format" description:"Hadoop output format class"`
-	Serde        string `json:"serde" metadata:"serde" description:"Serialization/deserialization library"`
-	PartitionKeys string `json:"partition_keys" metadata:"partition_keys" description:"Partition key columns"`
-	CreateTime   string `json:"create_time" metadata:"create_time" description:"Date and time the table was created"`
-	UpdateTime   string `json:"update_time" metadata:"update_time" description:"Date and time the table was last updated"`
-	Retention    int32  `json:"retention" metadata:"retention" description:"Retention period in days"`
+	Owner          string `json:"owner" metadata:"owner" description:"Owner of the table"`
+	Location       string `json:"location" metadata:"location" description:"S3 location of the table data"`
+	InputFormat    string `json:"input_format" metadata:"input_format" description:"Hadoop input format class"`
+	OutputFormat   string `json:"output_format" metadata:"output_format" description:"Hadoop output format class"`
+	Serde          string `json:"serde" metadata:"serde" description:"Serialization/deserialization library"`
+	PartitionKeys  string `json:"partition_keys" metadata:"partition_keys" description:"Partition key columns"`
+	CreateTime     string `json:"create_time" metadata:"create_time" description:"Date and time the table was created"`
+	UpdateTime     string `json:"update_time" metadata:"update_time" description:"Date and time the table was last updated"`
+	Retention      int32  `json:"retention" metadata:"retention" description:"Retention period in days"`
 }
 
 // GlueCrawlerFields represents Glue Crawler metadata fields

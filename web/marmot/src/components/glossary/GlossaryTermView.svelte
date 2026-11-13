@@ -9,6 +9,7 @@
 	import { toast } from '@marmotdata/elements/toast.js';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
 	import TermForm from './TermForm.svelte';
 	import LinkAssetsDrawer from './LinkAssetsDrawer.svelte';
@@ -459,6 +460,9 @@
 							>
 							<mm-description term={m.glossary_last_updated_label()}
 								>{formatDate(term.updated_at)}</mm-description
+							>
+							<mm-description term={m.mrn_label()} mono
+								><MrnValue value={term.mrn} /></mm-description
 							>
 						</mm-description-list>
 					{/if}

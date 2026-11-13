@@ -82,7 +82,7 @@ func TestDiscoverEndpoints_LinksToTheAWSConsole(t *testing.T) {
 func TestDiscoverEndpoints_LinksTheModelToTheEndpointItServes(t *testing.T) {
 	result := discoverWith(t, fullFake(), nil)
 
-	assert.True(t, hasEdge(result, "mrn://model/sagemaker/churn-xgb", "mrn://endpoint/sagemaker/churn-prod", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/model/sagemaker/churn-xgb", "mrn://asset/endpoint/sagemaker/churn-prod", "FEEDS"))
 }
 
 func TestDiscoverEndpoints_SkipsTheEdgeForAModelFromAnotherAccount(t *testing.T) {
@@ -93,7 +93,7 @@ func TestDiscoverEndpoints_SkipsTheEdgeForAModelFromAnotherAccount(t *testing.T)
 
 	result := discoverWith(t, fake, nil)
 
-	assert.False(t, hasEdge(result, "mrn://model/sagemaker/elsewhere", "mrn://endpoint/sagemaker/churn-prod", "FEEDS"))
+	assert.False(t, hasEdge(result, "mrn://asset/model/sagemaker/elsewhere", "mrn://asset/endpoint/sagemaker/churn-prod", "FEEDS"))
 }
 
 func TestDiscoverEndpoints_KeepsTheEndpointWhenItsConfigurationIsGone(t *testing.T) {

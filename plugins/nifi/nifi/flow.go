@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,13 +23,17 @@ const maxDepth = 100
 type group struct {
 	component processGroupComponent
 	flow      flowContents
-	name      string
-	parent    *group
+	// name is the slash-joined path from the root group, kept for display and metadata.
+	name string
+	// path is the same chain as separate levels, which is what the MRN is built from.
+	path   []string
+	parent *group
 }
 
 // topicUsage records which tasks publish to and consume from a Kafka
 // topic, so the Topic asset can list them.
 type topicUsage struct {
+	name      string
 	producers []string
 	consumers []string
 }
@@ -92,6 +97,7 @@ func (d *discovery) run(ctx context.Context) error {
 		component: entity.Component,
 		flow:      flow.Flow,
 		name:      breadcrumbPath(flow.Breadcrumb),
+		path:      breadcrumbLevels(flow.Breadcrumb),
 	}
 	d.groups = append(d.groups, root)
 	d.walkChildren(ctx, root, 1)
@@ -131,6 +137,7 @@ func (d *discovery) walkChildren(ctx context.Context, parent *group, depth int) 
 			component: child.Component,
 			flow:      flow.Flow,
 			name:      parent.name + "/" + names[child.ID],
+			path:      append(append([]string{}, parent.path...), names[child.ID]),
 			parent:    parent,
 		}
 		d.groups = append(d.groups, g)
@@ -142,7 +149,7 @@ func (d *discovery) walkChildren(ctx context.Context, parent *group, depth int) 
 // port when enabled), the CONTAINS edges between them and the data
 // lineage of each processor.
 func (d *discovery) emitGroup(ctx context.Context, g *group) {
-	pipelineMRN := assetMRN("Pipeline", g.name)
+	pipelineMRN := d.assetMRN("Pipeline", g.path...)
 	d.groupMRNs[g.component.ID] = pipelineMRN
 
 	metadata := map[string]any{
@@ -165,7 +172,7 @@ func (d *discovery) emitGroup(ctx context.Context, g *group) {
 		putIf(metadata, "parameter_context", g.component.ParameterContext.Component.Name)
 	}
 
-	d.assets = append(d.assets, d.newAsset("Pipeline", g.name, g.component.Comments, metadata, d.groupURL(g.component.ID)))
+	d.assets = append(d.assets, d.newAsset("Pipeline", g.path, g.name, g.component.Comments, metadata, d.groupURL(g.component.ID)))
 
 	if g.parent != nil {
 		d.link(d.groupMRNs[g.parent.component.ID], pipelineMRN, "CONTAINS")
@@ -192,7 +199,7 @@ func (d *discovery) emitGroup(ctx context.Context, g *group) {
 	if d.config.IncludeProcessors {
 		for _, p := range g.flow.Processors {
 			taskName := g.name + "/" + names[p.ID]
-			taskMRN := d.emitProcessor(g, p, taskName)
+			taskMRN := d.emitProcessor(g, p, names[p.ID])
 			d.link(pipelineMRN, taskMRN, "CONTAINS")
 
 			if d.config.DiscoverLineage {
@@ -203,15 +210,16 @@ func (d *discovery) emitGroup(ctx context.Context, g *group) {
 
 	if d.config.IncludePorts {
 		for _, p := range append(append([]portEntity{}, g.flow.InputPorts...), g.flow.OutputPorts...) {
-			taskMRN := d.emitPort(g, p, g.name+"/"+names[p.ID])
+			taskMRN := d.emitPort(g, p, names[p.ID])
 			d.link(pipelineMRN, taskMRN, "CONTAINS")
 		}
 	}
 }
 
-func (d *discovery) emitProcessor(g *group, p processorEntity, taskName string) string {
+func (d *discovery) emitProcessor(g *group, p processorEntity, member string) string {
 	c := p.Component
-	taskMRN := assetMRN("Task", taskName)
+	path := append(append([]string{}, g.path...), member)
+	taskMRN := d.assetMRN("Task", path...)
 	d.taskMRNs[p.ID] = taskMRN
 
 	metadata := map[string]any{
@@ -233,13 +241,14 @@ func (d *discovery) emitProcessor(g *group, p processorEntity, taskName string) 
 		metadata["relationships"] = rels
 	}
 
-	d.assets = append(d.assets, d.newAsset("Task", taskName, c.Config.Comments, metadata, d.componentURL(g.component.ID, "processors", c.ID)))
+	d.assets = append(d.assets, d.newAsset("Task", path, g.name+"/"+member, c.Config.Comments, metadata, d.componentURL(g.component.ID, "processors", c.ID)))
 	return taskMRN
 }
 
-func (d *discovery) emitPort(g *group, p portEntity, taskName string) string {
+func (d *discovery) emitPort(g *group, p portEntity, member string) string {
 	c := p.Component
-	taskMRN := assetMRN("Task", taskName)
+	path := append(append([]string{}, g.path...), member)
+	taskMRN := d.assetMRN("Task", path...)
 	d.taskMRNs[p.ID] = taskMRN
 
 	metadata := map[string]any{
@@ -252,7 +261,7 @@ func (d *discovery) emitPort(g *group, p portEntity, taskName string) string {
 	}
 	putIf(metadata, "comments", c.Comments)
 
-	d.assets = append(d.assets, d.newAsset("Task", taskName, c.Comments, metadata, d.componentURL(g.component.ID, portKind(c.Type), c.ID)))
+	d.assets = append(d.assets, d.newAsset("Task", path, g.name+"/"+member, c.Comments, metadata, d.componentURL(g.component.ID, portKind(c.Type), c.ID)))
 	return taskMRN
 }
 
@@ -286,14 +295,15 @@ func (d *discovery) emitConnections(g *group) {
 // identity is the one the Kafka plugin uses, so a topic it already
 // catalogued gains NiFi as a second source instead of a duplicate.
 func (d *discovery) emitTopics() {
-	names := make([]string, 0, len(d.topics))
-	for name := range d.topics {
-		names = append(names, name)
+	mrns := make([]string, 0, len(d.topics))
+	for topicMRN := range d.topics {
+		mrns = append(mrns, topicMRN)
 	}
-	sort.Strings(names)
+	sort.Strings(mrns)
 
-	for _, name := range names {
-		usage := d.topics[name]
+	for _, topicMRN := range mrns {
+		usage := d.topics[topicMRN]
+		name := usage.name
 		metadata := map[string]any{"topic_name": name}
 		if len(usage.producers) > 0 {
 			metadata["producers"] = usage.producers
@@ -303,7 +313,7 @@ func (d *discovery) emitTopics() {
 		}
 
 		topic := name
-		mrnValue := nativeMRN("Topic", "Kafka", name)
+		mrnValue := topicMRN
 		d.assets = append(d.assets, pluginsdk.Asset{
 			Name:      &topic,
 			MRN:       &mrnValue,
@@ -321,9 +331,10 @@ func (d *discovery) emitTopics() {
 	}
 }
 
-func (d *discovery) newAsset(assetType, name, description string, metadata map[string]any, link string) pluginsdk.Asset {
-	assetName := name
-	mrnValue := assetMRN(assetType, name)
+// newAsset builds a NiFi asset named after the last level of its path. legacyName is the slash-joined name earlier releases built the MRN from.
+func (d *discovery) newAsset(assetType string, path []string, legacyName, description string, metadata map[string]any, link string) pluginsdk.Asset {
+	assetName := path[len(path)-1]
+	mrnValue := d.assetMRN(assetType, path...)
 
 	asset := pluginsdk.Asset{
 		Name:      &assetName,
@@ -342,6 +353,9 @@ func (d *discovery) newAsset(assetType, name, description string, metadata map[s
 			Properties: metadata,
 			Priority:   1,
 		}},
+	}
+	if previous := mrn.New(assetType, provider, legacyName); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
 	}
 	if description != "" {
 		asset.Description = &description
@@ -395,11 +409,21 @@ func portKind(portType string) string {
 // group is named the same whether discovery started at the root or at
 // the group itself.
 func breadcrumbPath(b breadcrumbEntity) string {
+	return strings.Join(breadcrumbLevels(b), "/")
+}
+
+// breadcrumbLevels is the breadcrumb chain from the root down, one level per group.
+func breadcrumbLevels(b breadcrumbEntity) []string {
 	var names []string
 	for cur := &b; cur != nil; cur = cur.ParentBreadcrumb {
 		names = append([]string{cur.Breadcrumb.Name}, names...)
 	}
-	return strings.Join(names, "/")
+	return names
+}
+
+// assetMRN is the single place a NiFi MRN is built, so pipelines, tasks and every edge between them address an asset the same way. The path runs from the root group down, which keeps two processors called LogAttribute in different groups apart.
+func (d *discovery) assetMRN(assetType string, path ...string) string {
+	return d.config.AssetMRN(assetType, provider, path...)
 }
 
 type namedID struct {

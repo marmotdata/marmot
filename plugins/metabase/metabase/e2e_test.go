@@ -104,7 +104,7 @@ func TestE2E_ValidateAcceptsTheRealConfig(t *testing.T) {
 func TestE2E_DiscoverNamesDashboardsByCollectionPath(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	finance := findByMRN(result, "mrn://dashboard/metabase/marmot-finance-finance-overview")
+	finance := findByMRN(result, "mrn://asset/dashboard/metabase/marmot.finance.finance-overview")
 	require.NotNil(t, finance, "dashboard in the Marmot/Finance collection")
 	assert.Equal(t, "Marmot/Finance/Finance overview", *finance.Name)
 	assert.Equal(t, "Dashboard", finance.Type)
@@ -114,7 +114,7 @@ func TestE2E_DiscoverNamesDashboardsByCollectionPath(t *testing.T) {
 	assert.EqualValues(t, 4, finance.Metadata["card_count"], "numbers arrive as float64 over the wire")
 	assert.Equal(t, false, finance.Metadata["archived"])
 
-	root := findByMRN(result, "mrn://dashboard/metabase/root-board")
+	root := findByMRN(result, "mrn://asset/dashboard/metabase/root-board")
 	require.NotNil(t, root, "dashboard in the root collection keeps its bare name")
 	assert.Equal(t, "Root board", *root.Name)
 	assert.Nil(t, root.Metadata["collection"])
@@ -123,17 +123,17 @@ func TestE2E_DiscoverNamesDashboardsByCollectionPath(t *testing.T) {
 func TestE2E_DiscoverLinksDashboardsToTheirCards(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	dash := "mrn://dashboard/metabase/marmot-finance-finance-overview"
-	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-revenue-by-customer", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-totals-from-model", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://chart/metabase/marmot-finance-recent-order-count", "CONTAINS"))
-	assert.True(t, hasEdge(result, dash, "mrn://data-model-object/metabase/marmot-finance-customer-orders", "CONTAINS"))
+	dash := "mrn://asset/dashboard/metabase/marmot.finance.finance-overview"
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/metabase/marmot.finance.revenue-by-customer", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/metabase/marmot.finance.totals-from-model", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://asset/chart/metabase/marmot.finance.recent-order-count", "CONTAINS"))
+	assert.True(t, hasEdge(result, dash, "mrn://asset/data-model-object/metabase/marmot.finance.customer-orders", "CONTAINS"))
 }
 
 func TestE2E_DiscoverCataloguesANativeQuestionAsAChartWithItsSQL(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	chart := findByMRN(result, "mrn://chart/metabase/marmot-finance-revenue-by-customer")
+	chart := findByMRN(result, "mrn://asset/chart/metabase/marmot.finance.revenue-by-customer")
 	require.NotNil(t, chart)
 	assert.Equal(t, "Chart", chart.Type)
 	assert.Equal(t, "Bar", chart.Metadata["chart_type"])
@@ -153,7 +153,7 @@ func TestE2E_DiscoverCataloguesANativeQuestionAsAChartWithItsSQL(t *testing.T) {
 func TestE2E_DiscoverCataloguesAModelAsADataModelObject(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	model := findByMRN(result, "mrn://data-model-object/metabase/marmot-finance-customer-orders")
+	model := findByMRN(result, "mrn://asset/data-model-object/metabase/marmot.finance.customer-orders")
 	require.NotNil(t, model)
 	assert.Equal(t, "Data Model Object", model.Type)
 	assert.Equal(t, "model", model.Metadata["card_type"])
@@ -164,42 +164,42 @@ func TestE2E_DiscoverCataloguesAModelAsADataModelObject(t *testing.T) {
 func TestE2E_DiscoverLinksNativeCardsToTheirPostgresTables(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	chart := "mrn://chart/metabase/marmot-finance-revenue-by-customer"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", chart, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", chart, "FEEDS"))
+	chart := "mrn://asset/chart/metabase/marmot.finance.revenue-by-customer"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", chart, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", chart, "FEEDS"))
 
 	// The same tables feed the dashboard the card is on.
-	dash := "mrn://dashboard/metabase/marmot-finance-finance-overview"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", dash, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", dash, "FEEDS"))
+	dash := "mrn://asset/dashboard/metabase/marmot.finance.finance-overview"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", dash, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", dash, "FEEDS"))
 }
 
 func TestE2E_DiscoverResolvesQuotedNamesAndSchemasAndSkipsCTEs(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	chart := "mrn://chart/metabase/marmot-finance-recent-order-count"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/recent_orders", chart, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/regions", chart, "FEEDS"))
-	assert.False(t, hasEdge(result, "mrn://table/postgresql/recent", chart, "FEEDS"), "a CTE is not a table")
+	chart := "mrn://asset/chart/metabase/marmot.finance.recent-order-count"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/recent_orders", chart, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/regions", chart, "FEEDS"))
+	assert.False(t, hasEdge(result, "mrn://asset/table/postgresql/recent", chart, "FEEDS"), "a CTE is not a table")
 }
 
 func TestE2E_DiscoverLinksQueryBuilderCardsAndTheirJoins(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://chart/metabase/marmot-orders-table", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://dashboard/metabase/root-board", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", "mrn://asset/chart/metabase/marmot-orders-table", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", "mrn://asset/dashboard/metabase/root-board", "FEEDS"))
 
-	joined := "mrn://chart/metabase/marmot-orders-with-regions"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", joined, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/regions", joined, "FEEDS"))
+	joined := "mrn://asset/chart/metabase/marmot-orders-with-regions"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", joined, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/regions", joined, "FEEDS"))
 }
 
 func TestE2E_DiscoverLinksAQuestionToTheModelItBuildsOn(t *testing.T) {
 	result := discoverE2E(t, nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://data-model-object/metabase/marmot-finance-customer-orders",
-		"mrn://chart/metabase/marmot-finance-totals-from-model", "FEEDS"))
+		"mrn://asset/data-model-object/metabase/marmot.finance.customer-orders",
+		"mrn://asset/chart/metabase/marmot.finance.totals-from-model", "FEEDS"))
 }
 
 func TestE2E_DiscoverAddressesSampleDatabaseTablesByItsEngine(t *testing.T) {
@@ -207,28 +207,28 @@ func TestE2E_DiscoverAddressesSampleDatabaseTablesByItsEngine(t *testing.T) {
 
 	// The built-in sample database is SQLite on current releases and H2
 	// on older ones; either way the table is named by the engine's rule.
-	chart := "mrn://chart/metabase/sample-orders"
+	chart := "mrn://asset/chart/metabase/sample-orders"
 	assert.True(t,
-		hasEdge(result, "mrn://table/sqlite/orders", chart, "FEEDS") ||
-			hasEdge(result, "mrn://table/h2/orders", chart, "FEEDS"),
+		hasEdge(result, "mrn://asset/table/sqlite/orders", chart, "FEEDS") ||
+			hasEdge(result, "mrn://asset/table/h2/orders", chart, "FEEDS"),
 		"expected the sample ORDERS table to feed the sample card")
 }
 
 func TestE2E_DiscoverSkipsArchivedItemsByDefault(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	assert.Nil(t, findByMRN(result, "mrn://chart/metabase/marmot-finance-old-revenue"))
-	assert.Nil(t, findByMRN(result, "mrn://dashboard/metabase/marmot-finance-old-board"))
+	assert.Nil(t, findByMRN(result, "mrn://asset/chart/metabase/marmot.finance.old-revenue"))
+	assert.Nil(t, findByMRN(result, "mrn://asset/dashboard/metabase/marmot.finance.old-board"))
 }
 
 func TestE2E_DiscoverIncludesArchivedItemsWhenAsked(t *testing.T) {
 	result := discoverE2E(t, pluginsdk.RawConfig{"include_archived": true})
 
-	chart := findByMRN(result, "mrn://chart/metabase/marmot-finance-old-revenue")
+	chart := findByMRN(result, "mrn://asset/chart/metabase/marmot.finance.old-revenue")
 	require.NotNil(t, chart)
 	assert.Equal(t, true, chart.Metadata["archived"])
 
-	dash := findByMRN(result, "mrn://dashboard/metabase/marmot-finance-old-board")
+	dash := findByMRN(result, "mrn://asset/dashboard/metabase/marmot.finance.old-board")
 	require.NotNil(t, dash)
 	assert.Equal(t, true, dash.Metadata["archived"])
 }
@@ -245,5 +245,5 @@ func TestE2E_DiscoverWithSessionLogin(t *testing.T) {
 		"host": config["host"], "username": username, "password": password,
 	})
 	require.NoError(t, err)
-	assert.NotNil(t, findByMRN(result, "mrn://dashboard/metabase/marmot-finance-finance-overview"))
+	assert.NotNil(t, findByMRN(result, "mrn://asset/dashboard/metabase/marmot.finance.finance-overview"))
 }

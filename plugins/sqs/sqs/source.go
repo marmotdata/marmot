@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,7 +18,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "sqs",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS SQS",
 		Description:   "Discover SQS queues from AWS accounts",
 		Icon:          "sqs",
@@ -209,7 +209,7 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (plugins
 	}
 
 	name := extractQueueName(queueURL)
-	mrnValue := mrn.New("Queue", "SQS", name)
+	mrnValue := s.config.AssetMRN("Queue", "SQS", name)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -256,7 +256,7 @@ func (s *Source) discoverDLQLineage(ctx context.Context, queues []string, queueA
 			sourceName := extractQueueName(queueURL)
 			targetName := extractQueueNameFromArn(policy.DeadLetterTargetArn)
 
-			if edge, ok := dlqEdge(sourceName, targetName, queueArns); ok {
+			if edge, ok := s.dlqEdge(sourceName, targetName, queueArns); ok {
 				lineages = append(lineages, edge)
 			}
 		}
@@ -282,7 +282,7 @@ func extractQueueNameFromArn(arn string) string {
 // name a DLQ in another account or region, which is normal for a
 // centralised DLQ, and the server silently discards an edge whose
 // endpoints have no asset behind them.
-func dlqEdge(sourceName, targetName string, queueArns map[string]string) (pluginsdk.LineageEdge, bool) {
+func (s *Source) dlqEdge(sourceName, targetName string, queueArns map[string]string) (pluginsdk.LineageEdge, bool) {
 	_, haveSource := queueArns[sourceName]
 	_, haveTarget := queueArns[targetName]
 
@@ -294,8 +294,8 @@ func dlqEdge(sourceName, targetName string, queueArns map[string]string) (plugin
 	}
 
 	return pluginsdk.LineageEdge{
-		Source: mrn.New("Queue", "SQS", sourceName),
-		Target: mrn.New("Queue", "SQS", targetName),
+		Source: s.config.AssetMRN("Queue", "SQS", sourceName),
+		Target: s.config.AssetMRN("Queue", "SQS", targetName),
 		Type:   "DLQ",
 	}, true
 }

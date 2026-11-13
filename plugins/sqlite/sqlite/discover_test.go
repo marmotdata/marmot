@@ -149,8 +149,8 @@ func TestDiscover_DiscoversForeignKeys(t *testing.T) {
 	result := discover(t, pluginsdk.RawConfig{"path": newTestDB(t)})
 
 	want := pluginsdk.LineageEdge{
-		Source: assetMRN("Table", "orders"),
-		Target: assetMRN("Table", "users"),
+		Source: testMRN("Table", "orders"),
+		Target: testMRN("Table", "users"),
 		Type:   "FOREIGN_KEY",
 	}
 	assert.Contains(t, result.Lineage, want)
@@ -159,7 +159,7 @@ func TestDiscover_DiscoversForeignKeys(t *testing.T) {
 func TestDiscover_EmitsRowAndColumnCountStatistics(t *testing.T) {
 	result := discover(t, pluginsdk.RawConfig{"path": newTestDB(t)})
 
-	usersMRN := assetMRN("Table", "users")
+	usersMRN := testMRN("Table", "users")
 
 	stats := make(map[string]float64)
 	for _, st := range result.Statistics {
@@ -175,7 +175,7 @@ func TestDiscover_EmitsRowAndColumnCountStatistics(t *testing.T) {
 func TestDiscover_SkipsRowCountForViews(t *testing.T) {
 	result := discover(t, pluginsdk.RawConfig{"path": newTestDB(t)})
 
-	viewMRN := assetMRN("View", "active_users")
+	viewMRN := testMRN("View", "active_users")
 	for _, st := range result.Statistics {
 		if st.AssetMRN == viewMRN {
 			assert.NotEqual(t, "asset.row_count", st.MetricName,
@@ -208,4 +208,9 @@ func TestDiscover_MissingFileFails(t *testing.T) {
 		"path": filepath.Join(t.TempDir(), "does-not-exist.db"),
 	})
 	require.Error(t, err)
+}
+
+// testMRN is the MRN discovery gives an object of the test.db file newTestDB creates.
+func testMRN(assetType, table string) string {
+	return assetMRN(&Config{Path: "test.db"}, assetType, table)
 }

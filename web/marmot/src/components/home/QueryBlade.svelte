@@ -5,6 +5,7 @@
 	import { BladeSlot } from '$lib/mm';
 	import { auth } from '$lib/stores/auth';
 	import { m } from '$lib/paraglide/messages';
+	import { mrnShortName } from '$lib/mrn';
 	import { formatDateTime, formatNumber } from '$lib/utils/format';
 	import { getQueryRecord } from '$lib/dataquery/api';
 	import { assetRouteParams, clientLabel, isRealTime, subjectParts } from '$lib/dataquery/format';
@@ -43,7 +44,7 @@
 			const context = query?.context?.find((c) => c.mrn === mrn);
 			return {
 				mrn,
-				name: context?.name || mrn.split('/').pop() || mrn,
+				name: context?.name || mrnShortName(mrn) || mrn,
 				provider: context?.providers?.[0] ?? '',
 				route: context?.asset_id ? assetRouteParams(mrn) : null
 			};

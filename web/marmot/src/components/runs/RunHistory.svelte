@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { assetRouteParamsFor } from '$lib/mrn';
 	import { formatDateTime } from '$lib/utils/format';
 	import { formatRunDuration } from './pipeline';
 
@@ -49,11 +50,7 @@
 
 	let assetHref = $derived.by(() => {
 		if (!asset) return undefined;
-		const parts = (asset.mrn ?? '').replace('mrn://', '').split('/');
-		const params =
-			parts.length >= 3
-				? { type: parts[0], service: parts[1], name: parts.slice(2).join('/') }
-				: { type: asset.type ?? '', service: asset.providers?.[0] ?? '', name: asset.name ?? '' };
+		const params = assetRouteParamsFor(asset);
 		if (!params.type || !params.service || !params.name) return undefined;
 		return `${resolve('/discover/[type]/[service]/[name]', params)}?tab=run-history`;
 	});

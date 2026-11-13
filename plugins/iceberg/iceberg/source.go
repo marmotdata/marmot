@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/apache/iceberg-go/catalog"
 	gluecat "github.com/apache/iceberg-go/catalog/glue"
@@ -13,6 +14,9 @@ import (
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/marmotdata/plugin-sdk/mrn"
 )
+
+// providerName is the provider every Iceberg MRN is filed under.
+const providerName = "Iceberg"
 
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
@@ -29,7 +33,7 @@ func Meta() pluginsdk.Meta {
 
 	return pluginsdk.Meta{
 		ID:            "iceberg",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Iceberg",
 		Description:   "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
 		Icon:          "iceberg",
@@ -232,8 +236,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  allAssets,
-		Lineage: lineages,
+		Assets:       allAssets,
+		Lineage:      lineages,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
 }
 
@@ -267,20 +272,54 @@ func buildContainsLineage(tableAssets, viewAssets []pluginsdk.Asset) []pluginsdk
 	return edges
 }
 
-// namespaceFromAssetMRN returns the MRN of the Namespace asset that
-// contains a table or view. It reads the namespace the discovery pass
-// recorded rather than re-splitting the child's MRN: a table identifier
-// can contain a dot, and cutting at the last one would point the edge at a
-// Namespace no run ever creates, which fails the lineage foreign key.
+// namespaceFromAssetMRN returns the MRN of the Namespace asset that contains a table or view. It cuts the last level off the child's parsed path, which is safe because a level holding a dot is quoted in the MRN and so is never split in two.
 func namespaceFromAssetMRN(a pluginsdk.Asset) string {
-	if a.MRN == nil || a.Metadata == nil {
+	if a.MRN == nil {
 		return ""
 	}
 
-	nsPath, ok := a.Metadata["namespace"].(string)
-	if !ok || nsPath == "" {
+	m, err := mrn.ParseMRN(*a.MRN)
+	if err != nil {
+		return ""
+	}
+	path := m.Path()
+	if len(path) < 2 {
 		return ""
 	}
 
-	return mrn.New("Namespace", "Iceberg", nsPath)
+	return mrn.Asset("Namespace", providerName, path[:len(path)-1]...).WithZone(m.Zone).String()
+}
+
+// assetMRN names a namespace, table or view by its identifier levels. It also returns the MRN earlier releases gave the asset when that differs, which only happens when a level holds a dot because those are quoted now.
+func (s *Source) assetMRN(assetType string, levels []string) (string, []string) {
+	current := s.config.AssetMRN(assetType, providerName, levels...)
+
+	joined := strings.Join(levels, ".")
+	if mrn.New(assetType, providerName, joined) == mrn.Asset(assetType, providerName, levels...).String() {
+		return current, nil
+	}
+	return current, []string{mrn.Asset(assetType, providerName, joined).LegacyString()}
+}
+
+// zoneBindings names the REST catalog host so other plugins can resolve it to this zone. It is empty for catalogs that are not reached over the network.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	if s.config.CatalogType != "rest" {
+		return nil
+	}
+	u, err := url.Parse(s.config.URI)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{
+		Provider: providerName,
+		Host:     strings.ToLower(u.Hostname()) + ":" + port,
+		Zone:     s.config.Zone,
+	}}
 }

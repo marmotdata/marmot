@@ -149,7 +149,7 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 	if err != nil {
 		return tc.errorWithGuidance(
 			fmt.Sprintf("Asset with MRN '%s' not found", mrn),
-			"The MRN may be incorrect. MRNs are qualified identifiers like 'postgres://database/schema/table'.",
+			"The MRN may be incorrect. MRNs look like 'mrn://asset/table/postgresql/analytics.public.orders', with '@<instance>' after the provider when several systems of that technology are catalogued.",
 			map[string]string{
 				"Try searching instead": `{"query": "table name"}`,
 				"List all of this type": `{"providers": ["postgres"]}`,

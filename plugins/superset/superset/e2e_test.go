@@ -115,7 +115,7 @@ func TestE2E_DiscoverFailsWithWrongCredentials(t *testing.T) {
 func TestE2E_DiscoverDashboards(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	overview := findByMRN(result, "mrn://dashboard/superset/shop-overview")
+	overview := findByMRN(result, "mrn://asset/dashboard/superset/shop-overview")
 	require.NotNil(t, overview)
 	assert.Equal(t, "Dashboard", overview.Type)
 	assert.Equal(t, []string{"Superset"}, overview.Providers)
@@ -129,7 +129,7 @@ func TestE2E_DiscoverDashboards(t *testing.T) {
 	require.Len(t, overview.ExternalLinks, 1)
 	assert.Equal(t, "Open in Superset", overview.ExternalLinks[0].Name)
 
-	draft := findByMRN(result, "mrn://dashboard/superset/draft-scratchpad")
+	draft := findByMRN(result, "mrn://asset/dashboard/superset/draft-scratchpad")
 	require.NotNil(t, draft)
 	assert.Equal(t, false, draft.Metadata["published"])
 }
@@ -137,14 +137,14 @@ func TestE2E_DiscoverDashboards(t *testing.T) {
 func TestE2E_SkipsDraftsWhenConfigured(t *testing.T) {
 	result := discoverE2E(t, pluginsdk.RawConfig{"include_draft": false})
 
-	assert.NotNil(t, findByMRN(result, "mrn://dashboard/superset/shop-overview"))
-	assert.Nil(t, findByMRN(result, "mrn://dashboard/superset/draft-scratchpad"))
+	assert.NotNil(t, findByMRN(result, "mrn://asset/dashboard/superset/shop-overview"))
+	assert.Nil(t, findByMRN(result, "mrn://asset/dashboard/superset/draft-scratchpad"))
 }
 
 func TestE2E_DiscoverCharts(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	orders := findByMRN(result, "mrn://chart/superset/orders-by-status")
+	orders := findByMRN(result, "mrn://asset/chart/superset/orders-by-status")
 	require.NotNil(t, orders)
 	assert.Equal(t, "Chart", orders.Type)
 	assert.Equal(t, "table", orders.Metadata["viz_type"])
@@ -155,11 +155,11 @@ func TestE2E_DiscoverCharts(t *testing.T) {
 	assert.Equal(t, "Count of orders per status", *orders.Description)
 	assert.Contains(t, orders.Metadata["url"], "/explore/?slice_id=")
 
-	spend := findByMRN(result, "mrn://chart/superset/spend-per-customer")
+	spend := findByMRN(result, "mrn://asset/chart/superset/spend-per-customer")
 	require.NotNil(t, spend)
 	assert.Equal(t, "Pie", spend.Metadata["chart_type"])
 
-	prices := findByMRN(result, "mrn://chart/superset/product-prices")
+	prices := findByMRN(result, "mrn://asset/chart/superset/product-prices")
 	require.NotNil(t, prices)
 	assert.Equal(t, "Bar", prices.Metadata["chart_type"])
 }
@@ -213,7 +213,7 @@ func TestE2E_DiscoverVirtualDatasetWithQuery(t *testing.T) {
 func TestE2E_DiscoverDatabaseConnection(t *testing.T) {
 	result := discoverE2E(t, nil)
 
-	shop := findByMRN(result, "mrn://datasource/superset/shop")
+	shop := findByMRN(result, "mrn://asset/datasource/superset/shop")
 	require.NotNil(t, shop)
 	assert.Equal(t, "DataSource", shop.Type)
 	assert.Equal(t, "Shop", *shop.Name)
@@ -230,20 +230,20 @@ func TestE2E_Lineage(t *testing.T) {
 	result := discoverE2E(t, nil)
 
 	// Dashboard -> charts
-	assert.True(t, hasEdge(result, "mrn://dashboard/superset/shop-overview", "mrn://chart/superset/orders-by-status", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://dashboard/superset/shop-overview", "mrn://chart/superset/spend-per-customer", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://dashboard/superset/draft-scratchpad", "mrn://chart/superset/product-prices", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/superset/shop-overview", "mrn://asset/chart/superset/orders-by-status", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/superset/shop-overview", "mrn://asset/chart/superset/spend-per-customer", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/dashboard/superset/draft-scratchpad", "mrn://asset/chart/superset/product-prices", "CONTAINS"))
 
 	// Dataset -> chart
-	assert.True(t, hasEdge(result, "mrn://data-model-object/superset/public.orders", "mrn://chart/superset/orders-by-status", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://data-model-object/superset/public.order_totals", "mrn://chart/superset/spend-per-customer", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://data-model-object/superset/public.orders", "mrn://asset/chart/superset/orders-by-status", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://data-model-object/superset/public.order_totals", "mrn://asset/chart/superset/spend-per-customer", "FEEDS"))
 
 	// Connection -> dataset
-	assert.True(t, hasEdge(result, "mrn://datasource/superset/shop", "mrn://data-model-object/superset/public.orders", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/superset/shop", "mrn://data-model-object/superset/public.orders", "FEEDS"))
 
 	// Postgres table -> dataset, physical and through the virtual SQL
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/products", "mrn://data-model-object/superset/inventory.products", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", "mrn://data-model-object/superset/public.order_totals", "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", "mrn://data-model-object/superset/public.order_totals", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", "mrn://data-model-object/superset/public.orders", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/products", "mrn://data-model-object/superset/inventory.products", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", "mrn://data-model-object/superset/public.order_totals", "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", "mrn://data-model-object/superset/public.order_totals", "FEEDS"))
 }

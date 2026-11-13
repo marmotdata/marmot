@@ -229,7 +229,7 @@ Use this when the upstream is only known at runtime, for example a tool that pic
 
 ```python
 def query_table(table: str, sql: str) -> list[dict]:
-    tracker.record_source(f"mrn://table/postgres/{table}")
+    tracker.record_source(f"mrn://asset/table/postgresql/analytics.public.{table}")
     return run_sql(sql)
 ```
 
@@ -239,7 +239,7 @@ def query_table(table: str, sql: str) -> list[dict]:
 
 ```ts
 function queryTable(table: string, sql: string) {
-  tracker.recordSource(`mrn://table/postgres/${table}`);
+  tracker.recordSource(`mrn://asset/table/postgresql/analytics.public.${table}`);
   return runSql(sql);
 }
 ```

@@ -1158,6 +1158,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/assets/by-mrn": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Idempotent write for automation: creates the asset the MRN names, or records the caller's fields on it when it already exists. Unlike POST /assets/ this never fails because the asset exists, so only use it when the caller means the same asset.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Create or update an asset by MRN",
+                "operationId": "putAssetsByMRN",
+                "parameters": [
+                    {
+                        "description": "Asset",
+                        "name": "asset",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpsertAssetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Asset"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/Asset"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/assets/counts/{id}": {
             "get": {
                 "security": [
@@ -1549,6 +1604,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/assets/identity/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The asset's MRN in parts, the MRNs it used to have, and what each pipeline, import, person or Terraform resource says about it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get an asset's identity",
+                "operationId": "getAssetsIdentityID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AssetIdentityResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/assets/lookup/{type}/{service}/{name}": {
             "get": {
                 "security": [
@@ -1666,6 +1765,68 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/merge/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Folds the asset into the one named by into when both turn out to be the same thing, such as an OpenLineage stub and the table a plugin found, or a federated copy and the native one. Owners, terms, data products, subscriptions, lineage and documentation move across, and the merged asset's MRN keeps working as an alias.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Merge an asset into another",
+                "operationId": "postAssetsMergeID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID to merge away",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Asset to merge into",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/MergeAssetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Asset"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -5052,6 +5213,56 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/QueryCount"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mrn/resolve": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Says what an MRN of any kind names: an asset, glossary term, data product, team, user, pipeline or source. Legacy asset MRNs and MRNs a thing used to have resolve too.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Resolve an MRN",
+                "operationId": "getMRNResolve",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "MRN",
+                        "name": "mrn",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ResolveMRNResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -11591,6 +11802,127 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/zone-bindings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Which zone each host belongs to. Plugins report the hosts they connect to; an admin can pin a binding so a Kafka Connect sink or an OpenLineage event that only names a host lands on the right system's assets.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "List zone bindings",
+                "operationId": "getZoneBindings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ZoneBinding"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Binds a provider's host, host:port, to a zone. A pinned binding wins over what plugins report.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Pin a zone binding",
+                "operationId": "putZoneBindings",
+                "parameters": [
+                    {
+                        "description": "Binding",
+                        "name": "binding",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ZoneBinding"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ZoneBinding"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Delete a zone binding",
+                "operationId": "deleteZoneBindings",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider",
+                        "name": "provider",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Host",
+                        "name": "host",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth-providers": {
             "get": {
                 "description": "Returns the enabled auth providers without sensitive data",
@@ -12160,11 +12492,26 @@ const docTemplate = `{
                 "mrn": {
                     "type": "string"
                 },
+                "mrn_parts": {
+                    "description": "MRNParts is the MRN split into kind, type, provider, zone and name, so clients never split the string themselves.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/MRNParts"
+                        }
+                    ]
+                },
                 "name": {
                     "type": "string"
                 },
                 "parent_mrn": {
                     "type": "string"
+                },
+                "previous_mrns": {
+                    "description": "PreviousMRNs carries the MRNs a plugin gave this asset before; input only, like Terms.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "providers": {
                     "type": "array",
@@ -12214,6 +12561,37 @@ const docTemplate = `{
                 }
             }
         },
+        "AssetContribution": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "fields": {
+                    "$ref": "#/definitions/asset.ContributionFields"
+                },
+                "first_seen_at": {
+                    "type": "string"
+                },
+                "last_seen_at": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "writer": {
+                    "type": "string"
+                },
+                "writer_info": {
+                    "description": "WriterInfo is Writer split into what a person reading it needs, filled in by the API so clients never parse writer keys.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/AssetWriterInfo"
+                        }
+                    ]
+                }
+            }
+        },
         "AssetCount": {
             "type": "object",
             "properties": {
@@ -12245,6 +12623,32 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "AssetIdentityResponse": {
+            "type": "object",
+            "properties": {
+                "aliases": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "contributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetContribution"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "mrn_parts": {
+                    "$ref": "#/definitions/MRNParts"
                 }
             }
         },
@@ -12551,6 +12955,36 @@ const docTemplate = `{
                 }
             }
         },
+        "AssetWriterInfo": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "pipeline": {
+                    "type": "string"
+                },
+                "principal_id": {
+                    "type": "string"
+                },
+                "principal_name": {
+                    "type": "string"
+                },
+                "principal_type": {
+                    "description": "PrincipalType and PrincipalID name the person or service account, and PrincipalName is their display name when it could be looked up.",
+                    "type": "string"
+                },
+                "scheduled": {
+                    "type": "boolean"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
         "AssetsByOwnerResponse": {
             "type": "object",
             "properties": {
@@ -12702,6 +13136,10 @@ const docTemplate = `{
                 "error": {
                     "type": "string"
                 },
+                "moved_from": {
+                    "description": "MovedFrom is the MRN the asset had before this run gave it a new one.",
+                    "type": "string"
+                },
                 "mrn": {
                     "type": "string"
                 },
@@ -12776,6 +13214,13 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/CreateStatRequest"
                     }
+                },
+                "zone_bindings": {
+                    "description": "ZoneBindings are the hosts the plugin connected to and the zone each belongs to.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ZoneBinding"
+                    }
                 }
             }
         },
@@ -12800,7 +13245,21 @@ const docTemplate = `{
                         "$ref": "#/definitions/LineageResult"
                     }
                 },
+                "stale_contributions_withdrawn": {
+                    "description": "StaleContributionsWithdrawn are assets the run no longer found that another writer still describes, so they were kept.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "stale_entities_removed": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "warnings": {
+                    "description": "Warnings are identity problems the run worked around.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -13084,6 +13543,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "mrn": {
+                    "description": "MRN sets the asset's identity explicitly, for example mrn://asset/table/postgresql@prod-eu/analytics.public.orders. Without it the MRN is built from type, the first provider, zone and name.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -13130,6 +13593,10 @@ const docTemplate = `{
                 },
                 "user_description": {
                     "description": "UserDescription is the people-written description, kept apart from the source's own.",
+                    "type": "string"
+                },
+                "zone": {
+                    "description": "Zone tells apart two systems of the same provider when the MRN is built from the name; ignored when MRN is set.",
                     "type": "string"
                 }
             }
@@ -13548,6 +14015,10 @@ const docTemplate = `{
                     "description": "LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
                     "type": "string"
                 },
+                "mrn": {
+                    "description": "MRN is mrn://user/\u003cusername\u003e, derived from the name.",
+                    "type": "string"
+                },
                 "must_change_password": {
                     "type": "boolean"
                 },
@@ -13629,6 +14100,10 @@ const docTemplate = `{
                 "metadata": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "mrn": {
+                    "description": "MRN is mrn://data-product/\u003cslug\u003e, kept up to date by the database as the product is renamed.",
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -14465,6 +14940,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "mrn": {
+                    "description": "MRN is mrn://glossary-term/\u003csource\u003e/\u003cpath\u003e, kept up to date by the database as the term is renamed or moved.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -14984,6 +15463,40 @@ const docTemplate = `{
                 }
             }
         },
+        "MRNParts": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "MergeAssetRequest": {
+            "type": "object",
+            "properties": {
+                "into": {
+                    "type": "string"
+                }
+            }
+        },
         "MessageResponse": {
             "type": "object",
             "properties": {
@@ -15234,11 +15747,23 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "federates": {
+                    "description": "Federates is true for a plugin that catalogues assets other systems own, such as Trino, OpenMetadata or dbt, so that when it and the system's own plugin describe the same asset the owner's description, schema and metadata win.",
+                    "type": "boolean"
+                },
                 "icon": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
+                },
+                "identity_scope": {
+                    "description": "IdentityScope says how the systems this plugin reads are told apart,\nwhich decides the zone used when the config sets none. See the\nIdentityScope constants; empty is IdentityScopeNetwork.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pluginsdk.IdentityScope"
+                        }
+                    ]
                 },
                 "marmot_version": {
                     "type": "string"
@@ -15341,6 +15866,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "owner": {
+                    "description": "Owner is who started the run: the schedule for a scheduled run, the principal for a CLI or API run. Checkpoints and the run's contributions to assets belong to the pipeline, source and owner together, so two people running the same pipeline file never treat each other's assets as stale.",
                     "type": "string"
                 },
                 "pipeline_name": {
@@ -16416,6 +16945,24 @@ const docTemplate = `{
                 }
             }
         },
+        "ResolveMRNResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "moved": {
+                    "description": "Moved is true when the MRN asked for is an alias of this one.",
+                    "type": "boolean"
+                },
+                "mrn": {
+                    "type": "string"
+                }
+            }
+        },
         "Result": {
             "type": "object",
             "properties": {
@@ -16619,8 +17166,19 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "mrn": {
+                    "description": "MRN is the plugin's own MRN for the asset. Without it the server builds one from type, provider and name, which cannot tell apart two tables of the same name in different schemas.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
+                },
+                "previous_mrns": {
+                    "description": "PreviousMRNs are MRNs earlier versions of the plugin gave the asset.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "providers": {
                     "type": "array",
@@ -17065,6 +17623,10 @@ const docTemplate = `{
                 "managed_by": {
                     "type": "string"
                 },
+                "mrn": {
+                    "description": "MRN is mrn://pipeline/\u003cname\u003e, derived from the name.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -17467,6 +18029,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "mrn": {
+                    "description": "MRN is mrn://team/\u003cslug\u003e, derived from the name.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -17572,6 +18138,10 @@ const docTemplate = `{
                 "metadata": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "mrn": {
+                    "description": "MRN is mrn://team/\u003cslug\u003e, derived from the name.",
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -18094,6 +18664,90 @@ const docTemplate = `{
                 }
             }
         },
+        "UpsertAssetRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "providers",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/Environment"
+                    }
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "description": "Owners are the users and teams to own the asset.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CreateAssetOwner"
+                    }
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetSource"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "terms": {
+                    "description": "Terms are the IDs of glossary terms to link the asset to.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_description": {
+                    "description": "UserDescription is the people-written description, kept apart from the source's own.",
+                    "type": "string"
+                },
+                "zone": {
+                    "description": "Zone tells apart two systems of the same provider when the MRN is built from the name; ignored when MRN is set.",
+                    "type": "string"
+                }
+            }
+        },
         "User": {
             "type": "object",
             "properties": {
@@ -18117,6 +18771,10 @@ const docTemplate = `{
                 },
                 "last_seen_at": {
                     "description": "LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
+                    "type": "string"
+                },
+                "mrn": {
+                    "description": "MRN is mrn://user/\u003cusername\u003e, derived from the name.",
                     "type": "string"
                 },
                 "must_change_password": {
@@ -18269,6 +18927,74 @@ const docTemplate = `{
                 }
             }
         },
+        "ZoneBinding": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.ContributionFields": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssetExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "query": {
+                    "type": "string"
+                },
+                "query_language": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "pluginsdk.AssetField": {
             "type": "object",
             "properties": {
@@ -18388,6 +19114,19 @@ const docTemplate = `{
                 "FieldTypeMultiselect",
                 "FieldTypePassword",
                 "FieldTypeObject"
+            ]
+        },
+        "pluginsdk.IdentityScope": {
+            "type": "string",
+            "enum": [
+                "network",
+                "account",
+                "file"
+            ],
+            "x-enum-varnames": [
+                "IdentityScopeNetwork",
+                "IdentityScopeAccount",
+                "IdentityScopeFile"
             ]
         },
         "pluginsdk.ShowWhen": {

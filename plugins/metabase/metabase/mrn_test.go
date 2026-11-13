@@ -1,6 +1,7 @@
 package metabase
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -8,59 +9,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A Metabase asset is named by the path of the collection holding it
-// and its own name, joined with "/". mrn.New folds the slashes and
-// spaces to hyphens and lowercases, so the MRN is a flat slug while
-// Name keeps the readable path.
+// A Metabase asset's MRN has one level per collection holding it, then its own name.
+
+// assetMRN builds the MRN of a Metabase asset from its slash-joined collection path and name, the way the plugin does from its levels.
+func assetMRN(assetType, path string) string {
+	return mrn.Asset(assetType, provider, strings.Split(path, "/")...).String()
+}
 
 func TestDashboardMRN_IsTheCollectionPathAndName(t *testing.T) {
-	assert.Equal(t, "mrn://dashboard/metabase/marmot-finance-finance-overview",
+	assert.Equal(t, "mrn://asset/dashboard/metabase/marmot.finance.finance-overview",
 		assetMRN("Dashboard", "Marmot/Finance/Finance overview"))
 }
 
-func TestChartMRN_IsTheCollectionPathAndName(t *testing.T) {
-	assert.Equal(t, "mrn://chart/metabase/marmot-finance-revenue-by-customer",
-		assetMRN("Chart", "Marmot/Finance/Revenue by customer"))
-}
-
-func TestDataModelObjectMRN_KeepsTheSpacedType(t *testing.T) {
-	// The type is used as-is by mrn.New, which is also how the
-	// OpenMetadata plugin addresses a Metabase model, so the two merge.
-	assert.Equal(t, "mrn://data-model-object/metabase/marmot-finance-customer-orders",
-		assetMRN("Data Model Object", "Marmot/Finance/Customer orders"))
-}
-
 func TestRootItemMRN_IsTheBareName(t *testing.T) {
-	assert.Equal(t, "mrn://dashboard/metabase/root-board", assetMRN("Dashboard", "Root board"))
+	assert.Equal(t, "mrn://asset/dashboard/metabase/root-board", assetMRN("Dashboard", "Root board"))
 }
 
-func TestMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so an MRN has to survive that
-	// unchanged or the asset becomes unreachable from the UI.
-	for _, original := range []string{
-		assetMRN("Dashboard", "Marmot/Finance/Finance overview"),
-		assetMRN("Chart", "Examples/Orders + People"),
-		assetMRN("Data Model Object", "Marmot/Finance/Customer orders"),
-	} {
-		parsed, err := mrn.Parse(original)
-		require.NoError(t, err)
-		assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-	}
+func TestMRN_CarriesTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod"
+	assert.Equal(t, "mrn://asset/dashboard/metabase@prod/finance.board", cfg.AssetMRN("Dashboard", provider, "Finance", "Board"))
 }
 
-func TestEveryAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so
-	// the MRN each asset carries must be exactly that.
+func TestEveryAsset_MRNIsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discover(t, shopFixture(), nil)
 
 	require.NotEmpty(t, result.Assets)
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy, *a.MRN)
+		assert.Equal(t, strings.ReplaceAll(strings.ToLower(a.Type), " ", "-"), parsed.Type)
+		assert.Equal(t, "metabase", parsed.Provider)
+		assert.NotContains(t, *a.Name, "/", "the name is the item's own name, not its path")
 	}
+}
+
+func TestAssetInACollection_ListsItsOldMRN(t *testing.T) {
+	result := discover(t, shopFixture(), nil)
+
+	found := false
+	for _, a := range result.Assets {
+		if len(a.PreviousMRNs) > 0 {
+			found = true
+			assert.Contains(t, a.PreviousMRNs[0], "-", "the old MRN folded the collection path into one slug")
+		}
+	}
+	assert.True(t, found)
 }
 
 func TestEveryEdge_PointsAtAnEmittedAssetOrANativeTable(t *testing.T) {
@@ -75,16 +71,25 @@ func TestEveryEdge_PointsAtAnEmittedAssetOrANativeTable(t *testing.T) {
 		_, targetEmitted := emitted[edge.Target]
 		assert.Truef(t, targetEmitted, "edge target %s is not an emitted asset", edge.Target)
 		if !sourceEmitted {
-			assert.Containsf(t, edge.Source, "mrn://table/postgresql/", "edge source %s is neither emitted nor a native table", edge.Source)
+			assert.Containsf(t, edge.Source, "mrn://asset/table/postgresql", "edge source %s is neither emitted nor a native table", edge.Source)
 		}
 	}
 }
 
 func TestTableMRN_MatchesThePostgreSQLPlugin(t *testing.T) {
-	// The PostgreSQL plugin names a table by its bare name, so the
-	// lineage edge must land on mrn://table/postgresql/<table>.
-	db := database{ID: 2, Engine: "postgres", Details: map[string]any{"dbname": "shop"}}
+	db := database{ID: 2, Engine: "postgres", Details: map[string]any{"dbname": "shop", "host": "DB.internal", "port": float64(5433)}}
 
-	assert.Equal(t, "mrn://table/postgresql/orders", tableMRN(db, table{Schema: "public", Name: "orders"}))
-	assert.Equal(t, mrn.New("Table", "PostgreSQL", "orders"), tableMRN(db, table{Schema: "public", Name: "orders"}))
+	assert.Equal(t, "mrn://asset/table/postgresql@host=db.internal:5433/shop.public.orders", tableMRN(db, table{Schema: "public", Name: "orders"}))
+}
+
+func TestTableMRN_TheHostGetsTheDefaultPort(t *testing.T) {
+	db := database{Engine: "postgres", Details: map[string]any{"dbname": "shop", "host": "db"}}
+
+	assert.Equal(t, "mrn://asset/table/postgresql@host=db:5432/shop.public.orders", tableMRN(db, table{Schema: "public", Name: "orders"}))
+}
+
+func TestTableMRN_SameTableInTwoSchemasDiffers(t *testing.T) {
+	db := database{Engine: "postgres", Details: map[string]any{"dbname": "shop"}}
+
+	assert.NotEqual(t, tableMRN(db, table{Schema: "public", Name: "orders"}), tableMRN(db, table{Schema: "archive", Name: "orders"}))
 }

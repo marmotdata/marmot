@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ const (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "starrocks",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "StarRocks",
 		Description:   "Discover databases, tables, views and materialized views from StarRocks clusters",
 		Icon:          "starrocks",
@@ -221,10 +222,19 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(d.statistics)).
 		Msg("StarRocks discovery completed")
 
+	port := s.config.Port
+	if port == 0 {
+		port = 9030
+	}
 	return &pluginsdk.DiscoveryResult{
 		Assets:     d.assets,
 		Lineage:    d.lineage,
 		Statistics: d.statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -382,7 +392,7 @@ func classifyObject(tableType, engine string) string {
 // OpenMetadata import of a StarRocks service produces.
 func (s *Source) databaseAsset(database, catalogType, version string) pluginsdk.Asset {
 	name := database
-	mrnValue := assetMRN("Database", name)
+	mrnValue := assetMRN(s.config, "Database", name)
 
 	metadata := map[string]any{
 		"host":     s.config.Host,
@@ -422,8 +432,9 @@ func (s *Source) objectAsset(ctx context.Context, d *discovery, database string,
 		assetType = "View"
 	}
 
-	name := objectName(database, t.Name)
-	mrnValue := assetMRN(assetType, name)
+	name := t.Name
+	qualified := objectName(database, t.Name)
+	mrnValue := assetMRN(s.config, assetType, database, t.Name)
 
 	metadata := map[string]any{
 		"host":        s.config.Host,
@@ -471,6 +482,10 @@ func (s *Source) objectAsset(ctx context.Context, d *discovery, database string,
 		Metadata:  metadata,
 		Schema:    make(map[string]string),
 	}
+	// Earlier releases named the asset database.object and had no zone, so the old MRN only differs once a zone is set.
+	if previous := mrn.New(assetType, provider, qualified); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
+	}
 	if t.Comment != "" {
 		description := t.Comment
 		asset.Description = &description
@@ -509,7 +524,7 @@ func (s *Source) objectAsset(ctx context.Context, d *discovery, database string,
 			log.Warn().Err(err).Str("database", database).Str("object", t.Name).Msg("Failed to read columns")
 		} else {
 			if err := pluginsdk.SetColumns(&asset, buildColumns(columns, parsed)); err != nil {
-				log.Warn().Err(err).Str("object", name).Msg("Failed to serialise columns")
+				log.Warn().Err(err).Str("object", qualified).Msg("Failed to serialise columns")
 			}
 			columnCount = len(columns)
 		}
@@ -812,16 +827,12 @@ func convertValue(v any) any {
 	}
 }
 
-// objectName is the Name of a table or view: database.object, the same
-// shape an OpenMetadata import of a StarRocks service produces, so both
-// land on one asset.
+// objectName is the database.object form earlier releases used as an asset name, kept to build the previous MRN and for log messages.
 func objectName(database, object string) string {
 	return database + "." + object
 }
 
-// assetMRN is the single place a StarRocks MRN is built. Assets, CONTAINS
-// edges, view lineage and foreign keys all go through it so they can
-// never address the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a StarRocks MRN is built. Assets, CONTAINS edges, view lineage and foreign keys all go through it so they can never address the same object differently. The path runs database, object, the same shape an OpenMetadata import of a StarRocks service produces, so both land on one asset.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }

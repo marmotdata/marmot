@@ -222,9 +222,30 @@ Manage named contexts for switching between Marmot instances. Contexts are creat
 
 ```
 marmot assets <list | get | search | delete | summary | tags | owners> [flags]
+marmot assets <identity | merge | upsert> [flags]
 ```
 
 Browse, search and manage assets in your catalog. Use `list` and `search` with `--types`, `--providers` and `--tags` to filter results. `tags add` and `tags remove` take an asset ID and a tag.
+
+`identity <id>` shows an asset's [MRN](MRNs/index.md), zone and previous MRNs, and each writer with its role and when it last saw the asset. `merge <id> --into <id>` folds an asset into another that turns out to be the same thing: owners, glossary terms, data products, subscriptions, lineage and documentation move across, and the merged asset's MRN keeps working as an alias. `upsert <mrn>` creates the asset an MRN names, or updates what you say about it if it exists.
+
+```bash
+marmot assets upsert \
+  mrn://asset/table/postgresql@prod-eu/analytics.public.orders \
+  --description "One row per order, from payment authorisation."
+
+marmot assets merge <old-asset-id> --into <new-asset-id>
+```
+
+| Flag | On | Description |
+| --- | --- | --- |
+| `--into` | `merge` | ID of the asset to keep. Required. |
+| `--yes`, `-y` | `merge` | Skip the confirmation prompt. |
+| `--name` | `upsert` | Asset name. Defaults to the MRN's name. |
+| `--type` | `upsert` | Asset type. Defaults to the MRN's type. |
+| `--providers` | `upsert` | Comma-separated providers. Defaults to the MRN's provider. |
+| `--description` | `upsert` | Description. |
+| `--tags` | `upsert` | Comma-separated tags. |
 
 ### marmot search
 
@@ -265,6 +286,28 @@ marmot lineage get <asset-id> [flags]
 ```
 
 View the upstream and downstream lineage graph for an asset. Control traversal depth with `--depth`.
+
+### marmot mrn
+
+```
+marmot mrn resolve <mrn>
+```
+
+Show what an [MRN](MRNs/index.md) names: its kind, ID and current MRN. It accepts legacy MRNs and MRNs something used to have, and says when the MRN you gave has moved.
+
+### marmot zones
+
+```
+marmot zones <list | bind | unbind>
+```
+
+Manage which [zone](MRNs/zones.md) each host belongs to. Plugins report the hosts they connect to; bind a host yourself when lineage from Kafka Connect, OpenLineage or another tool that only knows an address should land on a particular system's assets. A binding you make wins over what plugins report.
+
+| Subcommand | Description |
+| --- | --- |
+| `list` | Show every binding with its provider, host, zone and origin (`discovered` or `manual`) |
+| `bind <provider> <host:port> <zone>` | Bind a host to a zone |
+| `unbind <provider> <host:port>` | Remove a host's binding |
 
 ### marmot users
 

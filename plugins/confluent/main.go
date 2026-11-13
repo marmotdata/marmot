@@ -22,7 +22,7 @@ func main() {
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
 		Meta: pluginsdk.Meta{
 			ID:            "confluent",
-			MarmotVersion: ">=0.12.0",
+			MarmotVersion: ">=0.13.0",
 			Name:          "Confluent Cloud",
 			Description:   "Discover Kafka topics from Confluent Cloud clusters",
 			Icon:          "confluent",

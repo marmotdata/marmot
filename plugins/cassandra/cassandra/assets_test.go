@@ -53,10 +53,10 @@ func TestTableAsset_IsNamedByKeyspaceAndTable(t *testing.T) {
 	a := testSource().tableAsset("shop", ordersTable(), nil, nil)
 
 	require.NotNil(t, a.Name)
-	assert.Equal(t, "shop.orders", *a.Name)
+	assert.Equal(t, "orders", *a.Name)
 	assert.Equal(t, "Table", a.Type)
 	assert.Equal(t, []string{"Cassandra"}, a.Providers)
-	assert.Equal(t, "mrn://table/cassandra/shop.orders", *a.MRN)
+	assert.Equal(t, "mrn://asset/table/cassandra/shop.orders", *a.MRN)
 }
 
 func TestTableAsset_CarriesTableOptions(t *testing.T) {
@@ -179,9 +179,9 @@ func TestViewAsset_IsNamedByKeyspaceAndView(t *testing.T) {
 
 	a := testSource().viewAsset("shop", v, nil)
 
-	assert.Equal(t, "shop.orders_by_status", *a.Name)
+	assert.Equal(t, "orders_by_status", *a.Name)
 	assert.Equal(t, "View", a.Type)
-	assert.Equal(t, "mrn://view/cassandra/shop.orders_by_status", *a.MRN)
+	assert.Equal(t, "mrn://asset/view/cassandra/shop.orders_by_status", *a.MRN)
 }
 
 func TestViewAsset_CarriesTheDefinitionAsCQL(t *testing.T) {
@@ -216,7 +216,7 @@ func TestKeyspaceAsset_IsNamedByKeyspace(t *testing.T) {
 
 	assert.Equal(t, "shop", *a.Name)
 	assert.Equal(t, "Keyspace", a.Type)
-	assert.Equal(t, "mrn://keyspace/cassandra/shop", *a.MRN)
+	assert.Equal(t, "mrn://asset/keyspace/cassandra/shop", *a.MRN)
 }
 
 func TestKeyspaceAsset_CarriesReplicationAndCounts(t *testing.T) {
@@ -261,23 +261,23 @@ func TestKeyspaceAsset_OmitsWhatItDoesNotKnow(t *testing.T) {
 }
 
 func TestObjectStatistics_ColumnCountAndIndexCount(t *testing.T) {
-	stats := objectStatistics("mrn://table/cassandra/shop.orders", ordersColumns(), true, 1)
+	stats := objectStatistics("mrn://asset/table/cassandra/shop.orders", ordersColumns(), true, 1)
 
 	assert.Equal(t, []pluginsdk.Statistic{
-		{AssetMRN: "mrn://table/cassandra/shop.orders", MetricName: "asset.column_count", Value: 7},
-		{AssetMRN: "mrn://table/cassandra/shop.orders", MetricName: "asset.index_count", Value: 1},
+		{AssetMRN: "mrn://asset/table/cassandra/shop.orders", MetricName: "asset.column_count", Value: 7},
+		{AssetMRN: "mrn://asset/table/cassandra/shop.orders", MetricName: "asset.index_count", Value: 1},
 	}, stats)
 }
 
 func TestObjectStatistics_NoColumnsKnownMeansNoColumnCount(t *testing.T) {
 	// When the columns query failed the count is unknown, not zero.
-	stats := objectStatistics("mrn://table/cassandra/shop.orders", nil, false, 0)
+	stats := objectStatistics("mrn://asset/table/cassandra/shop.orders", nil, false, 0)
 
 	assert.Empty(t, stats)
 }
 
 func TestObjectStatistics_NeverEmitsARowCount(t *testing.T) {
-	stats := objectStatistics("mrn://table/cassandra/shop.orders", ordersColumns(), true, 0)
+	stats := objectStatistics("mrn://asset/table/cassandra/shop.orders", ordersColumns(), true, 0)
 
 	for _, st := range stats {
 		assert.NotEqual(t, "asset.row_count", st.MetricName)

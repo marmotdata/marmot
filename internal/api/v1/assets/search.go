@@ -9,7 +9,6 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -227,11 +226,12 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assetType := strings.ToUpper(parts[0])
-	assetService := parts[1]
-	assetName := parts[2]
-
-	mrnStr := mrn.New(assetType, assetService, assetName)
+	// The service segment carries the zone, provider@zone, exactly as it appears in the MRN and so in the asset's URL; a URL from before kinded MRNs has no zone and resolves the same way.
+	mrnStr, err := asset.CanonicalMRN("mrn://asset/" + parts[0] + "/" + parts[1] + "/" + parts[2])
+	if err != nil {
+		common.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	result, err := h.assetService.GetByMRN(r.Context(), mrnStr)
 	if err != nil {
 		switch err {

@@ -14,24 +14,24 @@ import (
 // identity for any AWS plugin.
 
 func TestStreamMRN_IsTheBareStreamName(t *testing.T) {
-	assert.Equal(t, "mrn://stream/kinesis/orders", assetMRN("Stream", "orders"))
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders", newSource(nil).assetMRN("Stream", "orders"))
 }
 
 func TestStreamMRN_KeepsDotsAndHyphens(t *testing.T) {
 	// Kinesis allows letters, digits, underscores, dots and hyphens. None
 	// of those are rewritten by mrn.New, so the name reads back verbatim.
-	assert.Equal(t, "mrn://stream/kinesis/orders.v2-eu", assetMRN("Stream", "orders.v2-eu"))
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders.v2-eu", newSource(nil).assetMRN("Stream", "orders.v2-eu"))
 }
 
 func TestStreamMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
 	// The UI splits an MRN to build a link and /assets/lookup feeds the
 	// parts back through mrn.New, so it has to survive byte-identical.
-	original := assetMRN("Stream", "orders.v2-eu")
+	original := newSource(nil).assetMRN("Stream", "orders.v2-eu")
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, parsed.String())
 }
 
 func TestStreamAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
@@ -42,12 +42,19 @@ func TestStreamAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
 	require.NotNil(t, a.MRN)
 	require.NotNil(t, a.Name)
 	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
+	assert.Equal(t, mrn.Asset(a.Type, a.Providers[0], *a.Name).String(), *a.MRN)
 }
 
 func TestStreamMRN_MatchesWhatAnOpenMetadataImportProduces(t *testing.T) {
 	// plugins/openmetadata projects a Kinesis service onto provider
 	// "Kinesis", type "Stream" and the bare stream name. This plugin has
 	// to land on the same MRN or the handover leaves two assets.
-	assert.Equal(t, mrn.New("Stream", "Kinesis", "orders"), assetMRN("Stream", "orders"))
+	assert.Equal(t, mrn.Asset("Stream", "Kinesis", "orders").String(), newSource(nil).assetMRN("Stream", "orders"))
+}
+
+func TestStreamMRN_CarriesTheZone(t *testing.T) {
+	s := newSource(nil)
+	s.config.Zone = "prod-eu"
+
+	assert.Equal(t, "mrn://asset/stream/kinesis@prod-eu/orders", s.assetMRN("Stream", "orders"))
 }

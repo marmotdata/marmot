@@ -59,12 +59,12 @@ func TestResolveReference_FillsMissingPartsFromTheView(t *testing.T) {
 
 func tableAsset(catalog, schema, table string) pluginsdk.Asset {
 	s := &Source{config: &Config{}}
-	return s.createTableAsset(catalog, schema, table, "BASE TABLE", "memory", connectorInfoForName("memory"))
+	return s.createTableAsset(catalog, schema, table, "BASE TABLE", "memory")
 }
 
 func viewAsset(catalog, schema, table, definition string) pluginsdk.Asset {
 	s := &Source{config: &Config{}}
-	a := s.createTableAsset(catalog, schema, table, "VIEW", "memory", connectorInfoForName("memory"))
+	a := s.createTableAsset(catalog, schema, table, "VIEW", "memory")
 	lang := "SQL"
 	a.Query = &definition
 	a.QueryLanguage = &lang
@@ -80,8 +80,8 @@ func TestViewLineage_EdgeRunsFromBaseTableToView(t *testing.T) {
 	edges := viewLineage(assets)
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://table/presto/memory.shop.orders", edges[0].Source)
-	assert.Equal(t, "mrn://view/presto/memory.shop.big_orders", edges[0].Target)
+	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", edges[0].Source)
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.big_orders", edges[0].Target)
 	assert.Equal(t, "VIEW_OF", edges[0].Type)
 }
 
@@ -95,7 +95,7 @@ func TestViewLineage_ResolvesBareNamesAgainstTheViewsSchema(t *testing.T) {
 	edges := viewLineage(assets)
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://table/presto/memory.shop.orders", edges[0].Source)
+	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", edges[0].Source)
 }
 
 func TestViewLineage_ReachesTablesInOtherCatalogs(t *testing.T) {
@@ -107,7 +107,7 @@ func TestViewLineage_ReachesTablesInOtherCatalogs(t *testing.T) {
 	edges := viewLineage(assets)
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://table/presto/tpch.tiny.nation", edges[0].Source)
+	assert.Equal(t, "mrn://asset/table/presto/tpch.tiny.nation", edges[0].Source)
 }
 
 func TestViewLineage_DropsUndiscoveredReferences(t *testing.T) {
@@ -136,13 +136,13 @@ func TestViewLineage_ViewsCanStackOnViews(t *testing.T) {
 	edges := viewLineage(assets)
 
 	require.Len(t, edges, 1)
-	assert.Equal(t, "mrn://view/presto/memory.shop.v1", edges[0].Source)
-	assert.Equal(t, "mrn://view/presto/memory.shop.v2", edges[0].Target)
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.v1", edges[0].Source)
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.v2", edges[0].Target)
 }
 
 func TestViewLineage_IgnoresViewsWithoutADefinition(t *testing.T) {
 	s := &Source{config: &Config{}}
-	view := s.createTableAsset("memory", "shop", "v", "VIEW", "memory", connectorInfoForName("memory"))
+	view := s.createTableAsset("memory", "shop", "v", "VIEW", "memory")
 
 	assert.Empty(t, viewLineage([]pluginsdk.Asset{tableAsset("memory", "shop", "orders"), view}))
 }

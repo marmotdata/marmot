@@ -66,7 +66,7 @@ func TestConsumerRecorderCatalogsAgentAndThrottlesEdges(t *testing.T) {
 
 	got := edges.snapshot()[0]
 	assert.Equal(t, orders, got.Source)
-	assert.Equal(t, "mrn://agent/marmot/test-agent", got.Target)
+	assert.Equal(t, "mrn://asset/agent/marmot/test-agent", got.Target)
 	assert.Equal(t, EdgeTypeDataQuery, got.Type)
 	require.Len(t, assets.created, 1)
 	assert.Equal(t, AgentAssetType, assets.created[0].Type)

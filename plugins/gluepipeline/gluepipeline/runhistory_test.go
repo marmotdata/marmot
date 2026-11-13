@@ -76,7 +76,7 @@ func TestCrawlerEventType_StoppedIsAbort(t *testing.T) {
 }
 
 func TestJobRunHistory_EmitsAStartAndAnEndEvent(t *testing.T) {
-	history := jobRunHistory("mrn://job/glue/load-orders", "load-orders", []types.JobRun{{
+	history := jobRunHistory("mrn://asset/job/glue/load-orders", "load-orders", []types.JobRun{{
 		Id:          aws.String("jr_1"),
 		JobRunState: types.JobRunStateSucceeded,
 		StartedOn:   &runStart,
@@ -84,7 +84,7 @@ func TestJobRunHistory_EmitsAStartAndAnEndEvent(t *testing.T) {
 	}})
 
 	require.Len(t, history.Runs, 2)
-	assert.Equal(t, "mrn://job/glue/load-orders", history.AssetMRN)
+	assert.Equal(t, "mrn://asset/job/glue/load-orders", history.AssetMRN)
 	assert.Equal(t, "START", history.Runs[0].EventType)
 	assert.Equal(t, runStart, history.Runs[0].EventTime)
 	assert.Equal(t, "COMPLETE", history.Runs[1].EventType)
@@ -92,7 +92,7 @@ func TestJobRunHistory_EmitsAStartAndAnEndEvent(t *testing.T) {
 }
 
 func TestJobRunHistory_RecordsTheRunFacets(t *testing.T) {
-	history := jobRunHistory("mrn://job/glue/load-orders", "load-orders", []types.JobRun{{
+	history := jobRunHistory("mrn://asset/job/glue/load-orders", "load-orders", []types.JobRun{{
 		Id:              aws.String("jr_1"),
 		JobRunState:     types.JobRunStateSucceeded,
 		StartedOn:       &runStart,
@@ -115,7 +115,7 @@ func TestJobRunHistory_RecordsTheRunFacets(t *testing.T) {
 }
 
 func TestJobRunHistory_RecordsTheErrorOfAFailedRun(t *testing.T) {
-	history := jobRunHistory("mrn://job/glue/load-orders", "load-orders", []types.JobRun{{
+	history := jobRunHistory("mrn://asset/job/glue/load-orders", "load-orders", []types.JobRun{{
 		Id:           aws.String("jr_2"),
 		JobRunState:  types.JobRunStateFailed,
 		StartedOn:    &runStart,
@@ -131,7 +131,7 @@ func TestJobRunHistory_RecordsTheErrorOfAFailedRun(t *testing.T) {
 // A run still in flight has no completion time, so the second event has to
 // borrow the start time to stay orderable.
 func TestJobRunHistory_UsesTheStartTimeWhileARunIsInFlight(t *testing.T) {
-	history := jobRunHistory("mrn://job/glue/load-orders", "load-orders", []types.JobRun{{
+	history := jobRunHistory("mrn://asset/job/glue/load-orders", "load-orders", []types.JobRun{{
 		Id:          aws.String("jr_3"),
 		JobRunState: types.JobRunStateRunning,
 		StartedOn:   &runStart,
@@ -143,7 +143,7 @@ func TestJobRunHistory_UsesTheStartTimeWhileARunIsInFlight(t *testing.T) {
 }
 
 func TestJobRunHistory_SkipsRunsWithoutAnID(t *testing.T) {
-	history := jobRunHistory("mrn://job/glue/load-orders", "load-orders", []types.JobRun{{
+	history := jobRunHistory("mrn://asset/job/glue/load-orders", "load-orders", []types.JobRun{{
 		JobRunState: types.JobRunStateSucceeded,
 		StartedOn:   &runStart,
 	}})
@@ -152,7 +152,7 @@ func TestJobRunHistory_SkipsRunsWithoutAnID(t *testing.T) {
 }
 
 func TestWorkflowRunHistory_RecordsTheActionCounters(t *testing.T) {
-	history := workflowRunHistory("mrn://pipeline/glue/daily-etl", "daily-etl", []types.WorkflowRun{{
+	history := workflowRunHistory("mrn://asset/pipeline/glue/daily-etl", "daily-etl", []types.WorkflowRun{{
 		WorkflowRunId: aws.String("wr_1"),
 		Status:        types.WorkflowRunStatusCompleted,
 		StartedOn:     &runStart,
@@ -169,7 +169,7 @@ func TestWorkflowRunHistory_RecordsTheActionCounters(t *testing.T) {
 }
 
 func TestWorkflowRunHistory_NamesTheJobAfterTheWorkflow(t *testing.T) {
-	history := workflowRunHistory("mrn://pipeline/glue/daily-etl", "daily-etl", []types.WorkflowRun{{
+	history := workflowRunHistory("mrn://asset/pipeline/glue/daily-etl", "daily-etl", []types.WorkflowRun{{
 		WorkflowRunId: aws.String("wr_1"),
 		Status:        types.WorkflowRunStatusRunning,
 		StartedOn:     &runStart,
@@ -182,7 +182,7 @@ func TestWorkflowRunHistory_NamesTheJobAfterTheWorkflow(t *testing.T) {
 }
 
 func TestCrawlerRunHistory_RecordsTheSummary(t *testing.T) {
-	history := crawlerRunHistory("mrn://crawler/glue/orders-crawler", "orders-crawler", []types.CrawlerHistory{{
+	history := crawlerRunHistory("mrn://asset/crawler/glue/orders-crawler", "orders-crawler", []types.CrawlerHistory{{
 		CrawlId:   aws.String("crawl_1"),
 		State:     types.CrawlerHistoryStateCompleted,
 		StartTime: &runStart,

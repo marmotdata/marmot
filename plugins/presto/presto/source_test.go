@@ -171,10 +171,10 @@ func TestNewColumn_LeavesDefaultUnsetWhenNull(t *testing.T) {
 func TestCreateTableAsset_PrestoNativeCatalogUsesTheFullPath(t *testing.T) {
 	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
 
-	a := s.createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory", connectorInfoForName("memory"))
+	a := s.createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory")
 
-	assert.Equal(t, "memory.shop.orders", *a.Name)
-	assert.Equal(t, "mrn://table/presto/memory.shop.orders", *a.MRN)
+	assert.Equal(t, "orders", *a.Name)
+	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", *a.MRN)
 	assert.Equal(t, "Table", a.Type)
 	assert.Equal(t, []string{"Presto"}, a.Providers)
 	assert.Equal(t, "Presto", a.Sources[0].Name)
@@ -185,30 +185,42 @@ func TestCreateTableAsset_PrestoNativeCatalogUsesTheFullPath(t *testing.T) {
 	assert.Equal(t, "memory", a.Metadata["connector_name"])
 }
 
-func TestCreateTableAsset_MappedConnectorUsesTheNativeProvider(t *testing.T) {
-	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
+func TestCreateTableAsset_MappedCatalogUsesTheNativeProvider(t *testing.T) {
+	s := &Source{config: &Config{Host: "localhost", Port: 8080, CatalogMap: map[string]CatalogMapping{
+		"pg": {Zone: "prod-eu", Database: "shop"},
+	}}}
 
-	a := s.createTableAsset("pg", "public", "orders", "BASE TABLE", "postgresql", connectorInfoForName("postgresql"))
+	a := s.createTableAsset("pg", "public", "orders", "BASE TABLE", "postgresql")
 
 	assert.Equal(t, "orders", *a.Name)
-	assert.Equal(t, "mrn://table/postgresql/orders", *a.MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql@prod-eu/shop.public.orders", *a.MRN)
 	assert.Equal(t, []string{"PostgreSQL"}, a.Providers)
 	assert.Equal(t, "Presto", a.Sources[0].Name, "the source is always Presto")
+}
+
+func TestCreateTableAsset_UnmappedCatalogIsPrestosOwn(t *testing.T) {
+	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
+
+	a := s.createTableAsset("pg", "public", "orders", "BASE TABLE", "postgresql")
+
+	assert.Equal(t, "mrn://asset/table/presto/pg.public.orders", *a.MRN)
+	assert.Equal(t, []string{"Presto"}, a.Providers)
+	assert.Empty(t, a.PreviousMRNs, "the old bare name belonged to the native plugin's own asset")
 }
 
 func TestCreateTableAsset_ViewGetsTheViewType(t *testing.T) {
 	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
 
-	a := s.createTableAsset("memory", "shop", "big_orders", "VIEW", "memory", connectorInfoForName("memory"))
+	a := s.createTableAsset("memory", "shop", "big_orders", "VIEW", "memory")
 
 	assert.Equal(t, "View", a.Type)
-	assert.Equal(t, "mrn://view/presto/memory.shop.big_orders", *a.MRN)
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.big_orders", *a.MRN)
 }
 
 func TestCreateTableAsset_OmitsUnknownConnector(t *testing.T) {
 	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
 
-	a := s.createTableAsset("x", "s", "t", "BASE TABLE", "", connectorInfoForName(""))
+	a := s.createTableAsset("x", "s", "t", "BASE TABLE", "")
 
 	_, present := a.Metadata["connector_name"]
 	assert.False(t, present)
@@ -222,7 +234,7 @@ func TestCreateCatalogAsset_CountsTablesAndViews(t *testing.T) {
 	a := s.createCatalogAsset("memory", "memory", "0.299", 2, tables)
 
 	assert.Equal(t, "memory", *a.Name)
-	assert.Equal(t, "mrn://catalog/presto/memory", *a.MRN)
+	assert.Equal(t, "mrn://asset/catalog/presto/memory", *a.MRN)
 	assert.Equal(t, "Catalog", a.Type)
 	assert.Equal(t, []string{"Presto"}, a.Providers)
 	assert.Equal(t, "memory", a.Metadata["connector_name"])
@@ -248,7 +260,7 @@ func TestCreateCatalogAsset_OmitsEmptyVersionAndConnector(t *testing.T) {
 func TestCreateTableAsset_InterpolatesTags(t *testing.T) {
 	s := &Source{config: &Config{BaseConfig: pluginsdk.BaseConfig{Tags: pluginsdk.TagsConfig{"catalog:${catalog}", "presto"}}}}
 
-	a := s.createTableAsset("tpch", "tiny", "nation", "BASE TABLE", "tpch", connectorInfoForName("tpch"))
+	a := s.createTableAsset("tpch", "tiny", "nation", "BASE TABLE", "tpch")
 
 	assert.Equal(t, []string{"catalog:tpch", "presto"}, a.Tags)
 }

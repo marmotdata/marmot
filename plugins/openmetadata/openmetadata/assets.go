@@ -3,6 +3,7 @@ package openmetadata
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -42,6 +43,8 @@ type collector struct {
 	collisions  []collision
 	// skipped counts entities left out by configuration, per service type.
 	skipped map[string]int
+	// serviceHosts is the address OpenMetadata holds for each service by name, as host:port. A reference to it carries the address so Marmot can resolve it to a zone.
+	serviceHosts map[string]string
 }
 
 // collision is two OpenMetadata entities that produced the same MRN.
@@ -59,17 +62,13 @@ func newCollector(config *Config) *collector {
 		lineageKinds: make(map[string]string),
 		entityByMRN:  make(map[string]map[string]interface{}),
 		skipped:      make(map[string]int),
+		serviceHosts: make(map[string]string),
 	}
 }
 
 // add records an asset and the id it came from, so lineage can find it.
 //
-// Two OpenMetadata entities can land on one MRN: naming an asset the way
-// a native Marmot plugin would means dropping the levels that plugin
-// does not use, and two services of the same technology can hold the
-// same table name. Marmot merges them into one asset, which is usually
-// what a reader wants and is the same thing the native plugin does, so
-// the collision is counted and reported rather than treated as an error.
+// Two OpenMetadata entities can land on one MRN when two services of the same technology hold the same object and neither is mapped to a zone in service_map. Marmot merges them into one asset, so the collision is counted and reported rather than treated as an error.
 func (c *collector) add(id string, asset pluginsdk.Asset) {
 	if asset.MRN != nil {
 		if first, seen := c.entityByMRN[*asset.MRN]; seen {
@@ -94,36 +93,44 @@ func (c *collector) link(source, target, edgeType string) {
 	})
 }
 
-// mrnName picks the name component of an asset's MRN. In native mode it
-// is the name the technology's own Marmot plugin would produce, so the
-// two runs land on the same asset. In qualified mode it is the full
-// OpenMetadata path below the service, which keeps two services of the
-// same technology apart at the cost of merging.
-func (c *collector) mrnName(native, fqn string) string {
-	if c.config.Naming == namingQualified {
-		// The whole path, service included: without the service two
-		// instances of the same technology holding the same table name
-		// would still collapse, which is the thing this mode exists to
-		// prevent.
-		if qualified := strings.Join(splitFQN(fqn), "."); qualified != "" {
-			return qualified
-		}
+// identity is what names one asset: its own name, the levels its MRN is built from and the name earlier releases gave it.
+type identity struct {
+	Name string
+	// Path is the asset's place in the system that owns it, outermost level first, following the naming table of the technology's own plugin.
+	Path []string
+	// Legacy is the single string earlier releases built the MRN from, kept to list the old MRN of an asset whose MRN has changed.
+	Legacy string
+}
+
+// flatIdent names an asset by a single level, for entities such as drive files whose name already holds their whole location.
+func flatIdent(name string) identity {
+	return identity{Name: name, Path: []string{name}, Legacy: name}
+}
+
+// ident names an asset by its path below the OpenMetadata service, which is the native hierarchy for services with no table-like levels such as topics, dashboards and pipelines. name is both its own name and its legacy name.
+func (c *collector) ident(name, fqn string) identity {
+	path := fqnBelowService(fqn)
+	if len(path) == 0 {
+		path = []string{name}
 	}
-	return native
+	return identity{Name: name, Path: path, Legacy: name}
+}
+
+// assetMRN builds the MRN of an asset in the system an OpenMetadata service describes. It follows the Marmot zone of the system an OpenMetadata service describes. An explicit service_map entry wins; otherwise the service's own address is passed on as a host hint, and with neither no zone is used.
+func (c *collector) assetMRN(base entityBase, assetType string, p projection, path []string) string {
+	m := mrn.Asset(assetType, p.Provider, path...)
+	if zone, ok := c.config.ServiceMap[base.Service.Name]; ok && zone != "" {
+		return m.WithZone(zone).String()
+	}
+	return m.WithHost(c.serviceHosts[base.Service.Name]).String()
 }
 
 // newAsset builds the asset shared by every entity kind: identity,
 // description, the OpenMetadata provenance metadata, tags, and links
 // back to OpenMetadata and to the system the entity lives in.
-func (c *collector) newAsset(base entityBase, kind, assetType string, p projection, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	// Name and MRN are the same string on purpose: both have to match
-	// what the technology's own plugin produces, or the two runs stop
-	// merging onto one asset.
-	//
-	// p.Provider is used unslugged for the same reason. A provider with
-	// a space, such as "Delta Lake", lands that space in the MRN, which
-	// is where the technology's own plugin lands too.
-	mrnValue := mrn.New(assetType, p.Provider, name)
+func (c *collector) newAsset(base entityBase, kind, assetType string, p projection, id identity, metadata map[string]interface{}) pluginsdk.Asset {
+	name := id.Name
+	mrnValue := c.assetMRN(base, assetType, p, id.Path)
 
 	if metadata == nil {
 		metadata = make(map[string]interface{})
@@ -149,11 +156,28 @@ func (c *collector) newAsset(base entityBase, kind, assetType string, p projecti
 		}},
 	}
 
+	asset.PreviousMRNs = c.previousMRNs(base, assetType, p, id, mrnValue)
+
 	if description := strings.TrimSpace(base.Description); description != "" {
 		asset.Description = &description
 	}
 
 	return asset
+}
+
+// previousMRNs lists the MRNs earlier releases gave the asset when they differ from the current one: the single-string name of native mode, and the full path including the service of the opt-in qualified mode. A release's own guess of Type, Provider and Name needs no listing because the server tries it anyway.
+func (c *collector) previousMRNs(base entityBase, assetType string, p projection, id identity, current string) []string {
+	var previous []string
+	for _, name := range []string{id.Legacy, strings.Join(splitFQN(base.FullyQualifiedName), ".")} {
+		if name == "" {
+			continue
+		}
+		old := mrn.New(assetType, p.Provider, name)
+		if old != current && !slices.Contains(previous, old) {
+			previous = append(previous, old)
+		}
+	}
+	return previous
 }
 
 // stampProvenance records where in OpenMetadata an asset came from, plus

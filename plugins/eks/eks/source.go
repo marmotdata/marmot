@@ -53,7 +53,8 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "eks",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "AWS EKS",
 		Description:   "Discover namespaces, services, workloads, and cron jobs from Amazon EKS clusters",
 		Icon:          "eks",

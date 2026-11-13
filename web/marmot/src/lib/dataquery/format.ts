@@ -1,6 +1,7 @@
 import { m } from '$lib/paraglide/messages';
 import { getLocale } from '$lib/paraglide/runtime';
 import { formatNumber } from '$lib/utils/format';
+import { assetRouteParams as mrnRouteParams, type AssetRouteParams } from '$lib/mrn';
 import type {
 	QueryDecision,
 	QueryRecord,
@@ -150,15 +151,9 @@ export function subjectParts(subject: string): { kind: string; name: string } {
 	return { kind, name };
 }
 
-// mrn://type/service/name maps onto the asset page route; source-level pseudo MRNs have no asset page
-export function assetRouteParams(
-	mrn: string
-): { type: string; service: string; name: string } | null {
-	if (!mrn.startsWith('mrn://')) return null;
-	const parts = mrn.slice('mrn://'.length).split('/');
-	if (parts.length < 3 || parts[0] === 'source') return null;
-	const [type, service, ...rest] = parts;
-	return { type, service, name: rest.join('/') };
+// An asset MRN maps onto the asset page route; source-level pseudo MRNs have no asset page
+export function assetRouteParams(mrn: string): AssetRouteParams | null {
+	return mrnRouteParams(mrn);
 }
 
 // The API sends Go's zero time when an asset has never been synced

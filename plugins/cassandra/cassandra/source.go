@@ -63,7 +63,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "cassandra",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Cassandra",
 		Description:   "Discover keyspaces, tables and materialized views from Apache Cassandra clusters",
 		Icon:          "cassandra",
@@ -170,10 +170,16 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(statistics)).
 		Msg("Cassandra discovery completed")
 
+	bindings := make([]pluginsdk.ZoneBinding, 0, len(s.config.Hosts))
+	for _, host := range s.config.Hosts {
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: provider, Host: strings.ToLower(host), Zone: s.config.Zone})
+	}
+
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		Statistics: statistics,
+		Assets:       assets,
+		Lineage:      lineages,
+		Statistics:   statistics,
+		ZoneBindings: bindings,
 	}, nil
 }
 
@@ -282,7 +288,7 @@ func (s *Source) discoverKeyspace(ctx context.Context, ks keyspaceInfo, cluster 
 
 	tableMRNs := make(map[string]string, len(tables))
 	for _, t := range tables {
-		tableMRNs[t.Name] = assetMRN("Table", objectName(ks.Name, t.Name))
+		tableMRNs[t.Name] = assetMRN(s.config, "Table", ks.Name, t.Name)
 	}
 
 	for _, v := range views {
@@ -356,11 +362,11 @@ func (s *Source) keyspaceAsset(ks keyspaceInfo, cluster clusterInfo, tableCount,
 		metadata["datacenter"] = cluster.Datacenter
 	}
 
-	return s.newAsset("Keyspace", name, metadata)
+	return s.newAsset("Keyspace", name, []string{ks.Name}, metadata)
 }
 
 func (s *Source) tableAsset(keyspace string, t tableInfo, cols []columnInfo, indexes []indexInfo) pluginsdk.Asset {
-	name := objectName(keyspace, t.Name)
+	name := t.Name
 	metadata := map[string]interface{}{
 		"keyspace":               keyspace,
 		"table_name":             t.Name,
@@ -401,7 +407,7 @@ func (s *Source) tableAsset(keyspace string, t tableInfo, cols []columnInfo, ind
 		metadata["index_count"] = len(indexes)
 	}
 
-	asset := s.newAsset("Table", name, metadata)
+	asset := s.newAsset("Table", name, []string{keyspace, t.Name}, metadata)
 	if t.Comment != "" {
 		comment := t.Comment
 		asset.Description = &comment
@@ -411,7 +417,7 @@ func (s *Source) tableAsset(keyspace string, t tableInfo, cols []columnInfo, ind
 }
 
 func (s *Source) viewAsset(keyspace string, v viewInfo, cols []columnInfo) pluginsdk.Asset {
-	name := objectName(keyspace, v.Name)
+	name := v.Name
 	metadata := map[string]interface{}{
 		"keyspace":            keyspace,
 		"table_name":          v.Name,
@@ -429,7 +435,7 @@ func (s *Source) viewAsset(keyspace string, v viewInfo, cols []columnInfo) plugi
 
 	addKeyMetadata(metadata, cols)
 
-	asset := s.newAsset("View", name, metadata)
+	asset := s.newAsset("View", name, []string{keyspace, v.Name}, metadata)
 	if v.Comment != "" {
 		comment := v.Comment
 		asset.Description = &comment
@@ -445,10 +451,10 @@ func (s *Source) viewAsset(keyspace string, v viewInfo, cols []columnInfo) plugi
 }
 
 // newAsset builds the parts every Cassandra asset shares.
-func (s *Source) newAsset(assetType, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+func (s *Source) newAsset(assetType, name string, path []string, metadata map[string]interface{}) pluginsdk.Asset {
+	mrnValue := assetMRN(s.config, assetType, path...)
 
-	return pluginsdk.Asset{
+	asset := pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
 		Type:      assetType,
@@ -463,6 +469,12 @@ func (s *Source) newAsset(assetType, name string, metadata map[string]interface{
 			Priority:   1,
 		}},
 	}
+
+	// Earlier releases named tables and views keyspace.name and had no zone, so the old MRN only differs once a zone is set.
+	if previous := mrn.New(assetType, provider, strings.Join(path, ".")); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
+	}
+	return asset
 }
 
 func (s *Source) attachColumns(asset *pluginsdk.Asset, cols []columnInfo) {
@@ -513,19 +525,9 @@ func objectStatistics(assetMRN string, cols []columnInfo, hasColumns bool, index
 	return statistics
 }
 
-// objectName qualifies a table or view by its keyspace. Cassandra has no
-// database layer above the keyspace and a table name is only unique within
-// one, so keyspace.table is the identity, matching the OpenMetadata
-// projection for Cassandra services.
-func objectName(keyspace, name string) string {
-	return keyspace + "." + name
-}
-
-// assetMRN is the single place a Cassandra MRN is built. Assets, lineage
-// and statistics all go through it so they can never drift into addressing
-// the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Cassandra MRN is built. Assets, lineage and statistics all go through it so they can never drift into addressing the same object differently. Cassandra has no database layer above the keyspace and a table name is only unique within one, so the path is keyspace, table, matching the OpenMetadata projection for Cassandra services.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
 }
 
 func hasFlag(flags []string, flag string) bool {

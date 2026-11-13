@@ -1,6 +1,7 @@
 package dagster
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,7 +49,7 @@ func TestMapRunStatus_UnknownStatusIsOther(t *testing.T) {
 // matching Marmot plugin would create, so the mapping stays deliberately
 // narrow.
 
-func TestWarehouseTarget_DuckDBUsesTheBareTableName(t *testing.T) {
+func TestWarehouseTarget_DuckDBUsesTheFullPath(t *testing.T) {
 	node := AssetNode{
 		ComputeKind: stringPtr("duckdb"),
 		MetadataEntries: []MetadataEntry{
@@ -61,10 +62,10 @@ func TestWarehouseTarget_DuckDBUsesTheBareTableName(t *testing.T) {
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
 	assert.Equal(t, "DuckDB", target.Provider)
-	assert.Equal(t, "clean_orders", target.Name)
+	assert.Equal(t, "analytics.staging.clean_orders", strings.Join(target.Path, "."))
 }
 
-func TestWarehouseTarget_PostgresUsesTheBareTableName(t *testing.T) {
+func TestWarehouseTarget_PostgresUsesTheFullPath(t *testing.T) {
 	node := AssetNode{
 		ComputeKind: stringPtr("postgres"),
 		MetadataEntries: []MetadataEntry{
@@ -77,7 +78,7 @@ func TestWarehouseTarget_PostgresUsesTheBareTableName(t *testing.T) {
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
 	assert.Equal(t, "PostgreSQL", target.Provider)
-	assert.Equal(t, "orders", target.Name)
+	assert.Equal(t, "app.public.orders", strings.Join(target.Path, "."))
 }
 
 func TestWarehouseTarget_PostgresqlSpellingResolvesTheSameWay(t *testing.T) {
@@ -91,7 +92,7 @@ func TestWarehouseTarget_PostgresqlSpellingResolvesTheSameWay(t *testing.T) {
 	assert.Equal(t, "PostgreSQL", target.Provider)
 }
 
-func TestWarehouseTarget_BigQueryUsesTheBareTableName(t *testing.T) {
+func TestWarehouseTarget_BigQueryUsesTheFullPath(t *testing.T) {
 	node := AssetNode{
 		ComputeKind: stringPtr("bigquery"),
 		AssetKey:    AssetKey{Path: []string{"project", "analytics", "orders"}},
@@ -100,10 +101,10 @@ func TestWarehouseTarget_BigQueryUsesTheBareTableName(t *testing.T) {
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
 	assert.Equal(t, "BigQuery", target.Provider)
-	assert.Equal(t, "orders", target.Name)
+	assert.Equal(t, "project.analytics.orders", strings.Join(target.Path, "."))
 }
 
-func TestWarehouseTarget_SnowflakeUsesTheFullyQualifiedName(t *testing.T) {
+func TestWarehouseTarget_SnowflakeUsesTheFullPath(t *testing.T) {
 	node := AssetNode{
 		ComputeKind: stringPtr("snowflake"),
 		AssetKey:    AssetKey{Path: []string{"ANALYTICS", "STAGING", "ORDERS"}},
@@ -112,7 +113,7 @@ func TestWarehouseTarget_SnowflakeUsesTheFullyQualifiedName(t *testing.T) {
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
 	assert.Equal(t, "Snowflake", target.Provider)
-	assert.Equal(t, "ANALYTICS.STAGING.ORDERS", target.Name)
+	assert.Equal(t, "ANALYTICS.STAGING.ORDERS", strings.Join(target.Path, "."))
 }
 
 func TestWarehouseTarget_ReadsTheDagsterTableNameConvention(t *testing.T) {
@@ -123,7 +124,7 @@ func TestWarehouseTarget_ReadsTheDagsterTableNameConvention(t *testing.T) {
 
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
-	assert.Equal(t, "analytics.staging.orders", target.Name)
+	assert.Equal(t, "analytics.staging.orders", strings.Join(target.Path, "."))
 }
 
 func TestWarehouseTarget_ExplicitEntriesBeatTheAssetKey(t *testing.T) {
@@ -139,7 +140,7 @@ func TestWarehouseTarget_ExplicitEntriesBeatTheAssetKey(t *testing.T) {
 
 	target, ok := warehouseTarget(node)
 	require.True(t, ok)
-	assert.Equal(t, "clean_orders", target.Name)
+	assert.Equal(t, "analytics.staging.clean_orders", strings.Join(target.Path, "."))
 }
 
 func TestWarehouseTarget_UnknownComputeKindResolvesToNothing(t *testing.T) {
@@ -370,7 +371,7 @@ func TestRunSummary_OmitsTheRateWhenNothingHasFinished(t *testing.T) {
 // Run history events.
 
 func TestRunHistory_AQueuedRunOnlyEmitsAStart(t *testing.T) {
-	history := runHistoryFor("mrn://pipeline/dagster/etl_job", "etl_job", []Run{
+	history := runHistoryFor("mrn://asset/pipeline/dagster/etl_job", "etl_job", []Run{
 		{RunID: "r1", Status: "QUEUED", StartTime: floatPtr(1788853304)},
 	})
 
@@ -379,7 +380,7 @@ func TestRunHistory_AQueuedRunOnlyEmitsAStart(t *testing.T) {
 }
 
 func TestRunHistory_ARunningRunIsTimedFromItsUpdate(t *testing.T) {
-	history := runHistoryFor("mrn://pipeline/dagster/etl_job", "etl_job", []Run{
+	history := runHistoryFor("mrn://asset/pipeline/dagster/etl_job", "etl_job", []Run{
 		{RunID: "r1", Status: "STARTED", StartTime: floatPtr(1788853304), UpdateTime: floatPtr(1788853310)},
 	})
 
@@ -389,7 +390,7 @@ func TestRunHistory_ARunningRunIsTimedFromItsUpdate(t *testing.T) {
 }
 
 func TestRunHistory_ARunThatNeverStartedEmitsNoStart(t *testing.T) {
-	history := runHistoryFor("mrn://pipeline/dagster/etl_job", "etl_job", []Run{
+	history := runHistoryFor("mrn://asset/pipeline/dagster/etl_job", "etl_job", []Run{
 		{RunID: "r1", Status: "CANCELED", UpdateTime: floatPtr(1788853310)},
 	})
 

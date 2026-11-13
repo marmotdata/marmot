@@ -45,7 +45,8 @@ type Repository interface {
 	ListWithFilters(ctx context.Context, pipelines, statuses []string, limit, offset int) ([]*plugin.Run, int, []string, error)
 	AddCheckpoint(ctx context.Context, runDBID string, checkpoint *plugin.RunCheckpoint) error
 	DeleteCheckpoints(ctx context.Context, pipelineName, sourceName string) error
-	GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error)
+	GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName, owner string) (map[string]*plugin.RunCheckpoint, string, error)
+	ListOwners(ctx context.Context, pipelineName, sourceName string) ([]string, error)
 	CleanupStaleRuns(ctx context.Context, timeout time.Duration) (int, error)
 	AddRunEntity(ctx context.Context, runDBID string, entity *RunEntity) error
 	ListRunEntities(ctx context.Context, runDBID, entityType, status string, limit, offset int) ([]*RunEntity, int, error)
@@ -66,12 +67,12 @@ func (r *PostgresRepository) Create(ctx context.Context, run *plugin.Run) error 
 	}
 
 	query := `
-		INSERT INTO runs (id, pipeline_name, source_name, run_id, status, started_at, config, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+		INSERT INTO runs (id, pipeline_name, source_name, run_id, status, started_at, config, created_by, owner)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	_, err = r.db.Exec(ctx, query,
 		run.ID, run.PipelineName, run.SourceName, run.RunID,
-		run.Status, run.StartedAt, configJSON, run.CreatedBy)
+		run.Status, run.StartedAt, configJSON, run.CreatedBy, run.Owner)
 
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -87,14 +88,14 @@ func (r *PostgresRepository) Create(ctx context.Context, run *plugin.Run) error 
 func (r *PostgresRepository) Get(ctx context.Context, id string) (*plugin.Run, error) {
 	return r.scanSingleRun(ctx, `
 		SELECT id, pipeline_name, source_name, run_id, status, started_at,
-		       completed_at, error_message, config, summary, created_by
+		       completed_at, error_message, config, summary, created_by, owner
 		FROM runs WHERE id = $1`, id)
 }
 
 func (r *PostgresRepository) GetByRunID(ctx context.Context, runID string) (*plugin.Run, error) {
 	return r.scanSingleRun(ctx, `
 		SELECT id, pipeline_name, source_name, run_id, status, started_at,
-		       completed_at, error_message, config, summary, created_by
+		       completed_at, error_message, config, summary, created_by, owner
 		FROM runs WHERE run_id = $1`, runID)
 }
 
@@ -144,7 +145,7 @@ func (r *PostgresRepository) List(ctx context.Context, pipelineName string, limi
 
 	query := `
 		SELECT id, pipeline_name, source_name, run_id, status, started_at,
-		       completed_at, error_message, config, summary, created_by
+		       completed_at, error_message, config, summary, created_by, owner
 		FROM runs`
 
 	args := []interface{}{}
@@ -186,32 +187,36 @@ func (r *PostgresRepository) AddCheckpoint(ctx context.Context, runDBID string, 
 // baseline for staleness and for the deletion guard.
 const lastRunCheckpointsQuery = `
 		WITH last_successful_run AS (
-			SELECT r.id, r.run_id
+			SELECT r.id, r.run_id, r.owner
 			FROM runs r
 			WHERE r.pipeline_name = $1 AND r.source_name = $2 AND r.status = 'completed'
+			  -- This owner's own runs, or failing those the same person's runs before they set a zone, or the runs from before runs had owners, which the owner's first run takes over.
+			  AND (r.owner = $3 OR ((r.owner = '' OR ($3 <> '' AND split_part(r.owner, '/', 1) = split_part($3, '/', 1))) AND NOT EXISTS (
+			      SELECT 1 FROM runs o WHERE o.pipeline_name = $1 AND o.source_name = $2 AND o.owner = $3 AND o.status = 'completed'
+			        AND EXISTS (SELECT 1 FROM run_checkpoints oc WHERE oc.run_id = o.id))))
 			  -- Skip a run that recorded nothing. A harvest can come back
 			  -- empty because a source was unreachable or a credential
 			  -- lapsed, and treating that as the new baseline would tell the
 			  -- next run that the catalog was always empty, so nothing looks
 			  -- stale and nothing looks like a mass deletion.
 			  AND EXISTS (SELECT 1 FROM run_checkpoints c WHERE c.run_id = r.id)
-			ORDER BY r.completed_at DESC
+			ORDER BY (r.owner = $3) DESC, (r.owner <> '') DESC, r.completed_at DESC
 			LIMIT 1
 		)
-		SELECT c.id, c.entity_type, c.entity_mrn, c.operation, c.source_fields, c.created_at, r.run_id
+		SELECT c.id, c.entity_type, c.entity_mrn, c.operation, c.source_fields, c.created_at, r.run_id, r.owner
 		FROM run_checkpoints c
 		JOIN last_successful_run r ON c.run_id = r.id`
 
-func (r *PostgresRepository) GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error) {
-	query := lastRunCheckpointsQuery
-
-	rows, err := r.db.Query(ctx, query, pipelineName, sourceName)
+// GetLastRunCheckpoints reads the checkpoints of the run that is the owner's baseline, and reports whose run that was: the owner's own, or "" when the owner has no runs yet and inherits the baseline from before runs had owners.
+func (r *PostgresRepository) GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName, owner string) (map[string]*plugin.RunCheckpoint, string, error) {
+	rows, err := r.db.Query(ctx, lastRunCheckpointsQuery, pipelineName, sourceName, owner)
 	if err != nil {
-		return nil, fmt.Errorf("querying checkpoints: %w", err)
+		return nil, "", fmt.Errorf("querying checkpoints: %w", err)
 	}
 	defer rows.Close()
 
 	checkpoints := make(map[string]*plugin.RunCheckpoint)
+	baselineOwner := owner
 	for rows.Next() {
 		var checkpoint plugin.RunCheckpoint
 		err := rows.Scan(
@@ -222,15 +227,28 @@ func (r *PostgresRepository) GetLastRunCheckpoints(ctx context.Context, pipeline
 			&checkpoint.SourceFields,
 			&checkpoint.CreatedAt,
 			&checkpoint.RunID,
+			&baselineOwner,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("scanning checkpoint: %w", err)
+			return nil, "", fmt.Errorf("scanning checkpoint: %w", err)
 		}
 
 		checkpoints[checkpoint.EntityMRN] = &checkpoint
 	}
+	if err := rows.Err(); err != nil {
+		return nil, "", fmt.Errorf("reading checkpoints: %w", err)
+	}
 
-	return checkpoints, nil
+	return checkpoints, baselineOwner, nil
+}
+
+// ListOwners returns everyone who has run a pipeline's source, including "" for runs from before runs had owners.
+func (r *PostgresRepository) ListOwners(ctx context.Context, pipelineName, sourceName string) ([]string, error) {
+	rows, err := r.db.Query(ctx, `SELECT DISTINCT owner FROM runs WHERE pipeline_name = $1 AND source_name = $2`, pipelineName, sourceName)
+	if err != nil {
+		return nil, fmt.Errorf("listing run owners: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[string])
 }
 
 func (r *PostgresRepository) CleanupStaleRuns(ctx context.Context, timeout time.Duration) (int, error) {
@@ -381,7 +399,7 @@ func (r *PostgresRepository) scanRun(ctx context.Context, row pgx.Row) (*plugin.
 	err := row.Scan(
 		&run.ID, &run.PipelineName, &run.SourceName, &run.RunID,
 		&run.Status, &run.StartedAt, &completedAt, &errorMessage,
-		&configJSON, &summaryJSON, &run.CreatedBy,
+		&configJSON, &summaryJSON, &run.CreatedBy, &run.Owner,
 	)
 
 	if err != nil {
@@ -455,7 +473,7 @@ func (r *PostgresRepository) ListWithFilters(ctx context.Context, pipelines, sta
 	}
 
 	query := `SELECT id, pipeline_name, source_name, run_id, status, started_at,
-		       completed_at, error_message, config, summary, created_by
+		       completed_at, error_message, config, summary, created_by, owner
 		FROM runs ` + whereClause +
 		fmt.Sprintf(" ORDER BY started_at DESC LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 

@@ -163,10 +163,21 @@ definitions:
         type: object
       mrn:
         type: string
+      mrn_parts:
+        allOf:
+        - $ref: '#/definitions/MRNParts'
+        description: MRNParts is the MRN split into kind, type, provider, zone and
+          name, so clients never split the string themselves.
       name:
         type: string
       parent_mrn:
         type: string
+      previous_mrns:
+        description: PreviousMRNs carries the MRNs a plugin gave this asset before;
+          input only, like Terms.
+        items:
+          type: string
+        type: array
       providers:
         items:
           type: string
@@ -202,6 +213,26 @@ definitions:
       user_description:
         type: string
     type: object
+  AssetContribution:
+    properties:
+      asset_id:
+        type: string
+      fields:
+        $ref: '#/definitions/asset.ContributionFields'
+      first_seen_at:
+        type: string
+      last_seen_at:
+        type: string
+      role:
+        type: string
+      writer:
+        type: string
+      writer_info:
+        allOf:
+        - $ref: '#/definitions/AssetWriterInfo'
+        description: WriterInfo is Writer split into what a person reading it needs,
+          filled in by the API so clients never parse writer keys.
+    type: object
   AssetCount:
     properties:
       asset_id:
@@ -223,6 +254,23 @@ definitions:
         type: string
       url:
         type: string
+    type: object
+  AssetIdentityResponse:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      contributions:
+        items:
+          $ref: '#/definitions/AssetContribution'
+        type: array
+      id:
+        type: string
+      mrn:
+        type: string
+      mrn_parts:
+        $ref: '#/definitions/MRNParts'
     type: object
   AssetRule:
     properties:
@@ -426,6 +474,27 @@ definitions:
       service:
         type: string
     type: object
+  AssetWriterInfo:
+    properties:
+      kind:
+        type: string
+      pipeline:
+        type: string
+      principal_id:
+        type: string
+      principal_name:
+        type: string
+      principal_type:
+        description: PrincipalType and PrincipalID name the person or service account,
+          and PrincipalName is their display name when it could be looked up.
+        type: string
+      scheduled:
+        type: boolean
+      source:
+        type: string
+      zone:
+        type: string
+    type: object
   AssetsByOwnerResponse:
     properties:
       assets:
@@ -525,6 +594,10 @@ definitions:
       asset: {}
       error:
         type: string
+      moved_from:
+        description: MovedFrom is the MRN the asset had before this run gave it a
+          new one.
+        type: string
       mrn:
         type: string
       name:
@@ -571,6 +644,12 @@ definitions:
         items:
           $ref: '#/definitions/CreateStatRequest'
         type: array
+      zone_bindings:
+        description: ZoneBindings are the hosts the plugin connected to and the zone
+          each belongs to.
+        items:
+          $ref: '#/definitions/ZoneBinding'
+        type: array
     required:
     - assets
     - pipeline_name
@@ -591,7 +670,18 @@ definitions:
         items:
           $ref: '#/definitions/LineageResult'
         type: array
+      stale_contributions_withdrawn:
+        description: StaleContributionsWithdrawn are assets the run no longer found
+          that another writer still describes, so they were kept.
+        items:
+          type: string
+        type: array
       stale_entities_removed:
+        items:
+          type: string
+        type: array
+      warnings:
+        description: Warnings are identity problems the run worked around.
         items:
           type: string
         type: array
@@ -775,6 +865,10 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN sets the asset's identity explicitly, for example mrn://asset/table/postgresql@prod-eu/analytics.public.orders.
+          Without it the MRN is built from type, the first provider, zone and name.
+        type: string
       name:
         type: string
       owners:
@@ -808,6 +902,10 @@ definitions:
       user_description:
         description: UserDescription is the people-written description, kept apart
           from the source's own.
+        type: string
+      zone:
+        description: Zone tells apart two systems of the same provider when the MRN
+          is built from the name; ignored when MRN is set.
         type: string
     required:
     - name
@@ -1103,6 +1201,9 @@ definitions:
         description: LastSeenAt is refreshed at most every LastSeenInterval, so it
           is accurate to a few minutes.
         type: string
+      mrn:
+        description: MRN is mrn://user/<username>, derived from the name.
+        type: string
       must_change_password:
         type: boolean
       name:
@@ -1162,6 +1263,10 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN is mrn://data-product/<slug>, kept up to date by the database
+          as the product is renamed.
+        type: string
       name:
         type: string
       owners:
@@ -1725,6 +1830,10 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN is mrn://glossary-term/<source>/<path>, kept up to date by
+          the database as the term is renamed or moved.
+        type: string
       name:
         type: string
       owners:
@@ -2077,6 +2186,28 @@ definitions:
     - password
     - username
     type: object
+  MRNParts:
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      path:
+        items:
+          type: string
+        type: array
+      provider:
+        type: string
+      type:
+        type: string
+      zone:
+        type: string
+    type: object
+  MergeAssetRequest:
+    properties:
+      into:
+        type: string
+    type: object
   MessageResponse:
     properties:
       message:
@@ -2245,10 +2376,23 @@ definitions:
         items:
           type: string
         type: array
+      federates:
+        description: Federates is true for a plugin that catalogues assets other systems
+          own, such as Trino, OpenMetadata or dbt, so that when it and the system's
+          own plugin describe the same asset the owner's description, schema and metadata
+          win.
+        type: boolean
       icon:
         type: string
       id:
         type: string
+      identity_scope:
+        allOf:
+        - $ref: '#/definitions/pluginsdk.IdentityScope'
+        description: |-
+          IdentityScope says how the systems this plugin reads are told apart,
+          which decides the zone used when the config sets none. See the
+          IdentityScope constants; empty is IdentityScopeNetwork.
       marmot_version:
         type: string
       name:
@@ -2321,6 +2465,12 @@ definitions:
       error_message:
         type: string
       id:
+        type: string
+      owner:
+        description: 'Owner is who started the run: the schedule for a scheduled run,
+          the principal for a CLI or API run. Checkpoints and the run''s contributions
+          to assets belong to the pipeline, source and owner together, so two people
+          running the same pipeline file never treat each other''s assets as stale.'
         type: string
       pipeline_name:
         type: string
@@ -3053,6 +3203,18 @@ definitions:
     required:
     - rule_ids
     type: object
+  ResolveMRNResponse:
+    properties:
+      id:
+        type: string
+      kind:
+        type: string
+      moved:
+        description: Moved is true when the MRN asked for is an alias of this one.
+        type: boolean
+      mrn:
+        type: string
+    type: object
   Result:
     properties:
       asset_count:
@@ -3200,8 +3362,19 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN is the plugin's own MRN for the asset. Without it the server
+          builds one from type, provider and name, which cannot tell apart two tables
+          of the same name in different schemas.
+        type: string
       name:
         type: string
+      previous_mrns:
+        description: PreviousMRNs are MRNs earlier versions of the plugin gave the
+          asset.
+        items:
+          type: string
+        type: array
       providers:
         items:
           type: string
@@ -3507,6 +3680,9 @@ definitions:
         type: string
       managed_by:
         type: string
+      mrn:
+        description: MRN is mrn://pipeline/<name>, derived from the name.
+        type: string
       name:
         type: string
       next_run_at:
@@ -3792,6 +3968,9 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN is mrn://team/<slug>, derived from the name.
+        type: string
       name:
         type: string
       sso_provider:
@@ -3862,6 +4041,9 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: MRN is mrn://team/<slug>, derived from the name.
+        type: string
       name:
         type: string
       sso_groups:
@@ -4221,6 +4403,66 @@ definitions:
         minItems: 1
         type: array
     type: object
+  UpsertAssetRequest:
+    properties:
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/AssetExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      mrn:
+        type: string
+      name:
+        type: string
+      owners:
+        description: Owners are the users and teams to own the asset.
+        items:
+          $ref: '#/definitions/CreateAssetOwner'
+        type: array
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties:
+          type: string
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/AssetSource'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      terms:
+        description: Terms are the IDs of glossary terms to link the asset to.
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      user_description:
+        description: UserDescription is the people-written description, kept apart
+          from the source's own.
+        type: string
+      zone:
+        description: Zone tells apart two systems of the same provider when the MRN
+          is built from the name; ignored when MRN is set.
+        type: string
+    required:
+    - name
+    - providers
+    - type
+    type: object
   User:
     properties:
       active:
@@ -4238,6 +4480,9 @@ definitions:
       last_seen_at:
         description: LastSeenAt is refreshed at most every LastSeenInterval, so it
           is accurate to a few minutes.
+        type: string
+      mrn:
+        description: MRN is mrn://user/<username>, derived from the name.
         type: string
       must_change_password:
         type: boolean
@@ -4340,6 +4585,51 @@ definitions:
           $ref: '#/definitions/ValidationErrorDetail'
         type: array
     type: object
+  ZoneBinding:
+    properties:
+      host:
+        type: string
+      origin:
+        type: string
+      provider:
+        type: string
+      updated_at:
+        type: string
+      zone:
+        type: string
+    type: object
+  asset.ContributionFields:
+    properties:
+      description:
+        type: string
+      external_links:
+        items:
+          $ref: '#/definitions/AssetExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      query:
+        type: string
+      query_language:
+        type: string
+      schema:
+        additionalProperties:
+          type: string
+        type: object
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
   pluginsdk.AssetField:
     properties:
       description:
@@ -4426,6 +4716,16 @@ definitions:
     - FieldTypeMultiselect
     - FieldTypePassword
     - FieldTypeObject
+  pluginsdk.IdentityScope:
+    enum:
+    - network
+    - account
+    - file
+    type: string
+    x-enum-varnames:
+    - IdentityScopeNetwork
+    - IdentityScopeAccount
+    - IdentityScopeFile
   pluginsdk.ShowWhen:
     properties:
       field:
@@ -5390,6 +5690,43 @@ paths:
       summary: Get assets by glossary term
       tags:
       - assets
+  /api/v1/assets/by-mrn:
+    put:
+      consumes:
+      - application/json
+      description: 'Idempotent write for automation: creates the asset the MRN names,
+        or records the caller''s fields on it when it already exists. Unlike POST
+        /assets/ this never fails because the asset exists, so only use it when the
+        caller means the same asset.'
+      operationId: putAssetsByMRN
+      parameters:
+      - description: Asset
+        in: body
+        name: asset
+        required: true
+        schema:
+          $ref: '#/definitions/UpsertAssetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Asset'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Create or update an asset by MRN
+      tags:
+      - assets
   /api/v1/assets/counts/{id}:
     get:
       description: 'Counts shown beside the asset page''s tabs: lineage neighbours
@@ -5643,6 +5980,34 @@ paths:
       summary: Set a field annotation
       tags:
       - assets
+  /api/v1/assets/identity/{id}:
+    get:
+      description: The asset's MRN in parts, the MRNs it used to have, and what each
+        pipeline, import, person or Terraform resource says about it.
+      operationId: getAssetsIdentityID
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AssetIdentityResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get an asset's identity
+      tags:
+      - assets
   /api/v1/assets/lookup/{type}/{service}/{name}:
     get:
       description: Get an asset by its type, service (provider), and name
@@ -5720,6 +6085,49 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Match asset pattern
+      tags:
+      - assets
+  /api/v1/assets/merge/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Folds the asset into the one named by into when both turn out to
+        be the same thing, such as an OpenLineage stub and the table a plugin found,
+        or a federated copy and the native one. Owners, terms, data products, subscriptions,
+        lineage and documentation move across, and the merged asset's MRN keeps working
+        as an alias.
+      operationId: postAssetsMergeID
+      parameters:
+      - description: Asset ID to merge away
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset to merge into
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/MergeAssetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Merge an asset into another
       tags:
       - assets
   /api/v1/assets/my-assets:
@@ -7762,6 +8170,39 @@ paths:
       summary: Get top search queries
       tags:
       - metrics
+  /api/v1/mrn/resolve:
+    get:
+      description: 'Says what an MRN of any kind names: an asset, glossary term, data
+        product, team, user, pipeline or source. Legacy asset MRNs and MRNs a thing
+        used to have resolve too.'
+      operationId: getMRNResolve
+      parameters:
+      - description: MRN
+        in: query
+        name: mrn
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ResolveMRNResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Resolve an MRN
+      tags:
+      - assets
   /api/v1/notifications/item/{id}/mark-unread:
     post:
       description: Put a notification the current user has read back into their unread
@@ -11936,6 +12377,83 @@ paths:
       summary: Update user password
       tags:
       - users
+  /api/v1/zone-bindings:
+    delete:
+      operationId: deleteZoneBindings
+      parameters:
+      - description: Provider
+        in: query
+        name: provider
+        required: true
+        type: string
+      - description: Host
+        in: query
+        name: host
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete a zone binding
+      tags:
+      - assets
+    get:
+      description: Which zone each host belongs to. Plugins report the hosts they
+        connect to; an admin can pin a binding so a Kafka Connect sink or an OpenLineage
+        event that only names a host lands on the right system's assets.
+      operationId: getZoneBindings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ZoneBinding'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List zone bindings
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Binds a provider's host, host:port, to a zone. A pinned binding
+        wins over what plugins report.
+      operationId: putZoneBindings
+      parameters:
+      - description: Binding
+        in: body
+        name: binding
+        required: true
+        schema:
+          $ref: '#/definitions/ZoneBinding'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ZoneBinding'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Pin a zone binding
+      tags:
+      - assets
   /auth-providers:
     get:
       description: Returns the enabled auth providers without sensitive data

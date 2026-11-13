@@ -65,6 +65,19 @@ type Repository interface {
 	GetTermLinks(ctx context.Context, termID string, assetIDs []string) ([]TermLink, error)
 	GetTermLinkGroups(ctx context.Context, termID string) ([]TermLinkGroup, error)
 	GetByIDs(ctx context.Context, ids []string) ([]*Asset, error)
+
+	ResolveMRNs(ctx context.Context, mrns []string) ([]string, error)
+	MoveMRN(ctx context.Context, assetID, newMRN, reason string) error
+	MergeAssets(ctx context.Context, loserID, winnerID string) error
+	Aliases(ctx context.Context, assetID string) ([]string, error)
+	ListContributions(ctx context.Context, assetID string) ([]Contribution, error)
+	UpsertContribution(ctx context.Context, c Contribution) error
+	TouchContribution(ctx context.Context, assetID, writer string) (bool, error)
+	DeleteContribution(ctx context.Context, assetID, writer string) (int, error)
+	AssetIDsByWriter(ctx context.Context, writer string) ([]string, error)
+	UpsertZoneBindings(ctx context.Context, bindings []ZoneBinding, origin string) error
+	ListZoneBindings(ctx context.Context) ([]ZoneBinding, error)
+	DeleteZoneBinding(ctx context.Context, provider, host string) error
 }
 
 type AvailableFilters struct {
@@ -376,6 +389,10 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling external links: %w", err)
 		}
+	}
+
+	if asset.MRN != nil {
+		asset.MRNParts = PartsOf(*asset.MRN)
 	}
 
 	r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), true)

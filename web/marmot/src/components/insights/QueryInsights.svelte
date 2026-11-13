@@ -3,6 +3,7 @@
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
+	import { mrnProvider, mrnShortName } from '$lib/mrn';
 	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
 	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
 	import type { QueryRecord, QueryStats } from '$lib/dataquery/types';
@@ -26,7 +27,7 @@
 	let spark = $derived((stats?.series ?? []).map((p) => p.succeeded + p.failed + p.denied));
 
 	function providerOf(mrn: string): string | undefined {
-		return assetRouteParams(mrn)?.service.toLowerCase();
+		return mrnProvider(mrn) || undefined;
 	}
 
 	let tables = $derived<RankedItem[]>(
@@ -34,7 +35,7 @@
 			const route = assetRouteParams(t.key);
 			return {
 				key: t.key,
-				label: t.label || route?.name || t.key,
+				label: t.label || mrnShortName(t.key) || t.key,
 				value: t.total,
 				provider: providerOf(t.key),
 				href: route ? resolve('/discover/[type]/[service]/[name]', route) : undefined

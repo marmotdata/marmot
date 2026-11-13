@@ -54,17 +54,17 @@ func (s *Source) datasetAssets(items []scanned[*aiplatform.GoogleCloudAiplatform
 		// Both ends of these edges belong to other plugins, so the server
 		// drops the ones with nothing behind them.
 		for _, uri := range input.bigQueryURIs {
-			if table := bigQueryTable(uri); table != "" {
-				edges.add(mrn.New("Table", "BigQuery", table), *asset.MRN, "FEEDS")
+			if table := bigQueryTable(uri); table != nil {
+				edges.add(mrn.Asset("Table", "BigQuery", table...).String(), *asset.MRN, "FEEDS")
 			}
 		}
 		for _, uri := range input.gcsURIs {
 			if bucket := gcsBucket(uri); bucket != "" {
-				edges.add(mrn.New("Bucket", "GCS", bucket), *asset.MRN, "FEEDS")
+				edges.add(mrn.Asset("Bucket", "GCS", bucket).String(), *asset.MRN, "FEEDS")
 			}
 		}
 		for _, bucket := range input.buckets {
-			edges.add(mrn.New("Bucket", "GCS", bucket), *asset.MRN, "FEEDS")
+			edges.add(mrn.Asset("Bucket", "GCS", bucket).String(), *asset.MRN, "FEEDS")
 		}
 	}
 

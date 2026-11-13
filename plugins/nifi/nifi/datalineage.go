@@ -2,6 +2,7 @@ package nifi
 
 import (
 	"context"
+	"net"
 	"regexp"
 	"strings"
 
@@ -105,17 +106,25 @@ func (d *discovery) dataLineage(ctx context.Context, p processorComponent, taskM
 	}
 
 	nativeProvider := rule.Provider
-	if rule.JDBC {
-		var name string
-		nativeProvider, name = d.jdbcTable(ctx, p, value)
+	var host string
+	var jdbcPath []string
+	switch {
+	case rule.JDBC:
+		nativeProvider, jdbcPath, host = d.jdbcTable(ctx, p, value)
 		if nativeProvider == "" {
 			return
 		}
-		names = []string{name}
+		names = []string{value}
+	case nativeProvider == "Kafka":
+		host = d.kafkaHost(ctx, p)
 	}
 
 	for _, name := range names {
-		target := nativeMRN(rule.AssetType, nativeProvider, name)
+		path := []string{name}
+		if rule.JDBC {
+			path = jdbcPath
+		}
+		target := nativeMRN(rule.AssetType, nativeProvider, host, path...)
 		if rule.Direction == writesTo {
 			d.link(taskMRN, target, "PRODUCES")
 		} else {
@@ -123,16 +132,16 @@ func (d *discovery) dataLineage(ctx context.Context, p processorComponent, taskM
 		}
 
 		if nativeProvider == "Kafka" {
-			d.recordTopic(name, taskName, rule.Direction)
+			d.recordTopic(target, name, taskName, rule.Direction)
 		}
 	}
 }
 
-func (d *discovery) recordTopic(topic, taskName string, direction flowDirection) {
-	usage, ok := d.topics[topic]
+func (d *discovery) recordTopic(topicMRN, topic, taskName string, direction flowDirection) {
+	usage, ok := d.topics[topicMRN]
 	if !ok {
-		usage = &topicUsage{}
-		d.topics[topic] = usage
+		usage = &topicUsage{name: topic}
+		d.topics[topicMRN] = usage
 	}
 	if direction == writesTo {
 		usage.producers = appendUnique(usage.producers, taskName)
@@ -141,58 +150,104 @@ func (d *discovery) recordTopic(topic, taskName string, direction flowDirection)
 	}
 }
 
-// jdbcTable resolves the provider and table name for a database
-// processor from the JDBC URL of its connection pool. It returns an
-// empty provider when the pool cannot be read, the database kind is
-// not one Marmot has a plugin for, or the name cannot be qualified the
-// way that plugin names tables.
-func (d *discovery) jdbcTable(ctx context.Context, p processorComponent, table string) (string, string) {
+// kafkaHost is the first bootstrap server a Kafka processor connects to as host:port, read from the processor or from the connection service NiFi 2 moved it to. It returns "" when neither names one.
+func (d *discovery) kafkaHost(ctx context.Context, p processorComponent) string {
+	servers := propertyValue(p.Config, "bootstrap.servers", "Kafka Brokers")
+	if servers == "" {
+		if id := propertyValue(p.Config, "Kafka Connection Service"); id != "" {
+			if svc := d.connectionPool(ctx, id); svc != nil {
+				servers = stringProperty(svc.Properties, "bootstrap.servers")
+			}
+		}
+	}
+	first, _, _ := strings.Cut(servers, ",")
+	first = strings.TrimSpace(first)
+	if _, rest, ok := strings.Cut(first, "://"); ok {
+		first = rest
+	}
+	return hostWithDefault(first, "9092")
+}
+
+// hostWithDefault lowercases an address and adds the port when it has none.
+func hostWithDefault(address, defaultPort string) string {
+	address = strings.ToLower(strings.TrimSpace(address))
+	if address == "" {
+		return ""
+	}
+	if _, _, err := net.SplitHostPort(address); err == nil {
+		return address
+	}
+	return net.JoinHostPort(strings.Trim(address, "[]"), defaultPort)
+}
+
+// jdbcTable resolves the provider, path and host:port of the table a database processor touches from the JDBC URL of its connection pool. It returns an empty provider when the pool cannot be read, the database kind is not one Marmot has a plugin for, or the name cannot be qualified the way that plugin names tables.
+func (d *discovery) jdbcTable(ctx context.Context, p processorComponent, table string) (string, []string, string) {
 	poolID := propertyValue(p.Config, poolProperty)
 	if poolID == "" {
-		return "", ""
+		return "", nil, ""
 	}
 
 	pool := d.connectionPool(ctx, poolID)
 	if pool == nil {
-		return "", ""
+		return "", nil, ""
 	}
 
 	jdbcURL := stringProperty(pool.Properties, "Database Connection URL")
 	nativeProvider := jdbcProvider(jdbcURL)
+	endpoint := parseJDBCURL(jdbcURL)
+	host := hostWithDefault(endpoint.host, endpoint.port)
+	parts := strings.Split(strings.TrimSpace(table), ".")
 
 	switch nativeProvider {
-	case "PostgreSQL", "MySQL", "MariaDB":
-		// These plugins name a table by its bare name.
-		parts := strings.Split(table, ".")
-		return nativeProvider, parts[len(parts)-1]
+	case "PostgreSQL":
+		// The PostgreSQL plugin names a table database.schema.table and a session's default schema is public.
+		schema := propertyValue(p.Config, "Schema Name")
+		if schema == "" {
+			schema = "public"
+		}
+		path, ok := qualify(parts, endpoint.database, schema)
+		if !ok {
+			return "", nil, ""
+		}
+		return nativeProvider, path, host
+	case "MySQL", "MariaDB":
+		database := propertyValue(p.Config, "Catalog Name")
+		if database == "" {
+			database = endpoint.database
+		}
+		path, ok := qualify(parts, database)
+		if !ok {
+			return "", nil, ""
+		}
+		return nativeProvider, path, host
 	case "SQL Server":
 		database := propertyValue(p.Config, "Database Name")
 		if database == "" {
-			database = jdbcParameter(jdbcURL, "databaseName", "database")
+			database = endpoint.database
 		}
 		schema := propertyValue(p.Config, "Schema Name")
 		if schema == "" {
 			schema = "dbo"
 		}
-		name, ok := qualify(table, 3, schema, database)
+		path, ok := qualify(parts, database, schema)
 		if !ok {
-			return "", ""
+			return "", nil, ""
 		}
-		return nativeProvider, name
+		return nativeProvider, path, host
 	case "Oracle":
 		// An Oracle session's default schema is its user, in upper case.
 		schema := propertyValue(p.Config, "Schema Name")
 		if schema == "" {
 			schema = strings.ToUpper(stringProperty(pool.Properties, "Database User"))
 		}
-		name, ok := qualify(table, 2, schema)
+		path, ok := qualify(parts, endpoint.database, schema)
 		if !ok {
-			return "", ""
+			return "", nil, ""
 		}
-		return nativeProvider, name
+		return nativeProvider, path, host
 	default:
 		log.Debug().Str("processor", p.Name).Str("pool", pool.Name).Msg("Connection pool database is not one Marmot catalogues, skipping table lineage")
-		return "", ""
+		return "", nil, ""
 	}
 }
 
@@ -258,22 +313,97 @@ func jdbcParameter(jdbcURL string, keys ...string) string {
 	return ""
 }
 
-// qualify pads a dotted table name on the left up to the number of
-// parts the target plugin expects, using the fillers in order from the
-// nearest (schema) outwards (database). It fails when a filler needed
-// is unknown or the name already has too many parts.
-func qualify(table string, parts int, fillers ...string) (string, bool) {
-	segments := strings.Split(strings.TrimSpace(table), ".")
-	if len(segments) > parts {
-		return "", false
+// qualify pads a table name on the left up to the number of levels the target plugin names a table by. The fillers are the levels above the table, outermost first, and only the ones the name lacks are used. It fails when a filler needed is unknown or the name already has too many levels.
+func qualify(segments []string, fillers ...string) ([]string, bool) {
+	missing := len(fillers) + 1 - len(segments)
+	if missing < 0 {
+		return nil, false
 	}
-	for i := 0; len(segments) < parts; i++ {
-		if i >= len(fillers) || fillers[i] == "" {
-			return "", false
+	prefix := fillers[:missing]
+	for _, filler := range prefix {
+		if filler == "" {
+			return nil, false
 		}
-		segments = append([]string{fillers[i]}, segments...)
 	}
-	return strings.Join(segments, "."), true
+	return append(append([]string{}, prefix...), segments...), true
+}
+
+// jdbcEndpoint is the server and database a JDBC URL names. Port is the driver's default when the URL omits it.
+type jdbcEndpoint struct {
+	host     string
+	port     string
+	database string
+}
+
+// parseJDBCURL reads the first host, the port and the database or service name from a JDBC URL of one of the kinds jdbcProvider knows.
+func parseJDBCURL(jdbcURL string) jdbcEndpoint {
+	lower := strings.ToLower(strings.TrimSpace(jdbcURL))
+	if !strings.HasPrefix(lower, "jdbc:") {
+		return jdbcEndpoint{}
+	}
+	rest := strings.TrimSpace(jdbcURL)[len("jdbc:"):]
+	subprotocol, rest, _ := strings.Cut(rest, ":")
+
+	switch strings.ToLower(subprotocol) {
+	case "postgresql":
+		return parseAuthorityURL(rest, "5432", "")
+	case "mysql", "mariadb":
+		return parseAuthorityURL(rest, "3306", "")
+	case "sqlserver":
+		return parseAuthorityURL(rest, "1433", "databaseName", "database")
+	case "oracle":
+		return parseOracleURL(rest)
+	}
+	return jdbcEndpoint{}
+}
+
+// parseAuthorityURL reads //host:port/database?query, taking the database from a named parameter instead when keys are given (SQL Server).
+func parseAuthorityURL(rest, defaultPort string, keys ...string) jdbcEndpoint {
+	rest = strings.TrimPrefix(rest, "//")
+	authority := rest
+	if i := strings.IndexAny(authority, "/;?"); i >= 0 {
+		authority = authority[:i]
+	}
+	database := ""
+	if len(keys) > 0 && keys[0] != "" {
+		database = jdbcParameter(rest, keys...)
+	} else if _, after, ok := strings.Cut(rest, "/"); ok {
+		database, _, _ = strings.Cut(after, "?")
+	}
+	first, _, _ := strings.Cut(authority, ",")
+	first, _, _ = strings.Cut(first, "\\")
+	host, port := splitHostPort(first, defaultPort)
+	return jdbcEndpoint{host: host, port: port, database: strings.TrimSpace(database)}
+}
+
+// parseOracleURL reads thin:@//host:port/service, thin:@host:port/service and thin:@host:port:SID.
+func parseOracleURL(rest string) jdbcEndpoint {
+	_, rest, _ = strings.Cut(rest, "@")
+	rest = strings.TrimPrefix(rest, "//")
+	if strings.HasPrefix(rest, "(") {
+		return jdbcEndpoint{}
+	}
+	if i := strings.Index(rest, "?"); i >= 0 {
+		rest = rest[:i]
+	}
+	if hostPort, service, ok := strings.Cut(rest, "/"); ok {
+		host, port := splitHostPort(hostPort, "1521")
+		return jdbcEndpoint{host: host, port: port, database: service}
+	}
+	parts := strings.Split(rest, ":")
+	if len(parts) == 3 {
+		return jdbcEndpoint{host: parts[0], port: parts[1], database: parts[2]}
+	}
+	host, port := splitHostPort(rest, "1521")
+	return jdbcEndpoint{host: host, port: port}
+}
+
+func splitHostPort(address, defaultPort string) (string, string) {
+	address = strings.TrimSpace(address)
+	if host, port, err := net.SplitHostPort(address); err == nil {
+		return host, port
+	}
+	return strings.Trim(address, "[]"), defaultPort
 }
 
 func stringProperty(properties map[string]*string, name string) string {

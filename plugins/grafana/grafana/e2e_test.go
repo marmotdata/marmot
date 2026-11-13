@@ -112,7 +112,7 @@ func TestE2E_DiscoversTheSeededDashboards(t *testing.T) {
 
 	orders := findByName(result, "Dashboard", "Sales/Orders overview")
 	require.NotNil(t, orders, "the dashboard in the Sales folder")
-	assert.Equal(t, "mrn://dashboard/grafana/sales-orders-overview", *orders.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/grafana/sales-orders-overview", *orders.MRN)
 	assert.Equal(t, "orders-overview", orders.Metadata["uid"])
 	assert.Equal(t, "Sales", orders.Metadata["folder"])
 	assert.Equal(t, 3, int(orders.Metadata["panel_count"].(float64)))
@@ -122,7 +122,7 @@ func TestE2E_DiscoversTheSeededDashboards(t *testing.T) {
 
 	ops := findByName(result, "Dashboard", "Ops home")
 	require.NotNil(t, ops, "the dashboard in the General folder is named by title alone")
-	assert.Equal(t, "mrn://dashboard/grafana/ops-home", *ops.MRN)
+	assert.Equal(t, "mrn://asset/dashboard/grafana/ops-home", *ops.MRN)
 }
 
 func TestE2E_DiscoversCharts(t *testing.T) {
@@ -167,27 +167,27 @@ func TestE2E_DiscoversDataSources(t *testing.T) {
 func TestE2E_Lineage(t *testing.T) {
 	result := discoverE2E(t)
 
-	dash := "mrn://dashboard/grafana/sales-orders-overview"
-	revenue := "mrn://chart/grafana/sales-orders-overview-revenue"
-	topCustomers := "mrn://chart/grafana/sales-orders-overview-top-customers"
-	random := "mrn://chart/grafana/sales-orders-overview-random"
+	dash := "mrn://asset/dashboard/grafana/sales-orders-overview"
+	revenue := "mrn://asset/chart/grafana/sales-orders-overview-revenue"
+	topCustomers := "mrn://asset/chart/grafana/sales-orders-overview-top-customers"
+	random := "mrn://asset/chart/grafana/sales-orders-overview-random"
 
 	assert.True(t, hasEdge(result, dash, revenue, "CONTAINS"))
 	assert.True(t, hasEdge(result, dash, topCustomers, "CONTAINS"))
 	assert.True(t, hasEdge(result, dash, random, "CONTAINS"))
 
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/shop", revenue, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://datasource/grafana/testdata", random, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/shop", revenue, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/datasource/grafana/testdata", random, "FEEDS"))
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", revenue, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", revenue, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/orders", dash, "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", topCustomers, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", revenue, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", revenue, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/orders", dash, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", topCustomers, "FEEDS"))
 
 	// The Ops home table panel filters on a template variable; that
 	// yields the real table and nothing for the variable.
-	totals := "mrn://chart/grafana/ops-home-customer-totals"
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customer_totals", totals, "FEEDS"))
+	totals := "mrn://asset/chart/grafana/ops-home-customer-totals"
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customer_totals", totals, "FEEDS"))
 	for _, e := range result.Lineage {
 		assert.NotContains(t, e.Source, "$")
 	}
@@ -216,5 +216,5 @@ func TestE2E_ResolvesLibraryPanels(t *testing.T) {
 	require.NotNil(t, chart, "the dashboard holding only a library panel reference")
 	assert.Equal(t, "barchart", chart.Metadata["panel_type"])
 	assert.Equal(t, "Shop", chart.Metadata["datasource"])
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", *chart.MRN, "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql/customers", *chart.MRN, "FEEDS"))
 }

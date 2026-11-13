@@ -12,7 +12,6 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -22,7 +21,8 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "bigquery",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google BigQuery",
 		Description:   "Discover datasets and tables from Google BigQuery projects",
 		Icon:          "bigquery",
@@ -97,6 +97,16 @@ type Source struct {
 // bigqueryReadOnlyScope is all discovery needs; the IAM role bound to
 // the pipeline's subject decides what it may read.
 const bigqueryReadOnlyScope = "https://www.googleapis.com/auth/bigquery.readonly"
+
+// datasetMRN names a dataset by project and dataset id.
+func (s *Source) datasetMRN(datasetID string) string {
+	return s.config.AssetMRN("Dataset", "BigQuery", s.config.ProjectID, datasetID)
+}
+
+// tableMRN names a table, view or external table by project, dataset and table id.
+func (s *Source) tableMRN(assetType, datasetID, tableID string) string {
+	return s.config.AssetMRN(assetType, "BigQuery", s.config.ProjectID, datasetID, tableID)
+}
 
 type TableType string
 
@@ -372,7 +382,7 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, error
 			assetMetadata["access_entries_count"] = len(metadata.Access)
 		}
 
-		mrnValue := mrn.New("Dataset", "BigQuery", datasetID)
+		mrnValue := s.datasetMRN(datasetID)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, assetMetadata)
 
@@ -512,7 +522,7 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]plugin
 			continue
 		}
 
-		mrnValue := mrn.New(assetType, "BigQuery", tableID)
+		mrnValue := s.tableMRN(assetType, datasetID, tableID)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, assetMetadata)
 

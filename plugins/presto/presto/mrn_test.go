@@ -9,98 +9,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A catalog is Presto's own object, so it lives under the Presto
-// provider by its bare name. A table is named by its full Presto path
-// unless its connector maps to a technology another Marmot plugin
-// catalogues, in which case it takes that plugin's provider and name
-// shape and the two runs land on one asset.
+// A catalog is Presto's own object, so it lives under the Presto provider by its name. A table is Presto's own too, named by its full path, unless its catalog is listed in catalog_map, in which case it takes the native plugin's provider, zone and path and the two runs land on one asset.
+
+func newMRNSource(zone string) *Source {
+	cfg := &Config{Host: "localhost", Port: 8080}
+	cfg.Zone = zone
+	return &Source{config: cfg}
+}
 
 func TestCatalogMRN_IsTheBareCatalogName(t *testing.T) {
-	assert.Equal(t, "mrn://catalog/presto/tpch", assetMRN("Catalog", "Presto", "tpch"))
+	assert.Equal(t, "mrn://asset/catalog/presto/tpch", newMRNSource("").config.catalogMRN("tpch"))
 }
 
-func TestTableMRN_PrestoNativeCatalogUsesTheFullPath(t *testing.T) {
-	assert.Equal(t, "mrn://table/presto/memory.default.orders", assetMRN("Table", "Presto", "memory.default.orders"))
+func TestTableMRN_PrestoCatalogUsesTheFullPath(t *testing.T) {
+	a := newMRNSource("").createTableAsset("memory", "default", "orders", "BASE TABLE", "memory")
+	assert.Equal(t, "mrn://asset/table/presto/memory.default.orders", *a.MRN)
 }
 
-func TestTableMRN_MappedConnectorUsesTheNativePluginsIdentity(t *testing.T) {
-	info := connectorInfoForName("postgresql")
-	assert.Equal(t, "mrn://table/postgresql/orders", assetMRN("Table", info.Provider, info.MRNName("pg", "public", "orders")))
+func TestTableMRN_ViewUsesTheViewType(t *testing.T) {
+	a := newMRNSource("").createTableAsset("memory", "shop", "big_orders", "VIEW", "memory")
+	assert.Equal(t, "mrn://asset/view/presto/memory.shop.big_orders", *a.MRN)
 }
 
-func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/presto/memory.shop.big_orders", assetMRN("View", "Presto", "memory.shop.big_orders"))
+func TestTableMRN_CarriesTheZone(t *testing.T) {
+	a := newMRNSource("prod-eu").createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory")
+	assert.Equal(t, "mrn://asset/table/presto@prod-eu/memory.shop.orders", *a.MRN)
 }
 
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so it has to survive byte-identical,
-	// dots included.
-	original := assetMRN("Table", "Presto", "memory.shop.orders")
+func TestTableMRN_IsStableUnderRoundTrip(t *testing.T) {
+	original := *newMRNSource("").createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory").MRN
 
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, mrn.Asset(parsed.Type, parsed.Provider, parsed.Path()...).String())
 }
 
-func TestCatalogAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
+func TestTableAsset_NameIsTheTableAndTheMRNEndsWithIt(t *testing.T) {
+	s := newMRNSource("")
+	s.config.CatalogMap = map[string]CatalogMapping{"cat": {Database: "db"}}
 
-	a := s.createCatalogAsset("tpch", "tpch", "0.299", 1, nil)
-
-	require.NotNil(t, a.MRN)
-	require.NotNil(t, a.Name)
-	require.NotEmpty(t, a.Providers)
-	assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN)
-}
-
-func TestTableAsset_MRNAgreesWithItsOwnFieldsForEveryConnector(t *testing.T) {
-	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
-
-	connectors := []string{"memory", "tpch", "unknown_connector"}
 	for connector := range connectorMap {
-		connectors = append(connectors, connector)
-	}
+		a := s.createTableAsset("cat", "sch", "orders", "BASE TABLE", connector)
 
-	for _, connector := range connectors {
-		a := s.createTableAsset("cat", "sch", "orders", "BASE TABLE", connector, connectorInfoForName(connector))
-
-		require.NotNil(t, a.MRN, connector)
 		require.NotNil(t, a.Name, connector)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN, "%s: MRN and Name must agree", connector)
+		assert.Equal(t, "orders", *a.Name, connector)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err, connector)
+		assert.Equal(t, "orders", parsed.Path()[len(parsed.Path())-1], connector)
 	}
-}
-
-func TestCatalogAsset_IsNotAPrefixOfTheTablesItHolds(t *testing.T) {
-	// The Contents tree is built from the CONTAINS edges Discover emits,
-	// not by matching MRN prefixes, so a PostgreSQL table reached through
-	// a Presto catalog keeps its bare PostgreSQL name.
-	catalog := assetMRN("Catalog", "Presto", "pg")
-	table := assetMRN("Table", "PostgreSQL", "orders")
-
-	assert.Equal(t, "mrn://catalog/presto/pg", catalog)
-	assert.Equal(t, "mrn://table/postgresql/orders", table)
-	assert.NotContains(t, table, "pg")
-}
-
-func TestTableMRN_ProviderWithASpaceIsDashedInTheMRN(t *testing.T) {
-	// mrn.New sanitises the service the same way it sanitises the name, so
-	// "Delta Lake" becomes "delta-lake". That is what the Trino plugin
-	// emits for the same table, and matching it is the point.
-	s := &Source{config: &Config{}}
-
-	a := s.createTableAsset("dl", "default", "events", "BASE TABLE", "delta", connectorInfoForName("delta"))
-
-	assert.Equal(t, "mrn://table/delta-lake/dl.default.events", *a.MRN)
-	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 }
 
 func TestLineage_ContainsEdgeUsesTheSameMRNsAsTheAssets(t *testing.T) {
-	s := &Source{config: &Config{Host: "localhost", Port: 8080}}
-	table := s.createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory", connectorInfoForName("memory"))
+	s := newMRNSource("")
+	table := s.createTableAsset("memory", "shop", "orders", "BASE TABLE", "memory")
 	catalog := s.createCatalogAsset("memory", "memory", "", 1, []pluginsdk.Asset{table})
 
-	assert.Equal(t, "mrn://catalog/presto/memory", *catalog.MRN)
-	assert.Equal(t, "mrn://table/presto/memory.shop.orders", *table.MRN)
+	assert.Equal(t, "mrn://asset/catalog/presto/memory", *catalog.MRN)
+	assert.Equal(t, "mrn://asset/table/presto/memory.shop.orders", *table.MRN)
+}
+
+func TestMeta_Federates(t *testing.T) {
+	assert.True(t, Meta().Federates)
 }

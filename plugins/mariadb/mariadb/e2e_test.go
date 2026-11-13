@@ -172,7 +172,7 @@ func TestE2E_DiscoverEmitsTheDatabaseAsset(t *testing.T) {
 	result := discover(t)
 
 	db := requireAsset(t, result, "Database", "shop")
-	assert.Equal(t, "mrn://database/mariadb/shop", *db.MRN)
+	assert.Equal(t, "mrn://asset/database/mariadb/shop", *db.MRN)
 	assert.Equal(t, []string{"MariaDB"}, db.Providers)
 	assert.Equal(t, "shop", db.Metadata["database"])
 	assert.Contains(t, db.Metadata["server_version"], "MariaDB")
@@ -195,7 +195,7 @@ func TestE2E_TableMetadataAndDescriptionComeFromInformationSchema(t *testing.T) 
 	result := discover(t)
 
 	orders := requireAsset(t, result, "Table", "orders")
-	assert.Equal(t, "mrn://table/mariadb/orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/mariadb/shop.orders", *orders.MRN)
 	require.NotNil(t, orders.Description)
 	assert.Equal(t, "Customer orders", *orders.Description)
 	assert.Equal(t, "Customer orders", orders.Metadata["comment"])
@@ -293,7 +293,7 @@ func TestE2E_ViewCarriesItsDefinitionAndMetadata(t *testing.T) {
 	result := discover(t)
 
 	view := requireAsset(t, result, "View", "customer_totals")
-	assert.Equal(t, "mrn://view/mariadb/customer_totals", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/mariadb/shop.customer_totals", *view.MRN)
 	assert.Nil(t, view.Description, "the literal VIEW comment is not a description")
 	require.NotNil(t, view.Query)
 	assert.Contains(t, *view.Query, "`shop`.`orders`")
@@ -315,10 +315,10 @@ func TestE2E_ViewOfEdgesRunFromTheBaseTablesIntoTheView(t *testing.T) {
 
 	// Same direction as the MongoDB plugin: the data flows from the base
 	// table into the view, so the base is the source.
-	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://table/mariadb/orders", "mrn://view/mariadb/customer_totals"))
-	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://table/mariadb/customers", "mrn://view/mariadb/customer_totals"))
-	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://view/mariadb/customer_totals", "mrn://view/mariadb/vip_customers"))
-	assert.False(t, hasEdge(result, "VIEW_OF", "mrn://view/mariadb/customer_totals", "mrn://table/mariadb/orders"),
+	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://asset/table/mariadb/shop.orders", "mrn://asset/view/mariadb/shop.customer_totals"))
+	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://asset/table/mariadb/shop.customers", "mrn://asset/view/mariadb/shop.customer_totals"))
+	assert.True(t, hasEdge(result, "VIEW_OF", "mrn://asset/view/mariadb/shop.customer_totals", "mrn://asset/view/mariadb/shop.vip_customers"))
+	assert.False(t, hasEdge(result, "VIEW_OF", "mrn://asset/view/mariadb/shop.customer_totals", "mrn://asset/table/mariadb/shop.orders"),
 		"the reversed edge must not be emitted")
 }
 
@@ -326,7 +326,7 @@ func TestE2E_SequenceCarriesItsSettings(t *testing.T) {
 	result := discover(t)
 
 	seq := requireAsset(t, result, "Sequence", "order_seq")
-	assert.Equal(t, "mrn://sequence/mariadb/order_seq", *seq.MRN)
+	assert.Equal(t, "mrn://asset/sequence/mariadb/shop.order_seq", *seq.MRN)
 	assert.Equal(t, "sequence", seq.Metadata["object_type"])
 	assert.EqualValues(t, 1000, seq.Metadata["start_value"])
 	assert.EqualValues(t, 1, seq.Metadata["increment"])
@@ -342,19 +342,19 @@ func TestE2E_SequenceCarriesItsSettings(t *testing.T) {
 func TestE2E_DatabaseContainsEveryObject(t *testing.T) {
 	result := discover(t)
 
-	db := "mrn://database/mariadb/shop"
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://table/mariadb/customers"))
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://table/mariadb/orders"))
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://table/mariadb/prices"))
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://view/mariadb/customer_totals"))
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://view/mariadb/vip_customers"))
-	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://sequence/mariadb/order_seq"))
+	db := "mrn://asset/database/mariadb/shop"
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/table/mariadb/shop.customers"))
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/table/mariadb/shop.orders"))
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/table/mariadb/shop.prices"))
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/view/mariadb/shop.customer_totals"))
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/view/mariadb/shop.vip_customers"))
+	assert.True(t, hasEdge(result, "CONTAINS", db, "mrn://asset/sequence/mariadb/shop.order_seq"))
 }
 
 func TestE2E_ForeignKeyBecomesALineageEdge(t *testing.T) {
 	result := discover(t)
 
-	assert.True(t, hasEdge(result, "FOREIGN_KEY", "mrn://table/mariadb/orders", "mrn://table/mariadb/customers"))
+	assert.True(t, hasEdge(result, "FOREIGN_KEY", "mrn://asset/table/mariadb/shop.orders", "mrn://asset/table/mariadb/shop.customers"))
 }
 
 func TestE2E_EveryEdgeEndpointIsADiscoveredAsset(t *testing.T) {
@@ -384,7 +384,7 @@ func TestE2E_EveryAssetMRNMatchesItsOwnFields(t *testing.T) {
 func TestE2E_TableStatisticsComeFromInformationSchema(t *testing.T) {
 	result := discover(t)
 
-	stats := statisticsOf(result, "mrn://table/mariadb/customers")
+	stats := statisticsOf(result, "mrn://asset/table/mariadb/shop.customers")
 	assert.Equal(t, float64(3), stats["asset.row_count"])
 	assert.Equal(t, float64(7), stats["asset.column_count"])
 	assert.Greater(t, stats["asset.size_bytes"], float64(0))
@@ -393,7 +393,7 @@ func TestE2E_TableStatisticsComeFromInformationSchema(t *testing.T) {
 func TestE2E_ViewsOnlyGetAColumnCount(t *testing.T) {
 	result := discover(t)
 
-	stats := statisticsOf(result, "mrn://view/mariadb/customer_totals")
+	stats := statisticsOf(result, "mrn://asset/view/mariadb/shop.customer_totals")
 	assert.Equal(t, map[string]float64{"asset.column_count": 3}, stats)
 }
 

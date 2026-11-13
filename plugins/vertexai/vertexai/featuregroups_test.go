@@ -30,7 +30,7 @@ func TestFeatureGroup_IsNamedAfterItsID(t *testing.T) {
 
 	group := assetNamed(t, result, "Dataset", "customer_features")
 
-	assert.Equal(t, "mrn://dataset/vertex-ai/customer_features", *group.MRN)
+	assert.Equal(t, "mrn://asset/dataset/vertex-ai/customer_features", *group.MRN)
 }
 
 func TestFeatureGroup_CarriesItsDescription(t *testing.T) {
@@ -103,8 +103,8 @@ func TestFeatureGroup_LinksTheBigQueryTableThatFeedsIt(t *testing.T) {
 	result := discoverWith(t, fullFake())
 
 	assert.True(t, hasEdge(result,
-		"mrn://table/bigquery/"+testTable,
-		"mrn://dataset/vertex-ai/customer_features",
+		"mrn://asset/table/bigquery/"+testProject+".features."+testTable,
+		"mrn://asset/dataset/vertex-ai/customer_features",
 		"FEEDS"))
 }
 

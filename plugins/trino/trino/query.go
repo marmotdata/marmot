@@ -15,7 +15,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,10 +47,10 @@ type cachedConn struct {
 // when it still answers a ping. The connector map is loaded once per
 // connection; unlike discoverCatalogs it applies no exclusions, because
 // planning must map any catalog a statement can name.
-func (s *Source) connect(ctx context.Context, raw pluginsdk.RawConfig) (*sql.DB, map[string]string, error) {
+func (s *Source) connect(ctx context.Context, raw pluginsdk.RawConfig) (*sql.DB, *Config, map[string]string, error) {
 	config, err := parseConfig(raw)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	hash := configHash(config)
 
@@ -60,7 +59,7 @@ func (s *Source) connect(ctx context.Context, raw pluginsdk.RawConfig) (*sql.DB,
 		err := c.db.PingContext(pingCtx)
 		cancel()
 		if err == nil {
-			return c.db, c.connectors, nil
+			return c.db, config, c.connectors, nil
 		}
 		log.Warn().Err(err).Msg("Cached Trino connection failed ping, reconnecting")
 		s.query.drop(hash, c)
@@ -69,15 +68,15 @@ func (s *Source) connect(ctx context.Context, raw pluginsdk.RawConfig) (*sql.DB,
 	// Connecting can take seconds, so it happens outside the lock and never holds up queries to other sources.
 	db, err := openDB(ctx, config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("connecting to Trino: %w", err)
+		return nil, nil, nil, fmt.Errorf("connecting to Trino: %w", err)
 	}
 	connectors, err := loadCatalogConnectors(ctx, db)
 	if err != nil {
 		_ = db.Close()
-		return nil, nil, fmt.Errorf("loading catalog connectors: %w", err)
+		return nil, nil, nil, fmt.Errorf("loading catalog connectors: %w", err)
 	}
 	c := s.query.put(hash, &cachedConn{db: db, connectors: connectors})
-	return c.db, c.connectors, nil
+	return c.db, config, c.connectors, nil
 }
 
 func (q *queryConns) get(hash string) *cachedConn {
@@ -255,7 +254,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	if !isReadStatement(req.Statement) {
 		return nil, errReadOnly
 	}
-	db, connectors, err := s.connect(ctx, raw)
+	db, config, connectors, err := s.connect(ctx, raw)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +273,7 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	// A table function such as a connector's system.query passes its own query straight to the underlying database, so the tables it reads never appear in Trino's plan and only access to the whole source can cover it.
 	result := &pluginsdk.QueryPlan{EstimatedBytes: plan.estimatedBytes(), Incomplete: callsTableFunction(req.Statement)}
 	for _, input := range plan.InputTableColumnInfos {
-		tableMRN := tableMRN(ctx, db, connectors, input.Table.Catalog, input.Table.SchemaTable.Schema, input.Table.SchemaTable.Table)
+		tableMRN := tableMRN(ctx, db, config, connectors, input.Table.Catalog, input.Table.SchemaTable.Schema, input.Table.SchemaTable.Table)
 		if !seen[tableMRN] {
 			seen[tableMRN] = true
 			result.ReferencedMRNs = append(result.ReferencedMRNs, tableMRN)
@@ -283,20 +282,13 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 	return result, nil
 }
 
-// tableMRN reproduces the discovery path's MRN for a referenced table.
-// Internal connectors (memory, tpch, ...) are skipped by discovery, so
-// their tables get a Trino-scoped MRN that grants can still target.
-func tableMRN(ctx context.Context, db *sql.DB, connectors map[string]string, catalog, schema, table string) string {
-	info, ok := connectorInfoForName(connectors[catalog])
-	if !ok {
-		info = connectorInfo{Provider: "Trino", MRNName: defaultMRNName}
-	}
-
+// tableMRN reproduces the discovery path's MRN for a referenced table, so a catalog mapped in catalog_map binds to the native asset and any other catalog, including internal connectors like memory and tpch that discovery skips, to Trino's own table.
+func tableMRN(ctx context.Context, db *sql.DB, config *Config, connectors map[string]string, catalog, schema, table string) string {
 	assetType := "Table"
 	if isView(ctx, db, catalog, schema, table) {
 		assetType = "View"
 	}
-	return mrn.New(assetType, info.Provider, info.MRNName(catalog, schema, table))
+	return config.targetFor(catalog, connectors[catalog], schema, table).mrn(assetType)
 }
 
 func isView(ctx context.Context, db *sql.DB, catalog, schema, table string) bool {
@@ -322,7 +314,7 @@ func (s *Source) ExecuteQuery(ctx context.Context, raw pluginsdk.RawConfig, req 
 	if !isReadStatement(req.Statement) {
 		return errReadOnly
 	}
-	db, _, err := s.connect(ctx, raw)
+	db, _, _, err := s.connect(ctx, raw)
 	if err != nil {
 		return err
 	}

@@ -6,12 +6,13 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,7 +20,7 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "questdb",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "QuestDB",
 		Description:   "Discover tables, views and materialized views from QuestDB instances",
 		Icon:          "questdb",
@@ -185,10 +186,19 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(statistics)).
 		Msg("QuestDB discovery completed")
 
+	port := s.config.Port
+	if port == 0 {
+		port = 8812
+	}
 	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: "QuestDB",
+			Host:     strings.ToLower(net.JoinHostPort(s.config.Host, strconv.Itoa(port))),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -384,7 +394,7 @@ func (s *Source) buildAsset(obj discoveredObject) pluginsdk.Asset {
 	}
 
 	name := t.Name
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := assetMRN(s.config, assetType, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -609,10 +619,7 @@ func convertValue(v any) any {
 	}
 }
 
-// assetMRN is the single place a QuestDB MRN is built, so the asset pass
-// and the lineage pass can never address the same object differently.
-// QuestDB has one database and no schemas, so an object is addressed by
-// its bare name, matching the OpenMetadata projection for QuestDB.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, "QuestDB", name)
+// assetMRN is the single place a QuestDB MRN is built, so the asset pass and the lineage pass can never address the same object differently. QuestDB has one database and no schemas, so an object is addressed by its bare name, matching the OpenMetadata projection for QuestDB.
+func assetMRN(cfg *Config, assetType, name string) string {
+	return cfg.AssetMRN(assetType, "QuestDB", name)
 }

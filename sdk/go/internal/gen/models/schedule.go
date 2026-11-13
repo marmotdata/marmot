@@ -50,6 +50,9 @@ type Schedule struct {
 	// managed by
 	ManagedBy string `json:"managed_by,omitempty"`
 
+	// MRN is mrn://pipeline/<name>, derived from the name.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

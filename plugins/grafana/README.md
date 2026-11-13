@@ -31,3 +31,7 @@ discover_lineage: true
 page_size: 100
 verify_ssl: true
 ```
+
+## Naming
+
+Table MRNs follow the owning plugin's naming, for example `mrn://asset/table/postgresql/shop.public.orders` for PostgreSQL, and carry the data source's host and port as a hint so Marmot picks the zone that owns that server. Set `zone` when you catalogue more than one Grafana; it becomes part of the MRN of every Grafana asset.

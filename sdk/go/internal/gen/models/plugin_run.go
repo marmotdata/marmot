@@ -32,6 +32,9 @@ type PluginRun struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// Owner is who started the run: the schedule for a scheduled run, the principal for a CLI or API run. Checkpoints and the run's contributions to assets belong to the pipeline, source and owner together, so two people running the same pipeline file never treat each other's assets as stale.
+	Owner string `json:"owner,omitempty"`
+
 	// pipeline name
 	PipelineName string `json:"pipeline_name,omitempty"`
 

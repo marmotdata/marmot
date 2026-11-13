@@ -174,7 +174,7 @@ Three ways to attribute lineage from your own tools.
 ```python
 from marmot.integrations.langchain import marmot_tool
 
-@marmot_tool(asset_mrn="mrn://table/postgres/orders")
+@marmot_tool(asset_mrn="mrn://asset/table/postgresql/analytics.public.orders")
 def query_orders(sql: str) -> list[dict]:
     """Run a read-only SQL query against the orders table."""
     return run_sql(sql)
@@ -190,7 +190,7 @@ import { marmotTool } from "@marmotdata/sdk/langchain";
 const queryOrders = marmotTool({
   name: "query_orders",
   description: "Run a SQL query against the orders table.",
-  assetMrn: "mrn://table/postgres/orders",
+  assetMrn: "mrn://asset/table/postgresql/analytics.public.orders",
   schema: {
     type: "object",
     properties: { sql: { type: "string" } },
@@ -219,7 +219,7 @@ Use this when the upstream is only known at runtime, for example a tool that pic
 
 ```python
 def query_table(table: str, sql: str) -> list[dict]:
-    handler.record_source(f"mrn://table/postgres/{table}")
+    handler.record_source(f"mrn://asset/table/postgresql/analytics.public.{table}")
     return run_sql(sql)
 ```
 
@@ -229,7 +229,7 @@ def query_table(table: str, sql: str) -> list[dict]:
 
 ```ts
 function queryTable(table: string, sql: string) {
-  handler.recordSource(`mrn://table/postgres/${table}`);
+  handler.recordSource(`mrn://asset/table/postgresql/analytics.public.${table}`);
   return runSql(sql);
 }
 ```

@@ -48,10 +48,14 @@ type Asset struct {
 	QueryLanguage   *string                `json:"query_language,omitempty"`
 	IsStub          bool                   `json:"is_stub"`
 	ExternalLinks   []ExternalLink         `json:"external_links,omitempty"`
+	// MRNParts is the MRN split into kind, type, provider, zone and name, so clients never split the string themselves.
+	MRNParts *MRNParts `json:"mrn_parts,omitempty"`
 	// Terms carries glossary term names a discovery assigned to this
 	// asset. It is input only: the links live in asset_terms, so reading
 	// an asset back from the database never fills this in.
-	Terms         []string  `json:"terms,omitempty"`
+	Terms []string `json:"terms,omitempty"`
+	// PreviousMRNs carries the MRNs a plugin gave this asset before; input only, like Terms.
+	PreviousMRNs  []string  `json:"previous_mrns,omitempty"`
 	HasRunHistory bool      `json:"has_run_history"`
 	CreatedAt     time.Time `json:"created_at,omitempty"`
 	UpdatedAt     time.Time `json:"updated_at,omitempty"`
@@ -81,6 +85,9 @@ type CreateInput struct {
 	Query         *string                `json:"query,omitempty"`
 	QueryLanguage *string                `json:"query_language,omitempty"`
 	IsStub        bool                   `json:"is_stub"`
+	// Writer and Role record who is creating the asset as its first contribution; empty means a person through Marmot.
+	Writer string `json:"-"`
+	Role   string `json:"-"`
 }
 
 type UpdateInput struct {
@@ -217,6 +224,21 @@ type Service interface {
 	GetTermLinkGroups(ctx context.Context, termID string) ([]TermLinkGroup, error)
 	// GetByIDs reads up to MaxBatchIDs assets at once, in the order asked for, skipping ids that match nothing.
 	GetByIDs(ctx context.Context, ids []string) ([]*Asset, error)
+
+	ResolveMRN(ctx context.Context, m string) (string, error)
+	GetByExactMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error)
+	ResolveMRNs(ctx context.Context, mrns []string) ([]string, error)
+	MoveMRN(ctx context.Context, assetID, newMRN, reason string) error
+	Merge(ctx context.Context, loserID, winnerID string) (*Asset, error)
+	Aliases(ctx context.Context, assetID string) ([]string, error)
+	Contributions(ctx context.Context, assetID string) ([]Contribution, error)
+	Contribute(ctx context.Context, assetID, writer, role string, fields ContributionFields, skipNotification bool) (*Asset, error)
+	TouchContribution(ctx context.Context, assetID, writer string) (bool, error)
+	Withdraw(ctx context.Context, assetID, writer string) (bool, error)
+	AssetIDsByWriter(ctx context.Context, writer string) ([]string, error)
+	UpsertZoneBindings(ctx context.Context, bindings []ZoneBinding, origin string) error
+	ListZoneBindings(ctx context.Context) ([]ZoneBinding, error)
+	DeleteZoneBinding(ctx context.Context, provider, host string) error
 
 	// SetMembershipObserver registers an observer for asset create/delete events.
 	SetMembershipObserver(observer MembershipObserver)
@@ -408,16 +430,27 @@ func (s *service) GetTagSuggestions(ctx context.Context, prefix string, limit in
 	return validTags, nil
 }
 
+// GetByMRNs looks assets up by MRN in either form, following aliases. The result is keyed by each input exactly as given, so a caller holding a legacy MRN finds its asset under that same string.
 func (s *service) GetByMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error) {
-	assets, err := s.repo.GetByMRNs(ctx, mrns)
+	resolved, err := s.repo.ResolveMRNs(ctx, mrns)
+	if err != nil {
+		return nil, err
+	}
+	assets, err := s.repo.GetByMRNs(ctx, resolved)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make(map[string]*Asset)
+	byMRN := make(map[string]*Asset, len(assets))
 	for _, ast := range assets {
 		if ast.MRN != nil {
-			result[*ast.MRN] = ast
+			byMRN[*ast.MRN] = ast
+		}
+	}
+	result := make(map[string]*Asset, len(mrns))
+	for i, in := range mrns {
+		if ast, ok := byMRN[resolved[i]]; ok {
+			result[in] = ast
 		}
 	}
 	return result, nil
@@ -440,13 +473,26 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		return nil, err
 	}
 
-	existing, err := s.repo.GetByMRN(ctx, *input.MRN)
-	if err != nil && !errors.Is(err, ErrNotFound) {
+	canonical, err := CanonicalMRN(*input.MRN)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	resolved, err := s.repo.ResolveMRNs(ctx, []string{canonical})
+	if err != nil {
 		return nil, fmt.Errorf("checking existing asset: %w", err)
 	}
-
-	if existing != nil {
-		return nil, ErrAlreadyExists
+	if existing, err := s.repo.GetByMRNs(ctx, resolved); err != nil {
+		return nil, fmt.Errorf("checking existing asset: %w", err)
+	} else if len(existing) > 0 {
+		return nil, &ExistsError{Asset: existing[0]}
+	}
+	input.MRN = &canonical
+	writer, role := input.Writer, input.Role
+	if writer == "" {
+		writer, role = "marmot", RoleManual
+	}
+	if role == "" {
+		role = RoleManual
 	}
 
 	if input.Schema == nil {
@@ -481,9 +527,20 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 
 	if err := s.repo.Create(ctx, asset); err != nil {
 		if errors.Is(err, ErrConflict) {
+			if existing, getErr := s.repo.GetByMRNs(ctx, []string{canonical}); getErr == nil && len(existing) > 0 {
+				return nil, &ExistsError{Asset: existing[0]}
+			}
 			return nil, ErrAlreadyExists
 		}
 		return nil, fmt.Errorf("failed to create asset: %w", err)
+	}
+	asset.MRNParts = PartsOf(canonical)
+
+	if err := s.repo.UpsertContribution(ctx, Contribution{AssetID: asset.ID, Writer: writer, Role: role, Fields: ContributionFields{
+		Name: input.Name, Type: input.Type, Providers: input.Providers, Description: input.Description, Metadata: input.Metadata,
+		Schema: input.Schema, Tags: input.Tags, ExternalLinks: input.ExternalLinks, Query: input.Query, QueryLanguage: input.QueryLanguage,
+	}}); err != nil {
+		log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to record the creating writer's contribution")
 	}
 
 	// Notify membership observers asynchronously
@@ -516,7 +573,11 @@ func (s *service) Get(ctx context.Context, id string) (*Asset, error) {
 	return asset, nil
 }
 
+// GetByMRN looks an asset up by MRN in either form, following aliases to an asset that has since moved.
 func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error) {
+	if resolved, err := s.repo.ResolveMRNs(ctx, []string{qualifiedName}); err == nil && resolved[0] != "" {
+		qualifiedName = resolved[0]
+	}
 	asset, err := s.repo.GetByMRN(ctx, qualifiedName)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -794,6 +855,9 @@ func (s *service) Delete(ctx context.Context, id string) error {
 }
 
 func (s *service) DeleteByMRN(ctx context.Context, mrn string) error {
+	if resolved, err := s.repo.ResolveMRNs(ctx, []string{mrn}); err == nil && resolved[0] != "" {
+		mrn = resolved[0]
+	}
 	asset, err := s.repo.GetByMRN(ctx, mrn)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -835,6 +899,9 @@ func (s *service) DeleteByMRN(ctx context.Context, mrn string) error {
 	return nil
 }
 
+// uiWriter is the contribution people make through Marmot itself, such as tags added on the asset page.
+const uiWriter = "ui"
+
 func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, error) {
 	asset, err := s.repo.Get(ctx, id)
 	if err != nil {
@@ -843,32 +910,34 @@ func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, er
 		}
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
-
-	for _, existingTag := range asset.Tags {
-		if existingTag == tag {
-			return asset, nil
-		}
+	if slices.Contains(asset.Tags, tag) {
+		return asset, nil
 	}
 
-	asset.Tags = append(asset.Tags, tag)
-	asset.UpdatedAt = time.Now()
-
-	if err := s.repo.Update(ctx, asset); err != nil {
+	contribs, err := s.repo.ListContributions(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	var fields ContributionFields
+	for _, c := range contribs {
+		if c.Writer == uiWriter {
+			fields = c.Fields
+		}
+	}
+	fields.Tags = append(fields.Tags, tag)
+	updated, err := s.Contribute(ctx, id, uiWriter, RoleManual, fields, true)
+	if err != nil {
 		return nil, fmt.Errorf("failed to add tag to asset: %w", err)
 	}
 
-	log.Debug().
-		Str("asset_id", id).
-		Str("tag", tag).
-		Msg("Asset tag added")
-
+	log.Debug().Str("asset_id", id).Str("tag", tag).Msg("Asset tag added")
 	if s.metrics != nil {
 		s.metrics.Count("asset.tag.added", 1)
 	}
-
-	return asset, nil
+	return updated, nil
 }
 
+// RemoveTag takes a tag off an asset by withdrawing it from every writer's contribution. A source that keeps sending the tag puts it back on its next run, as it always has.
 func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*Asset, error) {
 	asset, err := s.repo.Get(ctx, assetId)
 	if err != nil {
@@ -877,38 +946,33 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 		}
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
-
-	found := false
-	newTags := make([]string, 0, len(asset.Tags))
-	for _, existingTag := range asset.Tags {
-		if existingTag != tag {
-			newTags = append(newTags, existingTag)
-		} else {
-			found = true
-		}
-	}
-
-	if !found {
+	if !slices.Contains(asset.Tags, tag) {
 		return asset, nil
 	}
 
-	asset.Tags = newTags
-	asset.UpdatedAt = time.Now()
-
-	if err := s.repo.Update(ctx, asset); err != nil {
+	contribs, err := s.repo.ListContributions(ctx, assetId)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range contribs {
+		if !slices.Contains(c.Fields.Tags, tag) {
+			continue
+		}
+		c.Fields.Tags = slices.DeleteFunc(slices.Clone(c.Fields.Tags), func(t string) bool { return t == tag })
+		if err := s.repo.UpsertContribution(ctx, c); err != nil {
+			return nil, fmt.Errorf("failed to remove tag from asset: %w", err)
+		}
+	}
+	updated, err := s.recompute(ctx, assetId, true)
+	if err != nil {
 		return nil, fmt.Errorf("failed to remove tag from asset: %w", err)
 	}
 
-	log.Debug().
-		Str("asset_id", assetId).
-		Str("tag", tag).
-		Msg("Asset tag removed")
-
+	log.Debug().Str("asset_id", assetId).Str("tag", tag).Msg("Asset tag removed")
 	if s.metrics != nil {
 		s.metrics.Count("asset.tag.removed", 1)
 	}
-
-	return asset, nil
+	return updated, nil
 }
 
 func (s *service) AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error {

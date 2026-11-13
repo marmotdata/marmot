@@ -44,7 +44,7 @@ func (c *collector) discoverAPIs(ctx context.Context, client *client) error {
 		metadata := map[string]interface{}{}
 		putIf(metadata, "endpoint_url", coll.EndpointURL)
 
-		asset := c.newAsset(coll.entityBase, "apiCollection", "Service", p, c.mrnName(name, coll.FullyQualifiedName), metadata)
+		asset := c.newAsset(coll.entityBase, "apiCollection", "Service", p, c.ident(name, coll.FullyQualifiedName), metadata)
 		c.add(coll.ID, asset)
 
 		collectionMRNs[coll.FullyQualifiedName] = *asset.MRN
@@ -86,7 +86,7 @@ func (c *collector) discoverAPIs(ctx context.Context, client *client) error {
 			continue
 		}
 
-		asset := c.newAsset(ep.entityBase, "apiEndpoint", "Endpoint", p, name, metadata)
+		asset := c.newAsset(ep.entityBase, "apiEndpoint", "Endpoint", p, c.ident(name, ep.FullyQualifiedName), metadata)
 
 		// Containment is carried by the CONTAINS edge. Asset.ParentMRN
 		// exists on the SDK type but Marmot does not persist it, so

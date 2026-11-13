@@ -67,11 +67,11 @@ type DBTColumnFields struct {
 // DBTConfigFields represents DBT config-specific metadata fields
 // Fields with config_ prefix contain DBT model configuration
 type DBTConfigFields struct {
-	ConfigEnabled       bool   `json:"config_enabled" metadata:"config_enabled" description:"Whether model is enabled"`
-	ConfigMaterialized  string `json:"config_materialized" metadata:"config_materialized" description:"Materialization strategy from config"`
-	ConfigTags          string `json:"config_tags" metadata:"config_tags" description:"Tags from config"`
-	ConfigPersistDocs   bool   `json:"config_persist_docs" metadata:"config_persist_docs" description:"Whether to persist documentation to database"`
-	ConfigFullRefresh   bool   `json:"config_full_refresh" metadata:"config_full_refresh" description:"Whether to perform full refresh"`
+	ConfigEnabled        bool   `json:"config_enabled" metadata:"config_enabled" description:"Whether model is enabled"`
+	ConfigMaterialized   string `json:"config_materialized" metadata:"config_materialized" description:"Materialization strategy from config"`
+	ConfigTags           string `json:"config_tags" metadata:"config_tags" description:"Tags from config"`
+	ConfigPersistDocs    bool   `json:"config_persist_docs" metadata:"config_persist_docs" description:"Whether to persist documentation to database"`
+	ConfigFullRefresh    bool   `json:"config_full_refresh" metadata:"config_full_refresh" description:"Whether to perform full refresh"`
 	ConfigOnSchemaChange string `json:"config_on_schema_change" metadata:"config_on_schema_change" description:"Behavior when schema changes (append_new_columns, fail, ignore)"`
 }
 

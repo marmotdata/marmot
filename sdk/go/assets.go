@@ -42,6 +42,9 @@ type AssetEnvironment = models.Environment
 // CreateAssetInput is the input for AssetsService.Create. Only Name, Type, and
 // Providers are required; empty optional fields are omitted from the request.
 type CreateAssetInput struct {
+	// MRN sets the asset's identity explicitly; Zone tells apart two systems of the same provider when the MRN is built from the name.
+	MRN           string
+	Zone          string
 	Name          string
 	Type          string
 	Providers     []string
@@ -122,6 +125,8 @@ func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset
 		ExternalLinks: in.ExternalLinks,
 		Sources:       in.Sources,
 		Environments:  in.Environments,
+		Mrn:           in.MRN,
+		Zone:          in.Zone,
 	}
 	if len(in.Metadata) > 0 {
 		body.Metadata = in.Metadata

@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.66.10
 	github.com/aws/aws-sdk-go-v2/service/glue v1.173.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.51.8
-	github.com/marmotdata/plugin-sdk v0.0.0-20261101192627-c7c328cdb46d
+	github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 )

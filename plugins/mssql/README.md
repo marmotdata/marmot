@@ -6,7 +6,7 @@ It uses the pure-Go `github.com/microsoft/go-mssqldb` driver, so it needs no cgo
 
 A SQL Server session is bound to a single database, so the plugin opens one connection per database. By default it discovers every database the login can open, minus `master`, `model`, `msdb` and `tempdb`. Set `database` to discover just one.
 
-Because one instance holds many databases and two of them can hold the same schema and object name, tables, views and routines are named `database.schema.object`.
+Because one instance holds many databases and two of them can hold the same schema and object name, tables, views and routines are identified in their MRN by `database.schema.object`, while the asset name is the object's own name. Set `zone` to a short name such as `prod-eu` when you run two servers of the same kind, and it becomes part of every MRN. The name is one you choose, not a cloud availability zone.
 
 ## Encryption
 

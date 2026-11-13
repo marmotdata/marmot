@@ -537,14 +537,13 @@ func tryDiscover(t *testing.T, f *fakeNiFi, overrides pluginsdk.RawConfig) (*plu
 	return (&Source{}).Discover(t.Context(), config)
 }
 
-// findAsset returns the asset of one type whose MRN is the one the
-// server would derive from that name.
+// findAsset returns the asset of one type whose MRN is the one built from that slash-joined path.
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, asset := range result.Assets {
 		if asset.Type != assetType || asset.MRN == nil || len(asset.Providers) == 0 {
 			continue
 		}
-		if *asset.MRN == mrn.New(assetType, asset.Providers[0], name) {
+		if *asset.MRN == mrn.Asset(assetType, asset.Providers[0], strings.Split(name, "/")...).String() {
 			return &result.Assets[i]
 		}
 	}
@@ -610,4 +609,9 @@ func (f *fakeNiFi) startTLS(t *testing.T) *httptest.Server {
 	server := httptest.NewTLSServer(handler)
 	t.Cleanup(server.Close)
 	return server
+}
+
+// assetMRN builds the MRN of a NiFi asset from its slash-joined path, the way the plugin does from the group chain.
+func assetMRN(assetType, path string) string {
+	return mrn.Asset(assetType, provider, strings.Split(path, "/")...).String()
 }

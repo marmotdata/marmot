@@ -1,6 +1,7 @@
 package superset
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -13,77 +14,90 @@ import (
 // its schema, because two datasets on same-named tables in different
 // schemas are different datasets.
 
+// assetMRN builds the MRN of a Superset asset from its dotted path, the way the plugin does from its levels.
+func assetMRN(assetType, path string) string {
+	return mrn.Asset(assetType, provider, strings.Split(path, ".")...).String()
+}
+
 func TestDashboardMRN_IsTheTitle(t *testing.T) {
-	assert.Equal(t, "mrn://dashboard/superset/shop-overview", assetMRN("Dashboard", "Shop Overview"))
+	assert.Equal(t, "mrn://asset/dashboard/superset/shop-overview", assetMRN("Dashboard", "Shop Overview"))
 }
 
 func TestChartMRN_IsTheSliceName(t *testing.T) {
-	assert.Equal(t, "mrn://chart/superset/orders-by-status", assetMRN("Chart", "Orders by Status"))
+	assert.Equal(t, "mrn://asset/chart/superset/orders-by-status", assetMRN("Chart", "Orders by Status"))
 }
 
-func TestDatasetMRN_IsSchemaDotTable(t *testing.T) {
-	// The type loses its spaces: mrn.New sanitises the type the same way
-	// it sanitises the name, and the server derives the same string.
-	assert.Equal(t, "mrn://data-model-object/superset/public.orders", assetMRN("Data Model Object", "public.orders"))
+func TestDatasetMRN_IsSchemaAndTable(t *testing.T) {
+	assert.Equal(t, "mrn://asset/data-model-object/superset/public.orders", assetMRN("Data Model Object", "public.orders"))
 }
 
 func TestDatasetMRN_WithoutASchemaIsTheTable(t *testing.T) {
-	assert.Equal(t, "mrn://data-model-object/superset/events", assetMRN("Data Model Object", datasetName("", "events")))
+	assert.Equal(t, "mrn://asset/data-model-object/superset/events", assetMRN("Data Model Object", datasetName("", "events")))
 }
 
 func TestDataSourceMRN_IsTheDatabaseName(t *testing.T) {
-	assert.Equal(t, "mrn://datasource/superset/shop", assetMRN("DataSource", "Shop"))
+	assert.Equal(t, "mrn://asset/datasource/superset/shop", assetMRN("DataSource", "Shop"))
 }
 
-func TestMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so it has to survive byte-identical.
-	for _, original := range []string{
-		assetMRN("Dashboard", "Shop Overview"),
-		assetMRN("Chart", "Orders by Status"),
-		assetMRN("Data Model Object", "public.orders"),
-		assetMRN("DataSource", "Shop"),
-	} {
-		parsed, err := mrn.Parse(original)
-		require.NoError(t, err)
-		assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-	}
+func TestMRN_CarriesTheZone(t *testing.T) {
+	d := &discovery{config: &Config{}}
+	d.config.Zone = "prod"
+
+	asset := d.newAsset("Dashboard", "Shop Overview", nil)
+	assert.Equal(t, "mrn://asset/dashboard/superset@prod/shop-overview", *asset.MRN)
 }
 
-func TestEveryAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name); the
-	// MRN a plugin declares must be exactly that or the asset lands twice.
+func TestEveryAsset_MRNIsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discover(t, shop(), nil)
 	require.NotEmpty(t, result.Assets)
 
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN, "asset %s", *a.Name)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy, *a.MRN)
+		assert.Equal(t, strings.ReplaceAll(strings.ToLower(a.Type), " ", "-"), parsed.Type)
+		assert.Equal(t, "superset", parsed.Provider)
 	}
 }
 
-func TestDatasetMRN_IsNotAPrefixOfTheDatabaseThatHoldsIt(t *testing.T) {
-	// The Contents tree is built from the FEEDS and CONTAINS edges the
-	// run emits, not by matching MRN prefixes.
-	assert.NotContains(t, assetMRN("Data Model Object", "public.orders"), "shop")
+func TestDatasetAsset_IsNamedByItsTableAndNeedsNoPreviousMRN(t *testing.T) {
+	result := discover(t, shop(), nil)
+
+	for _, a := range result.Assets {
+		if a.Type == "Data Model Object" && *a.MRN == assetMRN("Data Model Object", "public.orders") {
+			assert.Equal(t, "orders", *a.Name)
+			assert.Empty(t, a.PreviousMRNs, "the MRN is the string earlier releases built")
+			return
+		}
+	}
+	t.Fatal("dataset not discovered")
 }
 
 // Edges to tables other plugins own are pinned to those plugins' exact
 // MRNs, because the server only keeps an edge whose both ends exist.
 
 func TestNativeTableMRN_MatchesThePostgreSQLPlugin(t *testing.T) {
-	assert.Equal(t, mrn.New("Table", "PostgreSQL", "orders"), nativeTableMRN("postgresql", "shop", "public", "orders"))
-	assert.Equal(t, "mrn://table/postgresql/orders", nativeTableMRN("postgresql", "shop", "public", "orders"))
+	assert.Equal(t, mrn.Asset("Table", "PostgreSQL", "shop", "public", "orders").String(), nativeTableMRN("postgresql", "", "shop", "public", "orders"))
 }
 
-func TestNativeTableMRN_MatchesTheSnowflakeProjection(t *testing.T) {
-	assert.Equal(t, mrn.New("Table", "Snowflake", "SALES.PUBLIC.ORDERS"), nativeTableMRN("snowflake", "SALES", "PUBLIC", "ORDERS"))
+func TestNativeTableMRN_TheConnectionsHostBecomesAHint(t *testing.T) {
+	assert.Equal(t, "mrn://asset/table/postgresql@host=db.internal:5432/shop.public.orders", nativeTableMRN("postgresql", "db.internal:5432", "shop", "public", "orders"))
 }
 
-func TestNativeTableMRN_KeepsTheSpaceInSQLServer(t *testing.T) {
-	// "SQL Server" is the provider string with a space; mrn.New keeps it
-	// in the service component, so the two plugins land on one asset.
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", nativeTableMRN("mssql", "shop", "dbo", "orders"))
+func TestNativeTableMRN_SameTableInTwoSchemasDiffers(t *testing.T) {
+	assert.NotEqual(t, nativeTableMRN("postgresql", "", "shop", "public", "orders"), nativeTableMRN("postgresql", "", "shop", "archive", "orders"))
+}
+
+func TestConnectionHost_UsesTheParametersThenTheURIThenTheBackendsPort(t *testing.T) {
+	var conn databaseConnection
+	conn.Parameters.Host = "DB.internal"
+	conn.Parameters.Port = "6432"
+	assert.Equal(t, "db.internal:6432", connectionHost("postgresql", &conn))
+
+	conn = databaseConnection{SQLAlchemyURI: "postgresql://user:XXXXXXXXXX@Pg.internal/shop"}
+	assert.Equal(t, "pg.internal:5432", connectionHost("postgresql", &conn))
+
+	conn = databaseConnection{SQLAlchemyURI: "snowflake://user:XXXXXXXXXX@acme/"}
+	assert.Equal(t, "", connectionHost("snowflake", &conn), "a hosted warehouse has no host to match")
 }

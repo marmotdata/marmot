@@ -9,95 +9,86 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The Marmot server rebuilds an asset's identity from its Type, first
-// Provider and Name. These tests pin the strings that come out of that, so a
-// change that would move an asset shows up here rather than as a duplicate in
-// the catalog.
-
-func TestTableMRN_IsTheBareTableNameUnderGlue(t *testing.T) {
-	assert.Equal(t, "mrn://table/glue/orders", tableMRN(typeTable, "orders"))
+func TestTableMRN_DefaultCatalogAgreesWithTheGluePlugin(t *testing.T) {
+	// plugins/glue files a table as (Table, Glue, [database, table]). Athena reads the same Glue Data Catalog, so both runs have to land on one asset.
+	assert.Equal(t, "mrn://asset/table/glue/shop.orders", ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"))
+	assert.Equal(t, "mrn://asset/view/glue/shop.order_totals", ids.tableMRN(typeView, "AwsDataCatalog", "shop", "order_totals"))
+	assert.Equal(t, "mrn://asset/database/glue/shop", ids.databaseMRN("AwsDataCatalog", "shop"))
 }
 
-func TestViewMRN_UsesTheViewType(t *testing.T) {
-	assert.Equal(t, "mrn://view/glue/order_totals", tableMRN(typeView, "order_totals"))
+func TestTableMRN_OtherCatalogsAreNamedInThePath(t *testing.T) {
+	assert.Equal(t, "mrn://asset/table/glue/lab.shop.orders", ids.tableMRN(typeTable, "lab", "shop", "orders"))
+	assert.NotEqual(t, ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"), ids.tableMRN(typeTable, "lab", "shop", "orders"))
 }
 
-func TestDatabaseMRN_IsTheBareDatabaseNameUnderGlue(t *testing.T) {
-	assert.Equal(t, "mrn://database/glue/shop", databaseMRN("shop"))
+func TestTableMRN_SameNameInTwoDatabasesDiffers(t *testing.T) {
+	assert.NotEqual(t,
+		ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"),
+		ids.tableMRN(typeTable, "AwsDataCatalog", "archive", "orders"))
 }
 
-func TestWorkGroupMRN_IsTheWorkGroupNameUnderAthena(t *testing.T) {
-	assert.Equal(t, "mrn://workgroup/athena/analytics", workGroupMRN("analytics"))
+func TestMRNs_CarryTheZone(t *testing.T) {
+	cfg := &Config{}
+	cfg.Zone = "prod-eu"
+	s := &Source{config: cfg}
+
+	assert.Equal(t, "mrn://asset/table/glue@prod-eu/shop.orders", s.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders"))
+	assert.Equal(t, "mrn://asset/workgroup/athena@prod-eu/analytics", s.workGroupMRN("analytics"))
+	assert.Equal(t, "mrn://asset/catalog/athena@prod-eu/awsdatacatalog", s.catalogMRN("AwsDataCatalog"))
 }
 
-func TestSavedQueryMRN_FoldsTheWorkGroupIntoTheName(t *testing.T) {
-	// mrn.New turns the separating slash into a hyphen, so the workgroup
-	// stays part of the identity without splitting the MRN.
-	assert.Equal(t, "mrn://data-model-object/athena/analytics-daily-revenue",
-		savedQueryMRN("analytics", "daily-revenue"))
+func TestWorkGroupAndCatalogMRNs(t *testing.T) {
+	assert.Equal(t, "mrn://asset/workgroup/athena/analytics", ids.workGroupMRN("analytics"))
+	assert.Equal(t, "mrn://asset/catalog/athena/awsdatacatalog", ids.catalogMRN("AwsDataCatalog"))
 }
 
-func TestCatalogMRN_IsTheCatalogNameUnderAthena(t *testing.T) {
-	assert.Equal(t, "mrn://catalog/athena/awsdatacatalog", catalogMRN("AwsDataCatalog"))
+func TestSavedQueryMRN_IsWorkGroupThenName(t *testing.T) {
+	assert.Equal(t, "mrn://asset/data-model-object/athena/analytics.daily-revenue", ids.savedQueryMRN("analytics", "daily-revenue"))
+	assert.Equal(t, "mrn://asset/data-model-object/athena/daily-revenue", ids.savedQueryMRN("", "daily-revenue"))
+}
+
+func TestPreviousSavedQueryMRN_IsTheFoldedLegacyName(t *testing.T) {
+	assert.Equal(t, "mrn://data-model-object/athena/analytics-daily-revenue", previousSavedQueryMRN("analytics", "daily-revenue"))
 }
 
 func TestBucketMRN_MatchesTheS3PluginIdentity(t *testing.T) {
-	// The S3 plugin names a bucket asset by its bare bucket name, so a
-	// lineage edge from a table location lands on the bucket it already
-	// catalogued.
-	assert.Equal(t, "mrn://bucket/s3/marmot-lake", bucketMRN("marmot-lake"))
+	assert.Equal(t, "mrn://asset/bucket/s3/marmot-lake", bucketMRN("marmot-lake"))
 }
 
-func TestTableMRN_AgreesWithTheGluePlugin(t *testing.T) {
-	// plugins/glue files a table as (Table, Glue, bare name). Athena reads
-	// the same Glue Data Catalog, so both runs have to land on one asset.
-	assert.Equal(t, mrn.New("Table", "Glue", "orders"), tableMRN(typeTable, "orders"))
-}
+func TestTableMRN_IsStableUnderRoundTrip(t *testing.T) {
+	original := ids.tableMRN(typeTable, "AwsDataCatalog", "shop", "orders")
 
-func TestTableMRN_AgreesWithTheOpenMetadataProjection(t *testing.T) {
-	// plugins/openmetadata projects Athena as {Provider: "Glue", TableName:
-	// nameOnly}, so an OpenMetadata import of an Athena service reaches the
-	// same asset this plugin creates.
-	assert.Equal(t, mrn.New("Table", "Glue", "orders"), tableMRN(typeTable, "orders"))
-}
-
-func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI.
-	original := tableMRN(typeTable, "orders")
-
-	parsed, err := mrn.Parse(original)
+	parsed, err := mrn.ParseMRN(original)
 	require.NoError(t, err)
 
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	assert.Equal(t, original, mrn.Asset(parsed.Type, parsed.Provider, parsed.Path()...).String())
 }
 
-func TestSavedQueryMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := savedQueryMRN("analytics", "daily-revenue")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
-}
-
-func TestDiscover_EveryAssetMRNMatchesItsOwnIdentity(t *testing.T) {
-	// The server ignores the MRN a plugin sends and rebuilds it from the
-	// asset's own fields. An asset whose MRN disagrees with that would be
-	// pointed at by lineage edges that never resolve.
+func TestDiscover_EveryAssetMRNIsUnique(t *testing.T) {
 	s := newTestSource(t, seedAthena(), seedGlue(), pluginsdk.RawConfig{})
 
 	result, err := s.discover(t.Context())
 	require.NoError(t, err)
 	require.NotEmpty(t, result.Assets)
 
+	seen := map[string]struct{}{}
 	for _, a := range result.Assets {
-		require.NotNil(t, a.Name)
 		require.NotNil(t, a.MRN)
-		require.Len(t, a.Providers, 1)
+		assert.NotContains(t, seen, *a.MRN)
+		seen[*a.MRN] = struct{}{}
+	}
+}
 
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN, "asset %s", *a.Name)
+func TestDiscover_SavedQueriesCarryTheirPreviousMRN(t *testing.T) {
+	s := newTestSource(t, seedAthena(), seedGlue(), pluginsdk.RawConfig{})
+
+	result, err := s.discover(t.Context())
+	require.NoError(t, err)
+
+	for _, a := range result.Assets {
+		if a.Type == typeSavedQuery {
+			assert.Equal(t, []string{"mrn://data-model-object/athena/analytics-daily-revenue"}, a.PreviousMRNs)
+		}
 	}
 }
 

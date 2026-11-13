@@ -63,17 +63,18 @@ func (s *Source) discoverRealtimeDatabases(ctx context.Context, projectDetails m
 		setIfNotEmpty(metadata, "state", instance.State)
 
 		name := realtimeDatabaseName(instanceID)
-		instanceMRN := assetMRN("Database", name)
+		instanceMRN := assetMRN(s.config, "Database", name)
 		description := fmt.Sprintf("Firebase Realtime Database instance %s", instanceID)
 
 		asset := pluginsdk.Asset{
-			Name:        &name,
-			MRN:         &instanceMRN,
-			Type:        "Database",
-			Providers:   []string{provider},
-			Description: &description,
-			Metadata:    metadata,
-			Tags:        pluginsdk.InterpolateTags(s.config.Tags, metadata),
+			Name:         &name,
+			MRN:          &instanceMRN,
+			PreviousMRNs: previousMRNs("Database", name, instanceMRN),
+			Type:         "Database",
+			Providers:    []string{provider},
+			Description:  &description,
+			Metadata:     metadata,
+			Tags:         pluginsdk.InterpolateTags(s.config.Tags, metadata),
 			Sources: []pluginsdk.AssetSource{{
 				Name:       provider,
 				LastSyncAt: time.Now(),

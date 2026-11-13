@@ -67,7 +67,8 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "cloudrun",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google Cloud Run",
 		Description:   "Discover services and jobs from Google Cloud Run",
 		Icon:          "cloud-run",
@@ -393,7 +394,7 @@ func (s *Source) jobAsset(job *run.GoogleCloudRunV2Job) (pluginsdk.Asset, []stri
 
 // newAsset assembles the parts every Cloud Run asset shares.
 func (s *Source) newAsset(assetType, name, description string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := s.assetMRN(assetType, name)
 
 	asset := pluginsdk.Asset{
 		Name:      &name,
@@ -427,8 +428,8 @@ func assetName(parsed resourceName) string {
 
 // assetMRN is the single place a Cloud Run MRN is built, so assets and both
 // ends of every lineage edge can never drift apart.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+func (s *Source) assetMRN(assetType, name string) string {
+	return s.config.AssetMRN(assetType, provider, name)
 }
 
 // bucketLineage points every mounted GCS bucket at the workload that reads it.
@@ -438,7 +439,7 @@ func bucketLineage(buckets []string, workloadMRN string) []pluginsdk.LineageEdge
 	edges := make([]pluginsdk.LineageEdge, 0, len(buckets))
 	for _, bucket := range buckets {
 		edges = append(edges, pluginsdk.LineageEdge{
-			Source: mrn.New(gcsBucketType, gcsProvider, bucket),
+			Source: mrn.Asset(gcsBucketType, gcsProvider, bucket).String(),
 			Target: workloadMRN,
 			Type:   "FEEDS",
 		})

@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { discoverPath, mrnProvider } from '$lib/mrn';
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import type { DataTableColumn } from '@marmotdata/elements/data-table.js';
 	import { subscriptions, loadSubscriptions, type SubscriptionWithAsset } from './accountData';
@@ -15,15 +16,12 @@
 		lineage_change: m.subscriptions_type_lineage_change
 	};
 
-	// MRNs read mrn://<type>/<provider>/<name>, so the provider logo comes from the MRN without another request
-	function providerOf(mrn: string): string {
-		return mrn.replace('mrn://', '').split('/')[1]?.toLowerCase() ?? '';
-	}
+	// The provider logo comes from the MRN without another request
+	const providerOf = mrnProvider;
 
 	function assetHref(sub: SubscriptionWithAsset): string {
-		return resolve(
-			`/discover/${sub.asset_mrn.replace('mrn://', '')}` as `/discover/${string}/${string}/${string}`
-		);
+		const path = discoverPath(sub.asset_mrn);
+		return path ? resolve(path) : '';
 	}
 
 	async function unsubscribe(sub: SubscriptionWithAsset) {

@@ -3,6 +3,7 @@
 	import type { Asset } from '$lib/assets/types';
 	import type { LineageNode, LineageResponse } from '$lib/lineage/types';
 	import { m } from '$lib/paraglide/messages';
+	import { zoneOf } from '$lib/mrn';
 	import { formatDateTime, formatRelativeTime } from '$lib/utils';
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
@@ -80,7 +81,7 @@
 			n.last_run_status === 'failed' && type
 				? `${type}, ${m.asset_page_last_run_failed_hint()}`
 				: type;
-		return [dir, what].filter(Boolean).join(' · ');
+		return [dir, what, n.asset ? zoneOf(n.asset) : ''].filter(Boolean).join(' · ');
 	}
 
 	function href(n: LineageNode): string | undefined {

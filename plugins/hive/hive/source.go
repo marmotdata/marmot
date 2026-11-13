@@ -9,7 +9,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +22,7 @@ const maxPartitionValues = 20
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "hive",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Hive",
 		Description:   "Discover databases, tables and views from Apache Hive through HiveServer2",
 		Icon:          "hive",
@@ -182,6 +181,11 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Assets:     d.assets,
 		Lineage:    d.lineage,
 		Statistics: d.statistics,
+		ZoneBindings: []pluginsdk.ZoneBinding{{
+			Provider: provider,
+			Host:     fmt.Sprintf("%s:%d", strings.ToLower(s.config.Host), s.config.Port),
+			Zone:     s.config.Zone,
+		}},
 	}, nil
 }
 
@@ -337,7 +341,7 @@ func (d *discovery) databaseAsset(database string, info *databaseInfo) pluginsdk
 	}
 
 	name := database
-	mrnValue := assetMRN("Database", name)
+	mrnValue := cfg.AssetMRN("Database", provider, database)
 	asset := pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
@@ -534,8 +538,8 @@ func (s *Source) objectAsset(database, table string, info *tableInfo, partitions
 	}
 	putString(metadata, "ddl", ddl)
 
-	name := qualifiedName(database, table)
-	mrnValue := assetMRN(assetType, name)
+	name := table
+	mrnValue := s.config.AssetMRN(assetType, provider, database, table)
 	asset := pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
@@ -706,15 +710,7 @@ func (s *Source) FetchSampleData(ctx context.Context, rawConfig pluginsdk.RawCon
 	return columns, rows, nil
 }
 
-// qualifiedName is the Name a table or view asset carries. Hive table names
-// are only unique within a database, so the database is part of the
-// identity.
+// qualifiedName is the db.table key used to match view and foreign key references to discovered tables.
 func qualifiedName(database, table string) string {
 	return database + "." + table
-}
-
-// assetMRN is the single place a Hive MRN is built, so the database, table
-// and lineage passes can never address one object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
 }

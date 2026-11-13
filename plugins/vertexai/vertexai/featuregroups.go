@@ -54,8 +54,8 @@ func (s *Source) featureGroupAssets(items []scannedFeatureGroup, edges *edgeSet)
 		// exists, so the table feeds the group. This is the opposite
 		// direction to SageMaker, where a feature group writes its offline
 		// store out to Glue.
-		if table := bigQueryTable(bigQuerySourceURI(group)); table != "" {
-			edges.add(mrn.New("Table", "BigQuery", table), *asset.MRN, "FEEDS")
+		if table := bigQueryTable(bigQuerySourceURI(group)); table != nil {
+			edges.add(mrn.Asset("Table", "BigQuery", table...).String(), *asset.MRN, "FEEDS")
 		}
 	}
 

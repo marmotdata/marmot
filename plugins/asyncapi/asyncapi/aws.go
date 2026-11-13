@@ -9,7 +9,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *sns.ChannelBinding) pluginsdk.Asset {
@@ -23,7 +22,7 @@ func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, cha
 		description = fmt.Sprintf("SNS topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "SNS", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "SNS", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -95,7 +94,7 @@ func (s *Source) createSQSQueue(doc *asyncapi3.Document, channelName string, cha
 		description = fmt.Sprintf("SQS queue for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Queue", "SQS", name)
+	mrnValue := s.brokerMRN(doc, channel, "Queue", "SQS", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

@@ -21,26 +21,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	// namingNative names assets the way the technology's own Marmot
-	// plugin names them, so the two runs land on the same asset.
-	namingNative = "native"
-	// namingQualified names assets by their full OpenMetadata path,
-	// keeping two services of the same technology apart.
-	namingQualified = "qualified"
-)
-
 // Meta describes the plugin to the Marmot host.
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "openmetadata",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "OpenMetadata",
 		Description:   "Import tables, topics, dashboards, pipelines, models, glossary and lineage from an OpenMetadata instance",
 		Icon:          "openmetadata",
 		Category:      "catalog",
 		Status:        "experimental",
 		Features:      []string{"Assets", "Lineage", "Run History", "Glossary"},
+		Federates:     true,
 		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(OpenMetadataFields{}, "OpenMetadata",
@@ -110,11 +102,11 @@ type Config struct {
 	IncludeGlossary          bool `json:"include_glossary" group:"Discovery" description:"Import the business glossary as Marmot glossary terms, and assign them to the assets they are curated onto" default:"true"`
 
 	// How to import
-	Naming               string `json:"naming" group:"Advanced" description:"native names assets the way Marmot's own plugin for each technology names them, so a later native run merges with the imported assets. qualified uses the full OpenMetadata path, which keeps two services of the same technology apart" default:"native" validate:"omitempty,oneof=native qualified"`
-	TagsFromOpenMetadata bool   `json:"tags_from_openmetadata" group:"Discovery" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
-	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" group:"Discovery" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
-	LinkToOpenMetadata   bool   `json:"link_to_openmetadata" group:"Advanced" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
-	SourcePriority       int    `json:"source_priority" group:"Advanced" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"min=1"`
+	ServiceMap           map[string]string `json:"service_map,omitempty" group:"Advanced" description:"Zone of each OpenMetadata service, as service name to zone"`
+	TagsFromOpenMetadata bool              `json:"tags_from_openmetadata" group:"Discovery" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
+	GlossaryTermsAsTags  bool              `json:"glossary_terms_as_tags" group:"Discovery" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
+	LinkToOpenMetadata   bool              `json:"link_to_openmetadata" group:"Advanced" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
+	SourcePriority       int               `json:"source_priority" group:"Advanced" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"min=1"`
 
 	// Performance
 	PageSize    int `json:"page_size" group:"Advanced" description:"Entities per API request" default:"250" validate:"min=1,max=1000"`
@@ -143,10 +135,6 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	}
 
 	pluginsdk.ApplyDefaults(config, rawConfig)
-
-	if config.Naming == "" {
-		config.Naming = namingNative
-	}
 
 	// ApplyDefaults leaves a key alone when the user wrote it, so an
 	// explicit zero reaches here. A zero concurrency would build an
@@ -205,6 +193,8 @@ func (s *Source) collect(ctx context.Context, client *client, c *collector) erro
 			return err
 		}
 	}
+
+	c.loadServiceHosts(ctx, client)
 
 	if s.config.IncludeTables || s.config.IncludeStoredProcedures {
 		groups, err := c.discoverDatabases(ctx, client)
@@ -319,8 +309,7 @@ func (c *collector) report() {
 	// folds a hundred entities into fifty assets should say so.
 	log.Warn().
 		Int("entities", len(c.collisions)).
-		Str("naming", c.config.Naming).
-		Msg("OpenMetadata entities share a Marmot asset because they resolve to the same name. Set naming: qualified to keep them apart")
+		Msg("OpenMetadata entities share a Marmot asset because they resolve to the same MRN. Map each service to its own zone in service_map to keep them apart")
 
 	for i, merged := range c.collisions {
 		if i >= maxReportedCollisions {

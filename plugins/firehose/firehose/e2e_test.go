@@ -344,7 +344,7 @@ func TestE2E_EveryAssetMRNMatchesItsIdentity(t *testing.T) {
 
 	for _, asset := range result.Assets {
 		require.NotNil(t, asset.MRN)
-		assert.Equal(t, "mrn://deliverystream/firehose/"+aws.ToString(asset.Name), *asset.MRN)
+		assert.Equal(t, "mrn://asset/deliverystream/firehose/"+aws.ToString(asset.Name), *asset.MRN)
 	}
 }
 
@@ -352,8 +352,8 @@ func TestE2E_KinesisStreamFeedsTheDeliveryStream(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://stream/kinesis/orders",
-		Target: "mrn://deliverystream/firehose/orders-to-s3",
+		Source: "mrn://asset/stream/kinesis/orders",
+		Target: "mrn://asset/deliverystream/firehose/orders-to-s3",
 		Type:   "FEEDS",
 	})
 }
@@ -362,8 +362,8 @@ func TestE2E_DeliveryStreamProducesIntoTheBucket(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/orders-to-s3",
-		Target: "mrn://bucket/s3/marmot-lake",
+		Source: "mrn://asset/deliverystream/firehose/orders-to-s3",
+		Target: "mrn://asset/bucket/s3/marmot-lake",
 		Type:   "PRODUCES",
 	})
 }
@@ -372,8 +372,8 @@ func TestE2E_FormatConversionProducesIntoTheGlueTable(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/orders-to-s3",
-		Target: "mrn://table/glue/orders",
+		Source: "mrn://asset/deliverystream/firehose/orders-to-s3",
+		Target: "mrn://asset/table/glue/shop.orders",
 		Type:   "PRODUCES",
 	})
 }
@@ -382,8 +382,8 @@ func TestE2E_DeliveryStreamProducesIntoTheRedshiftTable(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/clicks-to-redshift",
-		Target: "mrn://table/redshift/analytics.public.clicks",
+		Source: "mrn://asset/deliverystream/firehose/clicks-to-redshift",
+		Target: "mrn://asset/table/redshift@host=cluster.abc.us-east-1.redshift.amazonaws.com:5439/analytics.public.clicks",
 		Type:   "PRODUCES",
 	})
 }
@@ -395,8 +395,8 @@ func TestE2E_DeliveryStreamProducesIntoTheSearchIndex(t *testing.T) {
 	result := discover(t)
 
 	assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{
-		Source: "mrn://deliverystream/firehose/logs-to-opensearch",
-		Target: "mrn://table/elasticsearch/logs",
+		Source: "mrn://asset/deliverystream/firehose/logs-to-opensearch",
+		Target: "mrn://asset/table/elasticsearch/logs",
 		Type:   "PRODUCES",
 	})
 }

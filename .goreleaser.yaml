@@ -36,6 +36,8 @@ archives:
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
   algorithm: sha256
+  extra_files:
+    - glob: ./install.sh
 
 # Keyless Sigstore signatures, tied to this repository's release workflow
 # identity: the checksum file as a bundle, which covers every binary listed in
@@ -155,6 +157,8 @@ release:
   prerelease: auto
   draft: false
   name_template: "v{{.Version}}"
+  extra_files:
+    - glob: ./install.sh
 
 changelog:
   use: github
@@ -164,12 +168,12 @@ changelog:
     - title: Features
       regexp: "^.*feat[(\\w)]*:+.*$"
       order: 0
-    - title: 'Bug fixes'
+    - title: "Bug fixes"
       regexp: "^.*fix[(\\w)]*:+.*$"
       order: 1
     - title: Others
       order: 999
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"

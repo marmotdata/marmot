@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/amqp"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createAMQPAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *amqp.ChannelBinding) []pluginsdk.Asset {
@@ -35,7 +34,7 @@ func (s *Source) createAMQPQueue(doc *asyncapi3.Document, channelName string, ch
 		description = fmt.Sprintf("AMQP queue for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Queue", "AMQP", name)
+	mrnValue := s.brokerMRN(doc, channel, "Queue", "AMQP", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -98,7 +97,7 @@ func (s *Source) createAMQPExchange(doc *asyncapi3.Document, channelName string,
 		description = fmt.Sprintf("AMQP exchange for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Exchange", "AMQP", name)
+	mrnValue := s.brokerMRN(doc, channel, "Exchange", "AMQP", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

@@ -45,6 +45,9 @@ type DataProduct struct {
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
+	// MRN is mrn://data-product/<slug>, kept up to date by the database as the product is renamed.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

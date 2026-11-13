@@ -106,7 +106,7 @@ func TestE2E_DiscoverOverTheWire(t *testing.T) {
 	stats := findE2EAsset(result, "Table", "baseballStats")
 	require.NotNil(t, stats, "the batch QuickStart ships baseballStats")
 	assert.Equal(t, []string{"Pinot"}, stats.Providers)
-	assert.Equal(t, "mrn://table/pinot/baseballstats", *stats.MRN)
+	assert.Equal(t, "mrn://asset/table/pinot/baseballstats", *stats.MRN)
 	assert.Equal(t, "batch", stats.Metadata["ingestion_type"])
 	assert.Equal(t, "DefaultTenant", stats.Metadata["broker_tenant"])
 	assert.Equal(t, url+"/#/tenants/table/baseballStats_OFFLINE", stats.Metadata["url"])
@@ -174,11 +174,11 @@ func TestE2E_DiscoverLinksTheRealtimeTableToItsTopic(t *testing.T) {
 	topic := findE2EAsset(result, "Topic", "orders-events")
 	require.NotNil(t, topic)
 	assert.Equal(t, []string{"Kafka"}, topic.Providers)
-	assert.Equal(t, "mrn://topic/kafka/orders-events", *topic.MRN)
+	assert.Equal(t, "mrn://asset/topic/kafka@host=localhost:9092/orders-events", *topic.MRN)
 
 	var found bool
 	for _, e := range result.Lineage {
-		if e.Type == "FEEDS" && e.Source == "mrn://topic/kafka/orders-events" && e.Target == "mrn://table/pinot/orders_events" {
+		if e.Type == "FEEDS" && e.Source == "mrn://asset/topic/kafka@host=localhost:9092/orders-events" && e.Target == "mrn://asset/table/pinot/orders_events" {
 			found = true
 		}
 	}

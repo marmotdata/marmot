@@ -8,59 +8,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A Pub/Sub id is unique within a project, so an asset is addressed by its
-// bare id and the project lives in metadata.
+// A Pub/Sub id is unique within a project, so an asset is addressed by its bare id and the project is the zone.
 
 func TestTopicMRN_IsTheBareTopicID(t *testing.T) {
-	assert.Equal(t, "mrn://topic/googlepubsub/orders", assetMRN("Topic", "orders"))
+	s := newTestSource(newFakeProject())
+	assert.Equal(t, "mrn://asset/topic/googlepubsub/orders", s.assetMRN("Topic", "orders"))
 }
 
 func TestSubscriptionMRN_IsTheBareSubscriptionID(t *testing.T) {
-	assert.Equal(t, "mrn://subscription/googlepubsub/orders-sub", assetMRN("Subscription", "orders-sub"))
+	s := newTestSource(newFakeProject())
+	assert.Equal(t, "mrn://asset/subscription/googlepubsub/orders-sub", s.assetMRN("Subscription", "orders-sub"))
 }
 
-func TestTopicMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-	// back through mrn.New, so an MRN has to survive that unchanged or the
-	// asset becomes unreachable from the UI.
-	original := assetMRN("Topic", "orders")
-
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+func TestAssetMRN_CarriesTheConfiguredZone(t *testing.T) {
+	s := newTestSource(newFakeProject())
+	s.config.Zone = "prod"
+	assert.Equal(t, "mrn://asset/topic/googlepubsub@prod/orders", s.assetMRN("Topic", "orders"))
 }
 
-func TestSubscriptionMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Subscription", "orders-sub")
+func TestAssetMRN_IsStableUnderParseAndFormat(t *testing.T) {
+	s := newTestSource(newFakeProject())
+	s.config.Zone = "prod"
 
-	parsed, err := mrn.Parse(original)
-	require.NoError(t, err)
-
-	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	for _, original := range []string{s.assetMRN("Topic", "orders"), s.assetMRN("Subscription", "orders-sub")} {
+		parsed, err := mrn.ParseMRN(original)
+		require.NoError(t, err)
+		assert.Equal(t, original, parsed.String())
+	}
 }
 
-// Edges point at assets other plugins own, so their MRNs are pinned here too:
-// a drift in either plugin's naming silently drops the edge on the server.
+// Edges point at assets other plugins own, so their MRNs are pinned here too: a drift in either plugin's naming silently drops the edge on the server.
 
 func TestBigQueryTableMRN_MatchesTheBigQueryPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://table/bigquery/orders_raw",
-		mrn.New("Table", "BigQuery", bigQueryTableID("test-project.analytics.orders_raw")))
+	assert.Equal(t, "mrn://asset/table/bigquery/test-project.analytics.orders_raw",
+		mrn.Asset("Table", "BigQuery", bigQueryTablePath("test-project.analytics.orders_raw")...).String())
 }
 
 func TestGCSBucketMRN_MatchesTheGCSPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://bucket/gcs/order-archive", mrn.New("Bucket", "GCS", "order-archive"))
+	assert.Equal(t, "mrn://asset/bucket/gcs/order-archive", mrn.Asset("Bucket", "GCS", "order-archive").String())
 }
 
 func TestKinesisStreamMRN_MatchesTheKinesisPlugin(t *testing.T) {
-	assert.Equal(t, "mrn://stream/kinesis/orders-stream",
-		mrn.New("Stream", "Kinesis", kinesisStreamName("arn:aws:kinesis:us-east-1:111122223333:stream/orders-stream")))
+	assert.Equal(t, "mrn://asset/stream/kinesis/orders-stream",
+		mrn.Asset("Stream", "Kinesis", kinesisStreamName("arn:aws:kinesis:us-east-1:111122223333:stream/orders-stream")).String())
 }
 
-// The server rebuilds identity from (Type, Providers[0], Name), so every
-// asset's MRN has to equal mrn.New over its own fields or the asset is stored
-// under a different identity than the one lineage points at.
-func TestEveryAssetMRN_EqualsMRNNewOverItsOwnFields(t *testing.T) {
+func TestEveryAssetMRN_IsTheAssetNameUnderTheProvider(t *testing.T) {
 	fake := newFakeProject()
 	result := discoverFake(t, newTestSource(fake), fake)
 	require.NotEmpty(t, result.Assets)
@@ -70,6 +63,6 @@ func TestEveryAssetMRN_EqualsMRNNewOverItsOwnFields(t *testing.T) {
 		require.NotNil(t, a.MRN)
 		require.NotEmpty(t, a.Providers)
 
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN, "asset %s", *a.Name)
+		assert.Equal(t, mrn.Asset(a.Type, a.Providers[0], *a.Name).String(), *a.MRN, "asset %s", *a.Name)
 	}
 }

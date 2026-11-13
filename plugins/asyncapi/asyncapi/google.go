@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/googlepubsub"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
 func (s *Source) createGooglePubSubTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *googlepubsub.ChannelBinding) pluginsdk.Asset {
@@ -22,7 +21,7 @@ func (s *Source) createGooglePubSubTopic(doc *asyncapi3.Document, channelName st
 		description = fmt.Sprintf("Google Pub/Sub topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "GooglePubSub", name)
+	mrnValue := s.brokerMRN(doc, channel, "Topic", "GooglePubSub", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,

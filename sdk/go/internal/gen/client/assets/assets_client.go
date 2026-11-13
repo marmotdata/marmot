@@ -80,6 +80,12 @@ type ClientService interface {
 	// DeleteAssetsTermsIDContext remove glossary term from asset.
 	DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
 
+	// DeleteZoneBindings delete a zone binding.
+	DeleteZoneBindings(params *DeleteZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteZoneBindingsNoContent, error)
+
+	// DeleteZoneBindingsContext delete a zone binding.
+	DeleteZoneBindingsContext(ctx context.Context, params *DeleteZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteZoneBindingsNoContent, error)
+
 	// GetAssetsByGlossaryTermTermID get assets by glossary term.
 	GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
@@ -121,6 +127,12 @@ type ClientService interface {
 
 	// GetAssetsIDRunHistoryHistogramContext get asset run history histogram.
 	GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
+
+	// GetAssetsIdentityID get an asset s identity.
+	GetAssetsIdentityID(params *GetAssetsIdentityIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIdentityIDOK, error)
+
+	// GetAssetsIdentityIDContext get an asset s identity.
+	GetAssetsIdentityIDContext(ctx context.Context, params *GetAssetsIdentityIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIdentityIDOK, error)
 
 	// GetAssetsLookupTypeServiceName lookup asset by type service and name.
 	GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
@@ -188,6 +200,18 @@ type ClientService interface {
 	// GetAssetsTermsIDContext get asset s glossary terms.
 	GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
 
+	// GetMRNResolve resolve an m r n.
+	GetMRNResolve(params *GetMRNResolveParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMRNResolveOK, error)
+
+	// GetMRNResolveContext resolve an m r n.
+	GetMRNResolveContext(ctx context.Context, params *GetMRNResolveParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMRNResolveOK, error)
+
+	// GetZoneBindings list zone bindings.
+	GetZoneBindings(params *GetZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetZoneBindingsOK, error)
+
+	// GetZoneBindingsContext list zone bindings.
+	GetZoneBindingsContext(ctx context.Context, params *GetZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetZoneBindingsOK, error)
+
 	// PostAssets create a new asset.
 	PostAssets(params *PostAssetsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsCreated, error)
 
@@ -212,6 +236,12 @@ type ClientService interface {
 	// PostAssetsDocumentationBatchContext batch create documentation.
 	PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
 
+	// PostAssetsMergeID merge an asset into another.
+	PostAssetsMergeID(params *PostAssetsMergeIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsMergeIDOK, error)
+
+	// PostAssetsMergeIDContext merge an asset into another.
+	PostAssetsMergeIDContext(ctx context.Context, params *PostAssetsMergeIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsMergeIDOK, error)
+
 	// PostAssetsTagsID add tag to asset.
 	PostAssetsTagsID(params *PostAssetsTagsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
 
@@ -224,6 +254,12 @@ type ClientService interface {
 	// PostAssetsTermsIDContext add glossary terms to asset.
 	PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
 
+	// PutAssetsByMRN create or update an asset by m r n.
+	PutAssetsByMRN(params *PutAssetsByMRNParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsByMRNOK, *PutAssetsByMRNCreated, error)
+
+	// PutAssetsByMRNContext create or update an asset by m r n.
+	PutAssetsByMRNContext(ctx context.Context, params *PutAssetsByMRNParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsByMRNOK, *PutAssetsByMRNCreated, error)
+
 	// PutAssetsFieldAnnotationsID set a field annotation.
 	PutAssetsFieldAnnotationsID(params *PutAssetsFieldAnnotationsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsFieldAnnotationsIDOK, error)
 
@@ -235,6 +271,12 @@ type ClientService interface {
 
 	// PutAssetsIDContext update an asset.
 	PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsIDOK, error)
+
+	// PutZoneBindings pin a zone binding.
+	PutZoneBindings(params *PutZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutZoneBindingsOK, error)
+
+	// PutZoneBindingsContext pin a zone binding.
+	PutZoneBindingsContext(ctx context.Context, params *PutZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutZoneBindingsOK, error)
 
 	SetTransport(transport runtime.ContextualTransport)
 }
@@ -504,6 +546,69 @@ func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteA
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for deleteAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// DeleteZoneBindings deletes a zone binding.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteZoneBindingsContext] instead.
+func (a *Client) DeleteZoneBindings(params *DeleteZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteZoneBindingsNoContent, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteZoneBindingsContext(ctx, params, authInfo, opts...)
+}
+
+// DeleteZoneBindingsContext deletes a zone binding.
+//
+// Do not use the deprecated [DeleteZoneBindingsParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteZoneBindingsContext(ctx context.Context, params *DeleteZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DeleteZoneBindingsNoContent, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteZoneBindingsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "deleteZoneBindings",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1/zone-bindings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteZoneBindingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteZoneBindingsNoContent)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteZoneBindings: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -973,6 +1078,73 @@ func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, para
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getAssetsIDRunHistoryHistogram: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAssetsIdentityID gets an asset s identity.
+//
+// The asset's MRN in parts, the MRNs it used to have, and what each pipeline, import, person or Terraform resource says about it..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsIdentityIDContext] instead.
+func (a *Client) GetAssetsIdentityID(params *GetAssetsIdentityIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIdentityIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsIdentityIDContext(ctx, params, authInfo, opts...)
+}
+
+// GetAssetsIdentityIDContext gets an asset s identity.
+//
+// The asset's MRN in parts, the MRNs it used to have, and what each pipeline, import, person or Terraform resource says about it..
+//
+// Do not use the deprecated [GetAssetsIdentityIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsIdentityIDContext(ctx context.Context, params *GetAssetsIdentityIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsIdentityIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsIdentityIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getAssetsIdentityID",
+		Method:             "GET",
+		PathPattern:        "/api/v1/assets/identity/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsIdentityIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsIdentityIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAssetsIdentityID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1713,6 +1885,140 @@ func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsT
 	panic(msg)
 }
 
+// GetMRNResolve resolves an m r n.
+//
+// Says what an MRN of any kind names: an asset, glossary term, data product, team, user, pipeline or source. Legacy asset MRNs and MRNs a thing used to have resolve too..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMRNResolveContext] instead.
+func (a *Client) GetMRNResolve(params *GetMRNResolveParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMRNResolveOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMRNResolveContext(ctx, params, authInfo, opts...)
+}
+
+// GetMRNResolveContext resolves an m r n.
+//
+// Says what an MRN of any kind names: an asset, glossary term, data product, team, user, pipeline or source. Legacy asset MRNs and MRNs a thing used to have resolve too..
+//
+// Do not use the deprecated [GetMRNResolveParams.Context] with this method: it would be ignored.
+func (a *Client) GetMRNResolveContext(ctx context.Context, params *GetMRNResolveParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetMRNResolveOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetMRNResolveParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getMRNResolve",
+		Method:             "GET",
+		PathPattern:        "/api/v1/mrn/resolve",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetMRNResolveReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetMRNResolveOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getMRNResolve: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetZoneBindings lists zone bindings.
+//
+// Which zone each host belongs to. Plugins report the hosts they connect to; an admin can pin a binding so a Kafka Connect sink or an OpenLineage event that only names a host lands on the right system's assets..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetZoneBindingsContext] instead.
+func (a *Client) GetZoneBindings(params *GetZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetZoneBindingsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetZoneBindingsContext(ctx, params, authInfo, opts...)
+}
+
+// GetZoneBindingsContext lists zone bindings.
+//
+// Which zone each host belongs to. Plugins report the hosts they connect to; an admin can pin a binding so a Kafka Connect sink or an OpenLineage event that only names a host lands on the right system's assets..
+//
+// Do not use the deprecated [GetZoneBindingsParams.Context] with this method: it would be ignored.
+func (a *Client) GetZoneBindingsContext(ctx context.Context, params *GetZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetZoneBindingsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetZoneBindingsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getZoneBindings",
+		Method:             "GET",
+		PathPattern:        "/api/v1/zone-bindings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetZoneBindingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetZoneBindingsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getZoneBindings: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostAssets creates a new asset.
 //
 // Create a new asset in the system. Owners, a user description and glossary terms can be set in the same request; if any of them cannot be applied the asset is not kept..
@@ -1981,6 +2287,73 @@ func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params
 	panic(msg)
 }
 
+// PostAssetsMergeID merges an asset into another.
+//
+// Folds the asset into the one named by into when both turn out to be the same thing, such as an OpenLineage stub and the table a plugin found, or a federated copy and the native one. Owners, terms, data products, subscriptions, lineage and documentation move across, and the merged asset's MRN keeps working as an alias..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsMergeIDContext] instead.
+func (a *Client) PostAssetsMergeID(params *PostAssetsMergeIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsMergeIDOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsMergeIDContext(ctx, params, authInfo, opts...)
+}
+
+// PostAssetsMergeIDContext merges an asset into another.
+//
+// Folds the asset into the one named by into when both turn out to be the same thing, such as an OpenLineage stub and the table a plugin found, or a federated copy and the native one. Owners, terms, data products, subscriptions, lineage and documentation move across, and the merged asset's MRN keeps working as an alias..
+//
+// Do not use the deprecated [PostAssetsMergeIDParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsMergeIDContext(ctx context.Context, params *PostAssetsMergeIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostAssetsMergeIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostAssetsMergeIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "postAssetsMergeID",
+		Method:             "POST",
+		PathPattern:        "/api/v1/assets/merge/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostAssetsMergeIDReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostAssetsMergeIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postAssetsMergeID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PostAssetsTagsID adds tag to asset.
 //
 // Add a new tag to an existing asset.
@@ -2115,6 +2488,73 @@ func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAsset
 	panic(msg)
 }
 
+// PutAssetsByMRN creates or update an asset by m r n.
+//
+// Idempotent write for automation: creates the asset the MRN names, or records the caller's fields on it when it already exists. Unlike POST /assets/ this never fails because the asset exists, so only use it when the caller means the same asset..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAssetsByMRNContext] instead.
+func (a *Client) PutAssetsByMRN(params *PutAssetsByMRNParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsByMRNOK, *PutAssetsByMRNCreated, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAssetsByMRNContext(ctx, params, authInfo, opts...)
+}
+
+// PutAssetsByMRNContext creates or update an asset by m r n.
+//
+// Idempotent write for automation: creates the asset the MRN names, or records the caller's fields on it when it already exists. Unlike POST /assets/ this never fails because the asset exists, so only use it when the caller means the same asset..
+//
+// Do not use the deprecated [PutAssetsByMRNParams.Context] with this method: it would be ignored.
+func (a *Client) PutAssetsByMRNContext(ctx context.Context, params *PutAssetsByMRNParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutAssetsByMRNOK, *PutAssetsByMRNCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutAssetsByMRNParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putAssetsByMRN",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/assets/by-mrn",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutAssetsByMRNReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// several success responses have to be checked
+	switch value := result.(type) {
+	case *PutAssetsByMRNOK:
+		return value, nil, nil
+	case *PutAssetsByMRNCreated:
+		return nil, value, nil
+	}
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for assets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // PutAssetsFieldAnnotationsID sets a field annotation.
 //
 // Sets the markers on one schema field, merging into what is there: omitted markers keep their value, an empty description clears an edited one and a field left with no markers is removed. Returns every annotated field of the asset..
@@ -2246,6 +2686,73 @@ func (a *Client) PutAssetsIDContext(ctx context.Context, params *PutAssetsIDPara
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for putAssetsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PutZoneBindings pins a zone binding.
+//
+// Binds a provider's host, host:port, to a zone. A pinned binding wins over what plugins report..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutZoneBindingsContext] instead.
+func (a *Client) PutZoneBindings(params *PutZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutZoneBindingsOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutZoneBindingsContext(ctx, params, authInfo, opts...)
+}
+
+// PutZoneBindingsContext pins a zone binding.
+//
+// Binds a provider's host, host:port, to a zone. A pinned binding wins over what plugins report..
+//
+// Do not use the deprecated [PutZoneBindingsParams.Context] with this method: it would be ignored.
+func (a *Client) PutZoneBindingsContext(ctx context.Context, params *PutZoneBindingsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PutZoneBindingsOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutZoneBindingsParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "putZoneBindings",
+		Method:             "PUT",
+		PathPattern:        "/api/v1/zone-bindings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutZoneBindingsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutZoneBindingsOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for putZoneBindings: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

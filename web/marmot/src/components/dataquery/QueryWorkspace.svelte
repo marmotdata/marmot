@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { mrnShortName } from '$lib/mrn';
 	import { onMount } from 'svelte';
 	import '@marmotdata/elements/split-pane.js';
 	import '@marmotdata/elements/toolbar.js';
@@ -366,7 +367,7 @@
 
 	// Denial reasons name tables by MRN; the last segment is the name people know
 	function readableReason(message: string): string {
-		return stripKind(message).replace(/mrn:\/\/\S+/g, (mrn) => mrn.split('/').pop() ?? mrn);
+		return stripKind(message).replace(/mrn:\/\/\S+/g, (mrn) => mrnShortName(mrn) || mrn);
 	}
 
 	async function run(text = statement) {

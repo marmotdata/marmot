@@ -227,11 +227,22 @@ func discoverE2E(t *testing.T) (pluginsdk.RawConfig, *pluginsdk.DiscoveryResult)
 
 func findAsset(result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset {
 	for i := range result.Assets {
-		if result.Assets[i].Name != nil && *result.Assets[i].Name == name {
+		if assetKey(result.Assets[i]) == name {
 			return &result.Assets[i]
 		}
 	}
 	return nil
+}
+
+// assetKey is the database.table path of a table or view, or the bare name of a database.
+func assetKey(a pluginsdk.Asset) string {
+	if a.Name == nil {
+		return ""
+	}
+	if database, _ := a.Metadata["database"].(string); database != "" && a.Type != "Database" {
+		return database + "." + *a.Name
+	}
+	return *a.Name
 }
 
 func requireAsset(t *testing.T, result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset {
@@ -313,7 +324,7 @@ func TestE2E_DiscoverEmitsTheDatabaseAsset(t *testing.T) {
 	db := requireAsset(t, result, "shop")
 	assert.Equal(t, "Database", db.Type)
 	assert.Equal(t, []string{"Doris"}, db.Providers)
-	assert.Equal(t, "mrn://database/doris/shop", *db.MRN)
+	assert.Equal(t, "mrn://asset/database/doris/shop", *db.MRN)
 	assert.Equal(t, "internal", db.Metadata["catalog"])
 	assert.Contains(t, db.Metadata["doris_version"], "doris-2.1")
 	assert.Equal(t, float64(4), db.Metadata["table_count"])
@@ -325,7 +336,7 @@ func TestE2E_DiscoverNamesObjectsByDatabaseAndTable(t *testing.T) {
 
 	events := requireAsset(t, result, "shop.events")
 	assert.Equal(t, "Table", events.Type)
-	assert.Equal(t, "mrn://table/doris/shop.events", *events.MRN)
+	assert.Equal(t, "mrn://asset/table/doris/shop.events", *events.MRN)
 	assert.Equal(t, "shop", events.Metadata["database"])
 	assert.Equal(t, "events", events.Metadata["table_name"])
 	assert.Equal(t, "table", events.Metadata["object_type"])
@@ -439,7 +450,7 @@ func TestE2E_DiscoverCapturesTheViewQuery(t *testing.T) {
 
 	view := requireAsset(t, result, "shop.daily_sales")
 	assert.Equal(t, "View", view.Type)
-	assert.Equal(t, "mrn://view/doris/shop.daily_sales", *view.MRN)
+	assert.Equal(t, "mrn://asset/view/doris/shop.daily_sales", *view.MRN)
 	assert.Equal(t, "view", view.Metadata["object_type"])
 	assert.Equal(t, "View", view.Metadata["engine"])
 	require.NotNil(t, view.Description)
@@ -473,25 +484,25 @@ func TestE2E_DiscoverEmitsContainsEdges(t *testing.T) {
 	_, result := discoverE2E(t)
 
 	for _, name := range []string{"shop.events", "shop.customers", "shop.daily_stats", "shop.orders"} {
-		assert.True(t, hasEdge(result, "mrn://database/doris/shop", "mrn://table/doris/"+name, "CONTAINS"), name)
+		assert.True(t, hasEdge(result, "mrn://asset/database/doris/shop", "mrn://asset/table/doris/"+name, "CONTAINS"), name)
 	}
-	assert.True(t, hasEdge(result, "mrn://database/doris/shop", "mrn://view/doris/shop.daily_sales", "CONTAINS"))
-	assert.True(t, hasEdge(result, "mrn://database/doris/shop", "mrn://view/doris/shop.mv_sales", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/doris/shop", "mrn://asset/view/doris/shop.daily_sales", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/doris/shop", "mrn://asset/view/doris/shop.mv_sales", "CONTAINS"))
 }
 
 func TestE2E_DiscoverEmitsViewOfEdgesFromBaseTables(t *testing.T) {
 	_, result := discoverE2E(t)
 
-	assert.True(t, hasEdge(result, "mrn://table/doris/shop.events", "mrn://view/doris/shop.daily_sales", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/doris/shop.customers", "mrn://view/doris/shop.daily_sales", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/doris/shop.events", "mrn://view/doris/shop.mv_sales", "VIEW_OF"))
-	assert.True(t, hasEdge(result, "mrn://table/doris/shop.customers", "mrn://view/doris/shop.mv_sales", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/doris/shop.events", "mrn://asset/view/doris/shop.daily_sales", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/doris/shop.customers", "mrn://asset/view/doris/shop.daily_sales", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/doris/shop.events", "mrn://asset/view/doris/shop.mv_sales", "VIEW_OF"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/doris/shop.customers", "mrn://asset/view/doris/shop.mv_sales", "VIEW_OF"))
 }
 
 func TestE2E_DiscoverEmitsForeignKeyEdges(t *testing.T) {
 	_, result := discoverE2E(t)
 
-	assert.True(t, hasEdge(result, "mrn://table/doris/shop.orders", "mrn://table/doris/shop.customers", "FOREIGN_KEY"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/doris/shop.orders", "mrn://asset/table/doris/shop.customers", "FOREIGN_KEY"))
 }
 
 func TestE2E_EveryEdgePointsAtADiscoveredAsset(t *testing.T) {
@@ -533,12 +544,12 @@ func TestE2E_DiscoverEmitsStatistics(t *testing.T) {
 		stats[st.AssetMRN][st.MetricName] = st.Value
 	}
 
-	events := stats["mrn://table/doris/shop.events"]
+	events := stats["mrn://asset/table/doris/shop.events"]
 	assert.Equal(t, float64(4), events["asset.row_count"])
 	assert.Equal(t, float64(8), events["asset.column_count"])
 	assert.Greater(t, events["asset.size_bytes"], float64(0))
 
-	view := stats["mrn://view/doris/shop.daily_sales"]
+	view := stats["mrn://asset/view/doris/shop.daily_sales"]
 	assert.Equal(t, float64(4), view["asset.column_count"])
 	assert.NotContains(t, view, "asset.row_count")
 }

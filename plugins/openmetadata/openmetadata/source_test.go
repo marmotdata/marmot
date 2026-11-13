@@ -1,7 +1,6 @@
 package openmetadata
 
 import (
-	"strings"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -31,21 +30,11 @@ func TestValidate_RejectsAHostThatIsNotAURL(t *testing.T) {
 	assert.Contains(t, err.Error(), "host")
 }
 
-func TestValidate_RejectsAnUnknownNamingMode(t *testing.T) {
-	_, err := (&Source{}).Validate(pluginsdk.RawConfig{
-		"host": "https://om.example.com", "jwt_token": "t", "naming": "flat",
-	})
-
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "naming")
-}
-
 func TestValidate_AppliesDefaults(t *testing.T) {
 	source := &Source{}
 	_, err := source.Validate(pluginsdk.RawConfig{"host": "https://om.example.com", "jwt_token": "t"})
 	require.NoError(t, err)
 
-	assert.Equal(t, namingNative, source.config.Naming)
 	assert.True(t, source.config.IncludeTables)
 	assert.True(t, source.config.IncludeLineage)
 	assert.True(t, source.config.IncludeColumns)
@@ -58,11 +47,10 @@ func TestValidate_KeepsExplicitValues(t *testing.T) {
 	source := &Source{}
 	_, err := source.Validate(pluginsdk.RawConfig{
 		"host": "https://om.example.com", "jwt_token": "t",
-		"naming": namingQualified, "include_tables": false, "page_size": 10,
+		"include_tables": false, "page_size": 10,
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t, namingQualified, source.config.Naming)
 	assert.False(t, source.config.IncludeTables)
 	assert.Equal(t, 10, source.config.PageSize)
 }
@@ -85,7 +73,7 @@ func TestDiscover_CataloguesATableAsItsOwnTechnology(t *testing.T) {
 	require.NotNil(t, orders)
 	assert.Equal(t, []string{"PostgreSQL"}, orders.Providers,
 		"a Postgres table in OpenMetadata is a PostgreSQL asset in Marmot")
-	assert.Equal(t, "mrn://table/postgresql/orders", *orders.MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.orders", *orders.MRN)
 }
 
 func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
@@ -94,7 +82,7 @@ func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
 		with("tables", tableEntity("postgres_prod", "Postgres", "postgres_prod.shop.public.orders", "Regular")),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://database/postgresql/shop", "mrn://table/postgresql/orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://asset/database/postgresql/shop", "mrn://asset/table/postgresql/shop.public.orders", "CONTAINS"))
 }
 
 func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
@@ -108,24 +96,60 @@ func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
 	assert.NotNil(t, findAsset(result, "View", "recent_orders"))
 }
 
-func TestDiscover_QualifiedNamingKeepsServicesApart(t *testing.T) {
+func TestDiscover_ServiceMapKeepsServicesApart(t *testing.T) {
 	result := discover(t, newFakeOM().
 		with("tables",
 			tableEntity("pg_prod", "Postgres", "pg_prod.shop.public.orders", "Regular"),
 			tableEntity("pg_staging", "Postgres", "pg_staging.shop.public.orders", "Regular")),
-		pluginsdk.RawConfig{"naming": namingQualified})
+		pluginsdk.RawConfig{"service_map": map[string]any{"pg_prod": "prod", "pg_staging": "staging"}})
 
 	require.Len(t, result.Assets, 2)
-	assert.NotNil(t, findAsset(result, "Table", "pg_prod.shop.public.orders"))
-	assert.NotNil(t, findAsset(result, "Table", "pg_staging.shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.ElementsMatch(t,
+		[]string{"mrn://asset/table/postgresql@prod/shop.public.orders", "mrn://asset/table/postgresql@staging/shop.public.orders"},
+		[]string{*result.Assets[0].MRN, *result.Assets[1].MRN})
+}
 
-	// Distinct MRNs, which is the whole point of the mode.
+func TestDiscover_AnUnmappedServiceUsesItsConnectionAddressAsAHostHint(t *testing.T) {
+	result := discover(t, newFakeOM().
+		with("services/databaseServices", map[string]interface{}{
+			"name": "pg_prod", "serviceType": "Postgres",
+			"connection": map[string]interface{}{"config": map[string]interface{}{"hostPort": "PG.internal:6432"}},
+		}).
+		with("tables", tableEntity("pg_prod", "Postgres", "pg_prod.shop.public.orders", "Regular")),
+		nil)
+
+	orders := findAsset(result, "Table", "orders")
+	require.NotNil(t, orders)
+	assert.Equal(t, "mrn://asset/table/postgresql@host=pg.internal:6432/shop.public.orders", *orders.MRN)
+}
+
+func TestDiscover_AServiceMapEntryBeatsTheConnectionAddress(t *testing.T) {
+	result := discover(t, newFakeOM().
+		with("services/databaseServices", map[string]interface{}{
+			"name": "pg_prod", "serviceType": "Postgres",
+			"connection": map[string]interface{}{"config": map[string]interface{}{"hostPort": "pg.internal"}},
+		}).
+		with("tables", tableEntity("pg_prod", "Postgres", "pg_prod.shop.public.orders", "Regular")),
+		pluginsdk.RawConfig{"service_map": map[string]any{"pg_prod": "prod-eu"}})
+
+	orders := findAsset(result, "Table", "orders")
+	require.NotNil(t, orders)
+	assert.Equal(t, "mrn://asset/table/postgresql@prod-eu/shop.public.orders", *orders.MRN)
+}
+
+func TestDiscover_SameTableInTwoSchemasGetsDifferentMRNs(t *testing.T) {
+	result := discover(t, newFakeOM().
+		with("tables",
+			tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular"),
+			tableEntity("pg", "Postgres", "pg.shop.archive.orders", "Regular")),
+		nil)
+
+	require.Len(t, result.Assets, 2)
 	assert.NotEqual(t, *result.Assets[0].MRN, *result.Assets[1].MRN)
 }
 
-func TestDiscover_NativeNamingMergesAndReportsIt(t *testing.T) {
-	// Two Postgres services holding the same table name resolve to one
-	// asset, because that is the name the PostgreSQL plugin would use.
+func TestDiscover_UnmappedServicesOfOneTechnologyMergeAndReportIt(t *testing.T) {
 	source := &Source{}
 	config := pluginsdk.RawConfig{"host": "https://om.example.com", "jwt_token": "t"}
 	_, err := source.Validate(config)
@@ -136,13 +160,17 @@ func TestDiscover_NativeNamingMergesAndReportsIt(t *testing.T) {
 	base := entityBase{ID: "a", FullyQualifiedName: "pg_prod.shop.public.orders", ServiceType: "Postgres"}
 	other := entityBase{ID: "b", FullyQualifiedName: "pg_staging.shop.public.orders", ServiceType: "Postgres"}
 
-	c.add("a", c.newAsset(base, "table", "Table", p, "orders", nil))
-	c.add("b", c.newAsset(other, "table", "Table", p, "orders", nil))
+	c.add("a", c.newAsset(base, "table", "Table", p, c.tableIdent(p, "shop", "public", "orders"), nil))
+	c.add("b", c.newAsset(other, "table", "Table", p, c.tableIdent(p, "shop", "public", "orders"), nil))
 
 	require.Len(t, c.collisions, 1)
-	assert.Equal(t, "mrn://table/postgresql/orders", c.collisions[0].MRN)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.orders", c.collisions[0].MRN)
 	assert.Equal(t, "pg_prod.shop.public.orders", openMetadataFQN(c.collisions[0].First))
 	assert.Equal(t, "pg_staging.shop.public.orders", openMetadataFQN(c.collisions[0].Second))
+}
+
+func TestMeta_Federates(t *testing.T) {
+	assert.True(t, Meta().Federates)
 }
 
 func TestDiscover_SkipsExcludedServices(t *testing.T) {
@@ -222,65 +250,46 @@ func TestDiscover_FailsWhenTheServerIsNotOpenMetadata(t *testing.T) {
 	assert.Contains(t, err.Error(), "databases")
 }
 
-// TestDiscover_MRNsSurviveTheServer is the invariant that makes an asset
-// reachable. Marmot keeps the MRN a plugin declares, and the UI builds
-// every link by splitting that MRN back into type, service and name,
-// which /assets/lookup then feeds to mrn.New again. So the MRN has to
-// survive that round trip unchanged, or the asset exists but its page
-// 404s.
-//
-// Name must also reproduce the MRN's name component; that half is pinned
-// by TestDiscover_NameIsTheStringTheMRNIsBuiltFrom.
-func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
+// TestDiscover_MRNsAreCanonical pins that every MRN is in its kinded form and is its own canonical spelling, so the server stores it as written and every link built from it resolves.
+func TestDiscover_MRNsAreCanonical(t *testing.T) {
 	result := discover(t, everyEntityKind(), nil)
 	require.NotEmpty(t, result.Assets)
 
 	for _, asset := range result.Assets {
 		require.NotNil(t, asset.MRN)
-		require.NotNil(t, asset.Name)
 		require.NotEmpty(t, asset.Providers)
 
-		parts := strings.SplitN(strings.TrimPrefix(*asset.MRN, "mrn://"), "/", 3)
-		require.Len(t, parts, 3, "malformed MRN %q", *asset.MRN)
-
-		assert.Equal(t, *asset.MRN, mrn.New(parts[0], parts[1], parts[2]),
-			"asset %q is not reachable: its MRN changes when the server rebuilds it from its own parts", *asset.MRN)
+		parsed, err := mrn.ParseMRN(*asset.MRN)
+		require.NoError(t, err, *asset.MRN)
+		assert.False(t, parsed.Legacy, *asset.MRN)
+		assert.Equal(t, *asset.MRN, parsed.String())
 	}
 }
 
-// TestDiscover_NameIsTheStringTheMRNIsBuiltFrom pins the other half: Name
-// and the MRN's name component must agree, or the same object carries two
-// identities and lands twice.
-//
-// The price is that a Snowflake table reads as "sales.public.orders" in
-// the catalog rather than "orders". That is deliberate: a wrong name is
-// recoverable, a wrong identity deletes the asset's owners, term links and
-// lineage when it is rewritten.
-func TestDiscover_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
+// A table is named by its own name and its MRN carries the whole path, so a Snowflake table reads "orders" in the catalog and lands on database.schema.table.
+func TestDiscover_NameIsTheObjectsOwnNameAndTheMRNCarriesThePath(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables",
 		tableEntity("sf", "Snowflake", "sf.sales.public.orders", "Regular")), nil)
 
-	table := findAsset(result, "Table", "sales.public.orders")
+	table := findAsset(result, "Table", "orders")
 	require.NotNil(t, table)
 
-	assert.Equal(t, "mrn://table/snowflake/sales.public.orders", *table.MRN,
-		"Snowflake has no Marmot plugin, so it keeps every level")
-	assert.Equal(t, "sales.public.orders", *table.Name,
-		"Name must equal the MRN's name component")
-	assert.Equal(t, *table.MRN, mrn.New("Table", table.Providers[0], *table.Name))
+	assert.Equal(t, "mrn://asset/table/snowflake/sales.public.orders", *table.MRN)
+	assert.NotContains(t, table.PreviousMRNs, *table.MRN)
+	assert.Equal(t, []string{"mrn://asset/table/snowflake/sf.sales.public.orders"}, table.PreviousMRNs, "only the qualified naming mode's MRN differs")
 }
 
-// A technology that does have a Marmot plugin is projected onto that
-// plugin's bare name, so there the catalog does read "orders".
-func TestDiscover_NameIsBareWhereThePluginNamesItBare(t *testing.T) {
+// Earlier releases named a Postgres table by its bare name, so the old MRN is listed for the catalog to upgrade.
+func TestDiscover_ListsTheOldMRNOfAnAssetWhoseMRNChanged(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables",
 		tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")), nil)
 
 	table := findAsset(result, "Table", "orders")
 	require.NotNil(t, table)
 
-	assert.Equal(t, "mrn://table/postgresql/orders", *table.MRN)
-	assert.Equal(t, "orders", *table.Name)
+	assert.Equal(t, "mrn://asset/table/postgresql/shop.public.orders", *table.MRN)
+	assert.Contains(t, table.PreviousMRNs, "mrn://asset/table/postgresql/orders")
+	assert.Contains(t, table.PreviousMRNs, "mrn://asset/table/postgresql/pg.shop.public.orders", "the qualified naming mode's MRN")
 }
 
 // TestDiscover_LineagePointsAtRealAssets guards the other half of the

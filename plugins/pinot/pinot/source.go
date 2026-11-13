@@ -5,6 +5,8 @@ package pinot
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -54,7 +56,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "pinot",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Apache Pinot",
 		Description:   "Discover tables, schemas and stream lineage from Apache Pinot clusters",
 		Icon:          "pinot",
@@ -192,9 +194,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Pinot discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		Statistics: statistics,
+		Assets:       assets,
+		Lineage:      lineages,
+		Statistics:   statistics,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
 }
 
@@ -270,7 +273,7 @@ func (s *Source) discoverTable(ctx context.Context, client *Client, table, versi
 		metadata["segment_count"] = total
 	}
 
-	mrnValue := assetMRN("Table", table)
+	mrnValue := s.config.AssetMRN("Table", provider, table)
 	name := table
 
 	asset := pluginsdk.Asset{
@@ -449,7 +452,12 @@ func (s *Source) streamAsset(table string, stream map[string]string) *pluginsdk.
 	}
 
 	name := topic
-	mrnValue := mrn.New(assetType, streamProvider, name)
+	ref := mrn.Asset(assetType, streamProvider, topic)
+	// The topic belongs to the Kafka plugin, so the first broker only hints at which of its zones this is. Kinesis is a cloud service with no host.
+	if host := firstBroker(stream["stream."+streamType+".broker.list"]); host != "" && streamType == "kafka" {
+		ref = ref.WithHost(host)
+	}
+	mrnValue := ref.String()
 
 	return &pluginsdk.Asset{
 		Name:      &name,
@@ -584,10 +592,48 @@ func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig
 	return result.DataSchema.ColumnNames, rows, nil
 }
 
-// assetMRN is the single place a Pinot table MRN is built, so the table
-// pass and the lineage pass can never address the same table differently.
-// Pinot has no schema layer and the OpenMetadata and Trino plugins already
-// file Pinot tables by their bare name, so this does the same.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// firstBroker returns the first host:port of a Kafka broker list, with Kafka's default port when none is given.
+func firstBroker(list string) string {
+	first, _, _ := strings.Cut(list, ",")
+	first = strings.ToLower(strings.TrimSpace(first))
+	first = strings.TrimPrefix(first, "plaintext://")
+	first = strings.TrimPrefix(first, "ssl://")
+	if first == "" {
+		return ""
+	}
+	if _, _, err := net.SplitHostPort(first); err != nil {
+		return net.JoinHostPort(first, "9092")
+	}
+	return first
+}
+
+// urlHostPort returns the host:port of a URL, with the scheme's default port when none is given.
+func urlHostPort(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Hostname() == "" {
+		return ""
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return net.JoinHostPort(strings.ToLower(u.Hostname()), port)
+}
+
+// zoneBindings names the controller and broker hosts so other plugins can resolve them to this zone.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	var bindings []pluginsdk.ZoneBinding
+	seen := map[string]bool{}
+	for _, raw := range []string{s.config.ControllerURL, s.config.BrokerURL} {
+		host := urlHostPort(raw)
+		if host == "" || seen[host] {
+			continue
+		}
+		seen[host] = true
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: provider, Host: host, Zone: s.config.Zone})
+	}
+	return bindings
 }

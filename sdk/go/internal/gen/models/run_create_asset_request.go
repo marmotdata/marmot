@@ -27,8 +27,14 @@ type RunCreateAssetRequest struct {
 	// metadata
 	Metadata any `json:"metadata,omitempty"`
 
+	// MRN is the plugin's own MRN for the asset. Without it the server builds one from type, provider and name, which cannot tell apart two tables of the same name in different schemas.
+	Mrn string `json:"mrn,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
+
+	// PreviousMRNs are MRNs earlier versions of the plugin gave the asset.
+	PreviousMrns []string `json:"previous_mrns"`
 
 	// providers
 	Providers []string `json:"providers"`

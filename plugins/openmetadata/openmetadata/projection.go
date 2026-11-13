@@ -25,14 +25,17 @@ type projection struct {
 	// provider with a space in it lands that space in the MRN.
 	Provider string
 
-	// TableName builds the MRN name for a table, view or stored
-	// procedure from the parts of its OpenMetadata FQN below the
-	// service. nil means database.schema.name.
-	//
-	// Where a native plugin exists, this must match the Name that plugin
-	// sets, so both runs land on one asset. Most plugins set Name to the
-	// object's own bare name.
+	// TableName is the single string earlier releases built the MRN of a
+	// table, view or stored procedure from. It is kept only to work out
+	// the PreviousMRNs of an asset whose MRN has since changed. nil means
+	// database.schema.name.
 	TableName func(database, schema, name string) string
+
+	// Path is how many levels of the OpenMetadata path make up the MRN of
+	// a table, view or stored procedure. It follows the naming table of
+	// the technology's own Marmot plugin so both runs land on one asset.
+	// Zero value is pathFull.
+	Path pathShape
 
 	// TableTypes overrides the Marmot asset type for an OpenMetadata
 	// tableType, for technologies whose Marmot plugin calls the same
@@ -74,6 +77,71 @@ const (
 	groupSchema
 	groupNone
 )
+
+// pathShape picks which of a table's OpenMetadata levels go into its MRN.
+type pathShape int
+
+const (
+	// pathFull is database, schema and table.
+	pathFull pathShape = iota
+	// pathSchemaTable is schema and table, for engines whose OpenMetadata
+	// database level is a placeholder.
+	pathSchemaTable
+	// pathDatabaseTable is database and table.
+	pathDatabaseTable
+	// pathTable is the table alone, for services named by account or
+	// project rather than by a database.
+	pathTable
+	// pathBucketKey is a bucket and the object key inside it.
+	pathBucketKey
+)
+
+// tablePath returns the MRN path of a table, view or stored procedure.
+func (p projection) tablePath(database, schema, name string) []string {
+	switch p.Path {
+	case pathSchemaTable:
+		return nonEmptyLevels(schema, name)
+	case pathDatabaseTable:
+		return nonEmptyLevels(database, name)
+	case pathTable:
+		return nonEmptyLevels(name)
+	case pathBucketKey:
+		return nonEmptyLevels(schema, name)
+	default:
+		return nonEmptyLevels(database, schema, name)
+	}
+}
+
+// groupPath returns the MRN path of the asset a service's tables hang off:
+// the database for a technology grouped by database, otherwise the table
+// path without the table.
+func (p projection) groupPath(parts []string) []string {
+	if len(parts) == 0 {
+		return nil
+	}
+	if p.TableGroup == groupDatabase {
+		return []string{parts[0]}
+	}
+	database, schema := parts[0], ""
+	if len(parts) > 1 {
+		schema = parts[1]
+	}
+	path := p.tablePath(database, schema, "")
+	if len(path) == 0 {
+		return []string{parts[len(parts)-1]}
+	}
+	return path
+}
+
+func nonEmptyLevels(levels ...string) []string {
+	kept := make([]string, 0, len(levels))
+	for _, l := range levels {
+		if l != "" {
+			kept = append(kept, l)
+		}
+	}
+	return kept
+}
 
 // Name components below the service, by shape. Named so the table below
 // reads as the MRN format each technology uses.
@@ -126,62 +194,62 @@ func join(parts ...string) string {
 //     whose OpenMetadata database level is a placeholder, are not.
 var projections = map[string]projection{
 	// Relational databases
-	"Postgres":    {Provider: "PostgreSQL", TableName: nameOnly},
-	"Mysql":       {Provider: "MySQL", TableName: nameOnly, TableGroup: groupSchema},
-	"MariaDB":     {Provider: "MariaDB", TableName: nameOnly, TableGroup: groupSchema},
-	"Mssql":       {Provider: "SQL Server", TableName: fullyQualified},
-	"Oracle":      {Provider: "Oracle", TableName: schemaQualified, TableGroup: groupSchema},
-	"Db2":         {Provider: "Db2", TableName: fullyQualified},
-	"Clickhouse":  {Provider: "ClickHouse", TableName: nameOnly, TableGroup: groupSchema},
-	"SingleStore": {Provider: "SingleStore", TableName: nameOnly, TableGroup: groupSchema},
-	"Vertica":     {Provider: "Vertica", TableName: fullyQualified},
-	"Teradata":    {Provider: "Teradata", TableName: schemaQualified, TableGroup: groupSchema},
-	"Greenplum":   {Provider: "Greenplum", TableName: fullyQualified},
-	"Cockroach":   {Provider: "CockroachDB", TableName: fullyQualified},
-	"SQLite":      {Provider: "SQLite", TableName: nameOnly, TableGroup: groupNone},
-	"Exasol":      {Provider: "Exasol", TableName: schemaQualified, TableGroup: groupSchema},
+	"Postgres":    {Provider: "PostgreSQL", TableName: nameOnly, Path: pathFull},
+	"Mysql":       {Provider: "MySQL", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"MariaDB":     {Provider: "MariaDB", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Mssql":       {Provider: "SQL Server", TableName: fullyQualified, Path: pathFull},
+	"Oracle":      {Provider: "Oracle", TableName: schemaQualified, Path: pathFull, TableGroup: groupSchema},
+	"Db2":         {Provider: "Db2", TableName: fullyQualified, Path: pathFull},
+	"Clickhouse":  {Provider: "ClickHouse", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"SingleStore": {Provider: "SingleStore", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Vertica":     {Provider: "Vertica", TableName: fullyQualified, Path: pathFull},
+	"Teradata":    {Provider: "Teradata", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Greenplum":   {Provider: "Greenplum", TableName: fullyQualified, Path: pathFull},
+	"Cockroach":   {Provider: "CockroachDB", TableName: fullyQualified, Path: pathFull},
+	"SQLite":      {Provider: "SQLite", TableName: nameOnly, Path: pathDatabaseTable, TableGroup: groupNone},
+	"Exasol":      {Provider: "Exasol", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
 
 	// Cloud warehouses and lakehouses
-	"Snowflake": {Provider: "Snowflake", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
-	"BigQuery":  {Provider: "BigQuery", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Dataset", TableTypes: map[string]string{"External": "ExternalTable"}},
-	"Redshift":  {Provider: "Redshift", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
+	"Snowflake": {Provider: "Snowflake", TableName: fullyQualified, Path: pathFull, TableTypes: map[string]string{"External": "ExternalTable"}},
+	"BigQuery":  {Provider: "BigQuery", TableName: nameOnly, Path: pathFull, TableGroup: groupSchema, TableGroupType: "Dataset", TableTypes: map[string]string{"External": "ExternalTable"}},
+	"Redshift":  {Provider: "Redshift", TableName: fullyQualified, Path: pathFull, TableTypes: map[string]string{"External": "ExternalTable"}},
 	// Athena keeps no catalog of its own: it reads the Glue Data
 	// Catalog, which plugins/glue already catalogues under the Glue
 	// provider, naming each table by its bare name. Naming it Athena
 	// would file one table twice, once per route.
-	"Athena":     {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
-	"Databricks": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Athena":     {Provider: "Glue", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Databricks": {Provider: "Databricks", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
 	// A UnityCatalog service is a Unity Catalog server, which is not a
 	// Databricks workspace: it can run on its own, so plugins/unitycatalog
 	// catalogues it under its own provider and both routes must agree.
-	"UnityCatalog": {Provider: "Unity Catalog", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"AzureSQL":     {Provider: "SQL Server", TableName: fullyQualified},
-	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified},
-	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Namespace"},
-	"DeltaLake":    {Provider: "Delta Lake", TableName: nameOnly, TableGroup: groupNone},
+	"UnityCatalog": {Provider: "Unity Catalog", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
+	"AzureSQL":     {Provider: "SQL Server", TableName: fullyQualified, Path: pathFull},
+	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified, Path: pathFull},
+	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema, TableGroupType: "Namespace"},
+	"DeltaLake":    {Provider: "Delta Lake", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
 	// plugins/hive names a table database.table under a Database named by
 	// the Hive database; OpenMetadata's database level for Hive is a
 	// placeholder, so it stays out of the name.
-	"Hive":    {Provider: "Hive", TableName: schemaQualified, TableGroup: groupSchema},
-	"Impala":  {Provider: "Impala", TableName: schemaQualified, TableGroup: groupSchema},
-	"Trino":   {Provider: "Trino", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Presto":  {Provider: "Presto", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Dremio":  {Provider: "Dremio", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Glue":    {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
-	"Doris":   {Provider: "Doris", TableName: schemaQualified, TableGroup: groupSchema},
-	"Druid":   {Provider: "Druid", TableName: schemaQualified, TableGroup: groupSchema},
-	"PinotDB": {Provider: "Pinot", TableName: nameOnly, TableGroup: groupNone},
+	"Hive":    {Provider: "Hive", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Impala":  {Provider: "Impala", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Trino":   {Provider: "Trino", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
+	"Presto":  {Provider: "Presto", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
+	"Dremio":  {Provider: "Dremio", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
+	"Glue":    {Provider: "Glue", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Doris":   {Provider: "Doris", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Druid":   {Provider: "Druid", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"PinotDB": {Provider: "Pinot", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
 
 	// Document, key-value and wide-column stores
-	"MongoDB":   {Provider: "MongoDB", TableName: nameOnly, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
-	"DynamoDB":  {Provider: "DynamoDB", TableName: nameOnly, TableGroup: groupNone},
-	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Keyspace"},
-	"Couchbase": {Provider: "Couchbase", TableName: fullyQualified, TableGroupType: "Bucket", TableTypes: map[string]string{"Regular": "Collection"}},
+	"MongoDB":   {Provider: "MongoDB", TableName: nameOnly, Path: pathSchemaTable, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
+	"DynamoDB":  {Provider: "DynamoDB", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
+	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema, TableGroupType: "Keyspace"},
+	"Couchbase": {Provider: "Couchbase", TableName: fullyQualified, Path: pathFull, TableGroupType: "Bucket", TableTypes: map[string]string{"Regular": "Collection"}},
 
 	// SaaS and application sources
-	"Salesforce":   {Provider: "Salesforce", TableName: nameOnly, TableGroup: groupNone},
-	"SAS":          {Provider: "SAS", TableName: schemaQualified, TableGroup: groupSchema},
-	"DomoDatabase": {Provider: "Domo", TableName: nameOnly, TableGroup: groupNone, TableTypes: map[string]string{"Regular": "Dataset"}},
+	"Salesforce":   {Provider: "Salesforce", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
+	"SAS":          {Provider: "SAS", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"DomoDatabase": {Provider: "Domo", TableName: nameOnly, Path: pathTable, TableGroup: groupNone, TableTypes: map[string]string{"Regular": "Dataset"}},
 
 	// Search
 	"ElasticSearch": {Provider: "Elasticsearch", IndexType: "Table"},
@@ -247,27 +315,27 @@ var projections = map[string]projection{
 	// Technologies Marmot has no plugin for yet. Modelled as a native
 	// plugin should model them, so that when one is written the two runs
 	// land on the same asset rather than two.
-	"Timescale":       {Provider: "PostgreSQL", TableName: nameOnly},
-	"QuestDB":         {Provider: "QuestDB", TableName: nameOnly, TableGroup: groupNone},
-	"SapHana":         {Provider: "SAP HANA", TableName: fullyQualified},
-	"SapErp":          {Provider: "SAP ERP", TableName: nameOnly, TableGroup: groupNone},
-	"StarRocks":       {Provider: "StarRocks", TableName: schemaQualified, TableGroup: groupSchema},
-	"Iomete":          {Provider: "IOMETE", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"MicrosoftFabric": {Provider: "Microsoft Fabric", TableName: fullyQualified},
+	"Timescale":       {Provider: "PostgreSQL", TableName: nameOnly, Path: pathFull},
+	"QuestDB":         {Provider: "QuestDB", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
+	"SapHana":         {Provider: "SAP HANA", TableName: fullyQualified, Path: pathFull},
+	"SapErp":          {Provider: "SAP ERP", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
+	"StarRocks":       {Provider: "StarRocks", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema},
+	"Iomete":          {Provider: "IOMETE", TableName: fullyQualified, Path: pathFull, TableGroupType: "Catalog"},
+	"MicrosoftFabric": {Provider: "Microsoft Fabric", TableName: fullyQualified, Path: pathFull},
 	// OpenMetadata puts the GCP project at the database level and the
 	// instance at the schema level. The project stays out of the name for
 	// the same reason it does in BigQuery: a container asset is always
 	// named by its own bare level, so keeping the project in the table
-	// name would leave the Instance asset named by the instance alone and
+	// name would leave the Instance asset named by the zone alone and
 	// no longer a prefix of its tables. plugins/bigquery settles the
 	// question for GCP by taking one required project_id and leaving the
 	// project out of the MRN entirely.
-	"BigTable": {Provider: "Bigtable", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Instance"},
-	"BurstIQ":  {Provider: "BurstIQ", TableName: nameOnly, TableGroup: groupNone},
+	"BigTable": {Provider: "Bigtable", TableName: schemaQualified, Path: pathSchemaTable, TableGroup: groupSchema, TableGroupType: "Instance"},
+	"BurstIQ":  {Provider: "BurstIQ", TableName: nameOnly, Path: pathTable, TableGroup: groupNone},
 	// A data lake service reads files out of object storage, so its
 	// objects are addressed bucket/key. groupNone keeps it from minting a
 	// Bucket that would shadow the one the native S3 and GCS plugins make.
-	"Datalake": {Provider: "Data Lake", TableName: bucketQualified, TableGroup: groupNone},
+	"Datalake": {Provider: "Data Lake", TableName: bucketQualified, Path: pathBucketKey, TableGroup: groupNone},
 
 	// Messaging and drives
 	"PubSub": {Provider: "GooglePubSub"},

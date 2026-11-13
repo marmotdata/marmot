@@ -15,6 +15,7 @@ export interface UserIdentity {
 
 export interface User {
 	id: string;
+	mrn?: string;
 	username: string;
 	name: string;
 	email?: string;

@@ -8,6 +8,7 @@
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { m } from '$lib/paraglide/messages';
 	import { providerName } from '$lib/users/format';
+	import MrnValue from '$components/shared/MrnValue.svelte';
 	import type { User } from '$lib/users/types';
 	import type { Role } from '$lib/roles/types';
 
@@ -115,6 +116,9 @@
 					{m.users_auth_password_badge()}
 				{/if}
 			</mm-description>
+			{#if user.mrn}
+				<mm-description term={m.mrn_label()} mono><MrnValue value={user.mrn} /></mm-description>
+			{/if}
 		</mm-description-list>
 		{#if error && roleNames.length}
 			<mm-callout tone="danger" heading={m.members_save_failed()}>{error}</mm-callout>

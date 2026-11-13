@@ -174,7 +174,7 @@ func TestPlanQuery_ViewResolvesToItsBaseTable(t *testing.T) {
 		pluginsdk.QueryRequest{Statement: "SELECT * FROM active_users"})
 	require.NoError(t, err)
 
-	assert.Equal(t, []string{assetMRN("Table", "users")}, plan.ReferencedMRNs)
+	assert.Equal(t, []string{queryMRN("Table", "users")}, plan.ReferencedMRNs)
 }
 
 func TestPlanQuery_JoinThroughAnIndexListsBothTablesOnce(t *testing.T) {
@@ -186,7 +186,7 @@ func TestPlanQuery_JoinThroughAnIndexListsBothTablesOnce(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	assert.ElementsMatch(t, []string{assetMRN("Table", "users"), assetMRN("Table", "orders")}, plan.ReferencedMRNs)
+	assert.ElementsMatch(t, []string{queryMRN("Table", "users"), queryMRN("Table", "orders")}, plan.ReferencedMRNs)
 }
 
 func TestPlanQuery_IncompleteForATableValuedFunction(t *testing.T) {
@@ -301,7 +301,7 @@ func TestExecuteQuery_RefusesWrites(t *testing.T) {
 	result := discover(t, pluginsdk.RawConfig{"path": path})
 	stats := make(map[string]float64)
 	for _, st := range result.Statistics {
-		if st.AssetMRN == assetMRN("Table", "users") {
+		if st.AssetMRN == queryMRN("Table", "users") {
 			stats[st.MetricName] = st.Value
 		}
 	}
@@ -320,7 +320,7 @@ func TestExecuteQuery_RefusesMultipleStatements(t *testing.T) {
 	result := discover(t, pluginsdk.RawConfig{"path": path})
 	stats := make(map[string]float64)
 	for _, st := range result.Statistics {
-		if st.AssetMRN == assetMRN("Table", "users") {
+		if st.AssetMRN == queryMRN("Table", "users") {
 			stats[st.MetricName] = st.Value
 		}
 	}
@@ -365,4 +365,9 @@ func mustParseConfig(t *testing.T, raw pluginsdk.RawConfig) *Config {
 	config, err := parseConfig(raw)
 	require.NoError(t, err)
 	return config
+}
+
+// queryMRN is the MRN discovery gives an object of the query.db file newQueryTestDB creates.
+func queryMRN(assetType, table string) string {
+	return assetMRN(&Config{Path: "query.db"}, assetType, table)
 }

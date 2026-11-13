@@ -148,15 +148,15 @@ func TestE2E_DiscoverFindsTheTasksOfTheLatestRun(t *testing.T) {
 		}
 	}
 
-	assert.Contains(t, tasks, "nightly-etl/extract")
-	assert.Contains(t, tasks, "nightly-etl/transform")
-	assert.Contains(t, tasks, "nightly-etl/load")
+	assert.Contains(t, tasks, "extract")
+	assert.Contains(t, tasks, "transform")
+	assert.Contains(t, tasks, "load")
 }
 
 func TestE2E_TaskNameDropsThePrefectHashSuffix(t *testing.T) {
 	result := discoverE2E(t)
 
-	task := assetNamed(t, result, "nightly-etl/extract")
+	task := assetNamed(t, result, "extract")
 	key, ok := task.Metadata["task_key"].(string)
 	require.True(t, ok)
 	assert.Regexp(t, `^extract-[0-9a-f]{8}$`, key, "the raw key keeps the hash the name drops")
@@ -166,15 +166,15 @@ func TestE2E_TaskCalledTwiceIsOneAssetWithTwoRuns(t *testing.T) {
 	// The seeded flow calls load twice, on two different upstreams.
 	result := discoverE2E(t)
 
-	assert.EqualValues(t, 2, assetNamed(t, result, "nightly-etl/load").Metadata["run_count"])
+	assert.EqualValues(t, 2, assetNamed(t, result, "load").Metadata["run_count"])
 }
 
 func TestE2E_PipelineContainsItsTasks(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, hasE2EEdge(result,
-		"mrn://pipeline/prefect/nightly-etl",
-		"mrn://task/prefect/nightly-etl-extract",
+		"mrn://asset/pipeline/prefect/nightly-etl",
+		"mrn://asset/task/prefect/nightly-etl.extract",
 		"CONTAINS"))
 }
 
@@ -182,19 +182,19 @@ func TestE2E_TaskDependsOnTheTaskItConsumed(t *testing.T) {
 	result := discoverE2E(t)
 
 	assert.True(t, hasE2EEdge(result,
-		"mrn://task/prefect/nightly-etl-extract",
-		"mrn://task/prefect/nightly-etl-transform",
+		"mrn://asset/task/prefect/nightly-etl.extract",
+		"mrn://asset/task/prefect/nightly-etl.transform",
 		"DEPENDS_ON"))
 	assert.True(t, hasE2EEdge(result,
-		"mrn://task/prefect/nightly-etl-transform",
-		"mrn://task/prefect/nightly-etl-load",
+		"mrn://asset/task/prefect/nightly-etl.transform",
+		"mrn://asset/task/prefect/nightly-etl.load",
 		"DEPENDS_ON"))
 }
 
 func TestE2E_RunHistoryRecordsACompletedRun(t *testing.T) {
 	result := discoverE2E(t)
 
-	events := runEventTypes(t, result, "mrn://pipeline/prefect/nightly-etl")
+	events := runEventTypes(t, result, "mrn://asset/pipeline/prefect/nightly-etl")
 	assert.Contains(t, events, "START")
 	assert.Contains(t, events, "COMPLETE")
 }
@@ -202,7 +202,7 @@ func TestE2E_RunHistoryRecordsACompletedRun(t *testing.T) {
 func TestE2E_RunHistoryRecordsAFailedRun(t *testing.T) {
 	result := discoverE2E(t)
 
-	events := runEventTypes(t, result, "mrn://pipeline/prefect/broken-report")
+	events := runEventTypes(t, result, "mrn://asset/pipeline/prefect/broken-report")
 	assert.Contains(t, events, "START")
 	assert.Contains(t, events, "FAIL")
 }
@@ -211,7 +211,7 @@ func TestE2E_RunHistoryIsFiledUnderTheFlowName(t *testing.T) {
 	result := discoverE2E(t)
 
 	for _, history := range result.RunHistory {
-		if history.AssetMRN != "mrn://pipeline/prefect/nightly-etl" {
+		if history.AssetMRN != "mrn://asset/pipeline/prefect/nightly-etl" {
 			continue
 		}
 		require.NotEmpty(t, history.Runs)

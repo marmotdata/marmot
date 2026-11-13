@@ -7,7 +7,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -73,7 +72,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (pluginsdk.
 		}
 	}
 
-	mrnValue := mrn.New("Topic", "Kafka", topic)
+	mrnValue := s.topicMRN(topic)
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 

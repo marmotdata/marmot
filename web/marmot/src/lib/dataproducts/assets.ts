@@ -1,15 +1,11 @@
 import { fetchApi } from '../api';
+import { assetRouteParams as mrnRouteParams, type AssetRouteParams } from '../mrn';
 import type { Asset } from '../assets/types';
 import type { DataProduct } from './types';
 
-/** Route params for an asset page, from its MRN (mrn://type/service/full.name). */
-export function assetRouteParams(asset: {
-	mrn?: string;
-}): { type: string; service: string; name: string } | null {
-	if (!asset.mrn) return null;
-	const parts = asset.mrn.replace('mrn://', '').split('/');
-	if (parts.length < 3) return null;
-	return { type: parts[0], service: parts[1], name: parts.slice(2).join('/') };
+/** Route params for an asset page, from its MRN. */
+export function assetRouteParams(asset: { mrn?: string }): AssetRouteParams | null {
+	return mrnRouteParams(asset.mrn);
 }
 
 /** The provider key for an asset's logo; assets from several providers fall back to their type. */

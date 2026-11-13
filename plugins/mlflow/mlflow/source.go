@@ -5,6 +5,7 @@ package mlflow
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"sort"
 	"strings"
@@ -51,7 +52,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "mlflow",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "MLflow",
 		Description:   "Discover registered models, experiments and training datasets from MLflow tracking servers",
 		Icon:          "mlflow",
@@ -159,9 +160,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("MLflow discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     d.assets,
-		Lineage:    d.lineage,
-		Statistics: d.statistics,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		Statistics:   d.statistics,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -223,7 +225,7 @@ func (d *discovery) discoverModel(ctx context.Context, m registeredModel) {
 
 	if d.config.IncludeExperiments {
 		if exp, ok := d.experiments[r.Info.ExperimentID]; ok {
-			d.link(assetMRN("Experiment", exp.Name), modelMRN, "PRODUCES")
+			d.link(d.config.AssetMRN("Experiment", provider, exp.Name), modelMRN, "PRODUCES")
 		}
 	}
 
@@ -360,7 +362,7 @@ func (d *discovery) experimentAsset(e experiment) pluginsdk.Asset {
 
 // newAsset builds an asset with the fields every kind shares.
 func (d *discovery) newAsset(assetType, name string, metadata map[string]any) pluginsdk.Asset {
-	mrnValue := assetMRN(assetType, name)
+	mrnValue := d.config.AssetMRN(assetType, provider, name)
 	return pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
@@ -386,19 +388,25 @@ func (d *discovery) experimentURL(id string) string {
 	return d.config.TrackingURI + "/#/experiments/" + url.PathEscape(id)
 }
 
-// assetMRN is the single place an MLflow MRN is built, so assets and the
-// edges between them can never drift into addressing one thing two ways.
-// Every kind is addressed by its own MLflow name: model names are unique
-// per registry, and experiment and dataset names per tracking server.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRNFor addresses an asset another plugin owns, with that plugin's exact provider string, so an edge to it lands on the asset that plugin creates rather than on a duplicate. Every MLflow asset is addressed by its own name: model names are unique per registry, and experiment and dataset names per tracking server.
+func assetMRNFor(assetType, otherProvider string, path ...string) string {
+	return mrn.Asset(assetType, otherProvider, path...).String()
 }
 
-// assetMRNFor addresses an asset another plugin owns, with that plugin's
-// exact provider string, so an edge to it lands on the asset that plugin
-// creates rather than on a duplicate.
-func assetMRNFor(assetType, otherProvider, name string) string {
-	return mrn.New(assetType, otherProvider, name)
+// zoneBindings tells Marmot which zone the tracking server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.TrackingURI)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: provider, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }
 
 func putIf(metadata map[string]any, key, value string) {

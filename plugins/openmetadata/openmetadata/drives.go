@@ -118,7 +118,7 @@ func (c *collector) discoverDrives(ctx context.Context, client *client) error {
 		putIf(metadata, "shared", f.IsShared)
 
 		p := projectionFor(f.ServiceType)
-		asset := c.newAsset(f.entityBase, "file", "File", p, c.mrnName(name, f.FullyQualifiedName), metadata)
+		asset := c.newAsset(f.entityBase, "file", "File", p, flatIdent(name), metadata)
 		c.add(f.ID, asset)
 		fileCount++
 
@@ -148,7 +148,7 @@ func (c *collector) discoverDrives(ctx context.Context, client *client) error {
 		putIf(metadata, "size", int64(s.Size))
 
 		p := projectionFor(s.ServiceType)
-		asset := c.newAsset(s.entityBase, "spreadsheet", "Spreadsheet", p, c.mrnName(name, s.FullyQualifiedName), metadata)
+		asset := c.newAsset(s.entityBase, "spreadsheet", "Spreadsheet", p, flatIdent(name), metadata)
 		c.add(s.ID, asset)
 
 		sheetNames[s.FullyQualifiedName] = name
@@ -184,7 +184,7 @@ func (c *collector) discoverDrives(ctx context.Context, client *client) error {
 		// A worksheet is a sheet of columns, so it is catalogued the way
 		// every other columnar thing is.
 		p := projectionFor(w.ServiceType)
-		asset := c.newAsset(w.entityBase, "worksheet", "Table", p, c.mrnName(name, w.FullyQualifiedName), metadata)
+		asset := c.newAsset(w.entityBase, "worksheet", "Table", p, flatIdent(name), metadata)
 		if c.config.IncludeColumns {
 			setColumns(&asset, w.Columns)
 		}
@@ -229,7 +229,7 @@ func (c *collector) addDrives(drives []driveService) map[string]string {
 		putIf(metadata, "drive", name)
 
 		p := projectionFor(d.ServiceType)
-		asset := c.newAsset(d.entityBase, "", "Drive", p, name, metadata)
+		asset := c.newAsset(d.entityBase, "", "Drive", p, flatIdent(name), metadata)
 		c.add(d.ID, asset)
 		mrns[name] = *asset.MRN
 	}
@@ -347,7 +347,7 @@ func (c *collector) buildFolders(directories []directory, files []driveFile, spr
 		}
 
 		p := projectionFor(dir.ServiceType)
-		asset := c.newAsset(dir.entityBase, "directory", "Folder", p, c.mrnName(path, dir.FullyQualifiedName), metadata)
+		asset := c.newAsset(dir.entityBase, "directory", "Folder", p, flatIdent(path), metadata)
 		c.add(dir.ID, asset)
 
 		folders[path] = *asset.MRN

@@ -5,12 +5,12 @@ package grafana
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -47,7 +47,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "grafana",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Grafana",
 		Description:   "Discover dashboards, panels and data sources from Grafana",
 		Icon:          "grafana",
@@ -161,8 +161,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Grafana discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:  d.assets,
-		Lineage: d.lineage,
+		Assets:       d.assets,
+		Lineage:      d.lineage,
+		ZoneBindings: zoneBindings(s.config),
 	}, nil
 }
 
@@ -198,7 +199,7 @@ func (d *discovery) discoverDashboard(ctx context.Context, resp *dashboardRespon
 	meta := resp.Meta
 
 	name := dashboardName(resp)
-	dashMRN := assetMRN("Dashboard", name)
+	dashMRN := d.assetMRN("Dashboard", name)
 	dashURL := d.config.Host + meta.URL
 
 	panels := d.chartPanels(ctx, dash)
@@ -262,7 +263,7 @@ func (d *discovery) discoverDashboard(ctx context.Context, resp *dashboardRespon
 
 			if d.config.IncludeDatasources {
 				for _, ds := range distinctDatasources(p, queries, d.index) {
-					d.link(assetMRN("DataSource", ds.Name), chartMRN, "FEEDS")
+					d.link(d.assetMRN("DataSource", ds.Name), chartMRN, "FEEDS")
 				}
 			}
 		}
@@ -271,11 +272,12 @@ func (d *discovery) discoverDashboard(ctx context.Context, resp *dashboardRespon
 			continue
 		}
 		for _, q := range queries {
-			database := ""
+			database, host := "", ""
 			if q.ds != nil {
 				database = q.ds.databaseName()
+				host = q.ds.URL
 			}
-			for _, tableMRN := range sqlTableMRNs(q.datasourceType(), database, q.sql()) {
+			for _, tableMRN := range sqlTableMRNs(q.datasourceType(), database, host, q.sql()) {
 				if chartMRN != "" {
 					d.link(tableMRN, chartMRN, "FEEDS")
 				}
@@ -335,13 +337,13 @@ func (d *discovery) resolveLibraryPanel(ctx context.Context, p panel) panel {
 // chartAsset creates the Chart asset for one panel.
 func (d *discovery) chartAsset(resp *dashboardResponse, dashboardName string, p panel, queries []panelQuery, taken map[string]bool) pluginsdk.Asset {
 	name := dashboardName + "/" + panelName(p)
-	chartMRN := assetMRN("Chart", name)
+	chartMRN := d.assetMRN("Chart", name)
 
 	// Two panels with the same title would land on one asset, so the
 	// second and later ones carry their panel id.
 	if taken[chartMRN] {
 		name = fmt.Sprintf("%s/%s (panel %d)", dashboardName, panelName(p), p.ID)
-		chartMRN = assetMRN("Chart", name)
+		chartMRN = d.assetMRN("Chart", name)
 	}
 	taken[chartMRN] = true
 
@@ -390,7 +392,7 @@ func (d *discovery) chartAsset(resp *dashboardResponse, dashboardName string, p 
 // source. Nothing from secureJsonData is ever read.
 func (d *discovery) datasourceAsset(ds datasource) pluginsdk.Asset {
 	name := ds.Name
-	dsMRN := assetMRN("DataSource", name)
+	dsMRN := d.assetMRN("DataSource", name)
 	editURL := d.config.Host + "/connections/datasources/edit/" + url.PathEscape(ds.UID)
 
 	metadata := cleanMetadata(map[string]any{
@@ -478,8 +480,8 @@ func distinctDatasources(p panel, queries []panelQuery, ix *datasourceIndex) []*
 // assetMRN is the single place a Grafana MRN is built. Every asset and
 // every edge goes through it so the two can never drift into
 // addressing the same object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, providerName, name)
+func (d *discovery) assetMRN(assetType, name string) string {
+	return d.config.AssetMRN(assetType, providerName, name)
 }
 
 // optional returns a pointer to a non-empty string and nil otherwise,
@@ -531,4 +533,20 @@ func cleanMetadata(metadata map[string]any) map[string]any {
 		cleaned[k] = v
 	}
 	return cleaned
+}
+
+// zoneBindings tells Marmot which zone the Grafana server this run connected to is.
+func zoneBindings(cfg *Config) []pluginsdk.ZoneBinding {
+	u, err := url.Parse(cfg.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{Provider: providerName, Host: net.JoinHostPort(strings.ToLower(u.Hostname()), port), Zone: cfg.Zone}}
 }

@@ -70,14 +70,14 @@ func TestDiscover_NamesTheRootPipelineByItsBreadcrumb(t *testing.T) {
 
 	root := findAsset(result, "Pipeline", "NiFi Flow")
 	require.NotNil(t, root)
-	assert.Equal(t, "mrn://pipeline/nifi/nifi-flow", *root.MRN)
+	assert.Equal(t, "mrn://asset/pipeline/nifi/nifi-flow", *root.MRN)
 	assert.Equal(t, []string{"NiFi"}, root.Providers)
 }
 
 func TestDiscover_NamesAChildPipelineByItsPathFromTheRoot(t *testing.T) {
 	result := discover(t, newFakeNiFi().withRoot(standardFlow()), nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow", "NiFi Flow/Ingest", "NiFi Flow/Deliver"}, assetNames(result, "Pipeline"))
+	assert.ElementsMatch(t, []string{"NiFi Flow", "Ingest", "Deliver"}, assetNames(result, "Pipeline"))
 }
 
 func TestDiscover_NamesANestedPipelineByTheWholePath(t *testing.T) {
@@ -92,7 +92,7 @@ func TestDiscover_NamesATaskByPipelinePathAndProcessorName(t *testing.T) {
 
 	task := findAsset(result, "Task", "NiFi Flow/Ingest/Generate Orders")
 	require.NotNil(t, task)
-	assert.Equal(t, "mrn://task/nifi/nifi-flow-ingest-generate-orders", *task.MRN)
+	assert.Equal(t, "mrn://asset/task/nifi/nifi-flow.ingest.generate-orders", *task.MRN)
 }
 
 func TestDiscover_DisambiguatesSiblingProcessorsSharingAName(t *testing.T) {
@@ -101,7 +101,7 @@ func TestDiscover_DisambiguatesSiblingProcessorsSharingAName(t *testing.T) {
 		add(processor("p-b", "LogAttribute", "org.apache.nifi.processors.standard.LogAttribute"))
 	result := discover(t, newFakeNiFi().withRoot(root), nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow/LogAttribute (p-a)", "NiFi Flow/LogAttribute (p-b)"}, assetNames(result, "Task"))
+	assert.ElementsMatch(t, []string{"LogAttribute (p-a)", "LogAttribute (p-b)"}, assetNames(result, "Task"))
 }
 
 func TestDiscover_ProcessorsInDifferentGroupsMayShareAName(t *testing.T) {
@@ -110,14 +110,14 @@ func TestDiscover_ProcessorsInDifferentGroupsMayShareAName(t *testing.T) {
 		child(newGroup("pg-b", "B").add(processor("p-b", "LogAttribute", "org.apache.nifi.processors.standard.LogAttribute")))
 	result := discover(t, newFakeNiFi().withRoot(root), nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow/A/LogAttribute", "NiFi Flow/B/LogAttribute"}, assetNames(result, "Task"))
+	assert.ElementsMatch(t, []string{"LogAttribute", "LogAttribute"}, assetNames(result, "Task"))
 }
 
 func TestDiscover_DisambiguatesSiblingGroupsSharingAName(t *testing.T) {
 	root := newGroup("pg-root", "NiFi Flow").child(newGroup("pg-a", "Ingest")).child(newGroup("pg-b", "Ingest"))
 	result := discover(t, newFakeNiFi().withRoot(root), nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow", "NiFi Flow/Ingest (pg-a)", "NiFi Flow/Ingest (pg-b)"}, assetNames(result, "Pipeline"))
+	assert.ElementsMatch(t, []string{"NiFi Flow", "Ingest (pg-a)", "Ingest (pg-b)"}, assetNames(result, "Pipeline"))
 }
 
 func TestDiscover_PipelineContainsItsTasks(t *testing.T) {
@@ -199,14 +199,14 @@ func TestDiscover_SkipsAChildGroupThatFailsToLoad(t *testing.T) {
 
 	result := discover(t, f, nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow", "NiFi Flow/Ingest"}, assetNames(result, "Pipeline"))
+	assert.ElementsMatch(t, []string{"NiFi Flow", "Ingest"}, assetNames(result, "Pipeline"))
 	assert.NotNil(t, findAsset(result, "Task", "NiFi Flow/Ingest/Generate Orders"))
 }
 
 func TestDiscover_CanStartFromAConfiguredGroup(t *testing.T) {
 	result := discover(t, newFakeNiFi().withRoot(standardFlow()), pluginsdk.RawConfig{"root_process_group": "pg-ingest"})
 
-	assert.Equal(t, []string{"NiFi Flow/Ingest"}, assetNames(result, "Pipeline"), "the name still comes from the breadcrumb, so it matches a full run")
+	assert.Equal(t, []string{"Ingest"}, assetNames(result, "Pipeline"), "the name still comes from the breadcrumb, so it matches a full run")
 	assert.NotNil(t, findAsset(result, "Task", "NiFi Flow/Ingest/Generate Orders"))
 	assert.Nil(t, findAsset(result, "Task", "NiFi Flow/Deliver/Log Orders"))
 }
@@ -381,14 +381,14 @@ func TestDiscover_EveryEdgeEndsOnAnAssetOfThisRunOrAnotherPlugins(t *testing.T) 
 	}
 	for _, edge := range result.Lineage {
 		for _, endpoint := range []string{edge.Source, edge.Target} {
-			parsed, err := mrn.Parse(endpoint)
+			parsed, err := mrn.ParseMRN(endpoint)
 			require.NoError(t, err)
-			if parsed.Service == "nifi" {
+			if parsed.Provider == "nifi" {
 				assert.True(t, own[endpoint], "NiFi endpoint %s is not an asset of this run", endpoint)
 			}
 		}
 	}
-	assert.True(t, hasEdge(result, assetMRN("Task", "NiFi Flow/Ingest/Land in S3"), "mrn://bucket/s3/marmot-landing", "PRODUCES"))
+	assert.True(t, hasEdge(result, assetMRN("Task", "NiFi Flow/Ingest/Land in S3"), "mrn://asset/bucket/s3/marmot-landing", "PRODUCES"))
 }
 
 func TestDiscover_UsesAnUnverifiedTLSConnectionWhenAsked(t *testing.T) {
@@ -424,10 +424,10 @@ func realNiFi() *fakeNiFi {
 func TestDiscover_ReadsTheRealProcessGroupTree(t *testing.T) {
 	result := discover(t, realNiFi(), nil)
 
-	assert.ElementsMatch(t, []string{"NiFi Flow", "NiFi Flow/Ingest", "NiFi Flow/Deliver"}, assetNames(result, "Pipeline"))
+	assert.ElementsMatch(t, []string{"NiFi Flow", "Ingest", "Deliver"}, assetNames(result, "Pipeline"))
 	assert.ElementsMatch(t, []string{
-		"NiFi Flow/Ingest/Generate Orders", "NiFi Flow/Ingest/Stamp Attributes", "NiFi Flow/Ingest/Publish Orders",
-		"NiFi Flow/Deliver/Log Orders", "NiFi Flow/Deliver/Notify Webhook",
+		"Generate Orders", "Stamp Attributes", "Publish Orders",
+		"Log Orders", "Notify Webhook",
 	}, assetNames(result, "Task"))
 }
 
@@ -485,7 +485,7 @@ func TestDiscover_MasksTheRealSensitiveProperty(t *testing.T) {
 func TestDiscover_ReadsTheRealKafkaTopic(t *testing.T) {
 	result := discover(t, realNiFi(), nil)
 
-	assert.True(t, hasEdge(result, assetMRN("Task", "NiFi Flow/Ingest/Publish Orders"), "mrn://topic/kafka/orders-events", "PRODUCES"))
+	assert.True(t, hasEdge(result, assetMRN("Task", "NiFi Flow/Ingest/Publish Orders"), "mrn://asset/topic/kafka/orders-events", "PRODUCES"))
 	assert.NotNil(t, findAsset(result, "Topic", "orders-events"))
 }
 
@@ -509,7 +509,7 @@ func TestDiscover_ReadsTheRealConnectionPool(t *testing.T) {
 
 	result := discover(t, f, nil)
 
-	assert.True(t, hasEdge(result, "mrn://table/postgresql/customers", assetMRN("Task", "NiFi Flow/Ingest/Read Customers"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/table/postgresql@host=db.internal:5432/shop.public.customers", assetMRN("Task", "NiFi Flow/Ingest/Read Customers"), "FEEDS"))
 }
 
 func TestDiscover_LinksIntoTheNiFi2UIByHashRoute(t *testing.T) {

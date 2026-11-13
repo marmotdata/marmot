@@ -5,6 +5,7 @@ package couchbase
 import (
 	"context"
 	"fmt"
+	"net"
 	"sort"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ const provider = "Couchbase"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "couchbase",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Couchbase",
 		Description:   "Discover buckets, scopes and collections from Couchbase clusters",
 		Icon:          "couchbase",
@@ -209,10 +210,16 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Int("statistics", len(statistics)).
 		Msg("Couchbase discovery completed")
 
+	var bindings []pluginsdk.ZoneBinding
+	for _, host := range connectionHosts(s.config.ConnectionString) {
+		bindings = append(bindings, pluginsdk.ZoneBinding{Provider: provider, Host: host, Zone: s.config.Zone})
+	}
+
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		Statistics: statistics,
+		Assets:       assets,
+		Lineage:      lineages,
+		Statistics:   statistics,
+		ZoneBindings: bindings,
 	}, nil
 }
 
@@ -336,7 +343,7 @@ func (s *Source) bucketAsset(bucket gocb.BucketSettings, details *bucketDetails,
 	}
 
 	name := bucket.Name
-	mrnValue := assetMRN("Bucket", name)
+	mrnValue := assetMRN(s.config, "Bucket", name)
 	description := fmt.Sprintf("Couchbase bucket %s", name)
 
 	return pluginsdk.Asset{
@@ -357,8 +364,9 @@ func (s *Source) bucketAsset(bucket gocb.BucketSettings, details *bucketDetails,
 }
 
 func (s *Source) collectionAsset(ctx context.Context, bucket, scope string, coll gocb.CollectionSpec, indexes map[string][]gocb.QueryIndex, details *bucketDetails, collectionsInBucket int) (pluginsdk.Asset, []pluginsdk.Statistic) {
-	name := collectionName(bucket, scope, coll.Name)
-	mrnValue := assetMRN("Collection", name)
+	name := coll.Name
+	qualified := collectionName(bucket, scope, coll.Name)
+	mrnValue := assetMRN(s.config, "Collection", bucket, scope, coll.Name)
 	keyspace := quoteKeyspace(bucket, scope, coll.Name)
 
 	metadata := map[string]interface{}{
@@ -396,7 +404,7 @@ func (s *Source) collectionAsset(ctx context.Context, bucket, scope string, coll
 		}
 	}
 
-	description := fmt.Sprintf("Couchbase collection %s", name)
+	description := fmt.Sprintf("Couchbase collection %s", qualified)
 	asset := pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
@@ -414,11 +422,16 @@ func (s *Source) collectionAsset(ctx context.Context, bucket, scope string, coll
 		}},
 	}
 
+	// Earlier releases named the asset bucket.scope.collection and had no zone, so the old MRN only differs once a zone is set.
+	if previous := mrn.New("Collection", provider, qualified); previous != mrnValue {
+		asset.PreviousMRNs = []string{previous}
+	}
+
 	if s.config.IncludeColumns {
 		columns := s.inferColumns(ctx, keyspace)
 		if len(columns) > 0 {
 			if err := pluginsdk.SetColumns(&asset, columns); err != nil {
-				log.Warn().Err(err).Str("collection", name).Msg("Failed to set columns")
+				log.Warn().Err(err).Str("collection", qualified).Msg("Failed to set columns")
 			} else if s.config.IncludeStatistics {
 				statistics = append(statistics, pluginsdk.Statistic{
 					AssetMRN:   mrnValue,
@@ -586,16 +599,43 @@ func tabulate(docs []map[string]interface{}) ([]string, [][]interface{}) {
 	return columns, rows
 }
 
-// collectionName is the identity of a collection: bucket.scope.collection,
-// the same shape the OpenMetadata projection produces for Couchbase.
+// collectionName is the bucket.scope.collection form earlier releases used as an asset name, kept for descriptions and logs.
 func collectionName(bucket, scope, collection string) string {
 	return bucket + "." + scope + "." + collection
 }
 
-// assetMRN is the single place a Couchbase MRN is built, so the asset and
-// lineage passes can never address one object differently.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
+// assetMRN is the single place a Couchbase MRN is built, so the asset and lineage passes can never address one object differently. The path runs bucket, scope, collection, the shape the OpenMetadata projection produces for Couchbase.
+func assetMRN(cfg *Config, assetType string, path ...string) string {
+	return cfg.AssetMRN(assetType, provider, path...)
+}
+
+// connectionHosts lists the lowercase host:port addresses a connection string names, using the data service port for the scheme when the string gives none.
+func connectionHosts(connectionString string) []string {
+	scheme, rest, _ := strings.Cut(connectionString, "://")
+	if rest == "" {
+		rest = scheme
+		scheme = "couchbase"
+	}
+	rest, _, _ = strings.Cut(rest, "?")
+	rest, _, _ = strings.Cut(rest, "/")
+
+	defaultPort := "11210"
+	if scheme == "couchbases" {
+		defaultPort = "11207"
+	}
+
+	var hosts []string
+	for _, entry := range strings.Split(rest, ",") {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		if _, _, err := net.SplitHostPort(entry); err != nil {
+			entry = net.JoinHostPort(strings.Trim(entry, "[]"), defaultPort)
+		}
+		hosts = append(hosts, strings.ToLower(entry))
+	}
+	return hosts
 }
 
 // quoteKeyspace builds a backtick-quoted keyspace path for N1QL. A

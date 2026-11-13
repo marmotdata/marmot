@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -62,7 +63,7 @@ tags:
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "spline",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "Spline",
 		Description:   "Discover Spark applications and their lineage from a Spline server",
 		Icon:          "spark",
@@ -169,7 +170,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	seenEdges := make(map[string]struct{})
 
 	for _, app := range applications {
-		pipelineMRN := assetMRN("Pipeline", app.Name)
+		pipelineMRN := s.config.AssetMRN("Pipeline", provider, app.Name)
 
 		columnLineage := make(map[string][]ColumnLineageEntry)
 		var inputURIs, outputURIs []string
@@ -242,9 +243,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		Msg("Spline discovery completed")
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     assets,
-		Lineage:    lineages,
-		RunHistory: runHistory,
+		Assets:       assets,
+		Lineage:      lineages,
+		RunHistory:   runHistory,
+		ZoneBindings: s.zoneBindings(),
 	}, nil
 }
 
@@ -363,7 +365,7 @@ func (s *Source) buildPipelineAsset(app application, plans map[string]*Execution
 	}
 
 	name := app.Name
-	mrnValue := assetMRN("Pipeline", name)
+	mrnValue := s.config.AssetMRN("Pipeline", provider, name)
 
 	return pluginsdk.Asset{
 		Name:          &name,
@@ -498,16 +500,9 @@ func sourceColumns(graph AttributeGraph, rootID string) []string {
 	return sources
 }
 
-// assetMRN is the single place a Spline MRN is built, so the pipeline assets
-// and the lineage edges that point at them can never drift apart.
-func assetMRN(assetType, name string) string {
-	return mrn.New(assetType, provider, name)
-}
-
-// nativeMRN builds the MRN of an asset owned by another Marmot plugin, using
-// that plugin's own provider string and name shape.
+// nativeMRN builds the MRN of an asset owned by another Marmot plugin, using that plugin's own provider and path. The host in the URI only hints at the owning plugin's zone, which Marmot resolves from the zone bindings that plugin reports.
 func nativeMRN(ref dataSourceRef) string {
-	return mrn.New(ref.Type, ref.Provider, ref.Name)
+	return mrn.Asset(ref.Type, ref.Provider, ref.Path...).WithHost(ref.Host).String()
 }
 
 func addEdge(edges *[]pluginsdk.LineageEdge, seen map[string]struct{}, edge pluginsdk.LineageEdge) {
@@ -564,4 +559,24 @@ func capIDs(ids []string) []string {
 		return ids[:maxRecentIDs]
 	}
 	return ids
+}
+
+// zoneBindings names the Spline gateway host so other plugins can resolve it to this zone.
+func (s *Source) zoneBindings() []pluginsdk.ZoneBinding {
+	u, err := url.Parse(s.config.Host)
+	if err != nil || u.Hostname() == "" {
+		return nil
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	return []pluginsdk.ZoneBinding{{
+		Provider: provider,
+		Host:     strings.ToLower(u.Hostname()) + ":" + port,
+		Zone:     s.config.Zone,
+	}}
 }

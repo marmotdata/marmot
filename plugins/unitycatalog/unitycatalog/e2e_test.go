@@ -335,7 +335,7 @@ func TestE2E_DiscoversASeededTableWithItsMetadata(t *testing.T) {
 
 	table := findAsset(result, "Table", "shop.sales.orders")
 	require.NotNil(t, table)
-	assert.Equal(t, "mrn://table/unity-catalog/shop.sales.orders", *table.MRN)
+	assert.Equal(t, "mrn://asset/table/unity-catalog/shop.sales.orders", *table.MRN)
 	assert.Equal(t, "shop", table.Metadata["catalog"])
 	assert.Equal(t, "sales", table.Metadata["schema"])
 	assert.Equal(t, "orders", table.Metadata["table_name"])
@@ -440,9 +440,9 @@ func TestE2E_ViewOfEdgesPointAtTheViewsBaseTables(t *testing.T) {
 func TestE2E_CloudStorageFeedsTheObjectsItHolds(t *testing.T) {
 	result := discoverAll(t)
 
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", mrn.New("Table", provider, "shop.sales.orders"), "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://bucket/s3/marmot-lake", mrn.New("Volume", provider, "shop.sales.raw_exports"), "FEEDS"))
-	assert.True(t, hasEdge(result, "mrn://bucket/gcs/marmot-gcs-lake", mrn.New("Table", provider, "shop.sales.payments"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", mrn.New("Table", provider, "shop.sales.orders"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/s3/marmot-lake", mrn.New("Volume", provider, "shop.sales.raw_exports"), "FEEDS"))
+	assert.True(t, hasEdge(result, "mrn://asset/bucket/gcs/marmot-gcs-lake", mrn.New("Table", provider, "shop.sales.payments"), "FEEDS"))
 }
 
 func TestE2E_LocalStorageLocationsGetNoFeedsEdge(t *testing.T) {

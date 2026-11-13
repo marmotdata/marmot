@@ -51,10 +51,12 @@ type BatchCreateRequest struct {
 	Statistics    []CreateStatRequest         `json:"statistics"`
 	RunHistory    []CreateRunHistoryRequest   `json:"run_history"`
 	GlossaryTerms []CreateGlossaryTermRequest `json:"glossary_terms,omitempty"`
-	Config        plugin.RawPluginConfig      `json:"config"`
-	PipelineName  string                      `json:"pipeline_name" validate:"required"`
-	SourceName    string                      `json:"source_name" validate:"required"`
-	RunID         string                      `json:"run_id" validate:"required"`
+	// ZoneBindings are the hosts the plugin connected to and the zone each belongs to.
+	ZoneBindings []asset.ZoneBinding    `json:"zone_bindings,omitempty"`
+	Config       plugin.RawPluginConfig `json:"config"`
+	PipelineName string                 `json:"pipeline_name" validate:"required"`
+	SourceName   string                 `json:"source_name" validate:"required"`
+	RunID        string                 `json:"run_id" validate:"required"`
 } // @name BatchCreateRequest
 
 // CreateGlossaryTermRequest is one business term the source system
@@ -115,7 +117,11 @@ type DocumentationResult struct {
 } // @name DocumentationResult
 
 type CreateAssetRequest struct {
-	Name          string                 `json:"name"`
+	Name string `json:"name"`
+	// MRN is the plugin's own MRN for the asset. Without it the server builds one from type, provider and name, which cannot tell apart two tables of the same name in different schemas.
+	MRN *string `json:"mrn,omitempty"`
+	// PreviousMRNs are MRNs earlier versions of the plugin gave the asset.
+	PreviousMRNs  []string               `json:"previous_mrns,omitempty"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	Description   *string                `json:"description"`
@@ -129,10 +135,14 @@ type CreateAssetRequest struct {
 } // @name RunCreateAssetRequest
 
 type BatchCreateResponse struct {
-	Assets               []BatchAssetResult    `json:"assets"`
-	StaleEntitiesRemoved []string              `json:"stale_entities_removed,omitempty"`
-	Lineage              []LineageResult       `json:"lineage,omitempty"`
-	Documentation        []DocumentationResult `json:"documentation,omitempty"`
+	Assets               []BatchAssetResult `json:"assets"`
+	StaleEntitiesRemoved []string           `json:"stale_entities_removed,omitempty"`
+	// StaleContributionsWithdrawn are assets the run no longer found that another writer still describes, so they were kept.
+	StaleContributionsWithdrawn []string `json:"stale_contributions_withdrawn,omitempty"`
+	// Warnings are identity problems the run worked around.
+	Warnings      []string              `json:"warnings,omitempty"`
+	Lineage       []LineageResult       `json:"lineage,omitempty"`
+	Documentation []DocumentationResult `json:"documentation,omitempty"`
 } // @name BatchCreateResponse
 
 type BatchAssetResult struct {
@@ -143,6 +153,8 @@ type BatchAssetResult struct {
 	Asset    interface{} `json:"asset"`
 	Status   string      `json:"status"`
 	Error    string      `json:"error,omitempty"`
+	// MovedFrom is the MRN the asset had before this run gave it a new one.
+	MovedFrom string `json:"moved_from,omitempty"`
 } // @name BatchAssetResult
 
 type RunEntitiesResponse struct {
@@ -177,7 +189,13 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	run, err := h.runService.StartRun(r.Context(), req.PipelineName, req.SourceName, principal.DisplayName(), req.Config)
+	// The run belongs to whoever started it, so two people running the same pipeline file keep separate baselines and never delete each other's assets as stale.
+	owner := string(principal.Type()) + ":" + principal.ID()
+	// One person running the same pipeline against two systems, such as the dev.duckdb on two laptops, has a baseline per system: the zone is part of who owns the run.
+	if zone, _ := req.Config["zone"].(string); zone != "" {
+		owner += "/" + zone
+	}
+	run, err := h.runService.StartRunAs(r.Context(), req.PipelineName, req.SourceName, principal.DisplayName(), owner, req.Config)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to start run: %v", err))
 		return
@@ -265,6 +283,8 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	for i, asset := range req.Assets {
 		assets[i] = runs.CreateAssetInput{
 			Name:          asset.Name,
+			MRN:           asset.MRN,
+			PreviousMRNs:  asset.PreviousMRNs,
 			Type:          asset.Type,
 			Providers:     asset.Providers,
 			Description:   asset.Description,
@@ -313,6 +333,10 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Tags:        term.Tags,
 			Metadata:    term.Metadata,
 		}
+	}
+	// Bindings first, so this batch's own lineage can already resolve host hints to the zones they name.
+	if err := h.runService.RecordZoneBindings(r.Context(), req.ZoneBindings); err != nil {
+		log.Warn().Err(err).Msg("Failed to record zone bindings")
 	}
 	response, err := h.runService.ProcessEntities(r.Context(), req.RunID, assets, lineageRequests, docRequests, statsRequests, termRequests, req.PipelineName, req.SourceName)
 	if err != nil {

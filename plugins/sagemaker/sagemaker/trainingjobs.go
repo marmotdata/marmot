@@ -41,7 +41,7 @@ func (s *Source) discoverTrainingJobs(ctx context.Context, index *modelIndex) ([
 
 		asset := s.trainingJobAsset(ctx, name, detail)
 		assets = append(assets, asset)
-		edges = append(edges, trainingEdges(asset, detail, index)...)
+		edges = append(edges, s.trainingEdges(asset, detail, index)...)
 
 		if history := runHistory(asset, detail); history != nil {
 			runs = append(runs, *history)
@@ -155,7 +155,7 @@ func finalMetrics(metrics []types.MetricData) map[string]any {
 // trainingEdges links a job to the data it read and the model it produced.
 // The artifact match is how SageMaker itself connects the two: a model
 // points at the tarball a training job wrote.
-func trainingEdges(job pluginsdk.Asset, detail *sagemaker.DescribeTrainingJobOutput, index *modelIndex) []pluginsdk.LineageEdge {
+func (s *Source) trainingEdges(job pluginsdk.Asset, detail *sagemaker.DescribeTrainingJobOutput, index *modelIndex) []pluginsdk.LineageEdge {
 	var edges []pluginsdk.LineageEdge
 
 	if channels, ok := job.Metadata["input_channels"].(map[string]any); ok {
@@ -167,7 +167,7 @@ func trainingEdges(job pluginsdk.Asset, detail *sagemaker.DescribeTrainingJobOut
 			}
 			seen[bucket] = true
 			edges = append(edges, pluginsdk.LineageEdge{
-				Source: mrn.New("Bucket", "S3", bucket),
+				Source: mrn.Asset("Bucket", "S3", bucket).String(),
 				Target: *job.MRN,
 				Type:   "FEEDS",
 			})
@@ -178,7 +178,7 @@ func trainingEdges(job pluginsdk.Asset, detail *sagemaker.DescribeTrainingJobOut
 		if model, ok := index.byArtifact[deref(detail.ModelArtifacts.S3ModelArtifacts)]; ok {
 			edges = append(edges, pluginsdk.LineageEdge{
 				Source: *job.MRN,
-				Target: assetMRN("Model", model),
+				Target: s.config.AssetMRN("Model", provider, model),
 				Type:   "PRODUCES",
 			})
 		}

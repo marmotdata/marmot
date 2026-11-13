@@ -1,4 +1,6 @@
 The SQLite plugin discovers tables, views and foreign key relationships from SQLite database files.
+Tables are identified in their MRN by the database file name without its extension and the table name, for example `mrn://asset/table/sqlite/app.orders`. The identity is tied to the file, so set `zone` when several machines hold their own copy of the same file name and you want them kept apart or shared deliberately. The name is one you choose, not a cloud availability zone.
+
 
 It uses the pure-Go `modernc.org/sqlite` driver, so it needs no cgo and opens the database read-only. Turso and libSQL files are stored in the SQLite on-disk format, so a local copy of one works the same as any other SQLite file.
 

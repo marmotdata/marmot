@@ -1,6 +1,7 @@
 package kafkaconnect
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/marmotdata/plugin-sdk/mrn"
@@ -8,68 +9,120 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A connector is named by its own name and a task by the connector name
-// and its numeric id, the only identity Connect gives a task. The
-// provider has a space in it, which mrn.New keeps.
+func testDiscovery(zone string, servers string, connectorMap map[string]map[string]string) *discovery {
+	cfg := &Config{BootstrapServers: servers, ConnectorMap: connectorMap}
+	cfg.Zone = zone
+	return &discovery{config: cfg}
+}
 
 func TestPipelineMRN_IsTheConnectorName(t *testing.T) {
-	assert.Equal(t, "mrn://pipeline/kafka-connect/orders-file-source", assetMRN("Pipeline", "orders-file-source"))
+	d := testDiscovery("", "", nil)
+	assert.Equal(t, "mrn://asset/pipeline/kafka-connect/orders-file-source", d.config.AssetMRN("Pipeline", provider, "orders-file-source"))
+}
+
+func TestMRN_CarriesTheZone(t *testing.T) {
+	d := testDiscovery("prod", "", nil)
+	assert.Equal(t, "mrn://asset/pipeline/kafka-connect@prod/orders-file-source", d.config.AssetMRN("Pipeline", provider, "orders-file-source"))
 }
 
 func TestTaskMRN_IsTheConnectorNameAndTaskId(t *testing.T) {
-	assert.Equal(t, "mrn://task/kafka-connect/orders-file-source.task-0", assetMRN("Task", taskName("orders-file-source", 0)))
+	src := testDiscovery("", "", nil)
+	asset := src.taskAsset("orders-file-source", taskStatus{ID: 0})
+
+	assert.Equal(t, "mrn://asset/task/kafka-connect/orders-file-source.task-0", *asset.MRN)
+	assert.Equal(t, "task-0", *asset.Name)
+}
+
+func TestTaskMRN_SameTaskIdInDifferentConnectorsDiffers(t *testing.T) {
+	d := testDiscovery("", "", nil)
+	a := d.taskAsset("a", taskStatus{ID: 0})
+	b := d.taskAsset("b", taskStatus{ID: 0})
+	assert.NotEqual(t, *a.MRN, *b.MRN)
+}
+
+func TestTaskMRN_ADottedConnectorNameChangesTheMRNSoTheOldOneIsKept(t *testing.T) {
+	d := testDiscovery("", "", nil)
+	asset := d.taskAsset("orders.v1", taskStatus{ID: 2})
+
+	assert.Equal(t, `mrn://asset/task/kafka-connect/"orders.v1".task-2`, *asset.MRN)
+	assert.Equal(t, []string{"mrn://asset/task/kafka-connect/orders.v1.task-2"}, asset.PreviousMRNs)
 }
 
 func TestTopicMRN_MatchesWhatTheKafkaPluginProduces(t *testing.T) {
-	// plugins/kafka builds mrn.New("Topic", "Kafka", topic). This has to be
-	// byte-identical or a topic both plugins see becomes two assets.
-	assert.Equal(t, "mrn://topic/kafka/orders-events", topicMRN("orders-events"))
-	assert.Equal(t, mrn.New("Topic", "Kafka", "shop.public.orders"), topicMRN("shop.public.orders"))
+	// The Kafka plugin names a topic by its name alone. This has to be byte-identical or a topic both plugins see becomes two assets.
+	d := testDiscovery("", "", nil)
+	assert.Equal(t, "mrn://asset/topic/kafka/orders-events", d.topicMRN("c", connectorConfig{}, "orders-events"))
+	assert.Equal(t, mrn.Asset("Topic", "Kafka", "shop.public.orders").String(), d.topicMRN("c", connectorConfig{}, "shop.public.orders"))
+}
+
+func TestTopicMRN_TheConnectClustersBootstrapServersBecomeAHostHint(t *testing.T) {
+	d := testDiscovery("", "Broker-1:9093,broker-2:9093", nil)
+	assert.Equal(t, "mrn://asset/topic/kafka@host=broker-1:9093/orders", d.topicMRN("c", connectorConfig{}, "orders"))
+}
+
+func TestTopicMRN_TheConnectorsOwnBootstrapServersWin(t *testing.T) {
+	d := testDiscovery("", "broker-1", nil)
+	cfg := connectorConfig{"producer.override.bootstrap.servers": "other:9094"}
+	assert.Equal(t, "mrn://asset/topic/kafka@host=other:9094/orders", d.topicMRN("c", cfg, "orders"))
+}
+
+func TestTopicMRN_ABootstrapServerWithoutAPortGetsTheDefault(t *testing.T) {
+	d := testDiscovery("", "broker-1", nil)
+	assert.Equal(t, "mrn://asset/topic/kafka@host=broker-1:9092/orders", d.topicMRN("c", connectorConfig{}, "orders"))
+}
+
+func TestConnectorMap_AnExplicitZoneBeatsTheHostHint(t *testing.T) {
+	d := testDiscovery("", "broker-1:9092", map[string]map[string]string{"orders-sink": {"kafka": "prod-eu", "PostgreSQL": "warehouse"}})
+
+	assert.Equal(t, "mrn://asset/topic/kafka@prod-eu/orders", d.topicMRN("orders-sink", connectorConfig{}, "orders"))
+	assert.Equal(t, "mrn://asset/table/postgresql@warehouse/shop.public.orders",
+		d.datasetMRN("orders-sink", dataset{Type: "Table", Provider: "PostgreSQL", Path: []string{"shop", "public", "orders"}, Host: "db:5432"}))
+}
+
+func TestConnectorMap_OnlyAppliesToTheNamedConnector(t *testing.T) {
+	d := testDiscovery("", "", map[string]map[string]string{"orders-sink": {"PostgreSQL": "warehouse"}})
+
+	assert.Equal(t, "mrn://asset/table/postgresql@host=db:5432/shop.public.orders",
+		d.datasetMRN("other-sink", dataset{Type: "Table", Provider: "PostgreSQL", Path: []string{"shop", "public", "orders"}, Host: "db:5432"}))
 }
 
 func TestDatasetMRNs_MatchTheOwningPlugins(t *testing.T) {
-	// Pinned to the identity rule of each plugin the lineage points at.
-	assert.Equal(t, "mrn://table/postgresql/orders", datasetMRN(dataset{"Table", "PostgreSQL", "orders"}))
-	assert.Equal(t, "mrn://table/mysql/orders", datasetMRN(dataset{"Table", "MySQL", "orders"}))
-	assert.Equal(t, "mrn://table/mariadb/orders", datasetMRN(dataset{"Table", "MariaDB", "orders"}))
-	assert.Equal(t, "mrn://table/sql-server/shop.dbo.orders", datasetMRN(dataset{"Table", "SQL Server", "shop.dbo.orders"}))
-	assert.Equal(t, "mrn://table/oracle/shop.orders", datasetMRN(dataset{"Table", "Oracle", "SHOP.ORDERS"}))
-	assert.Equal(t, "mrn://table/snowflake/shop.raw.orders", datasetMRN(dataset{"Table", "Snowflake", "SHOP.RAW.ORDERS"}))
-	assert.Equal(t, "mrn://table/redshift/dev.public.orders", datasetMRN(dataset{"Table", "Redshift", "dev.public.orders"}))
-	assert.Equal(t, "mrn://table/bigquery/orders", datasetMRN(dataset{"Table", "BigQuery", "orders"}))
-	assert.Equal(t, "mrn://table/elasticsearch/orders", datasetMRN(dataset{"Table", "Elasticsearch", "orders"}))
-	assert.Equal(t, "mrn://collection/mongodb/orders", datasetMRN(dataset{"Collection", "MongoDB", "orders"}))
-	assert.Equal(t, "mrn://bucket/s3/data-lake", datasetMRN(dataset{"Bucket", "S3", "data-lake"}))
-	assert.Equal(t, "mrn://bucket/gcs/data-lake", datasetMRN(dataset{"Bucket", "GCS", "data-lake"}))
-	assert.Equal(t, "mrn://container/azureblob/raw", datasetMRN(dataset{"Container", "AzureBlob", "raw"}))
-}
-
-func TestPipelineMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	// The UI splits an MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so it has to survive byte-identical.
-	for _, original := range []string{
-		assetMRN("Pipeline", "orders-file-source"),
-		assetMRN("Task", taskName("shop-cdc", 3)),
-		topicMRN("shop.public.orders"),
-	} {
-		parsed, err := mrn.Parse(original)
-		require.NoError(t, err)
-		assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
+	// Pinned to the naming table of each plugin the lineage points at.
+	d := testDiscovery("", "", nil)
+	cases := []struct {
+		ds   dataset
+		want string
+	}{
+		{table("PostgreSQL", "shop", "public", "orders"), "mrn://asset/table/postgresql/shop.public.orders"},
+		{table("MySQL", "shop", "orders"), "mrn://asset/table/mysql/shop.orders"},
+		{table("MariaDB", "shop", "orders"), "mrn://asset/table/mariadb/shop.orders"},
+		{table("SQL Server", "shop", "dbo", "orders"), "mrn://asset/table/sql-server/shop.dbo.orders"},
+		{table("Oracle", "ORCL", "SHOP", "ORDERS"), "mrn://asset/table/oracle/orcl.shop.orders"},
+		{table("Snowflake", "SHOP", "RAW", "ORDERS"), "mrn://asset/table/snowflake/shop.raw.orders"},
+		{table("Redshift", "dev", "public", "orders"), "mrn://asset/table/redshift/dev.public.orders"},
+		{table("BigQuery", "acme", "raw", "orders"), "mrn://asset/table/bigquery/acme.raw.orders"},
+		{table("Elasticsearch", "orders"), "mrn://asset/table/elasticsearch/orders"},
+		{collection("", "shop", "orders"), "mrn://asset/collection/mongodb/shop.orders"},
+		{dataset{Type: "Bucket", Provider: "S3", Path: []string{"data-lake"}}, "mrn://asset/bucket/s3/data-lake"},
+		{dataset{Type: "Bucket", Provider: "GCS", Path: []string{"data-lake"}}, "mrn://asset/bucket/gcs/data-lake"},
+		{dataset{Type: "Container", Provider: "AzureBlob", Path: []string{"raw"}}, "mrn://asset/container/azureblob/raw"},
+	}
+	for _, tc := range cases {
+		assert.Equal(t, tc.want, d.datasetMRN("c", tc.ds))
 	}
 }
 
-func TestEveryAsset_MRNAgreesWithItsOwnFields(t *testing.T) {
-	// The server rebuilds identity from (Type, Providers[0], Name), so the
-	// MRN set here has to be exactly that or the asset is stored under a
-	// different identity than the lineage points at.
+func TestEveryAsset_MRNIsKindedAndMatchesItsTypeAndProvider(t *testing.T) {
 	result := discover(t, twoFileConnectors().with(brokenSinkFixture), nil)
 
 	require.NotEmpty(t, result.Assets)
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN, *a.Name)
+		parsed, err := mrn.ParseMRN(*a.MRN)
+		require.NoError(t, err)
+		assert.False(t, parsed.Legacy, *a.MRN)
+		assert.Equal(t, strings.ToLower(a.Type), parsed.Type)
+		assert.Equal(t, strings.ReplaceAll(strings.ToLower(a.Providers[0]), " ", "-"), parsed.Provider)
 	}
 }
 

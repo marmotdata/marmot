@@ -21,13 +21,14 @@ import (
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "dbt",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
 		Name:          "dbt",
 		Description:   "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
 		Icon:          "dbt",
 		Category:      "transformation",
 		Status:        "experimental",
 		Features:      []string{"Assets", "Lineage"},
+		Federates:     true,
 		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
 			pluginsdk.AssetSchemaOf(DBTModelFields{}, "Model",
@@ -50,6 +51,8 @@ func Meta() pluginsdk.Meta {
 type Config struct {
 	pluginsdk.BaseConfig         `json:",inline"`
 	*filesource.FileSourceConfig `json:",inline"`
+
+	TargetZone string `json:"target_zone,omitempty" group:"Advanced" description:"Zone of the warehouse dbt builds into"`
 
 	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url)" validate:"required"`
 
@@ -470,7 +473,11 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) pluginsdk.As
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	mrnValue := mrn.New("Model", "DBT", fqn)
+	mrnValue := s.modelMRN(node.Database, node.Schema, tableName)
+	var previousMRNs []string
+	if old := mrn.New("Model", "DBT", fqn); old != mrnValue {
+		previousMRNs = []string{old}
+	}
 
 	var description *string
 	if node.Description != "" {
@@ -505,6 +512,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) pluginsdk.As
 	return pluginsdk.Asset{
 		Name:          &modelName,
 		MRN:           &mrnValue,
+		PreviousMRNs:  previousMRNs,
 		Type:          "Model",
 		Providers:     []string{"DBT"},
 		Description:   description,
@@ -617,7 +625,7 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	mrnValue := mrn.New(assetType, provider, tableFQN)
+	mrnValue := s.warehouseMRN(adapter, assetType, node.Database, node.Schema, tableName)
 
 	var description *string
 	if node.Description != "" {
@@ -627,14 +635,15 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	cleanMetadata := s.cleanMetadata(metadata)
 
 	return pluginsdk.Asset{
-		Name:        &tableName,
-		MRN:         &mrnValue,
-		Type:        assetType,
-		Providers:   []string{provider},
-		Description: description,
-		Metadata:    cleanMetadata,
-		Tags:        allTags,
-		Schema:      schema,
+		Name:         &tableName,
+		MRN:          &mrnValue,
+		PreviousMRNs: previousWarehouseMRNs(assetType, provider, tableFQN, mrnValue),
+		Type:         assetType,
+		Providers:    []string{provider},
+		Description:  description,
+		Metadata:     cleanMetadata,
+		Tags:         allTags,
+		Schema:       schema,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
@@ -668,7 +677,6 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 	var lineages []pluginsdk.LineageEdge
 
 	adapter := s.getAdapter()
-	provider := adapter.Name()
 	materialization := s.getMaterialization(node)
 	if materialization == "" {
 		materialization = adapter.DefaultMaterialization()
@@ -682,14 +690,13 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 	if node.Alias != "" {
 		tableName = node.Alias
 	}
-	targetFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
-	modelMRN := mrn.New("Model", "DBT", targetFQN)
+	modelMRN := s.modelMRN(node.Database, node.Schema, tableName)
 
 	outputType := adapter.AssetTypeForMaterialization(materialization)
 	if outputType == "Ephemeral" {
 		return lineages
 	}
-	outputMRN := mrn.New(outputType, provider, targetFQN)
+	outputMRN := s.warehouseMRN(adapter, outputType, node.Database, node.Schema, tableName)
 
 	for _, depNodeID := range node.DependsOn.Nodes {
 		var depNode ManifestNode
@@ -727,12 +734,10 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			continue
 		}
 
-		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
-
 		var sourceMRN string
 		switch {
 		case resourceType == "source" || resourceType == "seed":
-			sourceMRN = mrn.New("Table", provider, sourceFQN)
+			sourceMRN = s.warehouseMRN(adapter, "Table", depNode.Database, depNode.Schema, depName)
 		case resourceType == "model":
 			depMaterialization := s.getMaterialization(depNode)
 			if depMaterialization == "" {
@@ -742,9 +747,9 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			if depType == "Ephemeral" {
 				depType = "Table"
 			}
-			sourceMRN = mrn.New(depType, provider, sourceFQN)
+			sourceMRN = s.warehouseMRN(adapter, depType, depNode.Database, depNode.Schema, depName)
 		default:
-			sourceMRN = mrn.New("Table", provider, sourceFQN)
+			sourceMRN = s.warehouseMRN(adapter, "Table", depNode.Database, depNode.Schema, depName)
 		}
 
 		lineages = append(lineages, pluginsdk.LineageEdge{
@@ -817,7 +822,7 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-source")
 
-	mrnValue := mrn.New("Table", provider, tableFQN)
+	mrnValue := s.warehouseMRN(s.getAdapter(), "Table", node.Database, node.Schema, tableName)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description
@@ -826,14 +831,15 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	cleanMetadata := s.cleanMetadata(metadata)
 
 	return pluginsdk.Asset{
-		Name:        &tableName,
-		MRN:         &mrnValue,
-		Type:        "Table",
-		Providers:   []string{provider},
-		Description: description,
-		Metadata:    cleanMetadata,
-		Tags:        allTags,
-		Schema:      schema,
+		Name:         &tableName,
+		MRN:          &mrnValue,
+		PreviousMRNs: previousWarehouseMRNs("Table", provider, tableFQN, mrnValue),
+		Type:         "Table",
+		Providers:    []string{provider},
+		Description:  description,
+		Metadata:     cleanMetadata,
+		Tags:         allTags,
+		Schema:       schema,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
@@ -905,7 +911,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-seed")
 
-	mrnValue := mrn.New("Table", provider, tableFQN)
+	mrnValue := s.warehouseMRN(s.getAdapter(), "Table", node.Database, node.Schema, seedName)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description
@@ -914,14 +920,15 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	cleanMetadata := s.cleanMetadata(metadata)
 
 	return pluginsdk.Asset{
-		Name:        &seedName,
-		MRN:         &mrnValue,
-		Type:        "Table",
-		Providers:   []string{provider},
-		Description: description,
-		Metadata:    cleanMetadata,
-		Tags:        allTags,
-		Schema:      schema,
+		Name:         &seedName,
+		MRN:          &mrnValue,
+		PreviousMRNs: previousWarehouseMRNs("Table", provider, tableFQN, mrnValue),
+		Type:         "Table",
+		Providers:    []string{provider},
+		Description:  description,
+		Metadata:     cleanMetadata,
+		Tags:         allTags,
+		Schema:       schema,
 		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
@@ -929,4 +936,52 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 			Priority:   1,
 		}},
 	}
+}
+
+// modelMRN is the MRN of a dbt model, named by the database and schema it is built into and its own name.
+func (s *Source) modelMRN(database, schema, name string) string {
+	return s.config.AssetMRN("Model", "DBT", nonEmptyLevels(database, schema, name)...)
+}
+
+// warehouseMRN is the MRN the warehouse's own plugin gives a table dbt builds or reads. The warehouse is not a dbt system, so the zone is target_zone and not the plugin's own zone.
+func (s *Source) warehouseMRN(adapter Adapter, assetType, database, schema, table string) string {
+	return mrn.Asset(assetType, adapter.Name(), warehousePath(adapter, database, schema, table)...).WithZone(s.config.TargetZone).String()
+}
+
+// warehousePath is the path the warehouse's plugin names a table by: database, schema and table for most, and without the database for engines where dbt's schema is the database.
+func warehousePath(adapter Adapter, database, schema, table string) []string {
+	switch adapter.Name() {
+	case "MySQL", "ClickHouse", "SingleStore", "Spark", "Glue":
+		return nonEmptyLevels(schema, table)
+	default:
+		return nonEmptyLevels(database, schema, table)
+	}
+}
+
+func nonEmptyLevels(levels ...string) []string {
+	kept := make([]string, 0, len(levels))
+	for _, l := range levels {
+		if l != "" {
+			kept = append(kept, l)
+		}
+	}
+	return kept
+}
+
+// legacyProviders are the provider strings earlier releases used where they differed from the ones the warehouse plugins use.
+var legacyProviders = map[string]string{
+	"PostgreSQL": "Postgres",
+	"SQL Server": "SQLServer",
+	"Glue":       "AWS Glue",
+}
+
+// previousWarehouseMRNs lists the MRN earlier releases gave a warehouse table, built from the single dotted name and the old provider string, when it differs from the current one.
+func previousWarehouseMRNs(assetType, provider, fqn, current string) []string {
+	if legacy, ok := legacyProviders[provider]; ok {
+		provider = legacy
+	}
+	if old := mrn.New(assetType, provider, fqn); old != current {
+		return []string{old}
+	}
+	return nil
 }

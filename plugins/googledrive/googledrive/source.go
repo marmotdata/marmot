@@ -28,7 +28,8 @@ const provider = "GoogleDrive"
 func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:            "googledrive",
-		MarmotVersion: ">=0.12.0",
+		MarmotVersion: ">=0.13.0",
+		IdentityScope: pluginsdk.IdentityScopeAccount,
 		Name:          "Google Drive",
 		Description:   "Discover folders, files and spreadsheets from Google Drive",
 		Icon:          "googledrive",

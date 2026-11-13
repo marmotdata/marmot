@@ -92,8 +92,8 @@ func (c *collector) addTableGroup(base entityBase, p projection, kind string, gr
 		putIf(metadata, "schema", parts[len(parts)-1])
 	}
 
-	name := c.mrnName(nativeName, base.FullyQualifiedName)
-	asset := c.newAsset(base, kind, p.TableGroupType, p, name, metadata)
+	id := identity{Name: nativeName, Path: p.groupPath(parts), Legacy: nativeName}
+	asset := c.newAsset(base, kind, p.TableGroupType, p, id, metadata)
 	c.add(base.ID, asset)
 
 	groups[containerKey(base.FullyQualifiedName, p)] = *asset.MRN
@@ -137,9 +137,7 @@ func (c *collector) discoverTables(ctx context.Context, client *client, groups t
 		}
 
 		assetType := p.assetTypeFor(t.TableType)
-		name := c.mrnName(p.TableName(databaseName, schemaName, tableName), t.FullyQualifiedName)
-
-		asset := c.newAsset(t.entityBase, "table", assetType, p, name, metadata)
+		asset := c.newAsset(t.entityBase, "table", assetType, p, c.tableIdent(p, databaseName, schemaName, tableName), metadata)
 		if c.config.IncludeColumns {
 			setColumns(&asset, t.Columns)
 		}
@@ -186,8 +184,7 @@ func (c *collector) discoverStoredProcedures(ctx context.Context, client *client
 		putIf(metadata, "schema", schemaName)
 		putIf(metadata, "procedure_type", sp.StoredProcedureType)
 
-		name := c.mrnName(p.TableName(databaseName, schemaName, procedureName), sp.FullyQualifiedName)
-		asset := c.newAsset(sp.entityBase, "storedProcedure", "Function", p, name, metadata)
+		asset := c.newAsset(sp.entityBase, "storedProcedure", "Function", p, c.tableIdent(p, databaseName, schemaName, procedureName), metadata)
 
 		if sp.Code != nil && sp.Code.Code != "" {
 			query, language := sp.Code.Code, sp.Code.Language
@@ -239,4 +236,9 @@ func constraintColumns(constraints []constraint, kind string) []string {
 		}
 	}
 	return nil
+}
+
+// tableIdent names a table, view or stored procedure by its own name, with the levels of its MRN taken from the projection and the single string of earlier releases kept as the legacy name.
+func (c *collector) tableIdent(p projection, database, schema, name string) identity {
+	return identity{Name: name, Path: p.tablePath(database, schema, name), Legacy: p.TableName(database, schema, name)}
 }

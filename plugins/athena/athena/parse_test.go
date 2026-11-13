@@ -133,14 +133,6 @@ func TestTableAssetType_UnknownTypeIsATable(t *testing.T) {
 	assert.Equal(t, "Table", tableAssetType(""))
 }
 
-func TestSavedQueryName_IsQualifiedByItsWorkGroup(t *testing.T) {
-	assert.Equal(t, "analytics/daily-revenue", savedQueryName("analytics", "daily-revenue"))
-}
-
-func TestSavedQueryName_WithoutAWorkGroupIsTheBareName(t *testing.T) {
-	assert.Equal(t, "daily-revenue", savedQueryName("", "daily-revenue"))
-}
-
 func TestArnPartition_CommercialRegions(t *testing.T) {
 	assert.Equal(t, "aws", arnPartition("us-east-1"))
 }
