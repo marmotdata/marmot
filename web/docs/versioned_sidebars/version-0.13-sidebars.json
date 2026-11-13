@@ -1,0 +1,477 @@
+{
+  "tutorialSidebar": [
+    {
+      "type": "doc",
+      "id": "introduction",
+      "label": "Introduction"
+    },
+    {
+      "type": "category",
+      "label": "Get started",
+      "collapsed": false,
+      "items": [
+        {
+          "type": "doc",
+          "id": "quick-start",
+          "label": "Run it yourself"
+        },
+        {
+          "type": "ref",
+          "id": "Cloud/getting-started",
+          "label": "Use Marmot Cloud"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Marmot Cloud",
+      "link": {
+        "type": "doc",
+        "id": "Cloud/index"
+      },
+      "items": [
+        {
+          "type": "doc",
+          "id": "Cloud/getting-started"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/instances"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/members"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/custom-domains"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/access-control"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/grant-access"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/query-access"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/service-accounts"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/single-sign-on"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/pipelines"
+        },
+        {
+          "type": "category",
+          "label": "Connect your cloud",
+          "items": [
+            {
+              "type": "doc",
+              "id": "Cloud/Guides/google",
+              "label": "Google Cloud"
+            },
+            {
+              "type": "doc",
+              "id": "Cloud/Guides/aws",
+              "label": "AWS"
+            },
+            {
+              "type": "doc",
+              "id": "Cloud/Guides/azure",
+              "label": "Azure"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/secret-stores"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/plugin-registry"
+        },
+        {
+          "type": "doc",
+          "id": "Cloud/security"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Self-host",
+      "link": {
+        "type": "doc",
+        "id": "Deploy/index"
+      },
+      "items": [
+        {
+          "type": "category",
+          "label": "Install",
+          "collapsed": false,
+          "items": [
+            {
+              "type": "doc",
+              "id": "Deploy/Docker-Compose",
+              "label": "Docker Compose"
+            },
+            {
+              "type": "doc",
+              "id": "Deploy/Docker",
+              "label": "Docker"
+            },
+            {
+              "type": "doc",
+              "id": "Deploy/Helm",
+              "label": "Helm and Kubernetes"
+            },
+            {
+              "type": "doc",
+              "id": "Deploy/CLI",
+              "label": "Binary"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "Deploy/upgrade-0.13",
+          "label": "Upgrade to 0.13"
+        },
+        {
+          "type": "category",
+          "label": "Configure",
+          "items": [
+            {
+              "type": "doc",
+              "id": "Configure/index",
+              "label": "Configuration reference"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/tls",
+              "label": "TLS"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/elasticsearch",
+              "label": "Search backend"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/banner",
+              "label": "Banner"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/plugin-updates",
+              "label": "Plugin updates"
+            },
+            {
+              "type": "doc",
+              "id": "metrics",
+              "label": "Monitoring and metrics"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/telemetry",
+              "label": "Telemetry"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Populate the catalog",
+      "link": {
+        "type": "doc",
+        "id": "Populating/index"
+      },
+      "items": [
+        {
+          "type": "doc",
+          "id": "Populating/Pipelines",
+          "label": "Pipelines"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/UI",
+          "label": "From the UI"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/CLI",
+          "label": "From the CLI"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/Terraform",
+          "label": "Terraform"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/Pulumi",
+          "label": "Pulumi"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/Operator",
+          "label": "Kubernetes operator"
+        },
+        {
+          "type": "doc",
+          "id": "open-lineage",
+          "label": "OpenLineage"
+        },
+        {
+          "type": "doc",
+          "id": "Populating/API",
+          "label": "API"
+        },
+        {
+          "type": "doc",
+          "id": "Configure/serving-plugins",
+          "label": "Serve queries from your network"
+        },
+        {
+          "type": "doc",
+          "id": "Plugins/index",
+          "label": "Plugins"
+        },
+        {
+          "type": "category",
+          "label": "MRNs",
+          "link": {
+            "type": "doc",
+            "id": "MRNs/index"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "MRNs/zones",
+              "label": "Zones"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Use the catalog",
+      "items": [
+        {
+          "type": "doc",
+          "id": "queries",
+          "label": "Search and the query language"
+        },
+        {
+          "type": "doc",
+          "id": "lineage",
+          "label": "Lineage"
+        },
+        {
+          "type": "category",
+          "label": "Query data",
+          "link": {
+            "type": "doc",
+            "id": "data-queries"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "query-data",
+              "label": "Query your data"
+            },
+            {
+              "type": "doc",
+              "id": "query-audit",
+              "label": "Query audit"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "glossary",
+          "label": "Glossary"
+        },
+        {
+          "type": "doc",
+          "id": "data-products",
+          "label": "Data products"
+        },
+        {
+          "type": "doc",
+          "id": "asset-rules",
+          "label": "Asset rules"
+        },
+        {
+          "type": "category",
+          "label": "Notifications",
+          "link": {
+            "type": "doc",
+            "id": "Notifications/index"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "Notifications/webhooks",
+              "label": "Webhooks"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Agents and MCP",
+      "link": {
+        "type": "doc",
+        "id": "Agents/index"
+      },
+      "items": [
+        {
+          "type": "doc",
+          "id": "MCP/index",
+          "label": "MCP server"
+        },
+        {
+          "type": "doc",
+          "id": "MCP/skills",
+          "label": "Skills"
+        },
+        {
+          "type": "doc",
+          "id": "Agents/langchain",
+          "label": "LangChain"
+        },
+        {
+          "type": "doc",
+          "id": "Agents/claude-agent",
+          "label": "Claude Agent SDK"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Users and access",
+      "items": [
+        {
+          "type": "doc",
+          "id": "Configure/access-control",
+          "label": "Access control"
+        },
+        {
+          "type": "category",
+          "label": "Single sign-on",
+          "link": {
+            "type": "doc",
+            "id": "Configure/Authentication/index"
+          },
+          "items": [
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/auth0-oidc",
+              "label": "Auth0"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/generic-oidc",
+              "label": "Generic OIDC"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/github-oauth",
+              "label": "GitHub"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/gitlab-oidc",
+              "label": "GitLab"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/google-oidc",
+              "label": "Google"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/keycloak-oidc",
+              "label": "Keycloak"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/okta-oidc",
+              "label": "Okta"
+            },
+            {
+              "type": "doc",
+              "id": "Configure/Authentication/slack-oidc",
+              "label": "Slack"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "Configure/anonymous-access",
+          "label": "Anonymous access"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Build on Marmot",
+      "items": [
+        {
+          "type": "doc",
+          "id": "SDK/index",
+          "label": "SDK"
+        },
+        {
+          "type": "doc",
+          "id": "Develop/creating-plugins",
+          "label": "Build a plugin"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Contribute",
+      "items": [
+        {
+          "type": "doc",
+          "id": "Develop/local-development",
+          "label": "Local development"
+        },
+        {
+          "type": "doc",
+          "id": "Develop/translations",
+          "label": "Translations"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Reference",
+      "items": [
+        {
+          "type": "doc",
+          "id": "cli",
+          "label": "CLI"
+        },
+        {
+          "type": "doc",
+          "id": "api-reference",
+          "label": "API"
+        }
+      ]
+    }
+  ]
+}
