@@ -77,3 +77,9 @@ logs/
 /.idea
 
 go.work.sum
+
+# Plugin binaries from `go build` in a plugin directory
+/plugins/*/*
+!/plugins/*/*.*
+!/plugins/*/*/
+!/plugins/*/Makefile
