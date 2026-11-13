@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a
 	github.com/pb33f/go-yaml v0.1.1
-	github.com/pb33f/libopenapi v0.41.8
+	github.com/pb33f/libopenapi v0.42.3
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 )
