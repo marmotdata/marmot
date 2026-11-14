@@ -204,8 +204,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(@sveltejs/kit@2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))
       '@sveltejs/adapter-static':
-        specifier: ^3.0.10
-        version: 3.0.10(@sveltejs/kit@2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))
+        specifier: ^3.0.11
+        version: 3.0.11(@sveltejs/kit@2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))
       '@sveltejs/kit':
         specifier: ^2.69.1
         version: 2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0))
@@ -1087,8 +1087,8 @@ packages:
     peerDependencies:
       '@sveltejs/kit': ^2.0.0
 
-  '@sveltejs/adapter-static@3.0.10':
-    resolution: {integrity: sha512-7D9lYFWJmB7zxZyTE/qxjksvMqzMuYrrsyh1f4AlZqeZeACPRySjbC3aFiY55wb1tWUaKOQG9PVbm74JcN2Iew==}
+  '@sveltejs/adapter-static@3.0.11':
+    resolution: {integrity: sha512-DyX1bWx9uiPxzq7Mr+jnxqY+w3UhE3pYy5D1LcfdS++2KZTHSZBD60BoP44LjVgtGILfeOQCF8ESqzmLVrz4Ng==}
     peerDependencies:
       '@sveltejs/kit': ^2.0.0
 
@@ -3745,7 +3745,7 @@ snapshots:
     dependencies:
       '@sveltejs/kit': 2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0))
 
-  '@sveltejs/adapter-static@3.0.10(@sveltejs/kit@2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))':
+  '@sveltejs/adapter-static@3.0.11(@sveltejs/kit@2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))':
     dependencies:
       '@sveltejs/kit': 2.69.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0)))(svelte@5.57.2(@typescript-eslint/types@8.71.2))(typescript@5.8.3)(vite@6.4.5(@types/node@26.1.1)(jiti@1.21.7)(yaml@2.9.0))
 
