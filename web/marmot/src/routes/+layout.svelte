@@ -137,6 +137,7 @@
 		| 'home'
 		| 'discover'
 		| 'glossary'
+		| 'knowledge'
 		| 'products'
 		| 'query'
 		| 'insights'
@@ -158,6 +159,8 @@
 				return 'discover';
 			case 'glossary':
 				return 'glossary';
+			case 'knowledge':
+				return 'knowledge';
 			case 'products':
 				return 'products';
 			case 'query':
@@ -194,6 +197,7 @@
 		home: m.nav_home,
 		discover: m.nav_discover,
 		glossary: m.nav_glossary,
+		knowledge: m.nav_knowledge,
 		products: m.nav_data_products,
 		query: m.nav_query,
 		insights: m.nav_insights,
@@ -248,6 +252,13 @@
 				icon: 'menu-book',
 				href: '/glossary',
 				keywords: ['terms', 'definitions']
+			},
+			{
+				id: 'knowledge',
+				label: m.nav_knowledge(),
+				icon: 'article',
+				href: '/knowledge',
+				keywords: ['policy', 'decision', 'runbook', 'brand', 'style', 'design']
 			},
 			{ id: 'products', label: m.nav_data_products(), icon: 'package-2', href: '/products' }
 		];
@@ -440,6 +451,9 @@
 						href={resolve('/glossary/[[id]]', {})}
 						icon="menu-book"
 						current={current === 'glossary'}>{m.nav_glossary()}</mm-nav-item
+					>
+					<mm-nav-item href={resolve('/knowledge')} icon="article" current={current === 'knowledge'}
+						>{m.nav_knowledge()}</mm-nav-item
 					>
 					<mm-nav-item href={resolve('/products')} icon="package-2" current={current === 'products'}
 						>{m.nav_data_products()}</mm-nav-item
