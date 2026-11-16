@@ -5141,6 +5141,340 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/knowledge/applies-to/{asset_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "List entries that apply to an asset",
+                "operationId": "getKnowledgeAppliesTo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeEntriesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/counts": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "Count knowledge entries",
+                "operationId": "getKnowledgeCounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeCounts"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/entries": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "List knowledge entries",
+                "operationId": "getKnowledgeEntries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated kind keys, such as policy,decision",
+                        "name": "kind",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated statuses, such as in_force,accepted",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Text to find in the title, summary, fields or pages",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only entries whose review date has passed",
+                        "name": "review_due",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Only entries owned by the caller or a team they are in",
+                        "name": "mine",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "updated (default), name or review",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 25,
+                        "description": "Entries per page, at most 100",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Entries to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeEntriesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/entries/{asset_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "Get a knowledge entry",
+                "operationId": "getKnowledgeEntry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the entry",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeEntry"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "Save a knowledge entry",
+                "operationId": "putKnowledgeEntry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the entry",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The entry",
+                        "name": "entry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeSaveInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/entries/{asset_id}/reviewed": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "Mark a knowledge entry reviewed",
+                "operationId": "postKnowledgeEntryReviewed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the entry",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The next review date",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeReviewedRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/kinds": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "List knowledge kinds",
+                "operationId": "getKnowledgeKinds",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeKindsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/lineage": {
             "post": {
                 "security": [
@@ -16009,6 +16343,351 @@ const docTemplate = `{
                 }
             }
         },
+        "KnowledgeAssetRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeCounts": {
+            "type": "object",
+            "properties": {
+                "by_kind": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "by_state": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "review_due": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "unset": {
+                    "description": "Unset counts entries nobody has given a status yet.",
+                    "type": "integer"
+                }
+            }
+        },
+        "KnowledgeEntriesResponse": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeSummary"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "KnowledgeEntry": {
+            "type": "object",
+            "properties": {
+                "applies_to": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeAssetRef"
+                    }
+                },
+                "asset_id": {
+                    "type": "string"
+                },
+                "effective_from": {
+                    "description": "EffectiveFrom and ReviewBy are dates written as YYYY-MM-DD.",
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "last_reviewed_at": {
+                    "type": "string"
+                },
+                "last_reviewed_by": {
+                    "type": "string"
+                },
+                "review_by": {
+                    "type": "string"
+                },
+                "review_due": {
+                    "type": "boolean"
+                },
+                "state": {
+                    "description": "State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/knowledge.State"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "Status is one of the kind's statuses, or empty for an entry nobody has set one on.",
+                    "type": "string"
+                },
+                "superseded_by": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeAssetRef"
+                    }
+                },
+                "supersedes": {
+                    "description": "Supersedes is the entry this one replaces, and SupersededBy the newer entries that replace this one.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/KnowledgeAssetRef"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeField": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeField"
+                    }
+                },
+                "help": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "max_rows": {
+                    "description": "MaxRows caps a table field below the general limit.",
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeOption"
+                    }
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "required_when": {
+                    "description": "RequiredWhen lists statuses in which the field becomes required, such as a decision's date once it is accepted.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "$ref": "#/definitions/knowledge.FieldType"
+                }
+            }
+        },
+        "KnowledgeKind": {
+            "type": "object",
+            "properties": {
+                "default_status": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeField"
+                    }
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeStatus"
+                    }
+                },
+                "template": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeKindsResponse": {
+            "type": "object",
+            "properties": {
+                "kinds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeKind"
+                    }
+                }
+            }
+        },
+        "KnowledgeOption": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeOwner": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeReviewedRequest": {
+            "type": "object",
+            "properties": {
+                "review_by": {
+                    "description": "ReviewBy is the next review date, as YYYY-MM-DD. Leave it out to keep the current one.",
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeSaveInput": {
+            "type": "object",
+            "properties": {
+                "applies_to": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "effective_from": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "review_by": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "supersedes": {
+                    "description": "Supersedes is the asset ID of the entry this one replaces. It must be the same kind, and is marked superseded once this entry is current.",
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeStatus": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/knowledge.State"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeSummary": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "effective_from": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeOwner"
+                    }
+                },
+                "review_by": {
+                    "type": "string"
+                },
+                "review_due": {
+                    "type": "boolean"
+                },
+                "state": {
+                    "$ref": "#/definitions/knowledge.State"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "LineageEdge": {
             "type": "object",
             "properties": {
@@ -19955,6 +20634,40 @@ const docTemplate = `{
                     "type": "number"
                 }
             }
+        },
+        "knowledge.FieldType": {
+            "type": "string",
+            "enum": [
+                "text",
+                "long_text",
+                "date",
+                "select",
+                "url",
+                "list",
+                "table"
+            ],
+            "x-enum-varnames": [
+                "FieldText",
+                "FieldLongText",
+                "FieldDate",
+                "FieldSelect",
+                "FieldURL",
+                "FieldList",
+                "FieldTable"
+            ]
+        },
+        "knowledge.State": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "current",
+                "historical"
+            ],
+            "x-enum-varnames": [
+                "StatePending",
+                "StateCurrent",
+                "StateHistorical"
+            ]
         },
         "pluginsdk.AssetField": {
             "type": "object",

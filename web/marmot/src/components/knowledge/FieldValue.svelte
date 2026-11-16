@@ -1,0 +1,81 @@
+<script lang="ts">
+	import { formatDate } from '#lib/utils/format.ts';
+	import type { KnowledgeField } from '#lib/knowledge/kinds.ts';
+	import type { FieldRow, FieldValue } from '#lib/knowledge/api.ts';
+
+	// One typed field's value, read-only. Select values show their label, links open in a new tab and tables keep their columns.
+	let { field, value }: { field: KnowledgeField; value: FieldValue | undefined } = $props();
+
+	function label(f: KnowledgeField, v: string): string {
+		if (f.type === 'select') return f.options?.find((o) => o.value === v)?.label ?? v;
+		if (f.type === 'date') return formatDate(v);
+		return v;
+	}
+
+	let rows = $derived(
+		Array.isArray(value)
+			? (value as unknown[]).filter((r): r is FieldRow => typeof r === 'object' && r !== null)
+			: []
+	);
+	let items = $derived(
+		Array.isArray(value)
+			? (value as unknown[]).filter((v): v is string => typeof v === 'string')
+			: []
+	);
+	let columns = $derived(field.columns ?? []);
+</script>
+
+{#snippet cell(c: KnowledgeField, v: string | undefined)}
+	{#if !v}
+		<mm-text tone="secondary">—</mm-text>
+	{:else if c.type === 'url'}
+		<mm-link href={v} external>{v.replace(/^https?:\/\//, '')}</mm-link>
+	{:else if c.type === 'long_text'}
+		<span class="prose">{v}</span>
+	{:else}
+		{label(c, v)}
+	{/if}
+{/snippet}
+
+{#if field.type === 'table'}
+	<div class="mm-table-wrap">
+		<table class="mm-table mm-table--compact">
+			<thead>
+				<tr>
+					{#each columns as c (c.key)}
+						<th scope="col">{c.label}</th>
+					{/each}
+				</tr>
+			</thead>
+			<tbody>
+				{#each rows as r, i (i)}
+					<tr>
+						{#each columns as c (c.key)}
+							<td>{@render cell(c, r[c.key])}</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+{:else if field.type === 'list'}
+	<div class="mm-cluster" style="--mm-gap: var(--space-1)">
+		{#each items as item, i (i)}
+			<mm-tag>{item}</mm-tag>
+		{/each}
+	</div>
+{:else if typeof value === 'string'}
+	{#if field.type === 'url'}
+		<mm-link href={value} external>{value.replace(/^https?:\/\//, '')}</mm-link>
+	{:else if field.type === 'long_text'}
+		<span class="prose">{value}</span>
+	{:else}
+		{label(field, value)}
+	{/if}
+{/if}
+
+<style>
+	.prose {
+		white-space: pre-line;
+	}
+</style>

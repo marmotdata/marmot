@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/docs"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/glossary"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ingestion"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/knowledge"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/lineage"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/mcp"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/metrics"
@@ -86,6 +87,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot
 	cli.Docs = docs.New(transport, formats)
 	cli.Glossary = glossary.New(transport, formats)
 	cli.Ingestion = ingestion.New(transport, formats)
+	cli.Knowledge = knowledge.New(transport, formats)
 	cli.Lineage = lineage.New(transport, formats)
 	cli.Mcp = mcp.New(transport, formats)
 	cli.Metrics = metrics.New(transport, formats)
@@ -178,6 +180,8 @@ type Marmot struct {
 
 	Ingestion ingestion.ClientService
 
+	Knowledge knowledge.ClientService
+
 	Lineage lineage.ClientService
 
 	Mcp mcp.ClientService
@@ -226,6 +230,7 @@ func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.Docs.SetTransport(transport)
 	c.Glossary.SetTransport(transport)
 	c.Ingestion.SetTransport(transport)
+	c.Knowledge.SetTransport(transport)
 	c.Lineage.SetTransport(transport)
 	c.Mcp.SetTransport(transport)
 	c.Metrics.SetTransport(transport)

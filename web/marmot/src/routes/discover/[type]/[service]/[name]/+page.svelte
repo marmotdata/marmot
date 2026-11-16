@@ -15,7 +15,7 @@
 		providerSegment
 	} from '#lib/mrn.ts';
 	import DocumentationSystem from '#components/docs/DocumentationSystem.svelte';
-	import { knowledgeKindOf } from '#lib/knowledge/kinds.ts';
+	import { kindOfType, knowledgeKinds, loadKinds } from '#lib/knowledge/kinds.ts';
 	import AssetMetadata from '#components/asset/AssetMetadata.svelte';
 	import Lineage from '#components/lineage/Lineage.svelte';
 	import AssetContents from '#components/asset/AssetContents.svelte';
@@ -89,8 +89,16 @@
 	let assetName = $derived(page.params.name ?? '');
 
 	let isAgent = $derived((asset?.type || '').toLowerCase() === 'agent');
-	// A knowledge entry is read as a document, so it opens on its pages and has no schema to show.
-	let isKnowledge = $derived(!!knowledgeKindOf(asset?.type));
+	// A knowledge entry has its own page under Knowledge, so the catalog view only shows when asked for with ?view=asset.
+	let isKnowledge = $derived(!!kindOfType(asset?.type, $knowledgeKinds));
+	$effect(() => {
+		loadKinds().catch(() => {});
+	});
+	$effect(() => {
+		if (isKnowledge && asset?.id && page.url.searchParams.get('view') !== 'asset') {
+			goto(resolve('/knowledge/[id]', { id: asset.id }), { replace: true });
+		}
+	});
 	let isTable = $derived(
 		['table', 'view', 'dataset'].some((k) => (asset?.type || '').toLowerCase().includes(k))
 	);

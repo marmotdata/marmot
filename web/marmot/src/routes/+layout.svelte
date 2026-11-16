@@ -24,6 +24,7 @@
 	import PluginAdvisoryBanner from '#lib/components/PluginAdvisoryBanner.svelte';
 	import { advisoryBanner } from '#lib/plugins/advisoryBanner.svelte.ts';
 	import ToastContainer from '#components/ui/ToastContainer.svelte';
+	import { kindOfType, knowledgeKinds, loadKinds } from '#lib/knowledge/kinds.ts';
 	import type {
 		MmCommandPalette,
 		PaletteCommand,
@@ -149,11 +150,23 @@
 		| 'notifications'
 		| 'none';
 
+	// The kinds tell a knowledge entry's catalog page apart from any other asset's, so the sidebar can keep Knowledge selected there.
+	$effect(() => {
+		if ($auth) loadKinds().catch(() => {});
+	});
+
 	const current = $derived.by((): NavId => {
 		if (path === '/') return 'home';
 		const top = path.split('/')[1];
 		switch (top) {
 			case 'discover':
+				// Entries also have a catalog view under Discover; it still belongs to Knowledge.
+				return kindOfType(
+					decodeURIComponent(path.split('/')[2] ?? '').replace(/-/g, ' '),
+					$knowledgeKinds
+				)
+					? 'knowledge'
+					: 'discover';
 			case 'search':
 			case 'assets':
 				return 'discover';

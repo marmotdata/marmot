@@ -2067,6 +2067,238 @@ definitions:
       writing_at:
         type: string
     type: object
+  KnowledgeAssetRef:
+    properties:
+      id:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  KnowledgeCounts:
+    properties:
+      by_kind:
+        additionalProperties:
+          type: integer
+        type: object
+      by_state:
+        additionalProperties:
+          type: integer
+        type: object
+      review_due:
+        type: integer
+      total:
+        type: integer
+      unset:
+        description: Unset counts entries nobody has given a status yet.
+        type: integer
+    type: object
+  KnowledgeEntriesResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/KnowledgeSummary'
+        type: array
+      total:
+        type: integer
+    type: object
+  KnowledgeEntry:
+    properties:
+      applies_to:
+        items:
+          $ref: '#/definitions/KnowledgeAssetRef'
+        type: array
+      asset_id:
+        type: string
+      effective_from:
+        description: EffectiveFrom and ReviewBy are dates written as YYYY-MM-DD.
+        type: string
+      fields:
+        additionalProperties: {}
+        type: object
+      kind:
+        type: string
+      last_reviewed_at:
+        type: string
+      last_reviewed_by:
+        type: string
+      review_by:
+        type: string
+      review_due:
+        type: boolean
+      state:
+        allOf:
+        - $ref: '#/definitions/knowledge.State'
+        description: 'State is what Status means today: pending, current or historical.
+          A current entry whose effective date is still ahead is pending.'
+      status:
+        description: Status is one of the kind's statuses, or empty for an entry nobody
+          has set one on.
+        type: string
+      superseded_by:
+        items:
+          $ref: '#/definitions/KnowledgeAssetRef'
+        type: array
+      supersedes:
+        allOf:
+        - $ref: '#/definitions/KnowledgeAssetRef'
+        description: Supersedes is the entry this one replaces, and SupersededBy the
+          newer entries that replace this one.
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+    type: object
+  KnowledgeField:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/KnowledgeField'
+        type: array
+      help:
+        type: string
+      key:
+        type: string
+      label:
+        type: string
+      max_rows:
+        description: MaxRows caps a table field below the general limit.
+        type: integer
+      options:
+        items:
+          $ref: '#/definitions/KnowledgeOption'
+        type: array
+      placeholder:
+        type: string
+      required:
+        type: boolean
+      required_when:
+        description: RequiredWhen lists statuses in which the field becomes required,
+          such as a decision's date once it is accepted.
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/knowledge.FieldType'
+    type: object
+  KnowledgeKind:
+    properties:
+      default_status:
+        type: string
+      description:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/KnowledgeField'
+        type: array
+      icon:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      statuses:
+        items:
+          $ref: '#/definitions/KnowledgeStatus'
+        type: array
+      template:
+        type: string
+      type:
+        type: string
+    type: object
+  KnowledgeKindsResponse:
+    properties:
+      kinds:
+        items:
+          $ref: '#/definitions/KnowledgeKind'
+        type: array
+    type: object
+  KnowledgeOption:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  KnowledgeOwner:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  KnowledgeReviewedRequest:
+    properties:
+      review_by:
+        description: ReviewBy is the next review date, as YYYY-MM-DD. Leave it out
+          to keep the current one.
+        type: string
+    type: object
+  KnowledgeSaveInput:
+    properties:
+      applies_to:
+        items:
+          type: string
+        type: array
+      effective_from:
+        type: string
+      fields:
+        additionalProperties: {}
+        type: object
+      review_by:
+        type: string
+      status:
+        type: string
+      supersedes:
+        description: Supersedes is the asset ID of the entry this one replaces. It
+          must be the same kind, and is marked superseded once this entry is current.
+        type: string
+    type: object
+  KnowledgeStatus:
+    properties:
+      label:
+        type: string
+      state:
+        $ref: '#/definitions/knowledge.State'
+      value:
+        type: string
+    type: object
+  KnowledgeSummary:
+    properties:
+      asset_id:
+        type: string
+      effective_from:
+        type: string
+      kind:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/KnowledgeOwner'
+        type: array
+      review_by:
+        type: string
+      review_due:
+        type: boolean
+      state:
+        $ref: '#/definitions/knowledge.State'
+      status:
+        type: string
+      summary:
+        type: string
+      updated_at:
+        type: string
+    type: object
   LineageEdge:
     properties:
       column_lineage:
@@ -4787,6 +5019,34 @@ definitions:
       used_percent:
         type: number
     type: object
+  knowledge.FieldType:
+    enum:
+    - text
+    - long_text
+    - date
+    - select
+    - url
+    - list
+    - table
+    type: string
+    x-enum-varnames:
+    - FieldText
+    - FieldLongText
+    - FieldDate
+    - FieldSelect
+    - FieldURL
+    - FieldList
+    - FieldTable
+  knowledge.State:
+    enum:
+    - pending
+    - current
+    - historical
+    type: string
+    x-enum-varnames:
+    - StatePending
+    - StateCurrent
+    - StateHistorical
   pluginsdk.AssetField:
     properties:
       description:
@@ -8290,6 +8550,210 @@ paths:
       summary: Accept an invitation
       tags:
       - users
+  /api/v1/knowledge/applies-to/{asset_id}:
+    get:
+      operationId: getKnowledgeAppliesTo
+      parameters:
+      - description: Asset ID
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeEntriesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List entries that apply to an asset
+      tags:
+      - knowledge
+  /api/v1/knowledge/counts:
+    get:
+      operationId: getKnowledgeCounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeCounts'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Count knowledge entries
+      tags:
+      - knowledge
+  /api/v1/knowledge/entries:
+    get:
+      operationId: getKnowledgeEntries
+      parameters:
+      - description: Comma-separated kind keys, such as policy,decision
+        in: query
+        name: kind
+        type: string
+      - description: Comma-separated statuses, such as in_force,accepted
+        in: query
+        name: status
+        type: string
+      - description: Text to find in the title, summary, fields or pages
+        in: query
+        name: q
+        type: string
+      - description: Only entries whose review date has passed
+        in: query
+        name: review_due
+        type: boolean
+      - description: Only entries owned by the caller or a team they are in
+        in: query
+        name: mine
+        type: boolean
+      - description: updated (default), name or review
+        in: query
+        name: sort
+        type: string
+      - default: 25
+        description: Entries per page, at most 100
+        in: query
+        name: limit
+        type: integer
+      - description: Entries to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeEntriesResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List knowledge entries
+      tags:
+      - knowledge
+  /api/v1/knowledge/entries/{asset_id}:
+    get:
+      operationId: getKnowledgeEntry
+      parameters:
+      - description: Asset ID of the entry
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeEntry'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a knowledge entry
+      tags:
+      - knowledge
+    put:
+      consumes:
+      - application/json
+      operationId: putKnowledgeEntry
+      parameters:
+      - description: Asset ID of the entry
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: The entry
+        in: body
+        name: entry
+        required: true
+        schema:
+          $ref: '#/definitions/KnowledgeSaveInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Save a knowledge entry
+      tags:
+      - knowledge
+  /api/v1/knowledge/entries/{asset_id}/reviewed:
+    post:
+      consumes:
+      - application/json
+      operationId: postKnowledgeEntryReviewed
+      parameters:
+      - description: Asset ID of the entry
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: The next review date
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/KnowledgeReviewedRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Mark a knowledge entry reviewed
+      tags:
+      - knowledge
+  /api/v1/knowledge/kinds:
+    get:
+      operationId: getKnowledgeKinds
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeKindsResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List knowledge kinds
+      tags:
+      - knowledge
   /api/v1/lineage:
     post:
       consumes:
