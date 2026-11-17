@@ -51,5 +51,7 @@ func jobRunToMap(run *runs.JobRun) map[string]interface{} {
 	data, _ := json.Marshal(run)
 	var payload map[string]interface{}
 	_ = json.Unmarshal(data, &payload)
+	// Every ingestion viewer receives these events, including those not allowed to see how a source is reached.
+	delete(payload, "config")
 	return payload
 }

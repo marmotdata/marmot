@@ -1370,16 +1370,8 @@ func (r *SchedulePostgresRepository) maskJobRunConfig(run *JobRun) {
 	if len(run.Config) == 0 {
 		return
 	}
-
 	// SourceName holds the plugin id for job runs.
-	entry, err := plugin.GetRegistry().Get(run.SourceName)
-	if err != nil {
-		run.Config = nil
-		return
-	}
-
-	// Mask sensitive fields using the ConfigSpec
-	run.Config = plugin.MaskSensitiveFieldsFromSpec(plugin.RawPluginConfig(run.Config), entry.Meta.ConfigSpec)
+	run.Config = plugin.MaskConfigForPlugin(run.SourceName, run.Config)
 }
 
 // LinkAssetsByMRN links assets (identified by MRN) to a schedule.

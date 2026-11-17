@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
@@ -92,7 +94,13 @@ func decryptedPassword(t *testing.T, repo *fakeScheduleRepo, enc *crypto.Encrypt
 }
 
 func doGet(h *Handler) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/ingestion/schedules/sched-1", nil)
+	return doGetAs(h, "ingestion:view", "ingestion:manage")
+}
+
+func doGetAs(h *Handler, perms ...string) *httptest.ResponseRecorder {
+	p := auth.NewServiceAccountPrincipal("sa-1", "reader", nil, perms)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/ingestion/schedules/sched-1", nil).
+		WithContext(context.WithValue(context.Background(), common.PrincipalContextKey, p))
 	req.SetPathValue("id", "sched-1")
 	rec := httptest.NewRecorder()
 	h.getSchedule(rec, req)
@@ -125,6 +133,21 @@ func TestGetSchedule_MasksSecrets(t *testing.T) {
 	assert.Equal(t, plugin.SensitiveMask, got.Config["password"])
 	assert.Equal(t, "db.internal", got.Config["host"])
 	assert.NotContains(t, rec.Body.String(), "hunter2")
+}
+
+// Host, account and database are what an attacker needs besides the password, so viewers who cannot manage ingestion only see the settings every plugin shares
+func TestGetSchedule_HidesConnectionSettingsFromViewers(t *testing.T) {
+	registerTestPlugin(t, "schedtest-a")
+	stored := storedSchedule("schedtest-a")
+	stored.Config["tags"] = []interface{}{"pg"}
+	h, _, _ := newTestHandler(t, stored)
+
+	rec := doGetAs(h, "ingestion:view")
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var got runs.Schedule
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&got))
+	assert.Equal(t, map[string]interface{}{"tags": []interface{}{"pg"}}, got.Config)
 }
 
 // An empty config here would be saved over the real one by the edit form, so the request has to fail until plugins have loaded

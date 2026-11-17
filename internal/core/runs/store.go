@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -97,6 +98,63 @@ func (r *PostgresRepository) GetByRunID(ctx context.Context, runID string) (*plu
 		SELECT id, pipeline_name, source_name, run_id, status, started_at,
 		       completed_at, error_message, config, summary, created_by, owner
 		FROM runs WHERE run_id = $1`, runID)
+}
+
+// MaskStoredSecrets masks the sensitive fields of run configs stored before secrets were masked on write, leaving runs whose plugin is not loaded as they are, and reports how many runs it changed
+func (r *PostgresRepository) MaskStoredSecrets(ctx context.Context) (int, error) {
+	const pageSize = 500
+	type storedRun struct {
+		id, source string
+		config     []byte
+	}
+	changed := 0
+	after := "00000000-0000-0000-0000-000000000000"
+	for {
+		rows, err := r.db.Query(ctx, `
+			SELECT id::text, source_name, config FROM runs
+			WHERE config IS NOT NULL AND id > $1::uuid
+			ORDER BY id LIMIT $2`, after, pageSize)
+		if err != nil {
+			return changed, fmt.Errorf("listing run configs: %w", err)
+		}
+		var page []storedRun
+		for rows.Next() {
+			var sr storedRun
+			if err := rows.Scan(&sr.id, &sr.source, &sr.config); err != nil {
+				rows.Close()
+				return changed, fmt.Errorf("scanning run config: %w", err)
+			}
+			page = append(page, sr)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return changed, fmt.Errorf("listing run configs: %w", err)
+		}
+
+		for _, sr := range page {
+			var config plugin.RawPluginConfig
+			if err := json.Unmarshal(sr.config, &config); err != nil || config == nil {
+				continue
+			}
+			masked := plugin.MaskConfigForPlugin(sr.source, config)
+			if masked == nil || reflect.DeepEqual(masked, config) {
+				continue
+			}
+			data, err := json.Marshal(masked)
+			if err != nil {
+				return changed, fmt.Errorf("marshaling run config: %w", err)
+			}
+			if _, err := r.db.Exec(ctx, `UPDATE runs SET config = $1 WHERE id = $2::uuid`, data, sr.id); err != nil {
+				return changed, fmt.Errorf("masking run %s: %w", sr.id, err)
+			}
+			changed++
+		}
+
+		if len(page) < pageSize {
+			return changed, nil
+		}
+		after = page[len(page)-1].id
+	}
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, run *plugin.Run) error {
@@ -422,6 +480,8 @@ func (r *PostgresRepository) scanRun(ctx context.Context, row pgx.Row) (*plugin.
 			log.Warn().Err(err).Msg("Failed to unmarshal run config")
 			run.Config = make(plugin.RawPluginConfig)
 		}
+		// Runs started before secrets were masked on write still hold them in plaintext.
+		run.Config = plugin.MaskConfigForPlugin(run.SourceName, run.Config)
 	}
 
 	if len(summaryJSON) > 0 {

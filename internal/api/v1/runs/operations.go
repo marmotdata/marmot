@@ -535,6 +535,11 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to list runs: %v", err))
 		return
 	}
+	if !common.CanManageIngestion(r) {
+		for _, run := range runs {
+			run.Config = plugin.SharedConfigFields(run.Config)
+		}
+	}
 
 	response := struct {
 		Runs      []*plugin.Run `json:"runs"`
@@ -578,6 +583,9 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 			common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to get run: %v", err))
 		}
 		return
+	}
+	if !common.CanManageIngestion(r) {
+		run.Config = plugin.SharedConfigFields(run.Config)
 	}
 
 	common.RespondJSON(w, http.StatusOK, run)

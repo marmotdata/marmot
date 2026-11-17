@@ -61,8 +61,8 @@ Someone with several roles gets every permission in them. Nothing subtracts, so 
 | `assets:manage` | Create, edit and delete assets. |
 | `assets:query` | Run read-only queries against catalogued data. |
 | `glossary:view` / `glossary:manage` | Read terms; create, edit and delete them. |
-| `ingestion:view` | See pipelines and their run history. |
-| `ingestion:manage` | Create, edit and delete pipelines. |
+| `ingestion:view` | See pipelines and their run history. A pipeline's own settings, such as its host and account, stay hidden: viewers see only its tags, filters and links. |
+| `ingestion:manage` | Create, edit and delete pipelines, and see how each one reaches its source. |
 | `ingestion:serve` | Serve queries from plugins that run outside Marmot. See [serving queries from your network](serving-plugins.md). |
 | `access:view` | See the query log in **Query audit**. |
 | `access:manage` | Choose which sources answer queries. |

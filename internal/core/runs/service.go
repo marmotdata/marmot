@@ -242,7 +242,7 @@ func (s *service) StartRunAs(ctx context.Context, pipelineName, sourceName, crea
 		RunID:        runID,
 		Status:       plugin.StatusRunning,
 		StartedAt:    now,
-		Config:       config,
+		Config:       plugin.MaskConfigForPlugin(sourceName, config),
 		CreatedBy:    createdBy,
 		Owner:        owner,
 	}

@@ -62,6 +62,16 @@ func MaskScheduleConfig(schedule *Schedule) {
 	schedule.Config = plugin.MaskSensitiveFieldsFromSpec(schedule.Config, entry.Meta.ConfigSpec)
 }
 
+// RedactScheduleConfig keeps only the settings every plugin shares, for callers who may view ingestion but not manage it
+func RedactScheduleConfig(schedule *Schedule) {
+	schedule.Config = plugin.SharedConfigFields(schedule.Config)
+}
+
+// RedactJobRunConfig keeps only the settings every plugin shares, for callers who may view ingestion but not manage it
+func RedactJobRunConfig(run *JobRun) {
+	run.Config = plugin.SharedConfigFields(run.Config)
+}
+
 // RestoreMaskedScheduleConfig fills sensitive fields left as plugin.SensitiveMask in an incoming config from the previous decrypted config
 func RestoreMaskedScheduleConfig(pluginID string, config, previous map[string]interface{}) error {
 	entry, err := plugin.GetRegistry().Get(pluginID)

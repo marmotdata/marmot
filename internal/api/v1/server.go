@@ -357,6 +357,11 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 				log.Error().Err(err).Msg("Failed to encrypt plaintext pipeline secrets")
 			}
 		}
+		if n, err := runRepo.MaskStoredSecrets(context.Background()); err != nil {
+			log.Error().Err(err).Msg("Failed to mask secrets stored in run configs")
+		} else if n > 0 {
+			log.Info().Int("runs", n).Msg("Masked secrets stored in run configs")
+		}
 		log.Info().Msg("Plugin loading complete")
 	}()
 
