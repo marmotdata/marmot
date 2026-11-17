@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/google/uuid"
@@ -86,4 +87,12 @@ func IsSyntheticUser(u *user.User) bool {
 func PrincipalFromContext(ctx context.Context) (auth.Principal, bool) {
 	p, ok := ctx.Value(PrincipalContextKey).(auth.Principal)
 	return p, ok
+}
+
+// CanManageIngestion reports whether the caller may manage ingestion. Only
+// those callers see a pipeline's own settings, such as the host and account it
+// connects with; viewers get the settings every plugin shares.
+func CanManageIngestion(r *http.Request) bool {
+	p, ok := PrincipalFromContext(r.Context())
+	return ok && p.HasPermission("ingestion", "manage")
 }

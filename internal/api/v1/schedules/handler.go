@@ -569,8 +569,12 @@ func (h *Handler) listSchedules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	manager := common.CanManageIngestion(r)
 	for _, schedule := range schedules {
 		runs.MaskScheduleConfig(schedule)
+		if !manager {
+			runs.RedactScheduleConfig(schedule)
+		}
 	}
 
 	common.RespondJSON(w, http.StatusOK, ListSchedulesResponse{
@@ -619,6 +623,9 @@ func (h *Handler) getSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runs.MaskScheduleConfig(schedule)
+	if !common.CanManageIngestion(r) {
+		runs.RedactScheduleConfig(schedule)
+	}
 
 	common.RespondJSON(w, http.StatusOK, schedule)
 }
@@ -927,15 +934,20 @@ func (h *Handler) listJobRuns(w http.ResponseWriter, r *http.Request) {
 		status = &s
 	}
 
-	runs, total, err := h.service.ListJobRuns(r.Context(), scheduleID, status, limit, offset)
+	jobRuns, total, err := h.service.ListJobRuns(r.Context(), scheduleID, status, limit, offset)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list job runs")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to list job runs")
 		return
 	}
+	if !common.CanManageIngestion(r) {
+		for _, run := range jobRuns {
+			runs.RedactJobRunConfig(run)
+		}
+	}
 
 	common.RespondJSON(w, http.StatusOK, ListJobRunsResponse{
-		Runs:   runs,
+		Runs:   jobRuns,
 		Total:  total,
 		Limit:  limit,
 		Offset: offset,
@@ -970,6 +982,9 @@ func (h *Handler) getJobRun(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msg("Failed to get job run")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to get job run")
 		return
+	}
+	if !common.CanManageIngestion(r) {
+		runs.RedactJobRunConfig(run)
 	}
 
 	common.RespondJSON(w, http.StatusOK, run)

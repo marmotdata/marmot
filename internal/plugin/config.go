@@ -122,6 +122,35 @@ func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []pluginsdk.
 	return result
 }
 
+// MaskConfigForPlugin masks the sensitive fields of a config for the plugin with this ID, returning nil when the plugin is not loaded, since without its spec there is no telling which fields are secret
+func MaskConfigForPlugin(pluginID string, config RawPluginConfig) RawPluginConfig {
+	if config == nil {
+		return nil
+	}
+	entry, err := GetRegistry().Get(pluginID)
+	if err != nil {
+		return nil
+	}
+	return MaskSensitiveFieldsFromSpec(config, entry.Meta.ConfigSpec)
+}
+
+// sharedConfigKeys are the pluginsdk.BaseConfig settings every plugin carries: they shape what is catalogued, not how the source is reached.
+var sharedConfigKeys = []string{"tags", "external_links", "filter"}
+
+// SharedConfigFields keeps only the settings every plugin shares, leaving out the plugin's own fields, such as hosts, ports, accounts and databases, that describe how to reach the source
+func SharedConfigFields(config RawPluginConfig) RawPluginConfig {
+	if config == nil {
+		return nil
+	}
+	result := make(RawPluginConfig)
+	for _, key := range sharedConfigKeys {
+		if value, ok := config[key]; ok {
+			result[key] = value
+		}
+	}
+	return result
+}
+
 // RestoreMaskedFieldsFromSpec swaps sensitive fields still holding SensitiveMask for their value in previous, so a config read back from the API can be saved without wiping its secrets; masked fields with no previous value are removed
 func RestoreMaskedFieldsFromSpec(config, previous map[string]interface{}, configSpec []pluginsdk.ConfigField) {
 	for _, path := range extractSensitiveFieldsFromSpec(configSpec, "") {
