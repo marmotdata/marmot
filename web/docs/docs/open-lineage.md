@@ -20,7 +20,9 @@ Marmot takes all three OpenLineage event types:
 - **JobEvent**: a job's lineage with no run behind it, such as a scheduler describing a pipeline it hasn't run yet. Marmot adds the job and its lineage and records no run.
 - **DatasetEvent**: metadata about one dataset. Marmot adds or updates that dataset only.
 
-Each input dataset is linked to the job, and the job to each output dataset. When an output carries column lineage, Marmot also adds a direct edge from each input dataset to the output with the column mappings and the job that moved the data, which is what the **Lineage** tab draws column by column.
+Each input dataset is linked to the job, and the job to each output dataset. When an output carries column lineage, Marmot also adds a direct edge from each input dataset to the output with the column mappings and the job that moved the data. The **Lineage** tab draws that edge, and traces its columns, when the job isn't on the canvas; while the job is, selecting the input or output lists the mappings.
+
+Lineage from OpenLineage accumulates: when a job stops reading a dataset, the edge from it stays until someone removes it on the **Lineage** tab.
 
 A dataset Marmot hasn't seen before is added as a stub, so lineage is complete without filling search with undocumented assets. When the system's own plugin catalogs the dataset, the stub becomes that plugin's asset, keeping its id, its lineage and anything people added, and shows up in search.
 
@@ -31,6 +33,7 @@ OpenLineage producers describe a run over several events, often with its inputs 
 - A run that sent COMPLETE succeeded, and one that sent FAIL or ABORT failed. A failure stays a failure even if the producer sends COMPLETE after it, as Spark does.
 - A run that has only sent START, RUNNING or OTHER is still running. Events can arrive in any order.
 - An event Marmot already holds is ignored, so a producer that retries doesn't record a run twice.
+- A failed run shows the message from its `errorMessage` facet, or from the `spark.exception` facet Spark sends instead.
 
 ## How datasets are named
 
