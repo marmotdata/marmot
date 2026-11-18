@@ -1,0 +1,180 @@
+{
+  "eventTime": "2026-11-18T22:23:50.72188Z",
+  "eventType": "START",
+  "inputs": [
+    {
+      "facets": {
+        "catalog": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/CatalogDatasetFacet.json",
+          "framework": "duckdb",
+          "metadataUri": "postgres://127.0.0.1:55433/shop",
+          "name": "pg",
+          "source": "duckdb",
+          "type": "postgres"
+        },
+        "dataSource": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasourceDatasetFacet.json",
+          "name": "postgres://127.0.0.1:55433/shop",
+          "uri": "postgres://127.0.0.1:55433/shop"
+        },
+        "datasetType": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasetTypeDatasetFacet.json",
+          "datasetType": "TABLE"
+        },
+        "schema": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "customer_id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "total",
+              "type": "DECIMAL(10,2)"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP WITH TIME ZONE"
+            }
+          ]
+        }
+      },
+      "name": "pg.public.orders",
+      "namespace": "duckdb"
+    }
+  ],
+  "job": {
+    "facets": {
+      "sql": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/job/sql/1-0-0.json",
+        "query": "CREATE TABLE main.orders AS SELECT * FROM pg.public.orders;"
+      }
+    },
+    "name": "CREATE_TABLE_orders_orders_80b43dc7",
+    "namespace": "duckdb"
+  },
+  "outputs": [
+    {
+      "facets": {
+        "catalog": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/CatalogDatasetFacet.json",
+          "framework": "duckdb",
+          "metadataUri": "file:///data/shopdb.duckdb",
+          "name": "shopdb",
+          "source": "duckdb",
+          "type": "native",
+          "warehouseUri": "file:///data/shopdb.duckdb"
+        },
+        "columnLineage": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ColumnLineageDatasetFacet.json",
+          "fields": {
+            "created_at": {
+              "inputFields": [
+                {
+                  "field": "created_at",
+                  "name": "pg.public.orders",
+                  "namespace": "duckdb"
+                }
+              ],
+              "transformationType": "DIRECT"
+            },
+            "customer_id": {
+              "inputFields": [
+                {
+                  "field": "customer_id",
+                  "name": "pg.public.orders",
+                  "namespace": "duckdb"
+                }
+              ],
+              "transformationType": "DIRECT"
+            },
+            "id": {
+              "inputFields": [
+                {
+                  "field": "id",
+                  "name": "pg.public.orders",
+                  "namespace": "duckdb"
+                }
+              ],
+              "transformationType": "DIRECT"
+            },
+            "total": {
+              "inputFields": [
+                {
+                  "field": "total",
+                  "name": "pg.public.orders",
+                  "namespace": "duckdb"
+                }
+              ],
+              "transformationType": "DIRECT"
+            }
+          }
+        },
+        "dataSource": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasourceDatasetFacet.json",
+          "name": "file:///data/shopdb.duckdb",
+          "uri": "file:///data/shopdb.duckdb"
+        },
+        "datasetType": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasetTypeDatasetFacet.json",
+          "datasetType": "TABLE"
+        },
+        "lifecycleStateChange": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/LifecycleStateChangeDatasetFacet.json",
+          "lifecycleStateChange": "CREATE"
+        },
+        "schema": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "customer_id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "total",
+              "type": "DECIMAL(10,2)"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP WITH TIME ZONE"
+            }
+          ]
+        }
+      },
+      "name": "shopdb.main.orders",
+      "namespace": "duckdb"
+    }
+  ],
+  "producer": "https://github.com/ilum-cloud/duck_lineage",
+  "run": {
+    "facets": {
+      "processing_engine": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ProcessingEngineRunFacet.json",
+        "name": "DuckDB",
+        "version": "v1.5.6"
+      }
+    },
+    "runId": "01a1f0c2-57c1-99c7-8740-8825b9a881bf"
+  },
+  "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+}

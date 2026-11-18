@@ -1,0 +1,142 @@
+{
+  "eventTime": "2026-11-18T22:23:50.728166Z",
+  "eventType": "START",
+  "inputs": [
+    {
+      "facets": {
+        "schema": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            {
+              "name": "id",
+              "type": "BIGINT"
+            },
+            {
+              "name": "region",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "label",
+              "type": "VARCHAR"
+            }
+          ]
+        }
+      },
+      "name": "regions.csv",
+      "namespace": "file"
+    }
+  ],
+  "job": {
+    "facets": {
+      "sql": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/job/sql/1-0-0.json",
+        "query": "CREATE TABLE main.regions AS SELECT * FROM read_csv('regions.csv');"
+      }
+    },
+    "name": "CREATE_TABLE_regions_bcdfbfd7",
+    "namespace": "duckdb"
+  },
+  "outputs": [
+    {
+      "facets": {
+        "catalog": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/CatalogDatasetFacet.json",
+          "framework": "duckdb",
+          "metadataUri": "file:///data/shopdb.duckdb",
+          "name": "shopdb",
+          "source": "duckdb",
+          "type": "native",
+          "warehouseUri": "file:///data/shopdb.duckdb"
+        },
+        "columnLineage": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ColumnLineageDatasetFacet.json",
+          "fields": {
+            "id": {
+              "inputFields": [
+                {
+                  "field": "id",
+                  "name": "regions.csv",
+                  "namespace": "file"
+                }
+              ],
+              "transformationType": "DIRECT"
+            },
+            "label": {
+              "inputFields": [
+                {
+                  "field": "label",
+                  "name": "regions.csv",
+                  "namespace": "file"
+                }
+              ],
+              "transformationType": "DIRECT"
+            },
+            "region": {
+              "inputFields": [
+                {
+                  "field": "region",
+                  "name": "regions.csv",
+                  "namespace": "file"
+                }
+              ],
+              "transformationType": "DIRECT"
+            }
+          }
+        },
+        "dataSource": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasourceDatasetFacet.json",
+          "name": "file:///data/shopdb.duckdb",
+          "uri": "file:///data/shopdb.duckdb"
+        },
+        "datasetType": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasetTypeDatasetFacet.json",
+          "datasetType": "TABLE"
+        },
+        "lifecycleStateChange": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/LifecycleStateChangeDatasetFacet.json",
+          "lifecycleStateChange": "CREATE"
+        },
+        "schema": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            {
+              "name": "id",
+              "type": "BIGINT"
+            },
+            {
+              "name": "region",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "label",
+              "type": "VARCHAR"
+            }
+          ]
+        }
+      },
+      "name": "shopdb.main.regions",
+      "namespace": "duckdb"
+    }
+  ],
+  "producer": "https://github.com/ilum-cloud/duck_lineage",
+  "run": {
+    "facets": {
+      "processing_engine": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ProcessingEngineRunFacet.json",
+        "name": "DuckDB",
+        "version": "v1.5.6"
+      }
+    },
+    "runId": "01a1f0c2-57c8-b197-8fb6-8c03c2bb9345"
+  },
+  "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+}

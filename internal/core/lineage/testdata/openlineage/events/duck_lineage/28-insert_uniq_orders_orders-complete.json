@@ -1,0 +1,87 @@
+{
+  "eventTime": "2026-11-18T22:24:19.808272Z",
+  "eventType": "COMPLETE",
+  "job": {
+    "facets": {
+      "sql": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/job/sql/1-0-0.json",
+        "query": "INSERT INTO main.uniq SELECT id FROM main.orders UNION ALL SELECT id FROM main.orders;"
+      }
+    },
+    "name": "INSERT_uniq_orders_orders_1da94a62",
+    "namespace": "duckdb"
+  },
+  "outputs": [
+    {
+      "facets": {
+        "catalog": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/CatalogDatasetFacet.json",
+          "framework": "duckdb",
+          "metadataUri": "file:///data/shopdb.duckdb",
+          "name": "shopdb",
+          "source": "duckdb",
+          "type": "native",
+          "warehouseUri": "file:///data/shopdb.duckdb"
+        },
+        "columnLineage": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ColumnLineageDatasetFacet.json",
+          "fields": {
+            "id": {
+              "inputFields": [
+                {
+                  "field": "id",
+                  "name": "shopdb.main.orders",
+                  "namespace": "duckdb"
+                }
+              ],
+              "transformationType": "DIRECT"
+            }
+          }
+        },
+        "dataSource": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasourceDatasetFacet.json",
+          "name": "file:///data/shopdb.duckdb",
+          "uri": "file:///data/shopdb.duckdb"
+        },
+        "datasetType": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/DatasetTypeDatasetFacet.json",
+          "datasetType": "TABLE"
+        },
+        "lifecycleStateChange": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/LifecycleStateChangeDatasetFacet.json",
+          "lifecycleStateChange": "OVERWRITE"
+        },
+        "schema": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SchemaDatasetFacet.json",
+          "fields": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            }
+          ]
+        }
+      },
+      "name": "shopdb.main.uniq",
+      "namespace": "duckdb",
+      "outputFacets": {
+        "outputStatistics": {
+          "_producer": "https://github.com/ilum-cloud/duck_lineage",
+          "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/OutputStatisticsOutputDatasetFacet.json",
+          "rowCount": 0
+        }
+      }
+    }
+  ],
+  "producer": "https://github.com/ilum-cloud/duck_lineage",
+  "run": {
+    "runId": "01a1f0c2-c95f-8017-825d-7dd3a8d979a7"
+  },
+  "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+}

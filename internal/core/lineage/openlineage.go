@@ -37,6 +37,7 @@ const (
 	AssetTypeBucket  = "Bucket"
 	AssetTypeDataset = "Dataset"
 	AssetTypeProject = "Project"
+	AssetTypeTest    = "Test"
 )
 
 const (
@@ -54,16 +55,41 @@ const (
 	ProviderOpenLineage = "OpenLineage"
 )
 
+// RunEvent is one OpenLineage event. Despite the name it carries all three event types the spec defines: a RunEvent has a run and a job, a JobEvent a job and no run, and a DatasetEvent only a dataset. Kind says which.
 type RunEvent struct {
-	EventType string    `json:"eventType"`
+	EventType string    `json:"eventType,omitempty"`
 	EventTime time.Time `json:"eventTime"`
 	Run       Run       `json:"run"`
 	Job       Job       `json:"job"`
 	Inputs    []Dataset `json:"inputs,omitempty"`
 	Outputs   []Dataset `json:"outputs,omitempty"`
-	Producer  string    `json:"producer,omitempty"`
-	SchemaURL string    `json:"schemaURL,omitempty"`
+	// Dataset is the dataset a DatasetEvent describes.
+	Dataset   *Dataset `json:"dataset,omitempty"`
+	Producer  string   `json:"producer,omitempty"`
+	SchemaURL string   `json:"schemaURL,omitempty"`
+
+	kind         EventKind
+	rawEventTime string
 } // @name RunEvent
+
+// UnmarshalJSON reads eventTime leniently, accepting a timestamp without an offset as UTC, and keeps the text so ParseEvent can say what was wrong with one it cannot read.
+func (e *RunEvent) UnmarshalJSON(b []byte) error {
+	type plain RunEvent
+	aux := struct {
+		*plain
+		EventTime *string `json:"eventTime"`
+	}{plain: (*plain)(e)}
+	if err := json.Unmarshal(b, &aux); err != nil {
+		return err
+	}
+	if aux.EventTime != nil {
+		e.rawEventTime = *aux.EventTime
+		if t, err := parseEventTime(*aux.EventTime); err == nil {
+			e.EventTime = t
+		}
+	}
+	return nil
+}
 
 type Run struct {
 	RunID  string                 `json:"runId"`
@@ -100,102 +126,378 @@ type RunHistoryEntry struct {
 	CreatedAt    time.Time              `json:"created_at"`
 }
 
+// ProcessOpenLineageEvent files one OpenLineage event: the job and the datasets it read and wrote become assets, linked by lineage, and a run event is recorded in the job's run history. A JobEvent files the job and its lineage with no run, and a DatasetEvent files only the dataset.
 func (s *service) ProcessOpenLineageEvent(ctx context.Context, event *RunEvent, createdBy string) error {
-	jobAssetMRN, err := s.processJobAsset(ctx, event, createdBy)
+	switch event.Kind() {
+	case KindDataset:
+		if _, err := s.processDatasetOutput(ctx, event.Dataset, event.Producer, createdBy, true); err != nil {
+			return fmt.Errorf("failed to process dataset: %w", err)
+		}
+		return nil
+	case KindJob:
+		job, err := s.upsertJob(ctx, event, createdBy)
+		if err != nil {
+			return fmt.Errorf("failed to process job asset: %w", err)
+		}
+		return s.processLineage(ctx, event, job, createdBy, false)
+	}
+
+	job, err := s.upsertJob(ctx, event, createdBy)
 	if err != nil {
 		return fmt.Errorf("failed to process job asset: %w", err)
 	}
-
-	provider := inferProvider(event.Producer)
-	jobAssetType := inferJobType(event, provider)
-
-	if err := s.processDatasets(ctx, event, jobAssetMRN, createdBy); err != nil {
-		return fmt.Errorf("failed to process datasets: %w", err)
+	// A dataset is only renamed or dropped once the statement that does it has finished.
+	if err := s.processLineage(ctx, event, job, createdBy, event.EventType == EventTypeComplete); err != nil {
+		return err
 	}
-
-	if err := s.createProjectModelLineage(ctx, event, jobAssetMRN, jobAssetType); err != nil {
+	if err := s.createProjectModelLineage(ctx, event, job); err != nil {
 		return fmt.Errorf("failed to create project lineage: %w", err)
 	}
-
-	if err := s.createDAGTaskLineage(ctx, event, jobAssetMRN, jobAssetType, provider, createdBy); err != nil {
+	if err := s.createDAGTaskLineage(ctx, event, job, createdBy); err != nil {
 		return fmt.Errorf("failed to create DAG-task lineage: %w", err)
 	}
-
-	jobAsset, err := s.assetSvc.GetByMRN(ctx, jobAssetMRN)
-	if err != nil {
-		return fmt.Errorf("failed to get job asset for run history: %w", err)
-	}
-
-	if err := s.storeRunHistory(ctx, event, jobAsset.ID); err != nil {
+	if err := s.storeRunHistory(ctx, event, job.assetID); err != nil {
 		return fmt.Errorf("failed to store run history: %w", err)
 	}
-
 	return nil
 }
 
-func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, jobAssetMRN string, jobAssetType string, provider string, createdBy string) error {
-	if provider != ProviderAirflow {
+// filedJob is a job asset an event was filed against.
+type filedJob struct {
+	jobIdentity
+	assetID string
+	mrn     string
+}
+
+// filedDataset is a dataset an event was filed against: the event's own description of it and the MRN of the asset it is.
+type filedDataset struct {
+	dataset *Dataset
+	mrn     string
+}
+
+// processLineage files the event's datasets and links them through the job: each input feeds the job and the job produces each output. Outputs with column lineage also get a direct edge from each input dataset carrying the column mappings.
+func (s *service) processLineage(ctx context.Context, event *RunEvent, job filedJob, createdBy string, final bool) error {
+	var inputs, outputs []filedDataset
+	for i := range event.Inputs {
+		in := &event.Inputs[i]
+		m, err := s.upsertDataset(ctx, in, event.Producer, createdBy)
+		if err != nil {
+			log.Error().Err(err).Str("dataset", in.Namespace+"/"+in.Name).Msg("Failed to process input dataset")
+			continue
+		}
+		inputs = append(inputs, filedDataset{dataset: in, mrn: m})
+	}
+	for i := range event.Outputs {
+		out := &event.Outputs[i]
+		m, err := s.processDatasetOutput(ctx, out, event.Producer, createdBy, final)
+		if err != nil {
+			log.Error().Err(err).Str("dataset", out.Namespace+"/"+out.Name).Msg("Failed to process output dataset")
+			continue
+		}
+		if m != "" {
+			outputs = append(outputs, filedDataset{dataset: out, mrn: m})
+		}
+	}
+
+	for _, in := range inputs {
+		if _, err := s.CreateDirectLineage(ctx, in.mrn, job.mrn, "CONSUMES", ""); err != nil {
+			log.Warn().Err(err).Str("input_mrn", in.mrn).Str("job_mrn", job.mrn).Msg("Failed to create input lineage")
+		}
+	}
+	for _, out := range outputs {
+		if _, err := s.CreateDirectLineage(ctx, job.mrn, out.mrn, "PRODUCES", ""); err != nil {
+			log.Warn().Err(err).Str("job_mrn", job.mrn).Str("output_mrn", out.mrn).Msg("Failed to create output lineage")
+		}
+	}
+	return s.createColumnLineage(ctx, event, job, inputs, outputs)
+}
+
+// upsertJob files the job an event describes, creating it the first time and adding what this event says to it after that.
+func (s *service) upsertJob(ctx context.Context, event *RunEvent, createdBy string) (filedJob, error) {
+	id := identifyJob(event)
+	target, err := s.assetSvc.ResolveMRN(ctx, id.MRN)
+	if err != nil || target == "" {
+		target = id.MRN
+	}
+	s.adoptLegacy(ctx, id.Legacy, target)
+
+	fields := jobFields(event, id)
+	source := asset.AssetSource{Name: "OpenLineage", LastSyncAt: event.EventTime, Properties: runSourceProperties(event), Priority: 1}
+	existing, err := s.findAsset(ctx, target)
+	if err != nil {
+		return filedJob{}, err
+	}
+	if existing == nil {
+		created, err := s.assetSvc.Create(ctx, asset.CreateInput{
+			Name:          fields.Name,
+			MRN:           &target,
+			Type:          fields.Type,
+			Providers:     fields.Providers,
+			Description:   fields.Description,
+			Metadata:      fields.Metadata,
+			Tags:          fields.Tags,
+			Query:         fields.Query,
+			QueryLanguage: fields.QueryLanguage,
+			CreatedBy:     createdBy,
+			Writer:        openLineageWriter,
+			Role:          asset.RoleNative,
+			Sources:       []asset.AssetSource{source},
+		})
+		var exists *asset.ExistsError
+		switch {
+		case err == nil:
+			return filedJob{jobIdentity: id, assetID: created.ID, mrn: *created.MRN}, nil
+		case errors.As(err, &exists) && exists.Asset != nil:
+			existing = exists.Asset
+		default:
+			return filedJob{}, fmt.Errorf("failed to create job asset: %w", err)
+		}
+	}
+	s.contribute(ctx, existing, asset.RoleNative, fields, source)
+	return filedJob{jobIdentity: id, assetID: existing.ID, mrn: *existing.MRN}, nil
+}
+
+// upsertDataset files a dataset an event mentions as a stub the first time, so lineage is complete without filling the catalog with undocumented assets, and adds what the event says to it after that. A dataset the system's own plugin already catalogued is that asset, and what OpenLineage says ranks below what the plugin says.
+func (s *service) upsertDataset(ctx context.Context, ds *Dataset, producer, createdBy string) (string, error) {
+	id := identifyDataset(ds, producer)
+	target, err := s.assetSvc.ResolveMRN(ctx, id.MRN)
+	if err != nil || target == "" {
+		target = id.MRN
+	}
+	s.adoptLegacy(ctx, id.Legacy, target)
+	target, aliases := s.adoptSymlinks(ctx, ds, producer, target)
+
+	fields := datasetFields(ds, id)
+	source := datasetSource(ds, id)
+	existing, err := s.findAsset(ctx, target)
+	if err != nil {
+		return "", err
+	}
+	if existing == nil {
+		created, err := s.assetSvc.Create(ctx, asset.CreateInput{
+			Name:          fields.Name,
+			MRN:           &target,
+			Type:          fields.Type,
+			Providers:     fields.Providers,
+			Description:   fields.Description,
+			Metadata:      fields.Metadata,
+			Schema:        fields.Schema,
+			Tags:          fields.Tags,
+			Query:         fields.Query,
+			QueryLanguage: fields.QueryLanguage,
+			CreatedBy:     createdBy,
+			IsStub:        true,
+			Writer:        openLineageWriter,
+			Role:          asset.RoleReference,
+			Sources:       []asset.AssetSource{source},
+		})
+		var exists *asset.ExistsError
+		switch {
+		case err == nil:
+			s.addAliases(ctx, created.ID, aliases)
+			return *created.MRN, nil
+		case errors.As(err, &exists) && exists.Asset != nil:
+			existing = exists.Asset
+		default:
+			return "", fmt.Errorf("failed to create dataset asset: %w", err)
+		}
+	}
+	s.contribute(ctx, existing, asset.RoleReference, fields, source)
+	s.addAliases(ctx, existing.ID, aliases)
+	return *existing.MRN, nil
+}
+
+// datasetSource is the OpenLineage source recorded on a dataset asset.
+func datasetSource(ds *Dataset, id datasetIdentity) asset.AssetSource {
+	return asset.AssetSource{
+		Name:       "OpenLineage",
+		LastSyncAt: time.Now(),
+		Properties: map[string]interface{}{"namespace": ds.Namespace, "name": ds.Name, "provider": id.Provider, "asset_type": id.Type},
+		Priority:   1,
+	}
+}
+
+// findAsset looks an asset up by its current MRN, stubs included, returning nil when there is none.
+func (s *service) findAsset(ctx context.Context, m string) (*asset.Asset, error) {
+	c, err := asset.CanonicalMRN(m)
+	if err != nil {
+		return nil, nil
+	}
+	found, err := s.assetSvc.GetByExactMRNs(ctx, []string{c})
+	if err != nil {
+		return nil, fmt.Errorf("looking up %s: %w", m, err)
+	}
+	return found[c], nil
+}
+
+// contribute adds what an event says to an asset, on top of what earlier events said, and records OpenLineage as one of its sources. It logs rather than fails, so one asset that cannot be updated does not lose the rest of the event.
+func (s *service) contribute(ctx context.Context, a *asset.Asset, role string, fields asset.ContributionFields, source asset.AssetSource) {
+	var prev *asset.ContributionFields
+	if contribs, err := s.assetSvc.Contributions(ctx, a.ID); err == nil {
+		for i := range contribs {
+			if contribs[i].Writer == openLineageWriter {
+				prev = &contribs[i].Fields
+				break
+			}
+		}
+	}
+	if _, err := s.assetSvc.Contribute(ctx, a.ID, openLineageWriter, role, mergeContribution(prev, fields), true); err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to update asset from OpenLineage event")
+	}
+	if _, err := s.assetSvc.Update(ctx, a.ID, asset.UpdateInput{Sources: []asset.AssetSource{source}, SkipNotification: true}); err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to record OpenLineage as a source of the asset")
+	}
+}
+
+// ownedByOpenLineage reports whether OpenLineage is the only thing that has said anything about an asset, so Marmot may move, merge or delete it without losing anyone else's work.
+func (s *service) ownedByOpenLineage(ctx context.Context, a *asset.Asset) bool {
+	contribs, err := s.assetSvc.Contributions(ctx, a.ID)
+	if err != nil || len(contribs) == 0 {
+		return false
+	}
+	for _, c := range contribs {
+		if c.Writer != openLineageWriter {
+			return false
+		}
+	}
+	return true
+}
+
+// adoptLegacy brings an asset an earlier release filed under an older MRN onto the MRN it has now, keeping its id and everything attached to it. It only touches assets OpenLineage alone made: one with nothing at the new MRN moves there, and one that turns out to duplicate the asset already there is merged into it.
+func (s *service) adoptLegacy(ctx context.Context, legacy []string, current string) {
+	for _, old := range legacy {
+		oldMRN, err := asset.CanonicalMRN(old)
+		if err != nil || oldMRN == current {
+			continue
+		}
+		found, err := s.assetSvc.GetByExactMRNs(ctx, []string{oldMRN, current})
+		if err != nil {
+			return
+		}
+		was, ok := found[oldMRN]
+		if !ok || !s.ownedByOpenLineage(ctx, was) {
+			continue
+		}
+		if now, ok := found[current]; ok && now.ID != was.ID {
+			if _, err := s.assetSvc.Merge(ctx, was.ID, now.ID); err != nil {
+				log.Warn().Err(err).Str("from", oldMRN).Str("into", current).Msg("Failed to merge an asset from an earlier OpenLineage naming")
+			}
+			continue
+		}
+		if err := s.assetSvc.MoveMRN(ctx, was.ID, current, "openlineage-naming"); err != nil {
+			log.Warn().Err(err).Str("from", oldMRN).Str("to", current).Msg("Failed to move an asset from an earlier OpenLineage naming")
+		}
+	}
+}
+
+// adoptSymlinks reads a dataset's symlinks facet, which lists other names the same dataset goes by, such as the Hive table over a set of files. When an asset already exists under one of those names and none under the dataset's own, the event is filed against that asset. When the dataset's own asset is an OpenLineage stub that duplicates one, the stub is merged in. It returns the MRN to file against and the symlink MRNs to record as aliases of it.
+func (s *service) adoptSymlinks(ctx context.Context, ds *Dataset, producer, primary string) (string, []string) {
+	f := facetMap(ds.Facets, "symlinks")
+	if f == nil {
+		return primary, nil
+	}
+	list, _ := f["identifiers"].([]interface{})
+	var links []string
+	for _, item := range list {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		ns, _ := m["namespace"].(string)
+		name, _ := m["name"].(string)
+		if ns == "" || name == "" {
+			continue
+		}
+		id := identifyDataset(&Dataset{Namespace: ns, Name: name}, producer)
+		resolved, err := s.assetSvc.ResolveMRN(ctx, id.MRN)
+		if err != nil || resolved == "" {
+			resolved = id.MRN
+		}
+		if resolved != primary && !contains(links, resolved) {
+			links = append(links, resolved)
+		}
+	}
+	if len(links) == 0 {
+		return primary, nil
+	}
+	found, err := s.assetSvc.GetByExactMRNs(ctx, append([]string{primary}, links...))
+	if err != nil {
+		return primary, links
+	}
+	own := found[primary]
+	for _, l := range links {
+		other, ok := found[l]
+		if !ok || (own != nil && other.ID == own.ID) {
+			continue
+		}
+		if own == nil {
+			return *other.MRN, []string{primary}
+		}
+		if own.IsStub && s.ownedByOpenLineage(ctx, own) {
+			if _, err := s.assetSvc.Merge(ctx, own.ID, other.ID); err != nil {
+				log.Warn().Err(err).Str("stub", primary).Str("into", l).Msg("Failed to merge an OpenLineage stub into the asset its symlink names")
+				return primary, nil
+			}
+			return *other.MRN, nil
+		}
+		log.Info().Str("dataset", primary).Str("symlink", l).Msg("Dataset and its symlink are separate assets; leaving both")
+		return primary, nil
+	}
+	return primary, links
+}
+
+// addAliases records MRNs an asset also answers to, skipping any another asset already holds.
+func (s *service) addAliases(ctx context.Context, assetID string, aliases []string) {
+	for _, a := range aliases {
+		if err := s.assetSvc.AddAlias(ctx, assetID, a, "openlineage-symlink"); err != nil && !errors.Is(err, asset.ErrAlreadyExists) {
+			log.Warn().Err(err).Str("asset_id", assetID).Str("alias", a).Msg("Failed to record an OpenLineage symlink")
+		}
+	}
+}
+
+// createDAGTaskLineage links an Airflow task to the DAG its parent run facet names.
+func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, job filedJob, createdBy string) error {
+	if job.Provider != ProviderAirflow || job.Type != AssetTypeTask {
 		return nil
 	}
-
-	if jobAssetType == AssetTypeTask && event.Run.Facets != nil && event.Run.Facets["parent"] != nil {
-		parentFacet, ok := event.Run.Facets["parent"].(map[string]interface{})
-		if !ok {
-			return nil
-		}
-
-		jobInfo, ok := parentFacet["job"].(map[string]interface{})
-		if !ok {
-			return nil
-		}
-
-		parentJobName, ok := jobInfo["name"].(string)
-		if !ok {
-			return nil
-		}
-
-		parentNamespace, ok := jobInfo["namespace"].(string)
-		if !ok {
-			return nil
-		}
-
-		dagMRN := openLineageMRN(AssetTypeDAG, provider, parentNamespace, parentJobName)
-
-		err := s.ensureDAGAssetExists(ctx, dagMRN, parentJobName, parentNamespace, provider, createdBy)
-		if err != nil {
-			return err
-		}
-
-		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN, "CONTAINS", ""); err != nil {
-			log.Warn().Err(err).
-				Str("dag_mrn", dagMRN).
-				Str("task_mrn", jobAssetMRN).
-				Msg("Failed to create DAG-task lineage")
-		}
+	parentNamespace, parentJobName, ok := parentJob(event)
+	if !ok {
+		return nil
 	}
-
+	dagMRN := openLineageMRN(AssetTypeDAG, job.Provider, parentNamespace, parentJobName)
+	if err := s.ensureDAGAssetExists(ctx, dagMRN, parentJobName, parentNamespace, job.Provider, createdBy); err != nil {
+		return err
+	}
+	if _, err := s.CreateDirectLineage(ctx, dagMRN, job.mrn, "CONTAINS", ""); err != nil {
+		log.Warn().Err(err).Str("dag_mrn", dagMRN).Str("task_mrn", job.mrn).Msg("Failed to create DAG-task lineage")
+	}
 	return nil
+}
+
+// parentJob reads the job a run's parent facet names. Older Airflow integrations send the facet as parentRun.
+func parentJob(event *RunEvent) (namespace, name string, ok bool) {
+	parent := facetMap(event.Run.Facets, "parent")
+	if parent == nil {
+		parent = facetMap(event.Run.Facets, "parentRun")
+	}
+	job, _ := parent["job"].(map[string]interface{})
+	namespace, _ = job["namespace"].(string)
+	name, _ = job["name"].(string)
+	return namespace, name, namespace != "" && name != ""
 }
 
 func (s *service) ensureDAGAssetExists(ctx context.Context, dagMRN, dagName, namespace, provider, createdBy string) error {
-	_, err := s.assetSvc.GetByMRN(ctx, dagMRN)
-	if err == nil {
+	if existing, err := s.findAsset(ctx, dagMRN); err == nil && existing != nil {
 		return nil
 	}
-
 	desc := fmt.Sprintf("Airflow DAG from %s namespace", namespace)
-	metadata := make(map[string]interface{})
-	metadata["openlineage_producer"] = "airflow"
-	metadata["job_type"] = AssetTypeDAG
-	metadata["namespace"] = namespace
-
-	createInput := asset.CreateInput{
+	_, err := s.assetSvc.Create(ctx, asset.CreateInput{
 		Name:        &dagName,
 		MRN:         &dagMRN,
 		Type:        AssetTypeDAG,
 		Providers:   []string{provider},
 		Description: &desc,
-		Metadata:    metadata,
+		Metadata:    map[string]interface{}{"openlineage_producer": "airflow", "job_type": AssetTypeDAG, "namespace": namespace},
 		Tags:        []string{"openlineage", strings.ToLower(AssetTypeDAG), strings.ToLower(provider)},
 		CreatedBy:   createdBy,
 		Writer:      openLineageWriter,
@@ -203,458 +505,69 @@ func (s *service) ensureDAGAssetExists(ctx context.Context, dagMRN, dagName, nam
 		Sources: []asset.AssetSource{{
 			Name:       "OpenLineage",
 			LastSyncAt: time.Now(),
-			Properties: map[string]interface{}{
-				"dag_name":  dagName,
-				"namespace": namespace,
-				"provider":  provider,
-			},
-			Priority: 1,
+			Properties: map[string]interface{}{"dag_name": dagName, "namespace": namespace, "provider": provider},
+			Priority:   1,
 		}},
+	})
+	if errors.Is(err, asset.ErrAlreadyExists) {
+		return nil
 	}
-
-	_, err = s.assetSvc.Create(ctx, createInput)
 	return err
 }
 
-func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent, jobAssetMRN string, jobAssetType string) error {
-	provider := inferProvider(event.Producer)
-	if provider != ProviderDBT || jobAssetType != AssetTypeModel {
+// createProjectModelLineage links a dbt model to the dbt project run its parent run facet names. The project's MRN is built from its full job name, the same way the project's own events build it.
+func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent, job filedJob) error {
+	if job.Provider != ProviderDBT || job.Type != AssetTypeModel {
 		return nil
 	}
-
-	if event.Run.Facets == nil || event.Run.Facets["parent"] == nil {
-		return nil
-	}
-
-	parentFacet, ok := event.Run.Facets["parent"].(map[string]interface{})
+	parentNamespace, parentJobName, ok := parentJob(event)
 	if !ok {
 		return nil
 	}
-
-	jobInfo, ok := parentFacet["job"].(map[string]interface{})
-	if !ok {
+	projectMRN := openLineageMRN(AssetTypeProject, job.Provider, parentNamespace, parentJobName)
+	if existing, err := s.findAsset(ctx, projectMRN); err != nil || existing == nil {
 		return nil
 	}
-
-	parentJobName, ok := jobInfo["name"].(string)
-	if !ok {
-		return nil
+	if _, err := s.CreateDirectLineage(ctx, projectMRN, job.mrn, "CONTAINS", ""); err != nil {
+		log.Warn().Err(err).Str("project_mrn", projectMRN).Str("model_mrn", job.mrn).Msg("Failed to create project-model lineage")
 	}
-
-	parentNamespace, ok := jobInfo["namespace"].(string)
-	if !ok {
-		return nil
-	}
-
-	projectJobName := extractSimpleJobName(parentJobName)
-	projectMRN := openLineageMRN(AssetTypeProject, provider, parentNamespace, projectJobName)
-
-	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS", ""); err != nil {
-		log.Warn().Err(err).
-			Str("project_mrn", projectMRN).
-			Str("model_mrn", jobAssetMRN).
-			Msg("Failed to create project-model lineage")
-	}
-
 	return nil
-}
-
-func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdBy string) (string, error) {
-	provider := inferProvider(event.Producer)
-	jobName := extractSimpleJobName(event.Job.Name)
-	assetType := inferJobType(event, provider)
-
-	jobMRN := openLineageMRN(assetType, provider, event.Job.Namespace, jobName)
-
-	desc := fmt.Sprintf("%s from %s namespace", assetType, event.Job.Namespace)
-	if event.Job.Facets != nil {
-		if documentation, ok := event.Job.Facets["documentation"]; ok {
-			if doc, ok := documentation.(map[string]interface{}); ok {
-				if description, ok := doc["description"].(string); ok {
-					desc = description
-				}
-			}
-		}
-	}
-
-	metadata := make(map[string]interface{})
-	metadata["openlineage_producer"] = event.Producer
-	metadata["job_type"] = assetType
-	metadata["namespace"] = event.Job.Namespace
-
-	var query string
-	var queryLanguage string
-	if event.Job.Facets != nil {
-		extractJobMetadata(metadata, event.Job.Facets, &query, &queryLanguage)
-	}
-
-	runMetadata := s.extractRunMetadata(event)
-
-	var queryPtr *string
-	var queryLanguagePtr *string
-	if query != "" {
-		queryPtr = &query
-	}
-	if queryLanguage != "" {
-		queryLanguagePtr = &queryLanguage
-	}
-
-	createInput := asset.CreateInput{
-		Name:          &jobName,
-		MRN:           &jobMRN,
-		Type:          assetType,
-		Providers:     []string{provider},
-		Description:   &desc,
-		Metadata:      metadata,
-		Tags:          []string{"openlineage", strings.ToLower(assetType), strings.ToLower(provider)},
-		CreatedBy:     createdBy,
-		Writer:        openLineageWriter,
-		Role:          asset.RoleNative,
-		Query:         queryPtr,
-		QueryLanguage: queryLanguagePtr,
-		Sources: []asset.AssetSource{{
-			Name:       "OpenLineage",
-			LastSyncAt: event.EventTime,
-			Properties: runMetadata,
-			Priority:   1,
-		}},
-	}
-
-	_, err := s.assetSvc.Create(ctx, createInput)
-	if err != nil {
-		if errors.Is(err, asset.ErrAlreadyExists) {
-			existingAsset, getErr := s.assetSvc.GetByMRN(ctx, jobMRN)
-			if getErr != nil {
-				return "", fmt.Errorf("failed to get existing asset: %w", getErr)
-			}
-
-			fields := asset.ContributionFields{Description: &desc, Metadata: metadata}
-			if query != "" {
-				fields.Query = &query
-				fields.QueryLanguage = &queryLanguage
-			}
-			if _, updateErr := s.assetSvc.Contribute(ctx, existingAsset.ID, openLineageWriter, asset.RoleNative, fields, false); updateErr != nil {
-				log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing job asset")
-			}
-			if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, asset.UpdateInput{Sources: []asset.AssetSource{{
-				Name:       "OpenLineage",
-				LastSyncAt: event.EventTime,
-				Properties: runMetadata,
-				Priority:   1,
-			}}, SkipNotification: true}); updateErr != nil {
-				log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to record OpenLineage as a source of the job asset")
-			}
-
-			return jobMRN, nil
-		}
-		return "", fmt.Errorf("failed to create job asset: %w", err)
-	}
-
-	return jobMRN, nil
-}
-
-func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAssetMRN string, createdBy string) error {
-	var inputMRNs []string
-	for _, input := range event.Inputs {
-		mrn, err := s.processDatasetAsset(ctx, &input, "input", createdBy)
-		if err != nil {
-			log.Error().Err(err).
-				Str("dataset", input.Namespace+"."+input.Name).
-				Msg("Failed to process input dataset")
-			continue
-		}
-		inputMRNs = append(inputMRNs, mrn)
-	}
-
-	var outputMRNs []string
-	for _, output := range event.Outputs {
-		mrn, err := s.processDatasetAsset(ctx, &output, "output", createdBy)
-		if err != nil {
-			log.Error().Err(err).
-				Str("dataset", output.Namespace+"."+output.Name).
-				Msg("Failed to process output dataset")
-			continue
-		}
-		outputMRNs = append(outputMRNs, mrn)
-	}
-
-	for _, inputMRN := range inputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, inputMRN, jobAssetMRN, "CONSUMES", ""); err != nil {
-			log.Warn().Err(err).
-				Str("input_mrn", inputMRN).
-				Str("job_mrn", jobAssetMRN).
-				Msg("Failed to create input lineage")
-		}
-	}
-
-	for _, outputMRN := range outputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, jobAssetMRN, outputMRN, "PRODUCES", ""); err != nil {
-			log.Warn().Err(err).
-				Str("job_mrn", jobAssetMRN).
-				Str("output_mrn", outputMRN).
-				Msg("Failed to create output lineage")
-		}
-	}
-
-	return nil
-}
-
-func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, role string, createdBy string) (string, error) {
-	provider := inferDatasetProvider(dataset)
-	assetType := inferDatasetType(dataset)
-
-	name := dataset.Name
-	namespace := dataset.Namespace
-
-	datasetMRN := openLineageDatasetMRN(assetType, provider, namespace, name)
-	if resolved, err := s.assetSvc.ResolveMRN(ctx, datasetMRN); err == nil && resolved != "" {
-		datasetMRN = resolved
-	}
-	s.adoptLegacyStub(ctx, openLineageMRN(assetType, provider, namespace, name), datasetMRN)
-
-	desc := fmt.Sprintf("%s from %s namespace (%s)", assetType, namespace, role)
-
-	metadata := make(map[string]interface{})
-	metadata["openlineage_role"] = role
-	metadata["namespace"] = namespace
-
-	var query string
-	var queryLanguage string
-	schema := extractDatasetMetadata(metadata, dataset.Facets, dataset.InputFacets, dataset.OutputFacets, role, &query, &queryLanguage)
-
-	datasetRunMetadata := map[string]interface{}{
-		"dataset_name": name,
-		"namespace":    namespace,
-		"role":         role,
-		"provider":     provider,
-		"asset_type":   assetType,
-	}
-
-	runMetadata := datasetRunMetadata
-
-	existingAsset, err := s.assetSvc.GetByMRN(ctx, datasetMRN)
-	if err == nil {
-		// OpenLineage only mentions a dataset, so what it says ranks below the system that owns it and never overwrites that system's metadata or schema.
-		fields := asset.ContributionFields{Metadata: metadata, Schema: schema}
-		if query != "" {
-			fields.Query = &query
-			fields.QueryLanguage = &queryLanguage
-		}
-		if _, updateErr := s.assetSvc.Contribute(ctx, existingAsset.ID, openLineageWriter, asset.RoleReference, fields, false); updateErr != nil {
-			log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to update existing dataset asset")
-		}
-		if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, asset.UpdateInput{Sources: []asset.AssetSource{{
-			Name:       "OpenLineage",
-			LastSyncAt: time.Now(),
-			Properties: runMetadata,
-			Priority:   1,
-		}}, SkipNotification: true}); updateErr != nil {
-			log.Warn().Err(updateErr).Str("asset_id", existingAsset.ID).Msg("Failed to record OpenLineage as a source of the dataset asset")
-		}
-
-		return *existingAsset.MRN, nil
-	}
-
-	createInput := asset.CreateInput{
-		Name:        &name,
-		MRN:         &datasetMRN,
-		Type:        assetType,
-		Providers:   []string{provider},
-		Description: &desc,
-		Metadata:    metadata,
-		Schema:      schema,
-		Tags:        []string{"openlineage", strings.ToLower(assetType), role, strings.ToLower(provider)},
-		CreatedBy:   createdBy,
-		IsStub:      true,
-		Writer:      openLineageWriter,
-		Role:        asset.RoleReference,
-		Sources: []asset.AssetSource{{
-			Name:       "OpenLineage",
-			LastSyncAt: time.Now(),
-			Properties: runMetadata,
-			Priority:   1,
-		}},
-	}
-
-	if query != "" {
-		createInput.Query = &query
-		createInput.QueryLanguage = &queryLanguage
-	}
-
-	_, err = s.assetSvc.Create(ctx, createInput)
-	if err != nil {
-		// A stub from an earlier event is hidden from GetByMRN, so seeing it again is not a failure: the dataset is already there.
-		var exists *asset.ExistsError
-		if errors.As(err, &exists) && exists.Asset != nil && exists.Asset.MRN != nil {
-			return *exists.Asset.MRN, nil
-		}
-		return "", fmt.Errorf("failed to create stub asset: %w", err)
-	}
-
-	return datasetMRN, nil
 }
 
 func (s *service) storeRunHistory(ctx context.Context, event *RunEvent, jobAssetID string) error {
-	historyID := uuid.New().String()
-
 	entry := &RunHistoryEntry{
-		ID:           historyID,
+		ID:           uuid.New().String(),
 		AssetID:      jobAssetID,
 		RunID:        event.Run.RunID,
 		JobNamespace: event.Job.Namespace,
 		JobName:      event.Job.Name,
-		EventType:    event.EventType,
+		EventType:    normaliseEventType(event.EventType),
 		EventTime:    event.EventTime,
 		Producer:     event.Producer,
-		RunFacets:    event.Run.Facets,
-		JobFacets:    event.Job.Facets,
+		RunFacets:    orEmpty(event.Run.Facets),
+		JobFacets:    orEmpty(event.Job.Facets),
 		Inputs:       event.Inputs,
 		Outputs:      event.Outputs,
 		CreatedAt:    time.Now(),
 	}
-
+	if entry.Inputs == nil {
+		entry.Inputs = []Dataset{}
+	}
+	if entry.Outputs == nil {
+		entry.Outputs = []Dataset{}
+	}
 	return s.repo.StoreRunHistory(ctx, entry)
 }
 
-func (s *service) extractRunMetadata(event *RunEvent) map[string]interface{} {
-	runMetadata := map[string]interface{}{
+// runSourceProperties is what the job's OpenLineage source records about the latest run.
+func runSourceProperties(event *RunEvent) map[string]interface{} {
+	return map[string]interface{}{
 		"event_time": event.EventTime.Format(time.RFC3339),
 		"run_id":     event.Run.RunID,
 		"job_name":   event.Job.Name,
 		"namespace":  event.Job.Namespace,
 		"producer":   event.Producer,
 	}
-
-	return runMetadata
-}
-
-func extractJobMetadata(metadata map[string]interface{}, facets map[string]interface{}, query *string, queryLanguage *string) {
-	if facets == nil {
-		return
-	}
-
-	if sql, ok := facets["sql"]; ok {
-		if sqlData, ok := sql.(map[string]interface{}); ok {
-			if q, ok := sqlData["query"].(string); ok {
-				*query = q
-				*queryLanguage = "sql"
-			}
-		}
-	}
-
-	if sourceCode, ok := facets["sourceCode"]; ok {
-		if sourceCodeData, ok := sourceCode.(map[string]interface{}); ok {
-			if code, ok := sourceCodeData["sourceCode"].(string); ok {
-				*query = code
-				*queryLanguage = "python"
-			}
-		}
-	}
-
-	if sourceCodeLocation, ok := facets["sourceCodeLocation"]; ok {
-		if scl, ok := sourceCodeLocation.(map[string]interface{}); ok {
-			if url, ok := scl["url"].(string); ok {
-				metadata["source_code_url"] = url
-			}
-		}
-	}
-
-	if ownership, ok := facets["ownership"]; ok {
-		if own, ok := ownership.(map[string]interface{}); ok {
-			if owners, ok := own["owners"].([]interface{}); ok && len(owners) > 0 {
-				if owner, ok := owners[0].(map[string]interface{}); ok {
-					if name, ok := owner["name"].(string); ok {
-						metadata["owner"] = name
-					}
-				}
-			}
-		}
-	}
-
-	if airflowFacet, ok := facets["airflow"]; ok {
-		if airflowData, ok := airflowFacet.(map[string]interface{}); ok {
-			if tasks, ok := airflowData["tasks"].(map[string]interface{}); ok {
-				var taskNames []string
-				for taskName := range tasks {
-					taskNames = append(taskNames, taskName)
-				}
-				if len(taskNames) > 0 {
-					metadata["tasks"] = taskNames
-				}
-			}
-		}
-	}
-}
-
-func extractDatasetMetadata(metadata map[string]interface{}, facets, inputFacets, outputFacets map[string]interface{}, role string, query *string, queryLanguage *string) map[string]string {
-	var schema map[string]string
-
-	if facets != nil {
-		if sql, ok := facets["sql"]; ok {
-			if sqlData, ok := sql.(map[string]interface{}); ok {
-				if q, ok := sqlData["query"].(string); ok {
-					*query = q
-					*queryLanguage = "sql"
-				}
-			}
-		}
-
-		if schemaFacet, ok := facets["schema"]; ok {
-			if schemaData, ok := schemaFacet.(map[string]interface{}); ok {
-				schema = schemaFromFacet(schemaData)
-			}
-		}
-
-		if dataSource, ok := facets["dataSource"]; ok {
-			if ds, ok := dataSource.(map[string]interface{}); ok {
-				if name, ok := ds["name"].(string); ok {
-					metadata["data_source"] = name
-				}
-			}
-		}
-
-		if version, ok := facets["version"]; ok {
-			if v, ok := version.(map[string]interface{}); ok {
-				if datasetVersion, ok := v["datasetVersion"].(string); ok {
-					metadata["version"] = datasetVersion
-				}
-			}
-		}
-
-		if ownership, ok := facets["ownership"]; ok {
-			if own, ok := ownership.(map[string]interface{}); ok {
-				if owners, ok := own["owners"].([]interface{}); ok && len(owners) > 0 {
-					if owner, ok := owners[0].(map[string]interface{}); ok {
-						if name, ok := owner["name"].(string); ok {
-							metadata["owner"] = name
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if role == "input" && inputFacets != nil {
-		if inputStats, ok := inputFacets["inputStatistics"]; ok {
-			if stats, ok := inputStats.(map[string]interface{}); ok {
-				if rowCount, ok := stats["rowCount"].(float64); ok {
-					metadata["input_row_count"] = int64(rowCount)
-				}
-			}
-		}
-	}
-
-	if role == "output" && outputFacets != nil {
-		if outputStats, ok := outputFacets["outputStatistics"]; ok {
-			if stats, ok := outputStats.(map[string]interface{}); ok {
-				if rowCount, ok := stats["rowCount"].(float64); ok {
-					metadata["output_row_count"] = int64(rowCount)
-				}
-			}
-		}
-	}
-
-	return schema
 }
 
 // openLineageMRN builds the MRN for an asset an OpenLineage event describes.
@@ -718,33 +631,6 @@ func openLineageDatasetMRN(assetType, provider, namespace, name string) string {
 	return m.String()
 }
 
-// adoptLegacyStub moves a dataset stub an older Marmot named by its whole namespace onto the MRN the dataset has now, or folds it into the asset already there, so its lineage and anything people added to it carry over.
-func (s *service) adoptLegacyStub(ctx context.Context, legacyMRN, currentMRN string) {
-	if legacyMRN == currentMRN {
-		return
-	}
-	found, err := s.assetSvc.GetByMRNs(ctx, []string{legacyMRN, currentMRN})
-	if err != nil {
-		return
-	}
-	stub, ok := found[legacyMRN]
-	if !ok || stub.MRN == nil || *stub.MRN != legacyMRN {
-		return
-	}
-	if target, ok := found[currentMRN]; ok && target.ID != stub.ID {
-		if !stub.IsStub {
-			return
-		}
-		if _, err := s.assetSvc.Merge(ctx, stub.ID, target.ID); err != nil {
-			log.Warn().Err(err).Str("stub", legacyMRN).Str("into", currentMRN).Msg("Failed to merge legacy OpenLineage stub")
-		}
-		return
-	}
-	if err := s.assetSvc.MoveMRN(ctx, stub.ID, currentMRN, "openlineage-naming"); err != nil {
-		log.Warn().Err(err).Str("stub", legacyMRN).Str("to", currentMRN).Msg("Failed to move legacy OpenLineage stub")
-	}
-}
-
 func inferJobType(event *RunEvent, provider string) string {
 	if event.Job.Facets != nil {
 		if jobFacet, ok := event.Job.Facets["jobType"]; ok {
@@ -763,6 +649,8 @@ func inferJobType(event *RunEvent, provider string) string {
 						return AssetTypeModel
 					case "PROJECT":
 						return AssetTypeProject
+					case "TEST":
+						return AssetTypeTest
 					case "JOB":
 						if provider == ProviderDBT &&
 							strings.HasPrefix(event.Job.Name, "dbt-run-") &&
@@ -788,114 +676,6 @@ func inferJobType(event *RunEvent, provider string) string {
 	}
 }
 
-func inferProvider(producer string) string {
-	producer = strings.ToLower(producer)
-	if strings.Contains(producer, "airflow") {
-		return ProviderAirflow
-	}
-	if strings.Contains(producer, "spark") {
-		return ProviderSpark
-	}
-	if strings.Contains(producer, "dbt") {
-		return ProviderDBT
-	}
-	return ProviderOpenLineage
-}
-
-func inferDatasetProvider(dataset *Dataset) string {
-	namespace := strings.ToLower(dataset.Namespace)
-
-	if strings.Contains(namespace, "bigquery") || strings.Contains(namespace, "bq") {
-		return ProviderBigQuery
-	}
-	if strings.Contains(namespace, "postgres") {
-		return ProviderPostgreSQL
-	}
-	if strings.Contains(namespace, "mysql") {
-		return ProviderMySQL
-	}
-	if strings.Contains(namespace, "sqlserver") {
-		return ProviderSQLServer
-	}
-	if strings.Contains(namespace, "kafka") {
-		return ProviderKafka
-	}
-	if strings.Contains(namespace, "s3") {
-		return ProviderS3
-	}
-	if strings.Contains(namespace, "gcs") {
-		return ProviderGCS
-	}
-	if strings.Contains(namespace, "azure") {
-		return ProviderAzure
-	}
-	return ProviderOpenLineage
-}
-
-func inferDatasetType(dataset *Dataset) string {
-	namespace := strings.ToLower(dataset.Namespace)
-	name := strings.ToLower(dataset.Name)
-
-	if strings.Contains(namespace, "postgres") || strings.Contains(namespace, "mysql") ||
-		strings.Contains(namespace, "sqlserver") || strings.Contains(namespace, "bigquery") {
-		return AssetTypeTable
-	}
-	if strings.Contains(namespace, "kafka") {
-		return AssetTypeTopic
-	}
-	if strings.Contains(namespace, "s3") || strings.Contains(namespace, "gcs") || strings.Contains(namespace, "azure") {
-		if strings.Contains(name, ".parquet") || strings.Contains(name, ".csv") {
-			return AssetTypeFile
-		}
-		return AssetTypeBucket
-	}
-	if strings.Contains(name, ".parquet") || strings.Contains(name, ".csv") {
-		return AssetTypeFile
-	}
-
-	return AssetTypeDataset
-}
-
-// schemaColumn is one column in the list table plugins store under the columns schema, which is the form the catalog reads everywhere.
-type schemaColumn struct {
-	Name        string `json:"column_name"`
-	Type        string `json:"data_type"`
-	Description string `json:"description,omitempty"`
-}
-
-// schemaFromFacet turns an OpenLineage schema facet into the columns schema table plugins write, keeping the producer's field order and type names. It returns nil when the facet names no fields, so an event without them leaves the schema alone.
-func schemaFromFacet(schemaData map[string]interface{}) map[string]string {
-	fields, ok := schemaData["fields"].([]interface{})
-	if !ok {
-		return nil
-	}
-	columns := make([]schemaColumn, 0, len(fields))
-	for _, field := range fields {
-		fieldMap, ok := field.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		name, _ := fieldMap["name"].(string)
-		if name == "" {
-			continue
-		}
-		column := schemaColumn{Name: name, Type: "unknown"}
-		if fieldType, _ := fieldMap["type"].(string); fieldType != "" {
-			column.Type = fieldType
-		}
-		column.Description, _ = fieldMap["description"].(string)
-		columns = append(columns, column)
-	}
-	if len(columns) == 0 {
-		return nil
-	}
-	encoded, err := json.Marshal(columns)
-	if err != nil {
-		return nil
-	}
-	return map[string]string{"columns": string(encoded)}
-}
-
 func extractSimpleJobName(fullJobName string) string {
 	if strings.Contains(fullJobName, ".") {
 		parts := strings.Split(fullJobName, ".")
@@ -907,4 +687,12 @@ func extractSimpleJobName(fullJobName string) string {
 	}
 
 	return fullJobName
+}
+
+// orEmpty stores an absent facet map as an empty object rather than JSON null.
+func orEmpty(m map[string]interface{}) map[string]interface{} {
+	if m == nil {
+		return map[string]interface{}{}
+	}
+	return m
 }

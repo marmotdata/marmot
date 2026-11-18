@@ -1,0 +1,21 @@
+{
+  "eventTime": "2026-11-18T22:23:50.73572Z",
+  "eventType": "COMPLETE",
+  "job": {
+    "facets": {
+      "sql": {
+        "_producer": "https://github.com/ilum-cloud/duck_lineage",
+        "_schemaURL": "https://openlineage.io/spec/job/sql/1-0-0.json",
+        "query": "SELECT CAST('not a number' AS INTEGER) FROM main.orders;"
+      }
+    },
+    "name": "SELECT_orders_fe7db00f",
+    "namespace": "duckdb"
+  },
+  "outputs": [],
+  "producer": "https://github.com/ilum-cloud/duck_lineage",
+  "run": {
+    "runId": "01a1f0c2-57cf-d4c7-80c9-471a4a63ebf5"
+  },
+  "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+}

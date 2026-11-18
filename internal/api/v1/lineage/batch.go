@@ -14,21 +14,37 @@ type BatchLineageResult struct {
 	Status string              `json:"status"` // "created", "duplicate", or "existing"
 } // @name BatchLineageResult
 
-// @Summary Batch create lineage edges
-// @Description Create lineage edges in batch
+// @Summary Batch create lineage edges or ingest OpenLineage events
+// @Description Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key.
 // @Tags lineage
 // @Accept json
 // @Produce json
-// @Param edges body []lineage.LineageEdge true "Array of lineage edges to create"
+// @Param edges body []lineage.LineageEdge true "Array of lineage edges to create, or of OpenLineage events"
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {array} BatchLineageResult
 // @Failure 400 {object} common.ErrorResponse
+// @Failure 413 {object} common.ErrorResponse
 // @ID postLineageBatch
 // @Router /api/v1/lineage/batch [post]
 func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
+	body, err := readRequestBody(w, r)
+	if err != nil {
+		respondBodyError(w, err)
+		return
+	}
+	var items []json.RawMessage
+	if err := json.Unmarshal(body, &items); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if isOpenLineageBatch(items) {
+		h.ingestOpenLineageBatch(w, r, items)
+		return
+	}
+
 	var edges []lineage.LineageEdge
-	if err := json.NewDecoder(r.Body).Decode(&edges); err != nil {
+	if err := json.Unmarshal(body, &edges); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

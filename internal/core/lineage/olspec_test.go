@@ -234,3 +234,68 @@ func TestSpecCompilesWithEveryStandardFacet(t *testing.T) {
 		require.Contains(t, spec.facets[placeRun], key)
 	}
 }
+
+// eventFixtures lists every captured producer event under testdata/openlineage/events.
+func eventFixtures(t testing.TB) []string {
+	t.Helper()
+	var files []string
+	err := filepath.WalkDir("testdata/openlineage/events", func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(path, ".json") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+	sort.Strings(files)
+	return files
+}
+
+// producerDeviation is a way a real producer breaks the spec. Fixtures keep what the producer sent, so Marmot is tested against it; repair undoes only that one deviation, and the rest of the event must then be valid.
+type producerDeviation struct {
+	what   string
+	repair func(event map[string]any) bool
+}
+
+// knownProducerDeviations lists deviations by fixture directory.
+var knownProducerDeviations = map[string]producerDeviation{
+	// openlineage-spark 1.55.0 sends dataSource {"name":"file","uri":"file"} for local files, and the facet's uri must be an absolute URI.
+	"spark": {what: `dataSource.uri "file" is not an absolute URI`, repair: func(event map[string]any) bool {
+		changed := false
+		for _, side := range []string{"inputs", "outputs"} {
+			list, _ := event[side].([]any)
+			for _, d := range list {
+				facets, _ := d.(map[string]any)["facets"].(map[string]any)
+				if src, ok := facets["dataSource"].(map[string]any); ok && src["uri"] == "file" {
+					delete(src, "uri")
+					changed = true
+				}
+			}
+		}
+		return changed
+	}},
+}
+
+func TestEveryProducerFixtureIsValidOpenLineage(t *testing.T) {
+	spec := openLineageSpec(t)
+	files := eventFixtures(t)
+	require.NotEmpty(t, files)
+	for _, f := range files {
+		t.Run(f, func(t *testing.T) {
+			raw, err := os.ReadFile(f)
+			require.NoError(t, err)
+			dir := filepath.Base(filepath.Dir(f))
+			if dev, ok := knownProducerDeviations[dir]; ok {
+				var event map[string]any
+				require.NoError(t, json.Unmarshal(raw, &event))
+				if dev.repair(event) {
+					require.Error(t, spec.validateEvent(raw), "the fixture should show the known deviation: %s", dev.what)
+					raw = mustJSON(t, event)
+				}
+			}
+			require.NoError(t, spec.validateEvent(raw))
+		})
+	}
+}
