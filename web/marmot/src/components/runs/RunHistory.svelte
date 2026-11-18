@@ -26,6 +26,7 @@
 		duration_ms?: number;
 		type: string;
 		event_time: string;
+		error_message?: string;
 	}
 
 	interface Props {
@@ -146,9 +147,14 @@
 			{#each runs as run (run.id)}
 				{@const state = pill(run.status)}
 				<mm-list-item
-					secondary={[run.start_time ? formatDateTime(run.start_time) : '', run.job_namespace]
+					secondary={[
+						run.start_time ? formatDateTime(run.start_time) : '',
+						run.job_namespace,
+						run.error_message ?? ''
+					]
 						.filter(Boolean)
 						.join(' · ')}
+					title={run.error_message || undefined}
 				>
 					{run.job_name}
 					<span slot="end" class="mm-cluster" style="--mm-gap: var(--space-2); flex-wrap: nowrap">

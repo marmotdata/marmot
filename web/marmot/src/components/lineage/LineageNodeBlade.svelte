@@ -97,6 +97,15 @@
 			.pop() ?? ''
 	);
 	let job = $derived(edges.find((e) => e.job_mrn)?.job_mrn ?? '');
+	// Column mappings on the edges between this asset and the one in view, one line per output column, so they stay readable when the canvas hides the direct edge behind its job.
+	let columnMappings = $derived(
+		edges.flatMap((e) =>
+			(e.column_lineage ?? []).map(
+				(c) =>
+					`${(c.from_columns ?? []).join(', ')} → ${c.to_column}${c.transform ? ` (${c.transform})` : ''}`
+			)
+		)
+	);
 	let declaredBy = $derived(
 		[...new Set(edges.map((e) => e.declared_by).filter((d): d is string => !!d))].join(', ')
 	);
@@ -216,6 +225,16 @@
 			{/if}
 		</mm-description-list>
 	</mm-blade-section>
+
+	{#if columnMappings.length}
+		<mm-blade-section heading={m.lineage_blade_columns()}>
+			<mm-list dense aria-label={m.lineage_blade_columns()}>
+				{#each columnMappings as mapping (mapping)}
+					<mm-list-item>{mapping}</mm-list-item>
+				{/each}
+			</mm-list>
+		</mm-blade-section>
+	{/if}
 
 	<mm-blade-section heading={m.lineage_blade_more_details()} collapsible>
 		<mm-description-list>

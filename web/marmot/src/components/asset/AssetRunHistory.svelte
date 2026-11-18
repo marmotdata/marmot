@@ -23,6 +23,7 @@
 		duration_ms?: number;
 		type: string;
 		event_time: string;
+		error_message?: string;
 	}
 
 	interface Row {
@@ -33,6 +34,7 @@
 		started: string;
 		duration: number | null;
 		type: string;
+		error: string;
 	}
 
 	const PAGE_SIZE = 25;
@@ -81,11 +83,12 @@
 			job: r.job_namespace ? `${r.job_namespace} / ${r.job_name}` : r.job_name,
 			started: r.start_time || r.event_time,
 			duration: r.duration_ms && r.duration_ms > 0 ? r.duration_ms : null,
-			type: r.type ? r.type.charAt(0) + r.type.slice(1).toLowerCase() : ''
+			type: r.type ? r.type.charAt(0) + r.type.slice(1).toLowerCase() : '',
+			error: r.error_message ?? ''
 		}))
 	);
 
-	const columns: DataTableColumn<Row>[] = [
+	const baseColumns: DataTableColumn<Row>[] = [
 		{ key: 'run', header: m.asset_page_runs_col_run(), type: 'mono', width: 140 },
 		{ key: 'status', header: m.asset_page_runs_col_status(), type: 'status', width: 120 },
 		{ key: 'job', header: m.asset_page_runs_col_job() },
@@ -111,6 +114,13 @@
 		},
 		{ key: 'type', header: m.asset_page_runs_col_type(), width: 110 }
 	];
+
+	// Why a run failed, when the producer said; the column only appears when a run on the page has one.
+	let columns = $derived<DataTableColumn<Row>[]>(
+		rows.some((r) => r.error)
+			? [...baseColumns, { key: 'error', header: m.asset_page_runs_col_error(), empty: '' }]
+			: baseColumns
+	);
 
 	async function fetchPage(offset: number, limit: number) {
 		const response = await fetchApi(
