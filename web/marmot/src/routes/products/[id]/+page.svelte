@@ -5,22 +5,22 @@
 	import '@marmotdata/elements/popularity.js';
 	import '@marmotdata/elements/proportion-bar.js';
 	import { toast } from '@marmotdata/elements/toast.js';
-	import { fetchApi } from '$lib/api';
-	import { setCrumbs } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import type { DataProduct, Member, Owner, Rule } from '$lib/dataproducts/types';
-	import { getProductMembers } from '$lib/dataproducts/api';
-	import { assetRouteParams, normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
-	import { plainQuery } from '$lib/dataproducts/plain';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import MetadataView from '$components/shared/MetadataView.svelte';
-	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
-	import IconUploader from '$components/product/IconUploader.svelte';
-	import OwnerField from '$components/product/OwnerField.svelte';
-	import TagField from '$components/product/TagField.svelte';
-	import ProductAssets from '$components/product/ProductAssets.svelte';
-	import ProductRules from '$components/product/ProductRules.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { DataProduct, Member, Owner, Rule } from '#lib/dataproducts/types.ts';
+	import { getProductMembers } from '#lib/dataproducts/api.ts';
+	import { assetRouteParams, normaliseProduct, popularityLevel } from '#lib/dataproducts/assets.ts';
+	import { plainQuery } from '#lib/dataproducts/plain.ts';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import MetadataView from '#components/shared/MetadataView.svelte';
+	import DocumentationSystem from '#components/docs/DocumentationSystem.svelte';
+	import IconUploader from '#components/product/IconUploader.svelte';
+	import OwnerField from '#components/product/OwnerField.svelte';
+	import TagField from '#components/product/TagField.svelte';
+	import ProductAssets from '#components/product/ProductAssets.svelte';
+	import ProductRules from '#components/product/ProductRules.svelte';
 
 	type Tab = 'overview' | 'assets' | 'rules' | 'documentation' | 'metadata';
 	const TABS: Tab[] = ['overview', 'assets', 'rules', 'documentation', 'metadata'];
@@ -69,9 +69,8 @@
 		// The tab lives in the URL so it survives a reload and can be shared; the path is resolved and only the query string is added.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`${resolve('/products/[id]', { id: productId })}?tab=${tab}`, {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
+			replace: true,
+			reset: false
 		});
 	}
 

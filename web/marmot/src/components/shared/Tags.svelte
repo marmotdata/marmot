@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Tags on an asset, product or term as mm-tag chips, saved straight to the endpoint when one is given or kept in the bound array otherwise.
-	import { fetchApi } from '$lib/api';
-	import { INPUT } from '$lib/ui/classes';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { INPUT } from '#lib/ui/classes.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let {
 		tags = $bindable([]),

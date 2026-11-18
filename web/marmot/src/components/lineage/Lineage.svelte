@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mrnShortName } from '$lib/mrn';
+	import { mrnShortName } from '#lib/mrn.ts';
 	import '@marmotdata/elements/lineage-canvas.js';
 	import type {
 		MmLineageCanvas,
@@ -14,15 +14,15 @@
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
-	import { formatNumber } from '$lib/utils/format';
-	import { BladeSlot } from '$lib/mm';
-	import type { Asset } from '$lib/assets/types';
-	import type { LineageResponse } from '$lib/lineage/types';
+	import { goto } from '$app/navigation';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { formatNumber } from '#lib/utils/format.ts';
+	import { BladeSlot } from '#lib/mm/index.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import type { LineageResponse } from '#lib/lineage/types.ts';
 	import { buildGraph, edgeKind, isGroupId } from './graph';
 	import LineageNodeBlade from './LineageNodeBlade.svelte';
 	import AddLineageDialog from './AddLineageDialog.svelte';
@@ -195,11 +195,11 @@
 
 	function setFull(on: boolean) {
 		full = on;
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		if (on) url.searchParams.set('view', 'full');
 		else url.searchParams.delete('view');
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the current page's own URL with only the view parameter changed
-		replaceState(url, page.state);
+		goto(url, { state: page.state, shallow: true, replace: true });
 	}
 
 	function onFullscreen(e: CustomEvent<MmLineageFullscreenDetail>) {

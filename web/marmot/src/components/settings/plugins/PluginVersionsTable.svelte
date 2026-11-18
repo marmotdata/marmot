@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import type { PluginVersionStatus } from '$lib/plugins/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { PluginVersionStatus } from '#lib/plugins/types.ts';
 	import { pluginVersionsColumns, type PluginRowAction } from './pluginVersionsColumns';
 
 	// One row per core plugin, in the order the page has already sorted and filtered them. Row

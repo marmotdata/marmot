@@ -2,15 +2,15 @@
 	import { onMount, tick } from 'svelte';
 	import '@marmotdata/elements/drawer.js';
 	import { toast } from '@marmotdata/elements/toast.js';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import {
 		getLinkedAssets,
 		getSuggestedAssets,
 		linkAsset,
 		unlinkAsset,
 		type LinkedAsset
-	} from '$lib/glossary/assets';
+	} from '#lib/glossary/assets.ts';
 
 	let {
 		termId,

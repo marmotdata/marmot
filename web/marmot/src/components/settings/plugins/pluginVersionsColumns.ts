@@ -3,9 +3,9 @@
 // the API calls, toasts and reload, so these functions only build what each cell shows.
 import { html, nothing, type TemplateResult } from 'lit';
 import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
-import { m } from '$lib/paraglide/messages';
-import { worstAdvisory } from '$lib/plugins/advisories';
-import type { PluginVersionStatus } from '$lib/plugins/types';
+import { m } from '#lib/paraglide/messages.js';
+import { worstAdvisory } from '#lib/plugins/advisories.ts';
+import type { PluginVersionStatus } from '#lib/plugins/types.ts';
 
 export type PluginRowAction = 'latest' | 'choose' | 'pin' | 'unpin' | 'rollback' | 'reset';
 

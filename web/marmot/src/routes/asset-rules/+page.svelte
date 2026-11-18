@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
-	import { searchAssetRules, updateAssetRule } from '$lib/assetrules/api';
-	import { plainQuery } from '$lib/assetrules/plain';
-	import type { AssetRule } from '$lib/assetrules/types';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import RuleAdds from '$components/assetrule/RuleAdds.svelte';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { searchAssetRules, updateAssetRule } from '#lib/assetrules/api.ts';
+	import { plainQuery } from '#lib/assetrules/plain.ts';
+	import type { AssetRule } from '#lib/assetrules/types.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import RuleAdds from '#components/assetrule/RuleAdds.svelte';
 
 	const PAGE_SIZE = 50;
 

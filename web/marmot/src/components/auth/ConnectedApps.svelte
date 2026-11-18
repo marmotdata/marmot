@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { html } from 'lit';
-	import { fetchApi } from '$lib/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/confirm-dialog.js';
 	import type { DataTableColumn } from '@marmotdata/elements/data-table.js';
 	import { connectedApps, loadConnectedApps, type ConnectedApp } from './accountData';

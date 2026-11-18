@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '@marmotdata/elements/combobox.js';
 	import { tick } from 'svelte';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// Tags are free text, so the combobox accepts anything typed and suggests tags already in use to keep spellings consistent.
 	let { tags = $bindable([]), label }: { tags: string[]; label: string } = $props();

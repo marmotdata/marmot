@@ -2,6 +2,10 @@
 	"name": "marmot",
 	"version": "0.0.1",
 	"type": "module",
+	"imports": {
+		"#lib/*": "./src/lib/*",
+		"#components/*": "./src/components/*"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -18,10 +22,10 @@
 		"@iconify/json": "^2.2.546",
 		"@iconify/svelte": "^5.2.2",
 		"@inlang/paraglide-js": "^2.29.1",
-		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.69.1",
-		"@sveltejs/vite-plugin-svelte": "^5.1.1",
+		"@sveltejs/adapter-auto": "^8.0.1",
+		"@sveltejs/adapter-static": "^4.0.1",
+		"@sveltejs/kit": "^3.3.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/typography": "^0.5.20",
 		"@types/eslint": "^9.6.1",
 		"@types/turndown": "^5.0.6",
@@ -37,9 +41,9 @@
 		"svelte": "^5.57.1",
 		"svelte-check": "^4.7.7",
 		"tailwindcss": "^3.4.19",
-		"typescript": "^5.8.3",
+		"typescript": "^6.0.3",
 		"typescript-eslint": "~8.71.2",
-		"vite": "^6.4.5",
+		"vite": "^8.3.8",
 		"vite-plugin-node-polyfills": "^0.28.0"
 	},
 	"dependencies": {

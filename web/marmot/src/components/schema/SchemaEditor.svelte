@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
-	import type { Asset, FieldAnnotation } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import type { Asset, FieldAnnotation } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { applyAnnotations, parseSchema } from './schemaColumns';
 	import FieldTermsDrawer from './FieldTermsDrawer.svelte';
 	import { resolve } from '$app/paths';
@@ -390,7 +390,7 @@
 					>
 					{#each selectedTerms as t (t.id)}
 						<mm-tag
-							href={resolve(`/glossary/${t.id}`)}
+							href={resolve('/glossary/[[id]]', { id: t.id })}
 							removable={canManageAssets && !fieldSaving}
 							onmm-remove={() => unlinkTerm(activeKey, selectedPath, t)}>{t.name}</mm-tag
 						>

@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { html } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
-	import { m } from '$lib/paraglide/messages';
-	import { getErrorMessage } from '$lib/stores/toast';
-	import { getQueryStatus } from '$lib/dataquery/api';
-	import type { QueryInstanceStatus } from '$lib/dataquery/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getErrorMessage } from '#lib/stores/toast.ts';
+	import { getQueryStatus } from '#lib/dataquery/api.ts';
+	import type { QueryInstanceStatus } from '#lib/dataquery/types.ts';
 
 	// The plugin processes answering data queries right now; Marmot starts them on first use and stops them once idle
 	let instances = $state<QueryInstanceStatus[]>([]);

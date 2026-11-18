@@ -1,4 +1,4 @@
-import { fetchApi } from '$lib/api';
+import { fetchApi } from '#lib/api.ts';
 
 // Doc images require authentication, but <img> tags cannot send the bearer token,
 // so images are fetched with fetchApi and displayed via object URLs.

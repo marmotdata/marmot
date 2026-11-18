@@ -1,6 +1,6 @@
 // Reading and writing editable documents as JSON or YAML. js-yaml is imported on first use, so a page that never opens a code view never downloads it.
 
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 
 export type DocumentMode = 'json' | 'yaml';
 

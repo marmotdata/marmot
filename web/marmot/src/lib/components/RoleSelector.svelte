@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { listRoles } from '$lib/roles/api';
-	import type { Role } from '$lib/roles/types';
-	import { m } from '$lib/paraglide/messages';
+	import { listRoles } from '#lib/roles/api.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// Picks roles for a member or service account. An instance has dozens of roles and a principal holds a few, so the few are shown as removable tags and the rest are reached through a search, rather than a checkbox per role.
 	interface Props {

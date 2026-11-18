@@ -2,7 +2,7 @@
 // show around it. Kept apart from the page so the confirmations (which explain a rollback pins,
 // and a reset clears a manual choice) are not tangled up with the page's own state.
 import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import {
 	resetPluginVersion,
 	rollbackPluginVersion,

@@ -1,6 +1,6 @@
-import { fetchApi } from '$lib/api';
-import { throwApiError } from '$lib/stores/toast';
-import { parseSchemaResponse, processSchema } from '$lib/schema/utils';
+import { fetchApi } from '#lib/api.ts';
+import { throwApiError } from '#lib/stores/toast.ts';
+import { parseSchemaResponse, processSchema } from '#lib/schema/utils.ts';
 import type {
 	QueryInstanceStatus,
 	QueryAccessRequest,

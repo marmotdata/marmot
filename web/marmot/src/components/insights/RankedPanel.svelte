@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-	import { formatNumber } from '$lib/utils/format';
+	import { formatNumber } from '#lib/utils/format.ts';
 
 	let {
 		heading,

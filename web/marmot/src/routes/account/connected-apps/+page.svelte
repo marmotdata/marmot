@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ConnectedApps from '$components/auth/ConnectedApps.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import ConnectedApps from '#components/auth/ConnectedApps.svelte';
+	import { m } from '#lib/paraglide/messages.js';
 </script>
 
 <svelte:head>

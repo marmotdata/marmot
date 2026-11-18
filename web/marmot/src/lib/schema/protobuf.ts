@@ -254,7 +254,7 @@ export function isProtobufSchema(schema: unknown): boolean {
 			protobufjs.parse(schema);
 		} else {
 			const root = new protobufjs.Root();
-			root.addJSON(schema as protobufjs.INamespace);
+			root.addJSON(schema as Record<string, protobufjs.AnyNestedObject>);
 		}
 		return true;
 	} catch {

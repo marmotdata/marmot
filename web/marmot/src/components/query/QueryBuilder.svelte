@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '@marmotdata/elements/search-bar.js';
-	import { mmIcon } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
+	import { mmIcon } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { catalogFields, loadFieldValues, loadMetadataFields } from './catalogSearch';
 
 	// The query editor for rule forms: one search bar whose tokens, text view and in-place query builder all write the same query.

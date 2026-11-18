@@ -2,10 +2,10 @@
 	import '@marmotdata/elements/run-strip.js';
 	import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { assetRouteParamsFor } from '$lib/mrn';
-	import { formatDateTime } from '$lib/utils/format';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { assetRouteParamsFor } from '#lib/mrn.ts';
+	import { formatDateTime } from '#lib/utils/format.ts';
 	import { formatRunDuration } from './pipeline';
 
 	interface AssetRef {

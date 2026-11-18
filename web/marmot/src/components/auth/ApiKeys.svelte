@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import DatePicker from '$components/ui/DatePicker.svelte';
-	import { myAccess, loadMyAccess } from '$lib/iam/myAccess';
-	import { canSee, settingsGroups } from '$lib/settings/sections';
+	import { fetchApi } from '#lib/api.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import DatePicker from '#components/ui/DatePicker.svelte';
+	import { myAccess, loadMyAccess } from '#lib/iam/myAccess.ts';
+	import { canSee, settingsGroups } from '#lib/settings/sections.ts';
 	import '@marmotdata/elements/drawer.js';
 	import '@marmotdata/elements/code-sample.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/confirm-dialog.js';

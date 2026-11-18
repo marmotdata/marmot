@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import {
 		notificationPreferences,
 		type NotificationType
-	} from '$lib/stores/notificationPreferences';
+	} from '#lib/stores/notificationPreferences.ts';
 
 	let ready = $state(false);
 

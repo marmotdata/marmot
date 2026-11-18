@@ -1,7 +1,7 @@
 import type { SchemaColumn } from '@marmotdata/elements/classes/schema-table.js';
-import type { Field } from '$lib/schema/types';
-import type { FieldAnnotation } from '$lib/assets/types';
-import { processSchema, validateSchema } from '$lib/schema/utils';
+import type { Field } from '#lib/schema/types.ts';
+import type { FieldAnnotation } from '#lib/assets/types.ts';
+import { processSchema, validateSchema } from '#lib/schema/utils.ts';
 
 export interface ParsedSchema {
 	columns: SchemaColumn[];

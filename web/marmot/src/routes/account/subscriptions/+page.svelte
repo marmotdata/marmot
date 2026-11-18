@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Subscriptions from '$components/auth/Subscriptions.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import Subscriptions from '#components/auth/Subscriptions.svelte';
+	import { m } from '#lib/paraglide/messages.js';
 </script>
 
 <svelte:head>

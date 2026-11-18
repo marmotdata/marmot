@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { m } from '$lib/paraglide/messages';
-	import DocumentEditor from '$components/ui/DocumentEditor.svelte';
-	import DocumentProblems from '$components/ui/DocumentProblems.svelte';
-	import { parseDocument, stringifyDocument, type DocumentMode } from '$lib/document/format';
-	import { checkDocument, omitProperties } from '$lib/document/check';
-	import { pathMatches } from '$lib/document/paths';
-	import type { CompletionProvider, DocumentProblem, EditorDiagnostic } from '$lib/document/types';
-	import type { Schema } from '$lib/document/codemirror/schema';
-	import { getRoleSchema, validateRole } from '$lib/roles/api';
-	import { permissionKey, readRoleDocument, type RoleDocument } from '$lib/roles/document';
-	import type { Permission } from '$lib/roles/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import DocumentEditor from '#components/ui/DocumentEditor.svelte';
+	import DocumentProblems from '#components/ui/DocumentProblems.svelte';
+	import { parseDocument, stringifyDocument, type DocumentMode } from '#lib/document/format.ts';
+	import { checkDocument, omitProperties } from '#lib/document/check.ts';
+	import { pathMatches } from '#lib/document/paths.ts';
+	import type {
+		CompletionProvider,
+		DocumentProblem,
+		EditorDiagnostic
+	} from '#lib/document/types.ts';
+	import type { Schema } from '#lib/document/codemirror/schema.ts';
+	import { getRoleSchema, validateRole } from '#lib/roles/api.ts';
+	import { permissionKey, readRoleDocument, type RoleDocument } from '#lib/roles/document.ts';
+	import type { Permission } from '#lib/roles/types.ts';
 
 	// A role as a JSON or YAML document, {name, description, permission_keys}, checked against the API as it is typed. The parent owns saving and reads the document back with exportDocument.
 	let {

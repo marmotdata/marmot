@@ -23,7 +23,7 @@ try {
 const config: Config = {
   title: "Marmot",
   tagline: "The open source knowledgehouse for your company",
-  favicon: "img/favicon.ico",
+  favicon: "img/favicon.svg",
 
   // Set the production url of your site here
   url: "https://marmotdata.io",
@@ -52,6 +52,14 @@ const config: Config = {
     locales: ["en"],
   },
   headTags: [
+    {
+      tagName: "link",
+      attributes: { rel: "icon", href: "/img/favicon.ico", sizes: "32x32" },
+    },
+    {
+      tagName: "link",
+      attributes: { rel: "apple-touch-icon", href: "/img/apple-touch-icon.png" },
+    },
     {
       tagName: "meta",
       attributes: {

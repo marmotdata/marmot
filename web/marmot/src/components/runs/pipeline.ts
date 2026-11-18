@@ -1,7 +1,7 @@
 import cronstrue from 'cronstrue/i18n';
-import { m } from '$lib/paraglide/messages';
-import { getLocale } from '$lib/paraglide/runtime';
-import { fetchApi } from '$lib/api';
+import { m } from '#lib/paraglide/messages.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
+import { fetchApi } from '#lib/api.ts';
 import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
 
 // Shapes and helpers shared by the Plugins list, the pipeline page and the pipeline create and edit forms

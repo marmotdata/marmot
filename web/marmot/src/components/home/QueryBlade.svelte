@@ -2,14 +2,19 @@
 	import '@marmotdata/elements/code-sample.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { BladeSlot } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import { mrnShortName } from '$lib/mrn';
-	import { formatDateTime, formatNumber } from '$lib/utils/format';
-	import { getQueryRecord } from '$lib/dataquery/api';
-	import { assetRouteParams, clientLabel, isRealTime, subjectParts } from '$lib/dataquery/format';
-	import type { QueryRecord } from '$lib/dataquery/types';
+	import { BladeSlot } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { mrnShortName } from '#lib/mrn.ts';
+	import { formatDateTime, formatNumber } from '#lib/utils/format.ts';
+	import { getQueryRecord } from '#lib/dataquery/api.ts';
+	import {
+		assetRouteParams,
+		clientLabel,
+		isRealTime,
+		subjectParts
+	} from '#lib/dataquery/format.ts';
+	import type { QueryRecord } from '#lib/dataquery/types.ts';
 
 	// A query opened from Home's activity: who and what happened first, then why, what ran and what it read
 	let { queryId, onClose }: { queryId: string; onClose: () => void } = $props();

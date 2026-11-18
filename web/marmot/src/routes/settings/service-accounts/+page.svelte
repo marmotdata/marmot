@@ -8,15 +8,15 @@
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import type { MmPageChangeDetail } from '@marmotdata/elements/classes/pagination.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-	import { setCrumbs } from '$lib/mm';
-	import { toasts } from '$lib/stores/toast';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { m } from '$lib/paraglide/messages';
-	import { listServiceAccounts, deleteServiceAccount } from '$lib/serviceaccounts/api';
-	import { rowMenu } from '$lib/users/cells';
-	import { assetHref } from '$lib/assetrules/assets';
-	import type { ServiceAccount } from '$lib/serviceaccounts/types';
-	import CreateServiceAccountDrawer from '$components/serviceaccount/CreateServiceAccountDrawer.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { listServiceAccounts, deleteServiceAccount } from '#lib/serviceaccounts/api.ts';
+	import { rowMenu } from '#lib/users/cells.ts';
+	import { assetHref } from '#lib/assetrules/assets.ts';
+	import type { ServiceAccount } from '#lib/serviceaccounts/types.ts';
+	import CreateServiceAccountDrawer from '#components/serviceaccount/CreateServiceAccountDrawer.svelte';
 
 	// The API returns every service account at once, so search, the status filter and paging run here
 	const PAGE_SIZE = 50;
@@ -162,9 +162,8 @@
 		if (page.url.searchParams.get('create') === '1') {
 			creating = true;
 			goto(resolve('/settings/service-accounts'), {
-				replaceState: true,
-				noScroll: true,
-				keepFocus: true
+				replace: true,
+				reset: false
 			});
 		}
 	});

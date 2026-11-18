@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { fetchAssetBatch } from '$lib/dataproducts/assets';
-	import { previewAssetRule } from '$lib/assetrules/api';
-	import { assetCaption, assetHref } from '$lib/assetrules/assets';
-	import type { Asset } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchAssetBatch } from '#lib/dataproducts/assets.ts';
+	import { previewAssetRule } from '#lib/assetrules/api.ts';
+	import { assetCaption, assetHref } from '#lib/assetrules/assets.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let {
 		query,

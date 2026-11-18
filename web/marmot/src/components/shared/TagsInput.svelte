@@ -1,7 +1,7 @@
 <script lang="ts">
 	// A free-text tag field for create forms: Enter adds the typed tag as an mm-tag chip below.
-	import { INPUT } from '$lib/ui/classes';
-	import { m } from '$lib/paraglide/messages';
+	import { INPUT } from '#lib/ui/classes.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let {
 		tags = $bindable([]),

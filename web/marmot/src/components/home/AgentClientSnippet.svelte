@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '@marmotdata/elements/code-sample.js';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// How to add Marmot's MCP server to the common agent clients; clients sign in through OAuth in the browser, so no key is pasted anywhere
 	type Client = 'claude-code' | 'cursor' | 'claude-ai';

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
-	import { getSignInSettings, saveSignInSettings } from '$lib/sso/api';
-	import { toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import type { SignInSettings } from '$lib/sso/types';
-	import type { Role } from '$lib/roles/types';
-	import type { Team } from '$lib/teams/types';
+	import { getSignInSettings, saveSignInSettings } from '#lib/sso/api.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { SignInSettings } from '#lib/sso/types.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import type { Team } from '#lib/teams/types.ts';
 
 	// What happens the first time someone signs in with single sign-on, and whether passwords still work. Administrators always keep password sign-in, so turning it off cannot lock everyone out.
 	let {

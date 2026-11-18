@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import RoleEditor from '$components/role/RoleEditor.svelte';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { setCrumbs } from '$lib/mm';
-	import { getRole } from '$lib/roles/api';
-	import { documentFromRole, type RoleDocument } from '$lib/roles/document';
-	import { settingsCrumbs } from '$lib/settings/sections';
-	import { m } from '$lib/paraglide/messages';
+	import RoleEditor from '#components/role/RoleEditor.svelte';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { getRole } from '#lib/roles/api.ts';
+	import { documentFromRole, type RoleDocument } from '#lib/roles/document.ts';
+	import { settingsCrumbs } from '#lib/settings/sections.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let canManage = $derived(holdsAtRoot($myAccess, 'roles:manage'));
 

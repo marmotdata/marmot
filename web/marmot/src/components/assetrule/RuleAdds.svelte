@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { loadTerms } from '$lib/assetrules/terms';
-	import type { ExternalLink } from '$lib/assetrules/types';
-	import type { GlossaryTerm } from '$lib/glossary/types';
-	import { m } from '$lib/paraglide/messages';
+	import { loadTerms } from '#lib/assetrules/terms.ts';
+	import type { ExternalLink } from '#lib/assetrules/types.ts';
+	import type { GlossaryTerm } from '#lib/glossary/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// What a rule adds, by name: glossary terms as tags and links with their own external mark.
 	let { termIds = [], links = [] }: { termIds?: string[]; links?: ExternalLink[] } = $props();

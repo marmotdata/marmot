@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getAssetRule } from '$lib/assetrules/api';
-	import type { AssetRule } from '$lib/assetrules/types';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import RuleEditor from '$components/assetrule/RuleEditor.svelte';
+	import { getAssetRule } from '#lib/assetrules/api.ts';
+	import type { AssetRule } from '#lib/assetrules/types.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import RuleEditor from '#components/assetrule/RuleEditor.svelte';
 
 	let ruleId = $derived(page.params.id ?? '');
 	let rule = $state<AssetRule | null>(null);

@@ -3,10 +3,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { setCrumbs } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { userProfile } from '$lib/stores/user';
+	import { m } from '#lib/paraglide/messages.js';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { userProfile } from '#lib/stores/user.ts';
 	import {
 		apiKeys,
 		subscriptions,
@@ -14,7 +14,7 @@
 		loadApiKeys,
 		loadSubscriptions,
 		loadConnectedApps
-	} from '$components/auth/accountData';
+	} from '#components/auth/accountData.ts';
 
 	let { children }: { children: Snippet } = $props();
 

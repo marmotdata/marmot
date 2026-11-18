@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { getErrorMessage } from '$lib/stores/toast';
-	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
-	import { getAssetQueryStats, listQueryHistory } from '$lib/dataquery/api';
-	import { durationMs, outcomeReason, outcomeState, workspaceHref } from '$lib/dataquery/format';
-	import type { QueryAssetStats, QueryRecord } from '$lib/dataquery/types';
-	import { formatMs } from '$components/asset/assetFormat';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getErrorMessage } from '#lib/stores/toast.ts';
+	import { formatNumber, formatRelativeTime } from '#lib/utils/format.ts';
+	import { getAssetQueryStats, listQueryHistory } from '#lib/dataquery/api.ts';
+	import { durationMs, outcomeReason, outcomeState, workspaceHref } from '#lib/dataquery/format.ts';
+	import type { QueryAssetStats, QueryRecord } from '#lib/dataquery/types.ts';
+	import { formatMs } from '#components/asset/assetFormat.ts';
 	import QueryDetail from './QueryDetail.svelte';
 	import '@marmotdata/elements/query-history.js';
 	import '@marmotdata/elements/sparkline.js';

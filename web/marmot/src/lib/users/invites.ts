@@ -1,5 +1,5 @@
-import { fetchApi } from '$lib/api';
-import { parseApiError } from '$lib/stores/toast';
+import { fetchApi } from '#lib/api.ts';
+import { parseApiError } from '#lib/stores/toast.ts';
 import type { Invitation, InviteInfo } from './types';
 
 /** An invitation link the person can open, resolved against this page when the server does not know its own address. */

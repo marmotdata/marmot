@@ -3,12 +3,12 @@
 	import { createQuerySuggest } from '@marmotdata/elements/query-input.js';
 	import { untrack } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { m } from '$lib/paraglide/messages';
-	import { previewRule } from '$lib/dataproducts/api';
-	import { plainQuery } from '$lib/dataproducts/plain';
-	import { assetCaption, assetProvider, loadAssets } from '$lib/dataproducts/assets';
-	import type { RuleInput } from '$lib/dataproducts/types';
-	import type { Asset } from '$lib/assets/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { previewRule } from '#lib/dataproducts/api.ts';
+	import { plainQuery } from '#lib/dataproducts/plain.ts';
+	import { assetCaption, assetProvider, loadAssets } from '#lib/dataproducts/assets.ts';
+	import type { RuleInput } from '#lib/dataproducts/types.ts';
+	import type { Asset } from '#lib/assets/types.ts';
 
 	const SAMPLE = 3;
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mrnShortName } from '$lib/mrn';
+	import { mrnShortName } from '#lib/mrn.ts';
 	import { onMount } from 'svelte';
 	import '@marmotdata/elements/split-pane.js';
 	import '@marmotdata/elements/toolbar.js';
@@ -11,12 +11,12 @@
 	import type { MmSqlEditor, SqlError, SqlSchema } from '@marmotdata/elements/classes/sql-editor';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
 	import type { QueryHistoryItem } from '@marmotdata/elements/classes/query-history';
-	import { m } from '$lib/paraglide/messages';
-	import { ApiError, getErrorMessage, toasts } from '$lib/stores/toast';
-	import { formatDateTime, formatNumber } from '$lib/utils/format';
+	import { m } from '#lib/paraglide/messages.js';
+	import { ApiError, getErrorMessage, toasts } from '#lib/stores/toast.ts';
+	import { formatDateTime, formatNumber } from '#lib/utils/format.ts';
 	import { html } from 'lit';
 	import '@marmotdata/elements/tag.js';
-	import { holdsAtRoot, loadMyAccess, myAccess } from '$lib/iam/myAccess';
+	import { holdsAtRoot, loadMyAccess, myAccess } from '#lib/iam/myAccess.ts';
 	import {
 		cancelQuery,
 		listQueryHistory,
@@ -25,14 +25,14 @@
 		QueryRefusedError,
 		requestQueryAccess,
 		runQuery
-	} from '$lib/dataquery/api';
+	} from '#lib/dataquery/api.ts';
 	import {
 		assetRouteParams,
 		durationMs,
 		isRealTime,
 		outcomeReason,
 		qualifiedName
-	} from '$lib/dataquery/format';
+	} from '#lib/dataquery/format.ts';
 	import type {
 		QueryAssetContext,
 		QueryRecord,
@@ -40,7 +40,7 @@
 		QueryResult,
 		QuerySource,
 		QuerySourceTable
-	} from '$lib/dataquery/types';
+	} from '#lib/dataquery/types.ts';
 	import { resolve } from '$app/paths';
 	import QueryDetail from './QueryDetail.svelte';
 	import QueryEmptyState from './QueryEmptyState.svelte';

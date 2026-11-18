@@ -5,13 +5,13 @@
 	import '@marmotdata/elements/filter-pill.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
+	import { page, type ReadonlyURLSearchParams } from '$app/state';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import { myAccess, loadMyAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { getErrorMessage, toasts } from '$lib/stores/toast';
-	import { exportQueryHistory, listQueryHistory, listQuerySources } from '$lib/dataquery/api';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { myAccess, loadMyAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { getErrorMessage, toasts } from '#lib/stores/toast.ts';
+	import { exportQueryHistory, listQueryHistory, listQuerySources } from '#lib/dataquery/api.ts';
 	import {
 		actorKind,
 		actorName,
@@ -22,15 +22,15 @@
 		subjectParts,
 		tablesRead,
 		workspaceHref
-	} from '$lib/dataquery/format';
+	} from '#lib/dataquery/format.ts';
 	import type {
 		QueryHistoryFilter,
 		QueryOutcomeFilter,
 		QueryOutcomeReason,
 		QueryRecord,
 		QuerySource
-	} from '$lib/dataquery/types';
-	import QueryDetail from '$components/dataquery/QueryDetail.svelte';
+	} from '#lib/dataquery/types.ts';
+	import QueryDetail from '#components/dataquery/QueryDetail.svelte';
 
 	// The record of every data query, for whoever answers for how data is used: stewards and auditors as much as engineers, so it lives with governance rather than system settings. Every filter lives in the URL so other pages can link to a filtered audit, and ?id= opens one query's details.
 	type Range = '24h' | '7d' | '30d' | '90d';
@@ -94,7 +94,7 @@
 		};
 	}
 
-	function readParams(params: URLSearchParams) {
+	function readParams(params: ReadonlyURLSearchParams) {
 		const r = params.get('range') as Range | null;
 		range = r && RANGES.includes(r) ? r : '24h';
 		const o = params.get('outcome') as QueryOutcomeFilter | null;
@@ -121,9 +121,8 @@
 		const qs = params.toString();
 		lastSearch = qs ? `?${qs}` : '';
 		goto(resolve(qs ? `/query-audit?${qs}` : '/query-audit'), {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
+			replace: true,
+			reset: false
 		});
 	}
 

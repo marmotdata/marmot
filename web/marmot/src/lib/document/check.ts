@@ -1,6 +1,6 @@
 // Checks a whole document before it leaves its code view, for switching to a visual editor or to the other format. The schema checker is fetched with the editor, so this costs nothing extra once an editor has opened.
 
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import { parseDocument, type DocumentMode } from './format';
 import type { Schema } from './codemirror/schema';
 

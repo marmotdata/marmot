@@ -1,9 +1,9 @@
 <script lang="ts">
 	import '@marmotdata/elements/combobox.js';
 	import { tick } from 'svelte';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import type { Owner } from '$lib/dataproducts/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { Owner } from '#lib/dataproducts/types.ts';
 
 	// Chosen owners sit in their own list with Remove, apart from the search that adds more, so nobody has to untick a result to remove an owner.
 	let {

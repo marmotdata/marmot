@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { getAssetQueryPreview } from '$lib/dataquery/api';
+	import { fetchApi } from '#lib/api.ts';
+	import { getAssetQueryPreview } from '#lib/dataquery/api.ts';
 	import { page } from '$app/state';
-	import type { Asset, AssetTerm } from '$lib/assets/types';
-	import type { LineageNode, LineageResponse } from '$lib/lineage/types';
-	import RunHistory from '$components/runs/RunHistory.svelte';
+	import type { Asset, AssetTerm } from '#lib/assets/types.ts';
+	import type { LineageNode, LineageResponse } from '#lib/lineage/types.ts';
+	import RunHistory from '#components/runs/RunHistory.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import SubscribeButton from './SubscribeButton.svelte';
-	import { BladeSlot } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
+	import { BladeSlot } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { discoverPath } from '$lib/mrn';
-	import { formatDateTime } from '$lib/utils';
-	import { formatRelativeTime } from '$lib/utils/format';
-	import { compactNumber, providerLabel, typeLabel } from '$components/query/catalogSearch';
+	import { m } from '#lib/paraglide/messages.js';
+	import { discoverPath, discoverPathname } from '#lib/mrn.ts';
+	import { formatDateTime } from '#lib/utils/index.ts';
+	import { formatRelativeTime } from '#lib/utils/format.ts';
+	import { compactNumber, providerLabel, typeLabel } from '#components/query/catalogSearch.ts';
 	import '@marmotdata/elements/popularity.js';
 
 	interface Owner {
@@ -223,7 +223,9 @@
 	{#if neighbours.length}
 		<mm-blade-section heading={m.discover_blade_where_it_flows()} flush>
 			{#if fullViewUrl}
-				<mm-link slot="actions" href={`${resolve(fullViewUrl as DiscoverAssetRoute)}?tab=lineage`}
+				<mm-link
+					slot="actions"
+					href={`${resolve(discoverPathname(fullViewUrl as DiscoverAssetRoute))}?tab=lineage`}
 					>{m.discover_blade_open_lineage()}</mm-link
 				>
 			{/if}
@@ -231,7 +233,7 @@
 				{#each [...upstream, ...downstream].slice(0, 8) as n (n.id)}
 					{@const route = routeOf(n.asset)}
 					<mm-list-item
-						href={route ? resolve(route as DiscoverAssetRoute) : ''}
+						href={route ? resolve(discoverPathname(route as DiscoverAssetRoute)) : ''}
 						secondary={nodeCaption(n)}
 					>
 						{#if n.asset.providers?.[0]}
@@ -411,7 +413,7 @@
 					<mm-button
 						variant="primary"
 						icon="open-in-full"
-						href={resolve(fullViewUrl as DiscoverAssetRoute)}
+						href={resolve(discoverPathname(fullViewUrl as DiscoverAssetRoute))}
 						>{m.discover_blade_open_asset()}</mm-button
 					>
 				{/if}

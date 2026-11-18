@@ -4,10 +4,10 @@
 	import '@marmotdata/elements/code-sample.js';
 	import { resolve } from '$app/paths';
 	import { dump as dumpYaml } from 'js-yaml';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { assetRouteParams } from '$lib/mrn';
-	import { formatNumber } from '$lib/utils/format';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { assetRouteParams } from '#lib/mrn.ts';
+	import { formatNumber } from '#lib/utils/format.ts';
 	import {
 		formatRunDuration,
 		formatStamp,

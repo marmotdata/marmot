@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { m } from '$lib/paraglide/messages';
-	import type { DocumentMode } from '$lib/document/format';
-	import type { CompletionProvider, EditorDiagnostic } from '$lib/document/types';
-	import type { EditorController } from '$lib/document/codemirror/editor';
-	import type { Schema } from '$lib/document/codemirror/schema';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { DocumentMode } from '#lib/document/format.ts';
+	import type { CompletionProvider, EditorDiagnostic } from '#lib/document/types.ts';
+	import type { EditorController } from '#lib/document/codemirror/editor.ts';
+	import type { Schema } from '#lib/document/codemirror/schema.ts';
 	import IconifyIcon from '@iconify/svelte';
 	import Alert from './Alert.svelte';
 
@@ -86,7 +86,7 @@
 		};
 		host?.addEventListener('keydown', keepEscape);
 
-		import('$lib/document/codemirror/editor')
+		import('#lib/document/codemirror/editor.ts')
 			.then(({ createEditor }) => {
 				if (destroyed || !host) return;
 				created = createEditor({

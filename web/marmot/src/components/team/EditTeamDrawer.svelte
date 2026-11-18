@@ -2,10 +2,10 @@
 	import { untrack } from 'svelte';
 	import '@marmotdata/elements/drawer.js';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
-	import { fetchApi } from '$lib/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import type { TeamRow } from '$lib/teams/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { TeamRow } from '#lib/teams/types.ts';
 
 	// Renames a team or changes its description; tags and metadata are edited in place on the team page
 	let {

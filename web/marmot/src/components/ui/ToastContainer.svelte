@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toasts, type Toast } from '$lib/stores/toast';
+	import { toasts, type Toast } from '#lib/stores/toast.ts';
 
 	// The app's toasts as mm-toast elements in one mm-toaster. The store keeps owning each toast's lifetime, so the elements get no timer of their own and closing one removes it from the store.
 	const TONES: Record<Toast['variant'], 'success' | 'danger' | 'info' | 'warning'> = {

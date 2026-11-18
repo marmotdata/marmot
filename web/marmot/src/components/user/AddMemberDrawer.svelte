@@ -2,15 +2,15 @@
 	import { onMount } from 'svelte';
 	import '@marmotdata/elements/drawer.js';
 	import '@marmotdata/elements/multiselect.js';
-	import { fetchApi } from '$lib/api';
-	import { listRoles } from '$lib/roles/api';
-	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { formatList } from '$lib/utils';
-	import type { Role } from '$lib/roles/types';
-	import type { Team } from '$lib/teams/types';
-	import type { Invitation } from '$lib/users/types';
-	import { inviteMember } from '$lib/users/invites';
+	import { fetchApi } from '#lib/api.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import { toasts, parseApiError, isLimitExceeded } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatList } from '#lib/utils/index.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import type { Team } from '#lib/teams/types.ts';
+	import type { Invitation } from '#lib/users/types.ts';
+	import { inviteMember } from '#lib/users/invites.ts';
 
 	// Either creates an account now with a temporary password, or invites people by email. Marmot sends no email, so an invitation is a one-time link that onInvited hands back for whoever invited them to pass on.
 	let {

@@ -6,13 +6,13 @@
 		type KeyValuePair
 	} from '@marmotdata/elements/classes/key-value-editor.js';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
-	import TagsInput from '$components/shared/TagsInput.svelte';
+	import TagsInput from '#components/shared/TagsInput.svelte';
 	import TeamMemberPicker from './TeamMemberPicker.svelte';
-	import { fetchApi } from '$lib/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { formatList } from '$lib/utils';
-	import type { OwnerResult } from '$lib/teams/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatList } from '#lib/utils/index.ts';
+	import type { OwnerResult } from '#lib/teams/types.ts';
 
 	// Creating a team asks for its name first; members, tags and metadata are optional groups that start as one Add button each. Webhooks are added from the team page once it exists.
 	let {

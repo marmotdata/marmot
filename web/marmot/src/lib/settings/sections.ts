@@ -1,6 +1,6 @@
-import { m } from '$lib/paraglide/messages';
-import { holdsAtRoot, type MyAccess } from '$lib/iam/myAccess';
-import type { Crumb } from '$lib/mm';
+import { m } from '#lib/paraglide/messages.js';
+import { holdsAtRoot, type MyAccess } from '#lib/iam/myAccess.ts';
+import type { Crumb } from '#lib/mm/index.ts';
 
 // The single definition of what Settings contains and who sees each part. The sub-navigation, the gear in the top bar, the Overview and the command palette all read it, so a section can never be reachable from one and missing from another.
 

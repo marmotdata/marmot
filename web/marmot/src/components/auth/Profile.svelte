@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { locales } from '$lib/paraglide/runtime';
-	import { changeLocale, locale, type Locale } from '$lib/i18n';
-	import { theme } from '$lib/stores/theme';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { userProfile } from '$lib/stores/user';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { locales } from '#lib/paraglide/runtime.js';
+	import { changeLocale, locale, type Locale } from '#lib/i18n/index.ts';
+	import { theme } from '#lib/stores/theme.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { userProfile } from '#lib/stores/user.ts';
 	import { providerName } from './providers';
 
 	type ThemeChoice = 'auto' | 'light' | 'dark';

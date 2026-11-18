@@ -6,9 +6,9 @@ import type {
 	LineageGraphEdge,
 	LineageGraphNode
 } from '@marmotdata/elements/classes/lineage-canvas.js';
-import type { Asset } from '$lib/assets/types';
-import { discoverPath, mrnShortName } from '$lib/mrn';
-import type { LineageEdge, LineageResponse } from '$lib/lineage/types';
+import type { Asset } from '#lib/assets/types.ts';
+import { discoverPath, mrnShortName } from '#lib/mrn.ts';
+import type { LineageEdge, LineageResponse } from '#lib/lineage/types.ts';
 
 const KINDS = new Set<LineageEdgeKind>([
 	'CONTAINS',

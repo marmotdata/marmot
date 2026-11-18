@@ -11,20 +11,20 @@
 	import type { MmFacetOption } from '@marmotdata/elements/classes/facet-sidebar.js';
 	import { untrack } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import { page } from '$app/state';
+	import { page, type ReadonlyURLSearchParams } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { browser } from '$app/environment';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import { mrnZone, mrnQualifiedName } from '$lib/mrn';
-	import { formatRelativeTime } from '$lib/utils/format';
-	import type { Asset } from '$lib/assets/types';
-	import type { DataProduct } from '$lib/dataproducts/types';
-	import AssetBlade from '$components/asset/AssetBlade.svelte';
-	import ProductBlade from '$components/product/ProductBlade.svelte';
+	import { browser } from '$app/env';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { mrnZone, mrnQualifiedName } from '#lib/mrn.ts';
+	import { formatRelativeTime } from '#lib/utils/format.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import type { DataProduct } from '#lib/dataproducts/types.ts';
+	import AssetBlade from '#components/asset/AssetBlade.svelte';
+	import ProductBlade from '#components/product/ProductBlade.svelte';
 	import {
 		RESULT_KINDS,
 		catalogFields,
@@ -34,7 +34,7 @@
 		loadMetadataFields,
 		providerLabel,
 		typeLabel
-	} from '$components/query/catalogSearch';
+	} from '#components/query/catalogSearch.ts';
 
 	interface SearchResultMetadata {
 		type?: string;
@@ -202,7 +202,7 @@
 		return f;
 	}
 
-	function readParams(params: URLSearchParams) {
+	function readParams(params: ReadonlyURLSearchParams) {
 		const list = (key: string) => params.get(key)?.split(',').filter(Boolean) ?? [];
 		filters = {
 			q: params.get('q') ?? '',
@@ -293,9 +293,8 @@
 		const qs = params.toString();
 		lastSearch = qs ? `?${qs}` : '';
 		goto(resolve(qs ? `/discover?${qs}` : '/discover'), {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
+			replace: true,
+			reset: false
 		});
 	}
 

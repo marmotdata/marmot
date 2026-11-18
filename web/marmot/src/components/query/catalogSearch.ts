@@ -1,10 +1,10 @@
 import type { SearchBarField } from '@marmotdata/elements/search-bar.js';
 import { providerNames } from '@marmotdata/icons';
-import { fetchApi } from '$lib/api';
-import { typeNames } from '$lib/assetNames';
-import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '$lib/assets/types';
-import { m } from '$lib/paraglide/messages';
-import { getLocale } from '$lib/paraglide/runtime';
+import { fetchApi } from '#lib/api.ts';
+import { typeNames } from '#lib/assetNames.ts';
+import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '#lib/assets/types.ts';
+import { m } from '#lib/paraglide/messages.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
 
 /** The search result kinds the backend knows, in the order the facets list them. */
 export const RESULT_KINDS = ['asset', 'data_product', 'glossary', 'team'] as const;

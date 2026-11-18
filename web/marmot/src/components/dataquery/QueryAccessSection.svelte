@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	interface Props {
 		queryEnabled: boolean;

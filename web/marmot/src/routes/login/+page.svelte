@@ -2,10 +2,10 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
-	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
-	import { auth } from '$lib/stores/auth';
-	import { userProfile } from '$lib/stores/user';
-	import { m } from '$lib/paraglide/messages';
+	import OAuthButtons from '#components/auth/OAuthButtons.svelte';
+	import { auth } from '#lib/stores/auth.ts';
+	import { userProfile } from '#lib/stores/user.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { MmTextField } from '@marmotdata/elements/text-field.js';
 
 	// The page is public, so it shows no hostname, version or build details: those help an attacker

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import type { Asset } from '$lib/assets/types';
-	import type { LineageNode, LineageResponse } from '$lib/lineage/types';
-	import { m } from '$lib/paraglide/messages';
-	import { zoneOf } from '$lib/mrn';
-	import { formatDateTime, formatRelativeTime } from '$lib/utils';
+	import { fetchApi } from '#lib/api.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import type { LineageNode, LineageResponse } from '#lib/lineage/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { zoneOf } from '#lib/mrn.ts';
+	import { formatDateTime, formatRelativeTime } from '#lib/utils/index.ts';
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import { assetHref, providerKey } from './assetFormat';

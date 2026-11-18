@@ -1,6 +1,6 @@
 import { Centrifuge, type Subscription } from 'centrifuge';
-import { browser } from '$app/environment';
-import { auth } from '$lib/stores/auth';
+import { browser } from '$app/env';
+import { auth } from '#lib/stores/auth.ts';
 
 export type JobRunEvent = {
 	type:

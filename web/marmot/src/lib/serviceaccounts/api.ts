@@ -1,5 +1,5 @@
-import { fetchApi } from '$lib/api';
-import { throwApiError } from '$lib/stores/toast';
+import { fetchApi } from '#lib/api.ts';
+import { throwApiError } from '#lib/stores/toast.ts';
 import type {
 	ServiceAccount,
 	ServiceAccountAPIKey,

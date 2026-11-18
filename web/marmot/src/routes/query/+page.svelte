@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { setCrumbs } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import QueryWorkspace from '$components/dataquery/QueryWorkspace.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import QueryWorkspace from '#components/dataquery/QueryWorkspace.svelte';
 
 	const canRun = auth.hasPermission('assets', 'query');
 

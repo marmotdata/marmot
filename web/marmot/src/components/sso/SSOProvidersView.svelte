@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { html } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
-	import { listProviderStatuses, setProviderEnabled } from '$lib/sso/api';
-	import { toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import type { SSOProviderStatus } from '$lib/sso/types';
+	import { listProviderStatuses, setProviderEnabled } from '#lib/sso/api.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { SSOProviderStatus } from '#lib/sso/types.ts';
 
 	// Providers are defined in the server configuration, so this page cannot add one; it can switch a configured provider off and on again without touching the file, and shows who uses each.
 	let { onChange }: { onChange?: (providers: SSOProviderStatus[]) => void } = $props();

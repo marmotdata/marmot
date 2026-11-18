@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { discoverPath, mrnProvider } from '$lib/mrn';
-	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { discoverPath, discoverPathname, mrnProvider } from '#lib/mrn.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
 	import type { DataTableColumn } from '@marmotdata/elements/data-table.js';
 	import { subscriptions, loadSubscriptions, type SubscriptionWithAsset } from './accountData';
 	import { html } from 'lit';
@@ -21,7 +21,7 @@
 
 	function assetHref(sub: SubscriptionWithAsset): string {
 		const path = discoverPath(sub.asset_mrn);
-		return path ? resolve(path) : '';
+		return path ? resolve(discoverPathname(path)) : '';
 	}
 
 	async function unsubscribe(sub: SubscriptionWithAsset) {

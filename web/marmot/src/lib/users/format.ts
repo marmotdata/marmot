@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { User } from './types';
 
 const PROVIDERS: Record<string, string> = {

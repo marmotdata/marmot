@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
-import { browser } from '$app/environment';
-import { auth } from '$lib/stores/auth';
+import { browser } from '$app/env';
+import { auth } from '#lib/stores/auth.ts';
 
 export interface MyAccess {
 	/** Whether the token has been read; until then nothing is held. */

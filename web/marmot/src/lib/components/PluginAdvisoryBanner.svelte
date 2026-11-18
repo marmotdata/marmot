@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import type { AdvisoryBannerEntry } from '$lib/plugins/advisoryBanner.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { AdvisoryBannerEntry } from '#lib/plugins/advisoryBanner.svelte.ts';
 
 	// Purely presentational: the root layout decides whether this is the one banner to show (there
 	// is only one banner slot) and which entry is the most severe across every plugin.

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import { formatRelativeTime } from '$lib/utils';
-	import type { PluginUpdatesStatus } from '$lib/plugins/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatRelativeTime } from '#lib/utils/index.ts';
+	import type { PluginUpdatesStatus } from '#lib/plugins/types.ts';
 
 	// The server's own update policy and the state of the plugin index: read-only here, since both
 	// are set in Marmot's configuration, not from this page.

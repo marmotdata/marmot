@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import type { Asset } from '$lib/assets/types';
-	import { assetCaption, assetProvider, searchAssets } from '$lib/dataproducts/assets';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { assetCaption, assetProvider, searchAssets } from '#lib/dataproducts/assets.ts';
 
 	// Search results each carry their own Add button that acts at once; what is already chosen is listed elsewhere, never mixed into the results.
 	let {

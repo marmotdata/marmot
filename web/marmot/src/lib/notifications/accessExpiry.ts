@@ -1,5 +1,5 @@
-import { m } from '$lib/paraglide/messages';
-import { formatDateTime } from '$lib/utils/format';
+import { m } from '#lib/paraglide/messages.js';
+import { formatDateTime } from '#lib/utils/format.ts';
 
 // Copy for access_expiry notifications, rebuilt from data so it reads in the viewer's language and time zone. Each kind of credential or grant has its own case; anything unrecognised keeps the server's English.
 

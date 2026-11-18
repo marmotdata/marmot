@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import SSOProvidersView from '$components/sso/SSOProvidersView.svelte';
-	import GroupMappings from '$components/sso/GroupMappings.svelte';
-	import NewMemberSettings from '$components/sso/NewMemberSettings.svelte';
-	import { fetchApi } from '$lib/api';
-	import { listRoles } from '$lib/roles/api';
-	import { m } from '$lib/paraglide/messages';
-	import type { SSOProviderStatus } from '$lib/sso/types';
-	import type { Role } from '$lib/roles/types';
-	import type { Team } from '$lib/teams/types';
+	import SSOProvidersView from '#components/sso/SSOProvidersView.svelte';
+	import GroupMappings from '#components/sso/GroupMappings.svelte';
+	import NewMemberSettings from '#components/sso/NewMemberSettings.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { SSOProviderStatus } from '#lib/sso/types.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import type { Team } from '#lib/teams/types.ts';
 
 	// The mappings and the new-member form both choose from roles and teams, so they are read once here
 	let providers = $state<SSOProviderStatus[]>([]);

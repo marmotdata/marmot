@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	export let value: string = '';
 	export let min: string | null = null;

@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
-import { browser } from '$app/environment';
-import { fetchApi } from '$lib/api';
+import { browser } from '$app/env';
+import { fetchApi } from '#lib/api.ts';
 
 export type NotificationType =
 	| 'system'

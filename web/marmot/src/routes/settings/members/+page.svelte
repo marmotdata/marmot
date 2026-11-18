@@ -7,21 +7,21 @@
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import type { MmPageChangeDetail } from '@marmotdata/elements/classes/pagination.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-	import { setCrumbs } from '$lib/mm';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { listRoles } from '$lib/roles/api';
-	import { m } from '$lib/paraglide/messages';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { html, nothing } from 'lit';
-	import { rowMenu } from '$lib/users/cells';
-	import { renewInvite, withdrawInvite } from '$lib/users/invites';
-	import type { Invitation, MemberStatus, User } from '$lib/users/types';
-	import type { Role } from '$lib/roles/types';
-	import AddMemberDrawer from '$components/user/AddMemberDrawer.svelte';
-	import EditMemberDrawer from '$components/user/EditMemberDrawer.svelte';
-	import InviteLinksDrawer from '$components/user/InviteLinksDrawer.svelte';
+	import { rowMenu } from '#lib/users/cells.ts';
+	import { renewInvite, withdrawInvite } from '#lib/users/invites.ts';
+	import type { Invitation, MemberStatus, User } from '#lib/users/types.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import AddMemberDrawer from '#components/user/AddMemberDrawer.svelte';
+	import EditMemberDrawer from '#components/user/EditMemberDrawer.svelte';
+	import InviteLinksDrawer from '#components/user/InviteLinksDrawer.svelte';
 
 	// The server filters and pages members, so the list stays quick with thousands of people
 	const PAGE_SIZE = 50;
@@ -272,7 +272,7 @@
 		// The old /users/new route redirects here with ?create=1, so open the drawer and drop the flag so a refresh does not reopen it
 		if (page.url.searchParams.get('create') === '1') {
 			adding = true;
-			goto(resolve('/settings/members'), { replaceState: true, noScroll: true, keepFocus: true });
+			goto(resolve('/settings/members'), { replace: true, reset: false });
 		}
 	});
 </script>

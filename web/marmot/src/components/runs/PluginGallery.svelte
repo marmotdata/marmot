@@ -3,7 +3,7 @@
 	import '@marmotdata/elements/toolbar.js';
 	import '@marmotdata/elements/tag.js';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { PluginInfo } from './pipeline';
 
 	interface Props {

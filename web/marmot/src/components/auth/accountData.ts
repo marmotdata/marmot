@@ -1,7 +1,7 @@
 import { writable, get } from 'svelte/store';
-import { fetchApi } from '$lib/api';
-import { handleApiError } from '$lib/stores/toast';
-import { m } from '$lib/paraglide/messages';
+import { fetchApi } from '#lib/api.ts';
+import { handleApiError } from '#lib/stores/toast.ts';
+import { m } from '#lib/paraglide/messages.js';
 
 export interface ApiKey {
 	id: string;

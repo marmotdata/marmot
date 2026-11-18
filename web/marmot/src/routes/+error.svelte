@@ -2,8 +2,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { setCrumbs } from '$lib/mm';
+	import { m } from '#lib/paraglide/messages.js';
+	import { setCrumbs } from '#lib/mm/index.ts';
 
 	// Error pages keep the app shell so every destination stays one click away, and show no banner as well because it would say the same thing as the page
 

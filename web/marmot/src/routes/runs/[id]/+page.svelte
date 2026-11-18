@@ -7,8 +7,8 @@
 	import { page } from '$app/state';
 	import { html } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import RunDrawer from '$components/runs/RunDrawer.svelte';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import RunDrawer from '#components/runs/RunDrawer.svelte';
 	import {
 		BASE_FIELDS,
 		describeCron,
@@ -21,16 +21,16 @@
 		type JobRun,
 		type Pipeline,
 		type PluginInfo
-	} from '$components/runs/pipeline';
-	import { fetchApi } from '$lib/api';
-	import { setCrumbs } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { encryptionConfigured } from '$lib/stores/encryption';
-	import { toasts } from '$lib/stores/toast';
-	import { websocketService, type JobRunEvent } from '$lib/websocket';
-	import { m } from '$lib/paraglide/messages';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { formatDate, formatDateTime, formatNumber } from '$lib/utils/format';
+	} from '#components/runs/pipeline.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { encryptionConfigured } from '#lib/stores/encryption.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { websocketService, type JobRunEvent } from '#lib/websocket.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { formatDate, formatDateTime, formatNumber } from '#lib/utils/format.ts';
 
 	type StatusFilter = 'all' | 'succeeded' | 'failed' | 'running' | 'cancelled';
 
@@ -620,9 +620,8 @@
 							size="sm"
 							variant="secondary"
 							icon="terminal"
-							href={resolve(
-								`/pipelines/${id}/edit?query=1` as `/pipelines/${string}/edit?${string}`
-							)}>{m.plugins_turn_on_querying()}</mm-button
+							href={resolve('/pipelines/[id]/edit?query=1', { id })}
+							>{m.plugins_turn_on_querying()}</mm-button
 						>
 					</div>
 				</mm-section>

@@ -1,4 +1,4 @@
-import { fetchApi } from '$lib/api';
+import { fetchApi } from '#lib/api.ts';
 
 export type RecentKind = 'asset' | 'glossary_term' | 'data_product' | 'saved_query';
 
@@ -65,7 +65,7 @@ type ViewBody =
 export function viewedItem(
 	routeId: string | null,
 	params: Record<string, string | undefined>,
-	search: URLSearchParams
+	search: Pick<URLSearchParams, 'get' | 'has'>
 ): ViewBody | null {
 	switch (routeId) {
 		case '/discover/[type]/[service]/[name]':

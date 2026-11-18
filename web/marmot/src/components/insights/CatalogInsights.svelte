@@ -3,11 +3,11 @@
 	import '@marmotdata/elements/proportion-bar.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { formatRelativeTime } from '$lib/utils/format';
-	import { assetRouteParams } from '$lib/dataquery/format';
-	import { listStaleAssets, type StaleAsset } from '$lib/home/api';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatRelativeTime } from '#lib/utils/format.ts';
+	import { assetRouteParams } from '#lib/dataquery/format.ts';
+	import { listStaleAssets, type StaleAsset } from '#lib/home/api.ts';
 	import RankedPanel, { type RankedItem } from './RankedPanel.svelte';
 	import { RANGE_HOURS, percent, type InsightsRange } from './range';
 

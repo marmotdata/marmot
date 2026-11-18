@@ -5,13 +5,13 @@
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
 	import type { MmDialog } from '@marmotdata/elements/dialog.js';
-	import { createGroupMapping, deleteGroupMapping, listGroupMappings } from '$lib/sso/api';
-	import { toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { providerName } from '$lib/users/format';
-	import type { GroupMapping, SSOProviderStatus } from '$lib/sso/types';
-	import type { Role } from '$lib/roles/types';
-	import type { Team } from '$lib/teams/types';
+	import { createGroupMapping, deleteGroupMapping, listGroupMappings } from '#lib/sso/api.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { providerName } from '#lib/users/format.ts';
+	import type { GroupMapping, SSOProviderStatus } from '#lib/sso/types.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import type { Team } from '#lib/teams/types.ts';
 
 	// Groups from the identity provider, each giving a role, a team or both. They are applied at every sign-in, and a mapped role replaces the default one.
 	let {

@@ -19,12 +19,12 @@
 	import TurndownService from 'turndown';
 	import { gfm } from '@truto/turndown-plugin-gfm';
 	import Icon from '@iconify/svelte';
-	import { fetchApi } from '$lib/api';
+	import { fetchApi } from '#lib/api.ts';
 	import { mergeAttributes } from '@tiptap/core';
-	import { docImagePath, loadDocImage } from '$lib/docs/images';
-	import { escapeHtml, sanitizeEditorHtml } from '$lib/sanitize';
-	import { m } from '$lib/paraglide/messages';
-	import MentionList from '$components/editor/MentionList.svelte';
+	import { docImagePath, loadDocImage } from '#lib/docs/images.ts';
+	import { escapeHtml, sanitizeEditorHtml } from '#lib/sanitize.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import MentionList from '#components/editor/MentionList.svelte';
 
 	// Debounce helper
 	function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
@@ -137,7 +137,7 @@
 			items: async ({ query }: { query: string }) => {
 				if (!query || query.length < 1) return [];
 				// Return a promise that resolves after debounce
-				return new Promise((resolve) => {
+				return new Promise<MentionItem[]>((resolve) => {
 					const debouncedSearch = debounce(async (q: string) => {
 						const results = await searchOwners(q);
 						resolve(results);
@@ -171,7 +171,7 @@
 					onStart: (props: {
 						items: Array<MentionItem>;
 						command: (item: { id: string; label: string; type: string }) => void;
-						clientRect: () => DOMRect | null;
+						clientRect?: (() => DOMRect | null) | null;
 					}) => {
 						popup = document.createElement('div');
 						popup.className = 'mention-popup';
@@ -190,7 +190,7 @@
 					onUpdate: (props: {
 						items: Array<MentionItem>;
 						command: (item: { id: string; label: string; type: string }) => void;
-						clientRect: () => DOMRect | null;
+						clientRect?: (() => DOMRect | null) | null;
 					}) => {
 						if (popup) {
 							const rect = props.clientRect?.();
@@ -250,7 +250,8 @@
 		onImageUpload = undefined
 	}: Props = $props();
 
-	let editor: Editor | null = null;
+	// Assigned in onMount, so the cast stops TypeScript narrowing it to null for the reactive reads below
+	let editor = null as Editor | null;
 	let element: HTMLElement;
 	let turndownService: TurndownService;
 	let isUpdating = false;

@@ -1,6 +1,6 @@
-import { fetchApi } from '$lib/api';
-import { documentErrorFrom } from '$lib/document/errors';
-import type { Schema } from '$lib/document/codemirror/schema';
+import { fetchApi } from '#lib/api.ts';
+import { documentErrorFrom } from '#lib/document/errors.ts';
+import type { Schema } from '#lib/document/codemirror/schema.ts';
 import type {
 	Role,
 	Permission,

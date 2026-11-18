@@ -1,12 +1,12 @@
 import { writable } from 'svelte/store';
-import { fetchApi } from '$lib/api';
-import { m } from '$lib/paraglide/messages';
-import { getLocale } from '$lib/paraglide/runtime';
-import { holdsAtRoot, type MyAccess } from '$lib/iam/myAccess';
-import { visibleItems } from '$lib/settings/sections';
-import { listServiceAccounts, listAPIKeys } from '$lib/serviceaccounts/api';
-import type { ServiceAccount } from '$lib/serviceaccounts/types';
-import { getSignInSettings, listGroupMappings, listSSOProviders } from '$lib/sso/api';
+import { fetchApi } from '#lib/api.ts';
+import { m } from '#lib/paraglide/messages.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
+import { holdsAtRoot, type MyAccess } from '#lib/iam/myAccess.ts';
+import { visibleItems } from '#lib/settings/sections.ts';
+import { listServiceAccounts, listAPIKeys } from '#lib/serviceaccounts/api.ts';
+import type { ServiceAccount } from '#lib/serviceaccounts/types.ts';
+import { getSignInSettings, listGroupMappings, listSSOProviders } from '#lib/sso/api.ts';
 
 // The things an administrator should look at: what has already broken and what is about to. The Settings overview lists them and the gear in the top bar counts them, so both read from these checks and cannot disagree.
 

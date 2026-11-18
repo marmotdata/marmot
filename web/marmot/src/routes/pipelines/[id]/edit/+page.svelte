@@ -5,19 +5,19 @@
 	import { page } from '$app/state';
 	import { get } from 'svelte/store';
 	import { Cron } from 'croner';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { encryptionConfigured } from '$lib/stores/encryption';
-	import { toasts } from '$lib/stores/toast';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import QueryAccessSection from '$components/dataquery/QueryAccessSection.svelte';
-	import ConfigFields from '$components/runs/ConfigFields.svelte';
-	import ConnectionTestCallout from '$components/runs/ConnectionTestCallout.svelte';
-	import PipelineDetailsFields from '$components/runs/PipelineDetailsFields.svelte';
-	import PluginSummary from '$components/runs/PluginSummary.svelte';
-	import type { Owner } from '$lib/dataproducts/types';
-	import ScheduleFields from '$components/runs/ScheduleFields.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { encryptionConfigured } from '#lib/stores/encryption.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import QueryAccessSection from '#components/dataquery/QueryAccessSection.svelte';
+	import ConfigFields from '#components/runs/ConfigFields.svelte';
+	import ConnectionTestCallout from '#components/runs/ConnectionTestCallout.svelte';
+	import PipelineDetailsFields from '#components/runs/PipelineDetailsFields.svelte';
+	import PluginSummary from '#components/runs/PluginSummary.svelte';
+	import type { Owner } from '#lib/dataproducts/types.ts';
+	import ScheduleFields from '#components/runs/ScheduleFields.svelte';
 	import {
 		AWS_PLUGINS,
 		cleanConfigForSubmit,
@@ -28,7 +28,7 @@
 		type ConnectionTestResult,
 		type Pipeline,
 		type PluginInfo
-	} from '$components/runs/pipeline';
+	} from '#components/runs/pipeline.ts';
 
 	interface EditConfig extends ConfigObject {
 		tags?: string[];

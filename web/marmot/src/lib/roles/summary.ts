@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { Permission } from './types';
 
 // Turns the instance's permissions into the grid the role editor shows: one row per part of Marmot, in words rather than resource_type, and one column per action. OSS and Cloud spell resource types differently (assets and asset, service_accounts and serviceAccount), so both are matched by one normalised name.

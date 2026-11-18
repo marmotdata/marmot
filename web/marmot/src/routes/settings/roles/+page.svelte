@@ -4,10 +4,10 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { listRoles } from '$lib/roles/api';
-	import type { Role } from '$lib/roles/types';
-	import { m } from '$lib/paraglide/messages';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import type { Role } from '#lib/roles/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	let canManage = $derived(holdsAtRoot($myAccess, 'roles:manage'));
 	let roles = $state<Role[]>([]);
@@ -65,7 +65,7 @@
 	onMount(() => {
 		// The old /roles/new route redirects here with ?create=1, which now means the create page
 		if (page.url.searchParams.get('create') === '1') {
-			goto(resolve('/settings/roles/new'), { replaceState: true });
+			goto(resolve('/settings/roles/new'), { replace: true });
 			return;
 		}
 		load();

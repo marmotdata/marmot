@@ -2688,7 +2688,6 @@
 	"query_range_separator": "TO",
 	"query_range_to_placeholder": "To",
 	"query_raw_query_label": "Raw Query",
-	"query_raw_query_placeholder": "e.g @kind = &quot;asset&quot; AND @type = &quot;table&quot;",
 	"query_remove_filter_title": "Remove filter",
 	"query_run_button": "Run Query",
 	"query_select_placeholder": "Select...",

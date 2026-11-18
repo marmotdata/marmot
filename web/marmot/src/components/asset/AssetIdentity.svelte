@@ -1,8 +1,8 @@
 <script lang="ts">
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { formatRelativeTime } from '$lib/utils';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatRelativeTime } from '#lib/utils/index.ts';
 
 	// The Identity section of the Metadata tab: the asset's MRN, the MRNs it used to have and which writers describe it.
 	let { assetId, mrn }: { assetId: string; mrn: string } = $props();

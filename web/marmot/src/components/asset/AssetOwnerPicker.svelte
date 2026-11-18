@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	export interface AssetOwner {
 		id: string;

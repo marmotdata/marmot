@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '@marmotdata/elements/fieldset.js';
 	import '@marmotdata/elements/number-field.js';
-	import { m } from '$lib/paraglide/messages';
-	import { formatList } from '$lib/utils/format';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatList } from '#lib/utils/format.ts';
 	import ListInput from './ListInput.svelte';
 	import {
 		AWS_PLUGINS,

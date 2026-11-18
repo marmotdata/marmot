@@ -167,6 +167,13 @@ export function discoverPath(mrn: string | null | undefined): DiscoverPath | nul
 	return p ? `/discover/${p.type}/${p.service}/${p.name}` : null;
 }
 
+export type DiscoverPathname = `discover/${string}/${string}/${string}`;
+
+/** A discover path without its leading slash, which is the form `resolve` takes for a concrete pathname rather than a route ID. */
+export function discoverPathname(path: DiscoverPath): DiscoverPathname {
+	return path.slice(1) as DiscoverPathname;
+}
+
 /** The pieces of an asset a link can be built from when the MRN is missing or unreadable. */
 export interface AssetLike {
 	mrn?: string | null;

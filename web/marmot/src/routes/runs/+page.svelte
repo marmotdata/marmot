@@ -9,16 +9,16 @@
 	import { html, nothing } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
 	import type { Run as StripRun } from '@marmotdata/elements/classes/run-strip.js';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { websocketService, type JobRunEvent } from '$lib/websocket';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
-	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
-	import { setCrumbs } from '$lib/mm';
-	import { formatRelativeTime } from '$lib/utils/format';
-	import PluginGallery from '$components/runs/PluginGallery.svelte';
-	import RunDrawer from '$components/runs/RunDrawer.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { websocketService, type JobRunEvent } from '#lib/websocket.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { encryptionConfigured, allowUnencrypted } from '#lib/stores/encryption.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { formatRelativeTime } from '#lib/utils/format.ts';
+	import PluginGallery from '#components/runs/PluginGallery.svelte';
+	import RunDrawer from '#components/runs/RunDrawer.svelte';
 	import {
 		describeCron,
 		isRunning,
@@ -27,7 +27,7 @@
 		type JobRun,
 		type Pipeline,
 		type PluginInfo
-	} from '$components/runs/pipeline';
+	} from '#components/runs/pipeline.ts';
 
 	// Plugins: the pipelines already connected first, then the gallery of every plugin that could be connected
 	const PAGE_SIZE = 25;

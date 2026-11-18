@@ -3,7 +3,7 @@
 	import '@marmotdata/elements/cron-field.js';
 	import '@marmotdata/elements/key-value-editor.js';
 	import type { KeyValuePair } from '@marmotdata/elements/classes/key-value-editor.js';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import ListInput from './ListInput.svelte';
 
 	interface BaseConfig {

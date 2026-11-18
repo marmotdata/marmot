@@ -1,6 +1,6 @@
-import { fetchApi } from '$lib/api';
-import { parseApiError } from '$lib/stores/toast';
-import { getLocale } from '$lib/paraglide/runtime';
+import { fetchApi } from '#lib/api.ts';
+import { parseApiError } from '#lib/stores/toast.ts';
+import { getLocale } from '#lib/paraglide/runtime.js';
 
 export interface SystemSearchIndex {
 	documents: number;

@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { getPluginUpdatesStatus } from './api';
 import { severityRank } from './advisories';
 import type { PluginAdvisory } from './types';

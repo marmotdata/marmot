@@ -2,7 +2,7 @@ import { auth } from './stores/auth';
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 
 interface FetchApiOptions extends RequestInit {
 	skipAuth?: boolean;

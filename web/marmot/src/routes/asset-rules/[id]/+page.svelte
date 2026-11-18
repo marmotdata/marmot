@@ -5,22 +5,22 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
 	import {
 		createAssetRule,
 		deleteAssetRule,
 		getAssetRule,
 		getAssetRuleAssets,
 		updateAssetRule
-	} from '$lib/assetrules/api';
-	import { assetHref } from '$lib/assetrules/assets';
-	import { plainQuery, providerLabel } from '$lib/assetrules/plain';
-	import type { AssetRule } from '$lib/assetrules/types';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDateTime } from '$lib/utils';
-	import RuleAdds from '$components/assetrule/RuleAdds.svelte';
+	} from '#lib/assetrules/api.ts';
+	import { assetHref } from '#lib/assetrules/assets.ts';
+	import { plainQuery, providerLabel } from '#lib/assetrules/plain.ts';
+	import type { AssetRule } from '#lib/assetrules/types.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDateTime } from '#lib/utils/index.ts';
+	import RuleAdds from '#components/assetrule/RuleAdds.svelte';
 
 	const PAGE_SIZE = 25;
 

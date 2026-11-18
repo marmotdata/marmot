@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
+	import { fetchApi } from '#lib/api.ts';
 	import { resolve } from '$app/paths';
-	import type { Asset, AssetTerm, GlossaryTerm } from '$lib/assets/types';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import type { Asset, AssetTerm, GlossaryTerm } from '#lib/assets/types.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// The "What it means" blade section: glossary terms linked to the asset, grouped by how they got there so only manual links can be removed here.
 	let { asset, editable = true }: { asset: Asset; editable?: boolean } = $props();
@@ -173,7 +173,7 @@
 				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
 					{#each manualTerms as t (t.term_id)}
 						<mm-tag
-							href={resolve(`/glossary/${t.term_id}`)}
+							href={resolve('/glossary/[[id]]', { id: t.term_id })}
 							removable={canManageAssets}
 							onmm-remove={() => removeTerm(t.term_id)}>{t.term_name}</mm-tag
 						>
@@ -185,7 +185,7 @@
 					<mm-text variant="caption" tone="secondary">{m.asset_page_from_rules()}</mm-text>
 					<div class="mm-cluster" style="--mm-gap: var(--space-2)">
 						{#each ruleTerms as t (t.term_id)}
-							<mm-tag href={resolve(`/glossary/${t.term_id}`)}>{t.term_name}</mm-tag>
+							<mm-tag href={resolve('/glossary/[[id]]', { id: t.term_id })}>{t.term_name}</mm-tag>
 						{/each}
 					</div>
 				</div>
@@ -195,7 +195,7 @@
 					<mm-text variant="caption" tone="secondary">{m.asset_page_from_plugins()}</mm-text>
 					<div class="mm-cluster" style="--mm-gap: var(--space-2)">
 						{#each pluginTerms as t (t.term_id)}
-							<mm-tag href={resolve(`/glossary/${t.term_id}`)}>{t.term_name}</mm-tag>
+							<mm-tag href={resolve('/glossary/[[id]]', { id: t.term_id })}>{t.term_name}</mm-tag>
 						{/each}
 					</div>
 				</div>

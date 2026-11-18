@@ -7,13 +7,13 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { userProfile } from '$lib/stores/user';
-	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
-	import { providerNames, typeNames } from '$lib/assetNames';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { userProfile } from '#lib/stores/user.ts';
+	import { toasts, parseApiError, isLimitExceeded } from '#lib/stores/toast.ts';
+	import { providerNames, typeNames } from '#lib/assetNames.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	interface OwnerOption {
 		value: string;

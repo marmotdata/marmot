@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { mrnShortName } from '$lib/mrn';
-	import { fetchApi } from '$lib/api';
-	import type { Asset } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
-	import { getLocale } from '$lib/paraglide/runtime';
-	import { formatRelativeTime } from '$lib/utils';
+	import { mrnShortName } from '#lib/mrn.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { formatRelativeTime } from '#lib/utils/index.ts';
 	import { formatMs } from './assetFormat';
 	import '@marmotdata/elements/run-strip.js';
 	import '@marmotdata/elements/code-sample.js';

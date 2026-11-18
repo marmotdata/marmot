@@ -3,12 +3,12 @@
 	import { resolve } from '$app/paths';
 	import '@marmotdata/elements/popularity.js';
 	import { toast } from '@marmotdata/elements/toast.js';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { getProductMembers, type MemberQuery } from '$lib/dataproducts/api';
-	import { assetRouteParams, popularityLevel } from '$lib/dataproducts/assets';
-	import type { DataProduct, Member, Rule } from '$lib/dataproducts/types';
-	import type { Asset } from '$lib/assets/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getProductMembers, type MemberQuery } from '#lib/dataproducts/api.ts';
+	import { assetRouteParams, popularityLevel } from '#lib/dataproducts/assets.ts';
+	import type { DataProduct, Member, Rule } from '#lib/dataproducts/types.ts';
+	import type { Asset } from '#lib/assets/types.ts';
 	import AssetPicker from './AssetPicker.svelte';
 
 	const PAGE = 25;

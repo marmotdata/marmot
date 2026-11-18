@@ -3,12 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { m } from '$lib/paraglide/messages';
-	import { setCrumbs } from '$lib/mm';
-	import { myAccess, loadMyAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import CatalogInsights from '$components/insights/CatalogInsights.svelte';
-	import QueryInsights from '$components/insights/QueryInsights.svelte';
-	import { isRange, type InsightsRange } from '$components/insights/range';
+	import { m } from '#lib/paraglide/messages.js';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { myAccess, loadMyAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import CatalogInsights from '#components/insights/CatalogInsights.svelte';
+	import QueryInsights from '#components/insights/QueryInsights.svelte';
+	import { isRange, type InsightsRange } from '#components/insights/range.ts';
 
 	type View = 'queries' | 'catalog';
 
@@ -35,7 +35,7 @@
 
 	function show(next: { view?: View; range?: InsightsRange }) {
 		const query = `view=${next.view ?? view}&range=${next.range ?? range}`;
-		goto(resolve(`/insights?${query}`), { replaceState: true, noScroll: true, keepFocus: true });
+		goto(resolve(`/insights?${query}`), { replace: true, reset: false });
 	}
 </script>
 

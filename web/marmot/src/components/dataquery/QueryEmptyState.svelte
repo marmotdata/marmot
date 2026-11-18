@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	interface Plugin {
 		id: string;
@@ -18,7 +18,6 @@
 	}
 
 	// The edit page reads ?query=1 to switch querying on, so the link carries it
-	type EnableRoute = `/pipelines/${string}/edit?query=1`;
 
 	// Shown when no source answers queries: it points at the pipelines that could be switched on and otherwise offers to create one, so the next step is always a click away
 	const canManage =
@@ -76,7 +75,7 @@
 							size="sm"
 							variant="secondary"
 							icon="toggle-on"
-							href={resolve(`/pipelines/${pipeline.id}/edit?query=1` as EnableRoute)}
+							href={resolve('/pipelines/[id]/edit?query=1', { id: pipeline.id })}
 							>{m.dataquery_empty_turn_on()}</mm-button
 						>
 					</mm-list-item>

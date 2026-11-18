@@ -5,22 +5,22 @@
 	import { html, nothing } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-	import { setCrumbs } from '$lib/mm';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate, formatRelativeTime } from '$lib/utils';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate, formatRelativeTime } from '#lib/utils/index.ts';
 	import {
 		getServiceAccount,
 		deleteServiceAccount,
 		listAPIKeys,
 		deleteAPIKey,
 		rotateAPIKey
-	} from '$lib/serviceaccounts/api';
-	import { assetHref } from '$lib/assetrules/assets';
-	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
-	import CreateApiKeyDrawer from '$components/serviceaccount/CreateApiKeyDrawer.svelte';
-	import EditServiceAccountDrawer from '$components/serviceaccount/EditServiceAccountDrawer.svelte';
+	} from '#lib/serviceaccounts/api.ts';
+	import { assetHref } from '#lib/assetrules/assets.ts';
+	import type { ServiceAccount, ServiceAccountAPIKey } from '#lib/serviceaccounts/types.ts';
+	import CreateApiKeyDrawer from '#components/serviceaccount/CreateApiKeyDrawer.svelte';
+	import EditServiceAccountDrawer from '#components/serviceaccount/EditServiceAccountDrawer.svelte';
 
 	// The server refuses a sixth key, so the button is disabled before people fill in the form
 	const MAX_KEYS = 5;
@@ -54,9 +54,8 @@
 		if (sa && page.url.searchParams.get('create') === '1') {
 			creatingKey = true;
 			goto(resolve('/settings/service-accounts/[id]', { id: sa.id }), {
-				replaceState: true,
-				noScroll: true,
-				keepFocus: true
+				replace: true,
+				reset: false
 			});
 		}
 	});

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { mrnShortName } from '$lib/mrn';
+	import { mrnShortName, discoverPathname, type DiscoverPath } from '#lib/mrn.ts';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import MetadataView from '$components/shared/MetadataView.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import MetadataView from '#components/shared/MetadataView.svelte';
 	import { assetHref } from './graph';
 
 	interface LineageNode {
@@ -35,7 +35,7 @@
 	let name = $derived(mrnShortName(node.id) || node.id);
 	let provider = $derived(node.asset.providers?.[0] ?? node.asset.provider ?? '');
 	let path = $derived(assetHref({ mrn: node.asset.mrn ?? '', type: node.type }));
-	let href = $derived(path ? resolve(path as `/discover/${string}/${string}/${string}`) : '');
+	let href = $derived(path ? resolve(discoverPathname(path as DiscoverPath)) : '');
 	let hasMetadata = $derived(Object.keys(node.asset.metadata ?? {}).length > 0);
 </script>
 

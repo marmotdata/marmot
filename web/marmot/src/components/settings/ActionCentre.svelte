@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import type { MyAccess } from '$lib/iam/myAccess';
-	import { attentionChecks, publishAttention, type Attention } from '$lib/settings/attention';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { MyAccess } from '#lib/iam/myAccess.ts';
+	import { attentionChecks, publishAttention, type Attention } from '#lib/settings/attention.ts';
 
 	// What an administrator should look at first: what has already broken, then what is about to. Each check runs on its own, so one failing or forbidden request only hides its own rows.
 	let { access }: { access: MyAccess } = $props();

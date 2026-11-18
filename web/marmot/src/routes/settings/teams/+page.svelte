@@ -10,14 +10,14 @@
 	} from '@marmotdata/elements/classes/data-table.js';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import type { MmPageChangeDetail } from '@marmotdata/elements/classes/pagination.js';
-	import { setCrumbs } from '$lib/mm';
-	import { fetchApi } from '$lib/api';
-	import { handleApiError } from '$lib/stores/toast';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { m } from '$lib/paraglide/messages';
-	import { providerName } from '$lib/users/format';
-	import type { TeamRow } from '$lib/teams/types';
-	import CreateTeamDrawer from '$components/team/CreateTeamDrawer.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { handleApiError } from '#lib/stores/toast.ts';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { providerName } from '#lib/users/format.ts';
+	import type { TeamRow } from '#lib/teams/types.ts';
+	import CreateTeamDrawer from '#components/team/CreateTeamDrawer.svelte';
 
 	// The API has no team search, so every team is loaded a hundred at a time and searched, filtered and paged here
 	const FETCH_LIMIT = 100;
@@ -162,7 +162,7 @@
 		// The old /teams/new route redirects here with ?create=1, so open the drawer and drop the flag so a refresh does not reopen it
 		if (page.url.searchParams.get('create') === '1') {
 			creating = true;
-			goto(resolve('/settings/teams'), { replaceState: true, noScroll: true, keepFocus: true });
+			goto(resolve('/settings/teams'), { replace: true, reset: false });
 		}
 	});
 </script>

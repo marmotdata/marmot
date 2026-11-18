@@ -1,9 +1,9 @@
 <script lang="ts">
-	import SearchManagement from '$components/admin/SearchManagement.svelte';
-	import QueryProcesses from '$components/admin/QueryProcesses.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { getSystemInfo, type SystemInfo } from '$lib/settings/system';
+	import SearchManagement from '#components/admin/SearchManagement.svelte';
+	import QueryProcesses from '#components/admin/QueryProcesses.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { getSystemInfo, type SystemInfo } from '#lib/settings/system.ts';
 
 	// Plugin processes that answer data queries are system health, shown to whoever may read the query log
 	let canViewQueryStatus = $derived(holdsAtRoot($myAccess, 'access:view'));

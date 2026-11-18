@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import type { Asset } from '$lib/assets/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { Asset } from '#lib/assets/types.ts';
 	import { providerOf } from './graph';
 
 	let {

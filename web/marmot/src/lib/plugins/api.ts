@@ -1,5 +1,5 @@
-import { fetchApi } from '$lib/api';
-import { parseApiError } from '$lib/stores/toast';
+import { fetchApi } from '#lib/api.ts';
+import { parseApiError } from '#lib/stores/toast.ts';
 import type { PluginUpdatesStatus } from './types';
 
 // Thrown when the server has no update manager wired up (503 on every route below), so the page

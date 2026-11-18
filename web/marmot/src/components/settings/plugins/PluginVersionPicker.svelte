@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import type { PluginVersionOption, PluginVersionStatus } from '$lib/plugins/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { PluginVersionOption, PluginVersionStatus } from '#lib/plugins/types.ts';
 
 	// Every published version of one plugin, newest first (the server's own order), so an admin can
 	// move to something other than the latest: an older compatible release, or one it was pinned to

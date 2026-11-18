@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '@marmotdata/elements/query-input.js';
 	import { createQuerySuggest } from '@marmotdata/elements/query-input.js';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import { catalogFields, loadFieldValues } from './catalogSearch';
 
 	// A single search box that highlights Marmot's query syntax and completes fields, operators and values as people type.

@@ -1,5 +1,5 @@
-import { getLocale } from '$lib/paraglide/runtime';
-import { m } from '$lib/paraglide/messages';
+import { getLocale } from '#lib/paraglide/runtime.js';
+import { m } from '#lib/paraglide/messages.js';
 
 /**
  * Format a date string as a date in the active UI locale

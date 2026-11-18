@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Asset } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
-	import { formatRelativeTime } from '$lib/utils';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatRelativeTime } from '#lib/utils/index.ts';
 	import { SvelteSet } from 'svelte/reactivity';
 	import AssetIdentity from './AssetIdentity.svelte';
 	import '@marmotdata/elements/metadata-viewer.js';

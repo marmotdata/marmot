@@ -7,16 +7,16 @@
 	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { createAssetRule, previewAssetRule, updateAssetRule } from '$lib/assetrules/api';
-	import { fieldLabel, providerLabel } from '$lib/assetrules/plain';
-	import { loadTerms } from '$lib/assetrules/terms';
-	import type { AssetRule, ExternalLink } from '$lib/assetrules/types';
-	import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '$lib/assets/types';
-	import { searchTerms } from '$lib/glossary/api';
-	import type { GlossaryTerm } from '$lib/glossary/types';
-	import { m } from '$lib/paraglide/messages';
-	import { useUnsavedChangesGuard } from '$lib/utils/unsavedChanges.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { createAssetRule, previewAssetRule, updateAssetRule } from '#lib/assetrules/api.ts';
+	import { fieldLabel, providerLabel } from '#lib/assetrules/plain.ts';
+	import { loadTerms } from '#lib/assetrules/terms.ts';
+	import type { AssetRule, ExternalLink } from '#lib/assetrules/types.ts';
+	import type { MetadataFieldSuggestion, MetadataValueSuggestion } from '#lib/assets/types.ts';
+	import { searchTerms } from '#lib/glossary/api.ts';
+	import type { GlossaryTerm } from '#lib/glossary/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { useUnsavedChangesGuard } from '#lib/utils/unsavedChanges.svelte.ts';
 	import RulePreviewPanel from './RulePreviewPanel.svelte';
 
 	let { rule = null, cancelHref }: { rule?: AssetRule | null; cancelHref: string } = $props();

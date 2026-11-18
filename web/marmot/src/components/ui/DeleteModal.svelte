@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// Kept for pages not yet moved to mm-confirm-dialog directly: the confirmation every destructive action goes through, optionally asking for the resource name to be typed (the element's mono field) before the crimson button unlocks.
 	interface Props {

@@ -2,15 +2,15 @@
 	import { onMount } from 'svelte';
 	import '@marmotdata/elements/saved-query-card.js';
 	import type { MmDialog } from '@marmotdata/elements/dialog.js';
-	import { m } from '$lib/paraglide/messages';
-	import { getErrorMessage, toasts } from '$lib/stores/toast';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getErrorMessage, toasts } from '#lib/stores/toast.ts';
 	import {
 		createSavedQuery,
 		deleteSavedQuery,
 		listSavedQueries,
 		markSavedQueryRun,
 		type SavedQuery
-	} from '$lib/savedqueries/api';
+	} from '#lib/savedqueries/api.ts';
 
 	// The workspace's current source and statement are what Save query keeps; opening a saved query hands it back to the workspace
 	let {

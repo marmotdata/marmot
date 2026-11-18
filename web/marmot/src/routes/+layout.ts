@@ -1,4 +1,4 @@
-import { initI18n } from '$lib/i18n';
+import { initI18n } from '#lib/i18n/index.ts';
 
 // Since we're using a static adapter with fallback and serving from a Go backend,
 // we need to ensure the app properly hydrates on the client side.

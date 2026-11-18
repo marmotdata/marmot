@@ -1,7 +1,7 @@
-import { m } from '$lib/paraglide/messages';
-import { formatList } from '$lib/utils/format';
-import { discoverPath } from '$lib/mrn';
-import type { Notification } from '$lib/stores/notifications';
+import { m } from '#lib/paraglide/messages.js';
+import { formatList } from '#lib/utils/format.ts';
+import { discoverPath } from '#lib/mrn.ts';
+import type { Notification } from '#lib/stores/notifications.ts';
 import { accessExpiryCopy } from './accessExpiry';
 
 // Copy is rebuilt from the stored type and data so it translates, falling back to the server's English for old rows and unknown types

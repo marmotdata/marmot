@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '@marmotdata/elements/textarea.js';
-	import { m } from '$lib/paraglide/messages';
-	import type { Owner } from '$lib/dataproducts/types';
-	import OwnerField from '$components/product/OwnerField.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { Owner } from '#lib/dataproducts/types.ts';
+	import OwnerField from '#components/product/OwnerField.svelte';
 
 	// A pipeline's description and its one owner, shared by the create and edit forms
 	let {

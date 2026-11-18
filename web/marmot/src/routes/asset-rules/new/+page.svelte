@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { setCrumbs } from '$lib/mm';
-	import { m } from '$lib/paraglide/messages';
-	import RuleEditor from '$components/assetrule/RuleEditor.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import RuleEditor from '#components/assetrule/RuleEditor.svelte';
 
 	setCrumbs([
 		{ label: m.assetrules_heading(), href: resolve('/asset-rules') },

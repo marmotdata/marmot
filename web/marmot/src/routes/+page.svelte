@@ -4,20 +4,20 @@
 	import '@marmotdata/elements/run-strip.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { setCrumbs } from '$lib/mm';
-	import ConnectDrawer, { type ConnectTab } from '$components/home/ConnectDrawer.svelte';
-	import SetupChecklist, { type SetupStep } from '$components/home/SetupChecklist.svelte';
-	import QueryBlade from '$components/home/QueryBlade.svelte';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { userProfile } from '$lib/stores/user';
-	import { setupHidden, setupRemoved, skippedSteps } from '$lib/stores/setup.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { assetRouteParamsFor, mrnShortName } from '$lib/mrn';
-	import { formatNumber, formatRelativeTime } from '$lib/utils/format';
-	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
-	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
-	import type { QueryHistory, QueryRecord, QueryStats } from '$lib/dataquery/types';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import ConnectDrawer, { type ConnectTab } from '#components/home/ConnectDrawer.svelte';
+	import SetupChecklist, { type SetupStep } from '#components/home/SetupChecklist.svelte';
+	import QueryBlade from '#components/home/QueryBlade.svelte';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { userProfile } from '#lib/stores/user.ts';
+	import { setupHidden, setupRemoved, skippedSteps } from '#lib/stores/setup.svelte.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { assetRouteParamsFor, mrnShortName } from '#lib/mrn.ts';
+	import { formatNumber, formatRelativeTime } from '#lib/utils/format.ts';
+	import { getQueryStats, listQueryHistory } from '#lib/dataquery/api.ts';
+	import { assetRouteParams, subjectParts } from '#lib/dataquery/format.ts';
+	import type { QueryHistory, QueryRecord, QueryStats } from '#lib/dataquery/types.ts';
 	import {
 		listAgentSummaries,
 		listRecent,
@@ -25,8 +25,8 @@
 		type AgentSummary,
 		type RecentItem,
 		type StaleAsset
-	} from '$lib/home/api';
-	import { listSavedQueries, savedQueryHref, type SavedQuery } from '$lib/savedqueries/api';
+	} from '#lib/home/api.ts';
+	import { listSavedQueries, savedQueryHref, type SavedQuery } from '#lib/savedqueries/api.ts';
 
 	interface AssetSummary {
 		types: Record<string, { count?: number }>;

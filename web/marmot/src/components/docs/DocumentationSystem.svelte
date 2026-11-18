@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import DocEditor from './DocEditor.svelte';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import type { Page, PageTree, EntityType } from '$lib/docs/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import type { Page, PageTree, EntityType } from '#lib/docs/types.ts';
 	import { marked } from 'marked';
 	import { common, createLowlight } from 'lowlight';
 	import { toHtml } from 'hast-util-to-html';
-	import { escapeHtml, sanitizeHtml } from '$lib/sanitize';
+	import { escapeHtml, sanitizeHtml } from '#lib/sanitize.ts';
 	// The picker fetches its emoji list at runtime; Marmot's CSP only allows its own origin, so the list ships with the app instead of coming from a CDN
 	import emojiDataUrl from 'emoji-picker-element-data/en/emojibase/data.json?url';
-	import { deferDocImages, docImages } from '$lib/docs/images';
+	import { deferDocImages, docImages } from '#lib/docs/images.ts';
 	import '@marmotdata/elements/tree.js';
 	import type {
 		MmTreeActionDetail,

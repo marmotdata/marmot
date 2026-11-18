@@ -10,9 +10,9 @@
 	import { marked } from 'marked';
 	import TurndownService from 'turndown';
 	import Icon from '@iconify/svelte';
-	import { fetchApi } from '$lib/api';
+	import { fetchApi } from '#lib/api.ts';
 	import MentionList from './MentionList.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	export let value: string = '';
 	export let placeholder: string = m.editor_placeholder();
@@ -68,7 +68,7 @@
 		return {
 			items: async ({ query }: { query: string }) => {
 				if (!query || query.length < 1) return [];
-				return new Promise((resolve) => {
+				return new Promise<MentionItem[]>((resolve) => {
 					const debouncedSearch = debounce(async (q: string) => {
 						const results = await searchOwners(q);
 						resolve(results);
@@ -101,7 +101,7 @@
 					onStart: (props: {
 						items: Array<MentionItem>;
 						command: (item: { id: string; label: string; type: string }) => void;
-						clientRect: () => DOMRect | null;
+						clientRect?: (() => DOMRect | null) | null;
 					}) => {
 						popup = document.createElement('div');
 						popup.style.position = 'fixed';
@@ -119,7 +119,7 @@
 					onUpdate: (props: {
 						items: Array<MentionItem>;
 						command: (item: { id: string; label: string; type: string }) => void;
-						clientRect: () => DOMRect | null;
+						clientRect?: (() => DOMRect | null) | null;
 					}) => {
 						if (popup) {
 							const rect = props.clientRect?.();

@@ -7,25 +7,25 @@
 	import type { MmPageChangeDetail } from '@marmotdata/elements/classes/pagination.js';
 	import type { MmTabChangeDetail } from '@marmotdata/elements/classes/tabs.js';
 	import { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-	import { setCrumbs } from '$lib/mm';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import { assetHref } from '$lib/assetrules/assets';
-	import { providerLabel } from '$lib/assetrules/plain';
-	import { providerName } from '$lib/users/format';
-	import { notificationTypeLabels, providerLabels, type TeamWebhook } from '$lib/teams/webhooks';
-	import type { OwnerResult, TeamMemberRow, TeamRow } from '$lib/teams/types';
-	import type { Asset } from '$lib/assets/types';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import Tags from '$components/shared/Tags.svelte';
-	import MetadataView from '$components/shared/MetadataView.svelte';
-	import TeamMemberPicker from '$components/team/TeamMemberPicker.svelte';
-	import WebhookDrawer from '$components/team/WebhookDrawer.svelte';
-	import EditTeamDrawer from '$components/team/EditTeamDrawer.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import { assetHref } from '#lib/assetrules/assets.ts';
+	import { providerLabel } from '#lib/assetrules/plain.ts';
+	import { providerName } from '#lib/users/format.ts';
+	import { notificationTypeLabels, providerLabels, type TeamWebhook } from '#lib/teams/webhooks.ts';
+	import type { OwnerResult, TeamMemberRow, TeamRow } from '#lib/teams/types.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import Tags from '#components/shared/Tags.svelte';
+	import MetadataView from '#components/shared/MetadataView.svelte';
+	import TeamMemberPicker from '#components/team/TeamMemberPicker.svelte';
+	import WebhookDrawer from '#components/team/WebhookDrawer.svelte';
+	import EditTeamDrawer from '#components/team/EditTeamDrawer.svelte';
 
 	type Tab = 'overview' | 'integrations';
 
@@ -87,11 +87,15 @@
 	});
 
 	function setTab(tab: string) {
-		goto(resolve(`/settings/teams/${teamId}?tab=${tab === 'integrations' ? tab : 'overview'}`), {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
-		});
+		goto(
+			resolve(`/settings/teams/[id]?tab=${tab === 'integrations' ? tab : 'overview'}`, {
+				id: teamId
+			}),
+			{
+				replace: true,
+				reset: false
+			}
+		);
 	}
 
 	async function loadTeam() {

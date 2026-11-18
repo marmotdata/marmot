@@ -1,31 +1,38 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { getAssetQueryPreview } from '$lib/dataquery/api';
-	import type { Asset, AssetTabCounts, EnrichedExternalLink } from '$lib/assets/types';
-	import { setCrumbs, BladeSlot } from '$lib/mm';
-	import { discoverPath, zoneOf, type DiscoverPath, parseMRN, providerSegment } from '$lib/mrn';
-	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
-	import AssetMetadata from '$components/asset/AssetMetadata.svelte';
-	import Lineage from '$components/lineage/Lineage.svelte';
-	import AssetContents from '$components/asset/AssetContents.svelte';
-	import SchemaEditor from '$components/schema/SchemaEditor.svelte';
-	import AssetEnvironmentsView from '$components/asset/AssetEnvironmentsView.svelte';
-	import AssetRunHistory from '$components/asset/AssetRunHistory.svelte';
-	import AgentRunsView from '$components/asset/AgentRunsView.svelte';
-	import AssetQueryPanel from '$components/dataquery/AssetQueryPanel.svelte';
-	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
-	import AssetPageBlade from '$components/asset/AssetPageBlade.svelte';
-	import AssetOwnerPicker, { type AssetOwner } from '$components/asset/AssetOwnerPicker.svelte';
-	import AssetLinksEditor from '$components/asset/AssetLinksEditor.svelte';
-	import { linkIcon, providerKey } from '$components/asset/assetFormat';
-	import { auth } from '$lib/stores/auth';
-	import { toasts } from '$lib/stores/toast';
-	import { formatRelativeTime } from '$lib/utils';
-	import { formatNumber } from '$lib/utils/format';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { getAssetQueryPreview } from '#lib/dataquery/api.ts';
+	import type { Asset, AssetTabCounts, EnrichedExternalLink } from '#lib/assets/types.ts';
+	import { setCrumbs, BladeSlot } from '#lib/mm/index.ts';
+	import {
+		discoverPath,
+		discoverPathname,
+		type DiscoverPathname,
+		zoneOf,
+		parseMRN,
+		providerSegment
+	} from '#lib/mrn.ts';
+	import DocumentationSystem from '#components/docs/DocumentationSystem.svelte';
+	import AssetMetadata from '#components/asset/AssetMetadata.svelte';
+	import Lineage from '#components/lineage/Lineage.svelte';
+	import AssetContents from '#components/asset/AssetContents.svelte';
+	import SchemaEditor from '#components/schema/SchemaEditor.svelte';
+	import AssetEnvironmentsView from '#components/asset/AssetEnvironmentsView.svelte';
+	import AssetRunHistory from '#components/asset/AssetRunHistory.svelte';
+	import AgentRunsView from '#components/asset/AgentRunsView.svelte';
+	import AssetQueryPanel from '#components/dataquery/AssetQueryPanel.svelte';
+	import SubscribeButton from '#components/asset/SubscribeButton.svelte';
+	import AssetPageBlade from '#components/asset/AssetPageBlade.svelte';
+	import AssetOwnerPicker, { type AssetOwner } from '#components/asset/AssetOwnerPicker.svelte';
+	import AssetLinksEditor from '#components/asset/AssetLinksEditor.svelte';
+	import { linkIcon, providerKey } from '#components/asset/assetFormat.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { formatRelativeTime } from '#lib/utils/index.ts';
+	import { formatNumber } from '#lib/utils/format.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import type { MenuSelectDetail } from '@marmotdata/elements/classes/menu.js';
 	import type { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
 	import '@marmotdata/elements/code-sample.js';
@@ -76,9 +83,9 @@
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	const canQueryData = auth.hasPermission('assets', 'query');
 
-	let assetType = $derived($page.params.type ?? '');
-	let assetService = $derived($page.params.service ?? '');
-	let assetName = $derived($page.params.name ?? '');
+	let assetType = $derived(page.params.type ?? '');
+	let assetService = $derived(page.params.service ?? '');
+	let assetName = $derived(page.params.name ?? '');
 
 	let isAgent = $derived((asset?.type || '').toLowerCase() === 'agent');
 	let isTable = $derived(
@@ -159,7 +166,7 @@
 		return all.filter((t) => t.show);
 	});
 
-	let requestedTab = $derived($page.url.searchParams.get('tab'));
+	let requestedTab = $derived(page.url.searchParams.get('tab'));
 	let activeTab = $derived.by((): TabId => {
 		const ids = tabs.map((t) => t.id);
 		if (requestedTab && ids.includes(requestedTab as TabId)) return requestedTab as TabId;
@@ -193,7 +200,7 @@
 
 	function tabHref(id: TabId): string {
 		// Docs keep their page in ?page=, which belongs to the documentation tab only.
-		const kept = [...$page.url.searchParams].filter(([k]) => k !== 'tab' && k !== 'page');
+		const kept = [...page.url.searchParams].filter(([k]) => k !== 'tab' && k !== 'page');
 		return `?${new URLSearchParams([...kept, ['tab', id]]).toString()}`;
 	}
 
@@ -207,11 +214,13 @@
 			parsed.name === assetName;
 		const path = discoverPath(found.mrn);
 		if (same || !path) return;
-		goto(resolve(`${path}${$page.url.search}${$page.url.hash}` as DiscoverPath), {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
-		});
+		goto(
+			resolve(`${discoverPathname(path)}${page.url.search}${page.url.hash}` as DiscoverPathname),
+			{
+				replace: true,
+				reset: false
+			}
+		);
 	}
 
 	async function fetchAsset() {

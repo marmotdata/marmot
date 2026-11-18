@@ -1,13 +1,13 @@
 <script lang="ts">
-	import MrnValue from '$components/shared/MrnValue.svelte';
+	import MrnValue from '#components/shared/MrnValue.svelte';
 	import { resolve } from '$app/paths';
 	import '@marmotdata/elements/popularity.js';
-	import { BladeSlot } from '$lib/mm';
-	import type { DataProduct, Member } from '$lib/dataproducts/types';
-	import { getProductMembers } from '$lib/dataproducts/api';
-	import { assetRouteParams, popularityLevel } from '$lib/dataproducts/assets';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDateTime, formatRelativeTime } from '$lib/utils';
+	import { BladeSlot } from '#lib/mm/index.ts';
+	import type { DataProduct, Member } from '#lib/dataproducts/types.ts';
+	import { getProductMembers } from '#lib/dataproducts/api.ts';
+	import { assetRouteParams, popularityLevel } from '#lib/dataproducts/assets.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDateTime, formatRelativeTime } from '#lib/utils/index.ts';
 	import ProductIcon from './ProductIcon.svelte';
 
 	const PREVIEW = 5;

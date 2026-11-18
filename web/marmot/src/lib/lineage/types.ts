@@ -1,4 +1,4 @@
-import type { Asset } from '$lib/assets/types';
+import type { Asset } from '#lib/assets/types.ts';
 
 export interface LineageNode {
 	id: string;

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { toast } from '@marmotdata/elements/toast.js';
-	import type { ProductImageMeta } from '$lib/dataproducts/types';
+	import type { ProductImageMeta } from '#lib/dataproducts/types.ts';
 	import ProductIcon from './ProductIcon.svelte';
 
 	interface Props {

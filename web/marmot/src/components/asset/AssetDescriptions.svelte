@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import type { Asset } from '$lib/assets/types';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// The "About" blade section: the plugin's description and, unless the page header already shows them, the notes people wrote.
 	let {

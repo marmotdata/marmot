@@ -3,11 +3,11 @@
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import '@marmotdata/elements/combobox.js';
 	import '@marmotdata/elements/multiselect.js';
-	import { fetchApi } from '$lib/api';
-	import { userProfile } from '$lib/stores/user';
-	import { m } from '$lib/paraglide/messages';
-	import { possibleParents } from '$lib/glossary/tree';
-	import type { CreateTermInput, GlossaryTerm, Owner } from '$lib/glossary/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { userProfile } from '#lib/stores/user.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { possibleParents } from '#lib/glossary/tree.ts';
+	import type { CreateTermInput, GlossaryTerm, Owner } from '#lib/glossary/types.ts';
 
 	let {
 		term = undefined,

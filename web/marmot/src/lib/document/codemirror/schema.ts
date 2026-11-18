@@ -1,7 +1,7 @@
 // What a JSON Schema says about one place in a document: the keys an object there may have, the values a field may take and the problems with a parsed document, for linting and completion.
 
 import { Validator, type OutputUnit } from '@cfworker/json-schema';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import { pointerToPath, type PathSegment } from '../paths';
 
 export type Schema = {

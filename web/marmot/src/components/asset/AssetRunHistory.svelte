@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import type { Asset } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
-	import { getLocale } from '$lib/paraglide/runtime';
+	import { fetchApi } from '#lib/api.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { formatMs } from './assetFormat';
 	import '@marmotdata/elements/run-strip.js';
 	import '@marmotdata/elements/line-chart.js';

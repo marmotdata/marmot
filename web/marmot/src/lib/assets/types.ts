@@ -1,4 +1,4 @@
-import type { MRNParts } from '$lib/mrn';
+import type { MRNParts } from '#lib/mrn.ts';
 
 export interface AssetSource {
 	name: string;

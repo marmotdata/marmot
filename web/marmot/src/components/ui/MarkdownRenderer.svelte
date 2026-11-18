@@ -2,7 +2,7 @@
 	import { marked } from 'marked';
 	import { onMount, afterUpdate } from 'svelte';
 	import Prism from 'prismjs';
-	import { sanitizeHtml } from '$lib/sanitize';
+	import { sanitizeHtml } from '#lib/sanitize.ts';
 	import 'prism-themes/themes/prism-one-dark.css';
 	import 'prismjs/components/prism-json';
 	import 'prismjs/components/prism-sql';

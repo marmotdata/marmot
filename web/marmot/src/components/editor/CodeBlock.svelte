@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Prism from 'prismjs';
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 	import 'prismjs/components/prism-json';
 	import 'prismjs/components/prism-sql';
 	import 'prismjs/components/prism-yaml';

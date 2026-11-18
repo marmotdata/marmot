@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/** @param {string} rootDir */
 export function generateIconBundle(rootDir) {
 	const srcDir = join(rootDir, 'src');
 	const jsonDir = join(rootDir, 'node_modules', '@iconify', 'json', 'json');
@@ -21,9 +22,11 @@ export function generateIconBundle(rootDir) {
 	//   icon="prefix:name"          (Svelte attributes)
 	//   'prefix:name'               (JS string literals)
 	//   "prefix:name"               (JS string literals)
+	/** @type {Set<string>} */
 	const icons = new Set();
 	const pattern = /(?:icon=)?"([a-z][\w-]*:[a-z][\w-]*)"|'([a-z][\w-]*:[a-z][\w-]*)'/g;
 
+	/** @param {string} d */
 	function scan(d) {
 		for (const entry of readdirSync(d, { withFileTypes: true })) {
 			const full = join(d, entry.name);
@@ -44,6 +47,7 @@ export function generateIconBundle(rootDir) {
 	scan(srcDir);
 
 	// Group by prefix
+	/** @type {Record<string, string[]>} */
 	const byPrefix = {};
 	for (const icon of icons) {
 		const [prefix, name] = icon.split(':');
@@ -63,6 +67,7 @@ export function generateIconBundle(rootDir) {
 			continue;
 		}
 
+		/** @type {{ prefix: string; icons: Record<string, unknown>; width?: number; height?: number; aliases?: Record<string, unknown> }} */
 		const subset = {
 			prefix: fullSet.prefix,
 			icons: {},

@@ -9,23 +9,23 @@
 	import { toast } from '@marmotdata/elements/toast.js';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import MarkdownRenderer from '#components/ui/MarkdownRenderer.svelte';
 	import TermForm from './TermForm.svelte';
 	import LinkAssetsDrawer from './LinkAssetsDrawer.svelte';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import { deleteTerm, getTerm, updateTerm } from '$lib/glossary/api';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import { deleteTerm, getTerm, updateTerm } from '#lib/glossary/api.ts';
 	import {
 		assetRouteParams,
 		getLinkedAssets,
 		groupLink,
 		type LinkedAsset,
 		type LinkGroup
-	} from '$lib/glossary/assets';
-	import { possibleParents } from '$lib/glossary/tree';
-	import type { CreateTermInput, GlossaryTerm, UpdateTermInput } from '$lib/glossary/types';
+	} from '#lib/glossary/assets.ts';
+	import { possibleParents } from '#lib/glossary/tree.ts';
+	import type { CreateTermInput, GlossaryTerm, UpdateTermInput } from '#lib/glossary/types.ts';
 
 	let {
 		term,

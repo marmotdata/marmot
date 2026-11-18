@@ -1,10 +1,10 @@
 <script lang="ts">
 	import '@marmotdata/elements/drawer.js';
 	import '@marmotdata/elements/code-sample.js';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import { inviteLink } from '$lib/users/invites';
-	import type { Invitation } from '$lib/users/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import { inviteLink } from '#lib/users/invites.ts';
+	import type { Invitation } from '#lib/users/types.ts';
 
 	// Marmot sends no email, so the links are shown once here for whoever invited the people to pass on. Only a hash of each link is kept, so they cannot be shown again; a lost link is replaced from the member's menu.
 	let { invitations, onClose }: { invitations: Invitation[]; onClose: () => void } = $props();

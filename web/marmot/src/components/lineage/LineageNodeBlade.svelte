@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
+	import { fetchApi } from '#lib/api.ts';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDateTime, formatNumber, formatRelativeTime } from '$lib/utils/format';
-	import type { Asset } from '$lib/assets/types';
-	import type { LineageEdge, LineageNode } from '$lib/lineage/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDateTime, formatNumber, formatRelativeTime } from '#lib/utils/format.ts';
+	import type { Asset } from '#lib/assets/types.ts';
+	import type { LineageEdge, LineageNode } from '#lib/lineage/types.ts';
+	import { discoverPathname, type DiscoverPath } from '#lib/mrn.ts';
 	import { assetHref, edgeKind, providerOf } from './graph';
 
 	interface Owner {
@@ -58,7 +59,7 @@
 	let provider = $derived(providerOf(asset));
 	let href = $derived.by(() => {
 		const path = assetHref(asset);
-		return path ? resolve(path as `/discover/${string}/${string}/${string}`) : '';
+		return path ? resolve(discoverPathname(path as DiscoverPath)) : '';
 	});
 	let about = $derived(asset.user_description || asset.description || '');
 	let pii = $derived((asset.tags ?? []).some((t) => t.toLowerCase() === 'pii'));

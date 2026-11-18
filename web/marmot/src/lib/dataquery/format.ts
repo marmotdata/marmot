@@ -1,13 +1,13 @@
-import { m } from '$lib/paraglide/messages';
-import { getLocale } from '$lib/paraglide/runtime';
-import { formatNumber } from '$lib/utils/format';
-import { assetRouteParams as mrnRouteParams, type AssetRouteParams } from '$lib/mrn';
+import { m } from '#lib/paraglide/messages.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
+import { formatNumber } from '#lib/utils/format.ts';
+import { assetRouteParams as mrnRouteParams, type AssetRouteParams } from '#lib/mrn.ts';
 import type {
 	QueryDecision,
 	QueryRecord,
 	QueryRecordStatus,
 	QuerySourceTable
-} from '$lib/dataquery/types';
+} from '#lib/dataquery/types.ts';
 
 // Soft status fills from the design tokens, so pages that still render a plain badge follow the theme
 const RED = 'bg-mm-danger-soft text-mm-danger';

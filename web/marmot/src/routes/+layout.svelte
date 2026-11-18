@@ -1,29 +1,29 @@
 <script lang="ts">
-	import '$lib/icon-bundle';
-	import '$lib/mm';
+	import '#lib/icon-bundle.ts';
+	import '#lib/mm/index.ts';
 	import { onMount, type Snippet } from 'svelte';
 	import '../app.css';
 	import { page } from '$app/state';
-	import { auth, isAnonymousMode } from '$lib/stores/auth';
+	import { auth, isAnonymousMode } from '#lib/stores/auth.ts';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { browser } from '$app/environment';
-	import { m } from '$lib/paraglide/messages';
-	import { settingsAttention, refreshSettingsAttention } from '$lib/settings/attention';
-	import { myAccess, loadMyAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { visibleItems } from '$lib/settings/sections';
-	import { locale } from '$lib/i18n';
-	import { userProfile } from '$lib/stores/user';
-	import { theme } from '$lib/stores/theme';
-	import { notifications, unreadCount } from '$lib/stores/notifications';
-	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
-	import { fetchApi } from '$lib/api';
-	import { recordView, viewedItem } from '$lib/home/api';
-	import { chrome, mmIcon, type Crumb } from '$lib/mm';
-	import Banner from '$lib/components/Banner.svelte';
-	import PluginAdvisoryBanner from '$lib/components/PluginAdvisoryBanner.svelte';
-	import { advisoryBanner } from '$lib/plugins/advisoryBanner.svelte';
-	import ToastContainer from '$components/ui/ToastContainer.svelte';
+	import { browser } from '$app/env';
+	import { m } from '#lib/paraglide/messages.js';
+	import { settingsAttention, refreshSettingsAttention } from '#lib/settings/attention.ts';
+	import { myAccess, loadMyAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { visibleItems } from '#lib/settings/sections.ts';
+	import { locale } from '#lib/i18n/index.ts';
+	import { userProfile } from '#lib/stores/user.ts';
+	import { theme } from '#lib/stores/theme.ts';
+	import { notifications, unreadCount } from '#lib/stores/notifications.ts';
+	import { encryptionConfigured, allowUnencrypted } from '#lib/stores/encryption.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { recordView, viewedItem } from '#lib/home/api.ts';
+	import { chrome, mmIcon, type Crumb } from '#lib/mm/index.ts';
+	import Banner from '#lib/components/Banner.svelte';
+	import PluginAdvisoryBanner from '#lib/components/PluginAdvisoryBanner.svelte';
+	import { advisoryBanner } from '#lib/plugins/advisoryBanner.svelte.ts';
+	import ToastContainer from '#components/ui/ToastContainer.svelte';
 	import type {
 		MmCommandPalette,
 		PaletteCommand,
@@ -436,8 +436,10 @@
 						icon="travel-explore"
 						current={current === 'discover'}>{m.nav_discover()}</mm-nav-item
 					>
-					<mm-nav-item href={resolve('/glossary')} icon="menu-book" current={current === 'glossary'}
-						>{m.nav_glossary()}</mm-nav-item
+					<mm-nav-item
+						href={resolve('/glossary/[[id]]', {})}
+						icon="menu-book"
+						current={current === 'glossary'}>{m.nav_glossary()}</mm-nav-item
 					>
 					<mm-nav-item href={resolve('/products')} icon="package-2" current={current === 'products'}
 						>{m.nav_data_products()}</mm-nav-item

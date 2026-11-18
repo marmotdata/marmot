@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
-import { browser } from '$app/environment';
-import { fetchApi } from '$lib/api';
-import { auth } from '$lib/stores/auth';
+import { browser } from '$app/env';
+import { fetchApi } from '#lib/api.ts';
+import { auth } from '#lib/stores/auth.ts';
 
 export interface UserProfile {
 	id: string;

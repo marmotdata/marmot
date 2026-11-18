@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { fetchApi } from '$lib/api';
-	import type { ExternalLink } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import type { ExternalLink } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { linkIcon } from './assetFormat';
 
 	// "Add link" in the page header's Links row: a popover with the manual links (each removable) and a short form to add one; links a rule added are managed by the rule.

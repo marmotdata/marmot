@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Environment } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import type { Environment } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import '@marmotdata/elements/metadata-viewer.js';
 
 	// One folded row per environment; the first opens so the tab never lands on a wall of closed rows.

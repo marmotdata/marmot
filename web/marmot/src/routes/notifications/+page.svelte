@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { setCrumbs } from '$lib/mm';
-	import { notifications, type Notification } from '$lib/stores/notifications';
+	import { m } from '#lib/paraglide/messages.js';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { notifications, type Notification } from '#lib/stores/notifications.ts';
 	import {
 		renderNotificationTitle,
 		renderNotificationMessage,
 		notificationPath
-	} from '$lib/notifications/copy';
+	} from '#lib/notifications/copy.ts';
 	import '@marmotdata/elements/notification-list.js';
 	import type {
 		NotificationType,

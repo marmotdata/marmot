@@ -2,11 +2,11 @@
 	import '@marmotdata/elements/kpi-tile.js';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { mrnProvider, mrnShortName } from '$lib/mrn';
-	import { getQueryStats, listQueryHistory } from '$lib/dataquery/api';
-	import { assetRouteParams, subjectParts } from '$lib/dataquery/format';
-	import type { QueryRecord, QueryStats } from '$lib/dataquery/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { mrnProvider, mrnShortName } from '#lib/mrn.ts';
+	import { getQueryStats, listQueryHistory } from '#lib/dataquery/api.ts';
+	import { assetRouteParams, subjectParts } from '#lib/dataquery/format.ts';
+	import type { QueryRecord, QueryStats } from '#lib/dataquery/types.ts';
 	import RankedPanel, { type RankedItem } from './RankedPanel.svelte';
 	import { percent, rangeStart, type InsightsRange } from './range';
 

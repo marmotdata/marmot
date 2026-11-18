@@ -3,10 +3,10 @@
 	import '@marmotdata/elements/code-sample.js';
 	import '@marmotdata/elements/number-field.js';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
-	import { createAPIKey } from '$lib/serviceaccounts/api';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
+	import { createAPIKey } from '#lib/serviceaccounts/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import type { ServiceAccount, ServiceAccountAPIKey } from '#lib/serviceaccounts/types.ts';
 
 	// Creates a key, then shows it once with an example request. Once the key exists, any way of closing counts as done so the page picks up the new key.
 	// With rotated, the drawer opens straight on that key's one-time display, since a rotation has already issued it

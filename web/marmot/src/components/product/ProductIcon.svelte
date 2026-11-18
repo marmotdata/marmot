@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import AuthenticatedImage from '#components/ui/AuthenticatedImage.svelte';
 
 	// The tile a data product is recognised by in lists, the blade and the page header: its uploaded icon, or a neutral glyph until it has one.
 	let {

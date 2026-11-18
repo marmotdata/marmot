@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
-import { browser } from '$app/environment';
-import { theme } from '$lib/stores/theme';
-import { applyStoredLanguage } from '$lib/i18n';
+import { browser } from '$app/env';
+import { theme } from '#lib/stores/theme.ts';
+import { applyStoredLanguage } from '#lib/i18n/index.ts';
 
 export const isAnonymousMode = writable<boolean>(false);
 

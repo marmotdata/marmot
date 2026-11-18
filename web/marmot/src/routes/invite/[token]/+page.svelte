@@ -2,12 +2,12 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDate } from '$lib/utils';
-	import { acceptInvite, InviteError, lookupInvite } from '$lib/users/invites';
-	import type { InviteInfo } from '$lib/users/types';
+	import OAuthButtons from '#components/auth/OAuthButtons.svelte';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDate } from '#lib/utils/index.ts';
+	import { acceptInvite, InviteError, lookupInvite } from '#lib/users/invites.ts';
+	import type { InviteInfo } from '#lib/users/types.ts';
 
 	// Where an invited person arrives from the link they were sent: they choose a password and are signed straight in. When password sign-in is off they accept by signing in with single sign-on instead, which matches them by email.
 	let token = $derived(page.params.token ?? '');

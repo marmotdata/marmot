@@ -2,15 +2,15 @@
 	import { onMount } from 'svelte';
 	import '@marmotdata/elements/toolbar.js';
 	import '@marmotdata/elements/filter-pill.js';
-	import { m } from '$lib/paraglide/messages';
-	import { myAccess, holdsAtRoot } from '$lib/iam/myAccess';
-	import { toasts } from '$lib/stores/toast';
-	import { severityRank, worstAdvisory } from '$lib/plugins/advisories';
+	import { m } from '#lib/paraglide/messages.js';
+	import { myAccess, holdsAtRoot } from '#lib/iam/myAccess.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { severityRank, worstAdvisory } from '#lib/plugins/advisories.ts';
 	import {
 		checkPluginUpdates,
 		getPluginUpdatesStatus,
 		PluginUpdatesUnavailableError
-	} from '$lib/plugins/api';
+	} from '#lib/plugins/api.ts';
 	import {
 		chooseVersion,
 		confirmRollback,
@@ -18,12 +18,12 @@
 		setPinned,
 		updateToLatest,
 		type PluginChange
-	} from '$lib/plugins/actions';
-	import type { PluginUpdatesStatus, PluginVersionStatus } from '$lib/plugins/types';
-	import type { PluginRowAction } from '$components/settings/plugins/pluginVersionsColumns';
-	import PluginUpdatesHeader from '$components/settings/plugins/PluginUpdatesHeader.svelte';
-	import PluginVersionsTable from '$components/settings/plugins/PluginVersionsTable.svelte';
-	import PluginVersionPicker from '$components/settings/plugins/PluginVersionPicker.svelte';
+	} from '#lib/plugins/actions.ts';
+	import type { PluginUpdatesStatus, PluginVersionStatus } from '#lib/plugins/types.ts';
+	import type { PluginRowAction } from '#components/settings/plugins/pluginVersionsColumns.ts';
+	import PluginUpdatesHeader from '#components/settings/plugins/PluginUpdatesHeader.svelte';
+	import PluginVersionsTable from '#components/settings/plugins/PluginVersionsTable.svelte';
+	import PluginVersionPicker from '#components/settings/plugins/PluginVersionPicker.svelte';
 
 	// The table's default order puts what needs attention first, worst first: a plugin with a
 	// critical advisory outranks one with a low one, which outranks a plain update, which outranks

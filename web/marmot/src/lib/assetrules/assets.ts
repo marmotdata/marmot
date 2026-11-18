@@ -1,5 +1,5 @@
 import { resolve } from '$app/paths';
-import { assetRouteParamsFor, zoneOf, type MRNParts } from '$lib/mrn';
+import { assetRouteParamsFor, zoneOf, type MRNParts } from '#lib/mrn.ts';
 import { providerLabel } from './plain';
 
 /** The fields an asset link needs, so a full asset and a list row both fit. */

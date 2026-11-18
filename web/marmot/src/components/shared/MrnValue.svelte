@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
+	import { m } from '#lib/paraglide/messages.js';
 
 	// An MRN with a copy button beside it, wrapping only after its separators so a long value breaks at a segment boundary.
 	let { value }: { value: string } = $props();

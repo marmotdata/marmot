@@ -1,12 +1,12 @@
 import { resolve } from '$app/paths';
-import type { Asset } from '$lib/assets/types';
-import { mmIcon } from '$lib/mm';
-import { discoverPath } from '$lib/mrn';
+import type { Asset } from '#lib/assets/types.ts';
+import { mmIcon } from '#lib/mm/index.ts';
+import { discoverPath, discoverPathname } from '#lib/mrn.ts';
 
 /** The resolved asset page href for an asset, or undefined when its MRN cannot be read. */
 export function assetHref(a: Pick<Asset, 'mrn' | 'type'>): string | undefined {
 	const path = discoverPath(a?.mrn);
-	return path ? resolve(path) : undefined;
+	return path ? resolve(discoverPathname(path)) : undefined;
 }
 
 /** The provider key for the header logo: the single provider when there is one, otherwise the type so the logo element can fall back. */

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { toast } from '@marmotdata/elements/toast.js';
-	import { m } from '$lib/paraglide/messages';
-	import { createRule, deleteRule, reorderRules, updateRule } from '$lib/dataproducts/api';
-	import { plainQuery } from '$lib/dataproducts/plain';
-	import type { DataProduct, Rule, RuleInput } from '$lib/dataproducts/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { createRule, deleteRule, reorderRules, updateRule } from '#lib/dataproducts/api.ts';
+	import { plainQuery } from '#lib/dataproducts/plain.ts';
+	import type { DataProduct, Rule, RuleInput } from '#lib/dataproducts/types.ts';
 	import RuleEditor from './RuleEditor.svelte';
 
 	// Rules read as Matches, Adds and Applied to, in plain words first with the exact query beneath, and keep their on/off switch visible in the list.

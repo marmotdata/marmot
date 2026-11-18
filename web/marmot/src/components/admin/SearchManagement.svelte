@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import { formatDateTime, formatNumber } from '$lib/utils';
-	import { websocketService, type SearchReindexEvent } from '$lib/websocket';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatDateTime, formatNumber } from '#lib/utils/index.ts';
+	import { websocketService, type SearchReindexEvent } from '#lib/websocket.ts';
 	import '@marmotdata/elements/progress.js';
 
-	import { formatBytes, type SystemSearchIndex } from '$lib/settings/system';
+	import { formatBytes, type SystemSearchIndex } from '#lib/settings/system.ts';
 
 	// The index's size comes from the System page's admin-only read; the reindex progress comes over the websocket
 	let { index, onReindexed }: { index?: SystemSearchIndex; onReindexed?: () => void } = $props();

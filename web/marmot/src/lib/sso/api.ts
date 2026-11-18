@@ -1,5 +1,5 @@
-import { fetchApi } from '$lib/api';
-import { handleApiError, parseApiError } from '$lib/stores/toast';
+import { fetchApi } from '#lib/api.ts';
+import { handleApiError, parseApiError } from '#lib/stores/toast.ts';
 import type { GroupMapping, SignInSettings, SSOProvider, SSOProviderStatus } from './types';
 
 export async function listSSOProviders(): Promise<SSOProvider[]> {

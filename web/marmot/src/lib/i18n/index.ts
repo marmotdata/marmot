@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { readonly, writable } from 'svelte/store';
 import {
 	baseLocale,
@@ -8,7 +8,7 @@ import {
 	localStorageKey,
 	overwriteGetLocale,
 	setLocale
-} from '$lib/paraglide/runtime';
+} from '#lib/paraglide/runtime.js';
 
 export type Locale = (typeof locales)[number];
 

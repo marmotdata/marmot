@@ -4,16 +4,16 @@
 	import '@marmotdata/elements/popularity.js';
 	import '@marmotdata/elements/toolbar.js';
 	import { resolve } from '$app/paths';
-	import { browser } from '$app/environment';
-	import { fetchApi } from '$lib/api';
-	import { setCrumbs } from '$lib/mm';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import type { DataProduct, ProductFacets, ProductSort } from '$lib/dataproducts/types';
-	import { getProductFacets, queryDataProducts } from '$lib/dataproducts/api';
-	import { normaliseProduct, popularityLevel } from '$lib/dataproducts/assets';
-	import ProductBlade from '$components/product/ProductBlade.svelte';
-	import ProductIcon from '$components/product/ProductIcon.svelte';
+	import { browser } from '$app/env';
+	import { fetchApi } from '#lib/api.ts';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { DataProduct, ProductFacets, ProductSort } from '#lib/dataproducts/types.ts';
+	import { getProductFacets, queryDataProducts } from '#lib/dataproducts/api.ts';
+	import { normaliseProduct, popularityLevel } from '#lib/dataproducts/assets.ts';
+	import ProductBlade from '#components/product/ProductBlade.svelte';
+	import ProductIcon from '#components/product/ProductIcon.svelte';
 
 	const PAGE = 25;
 	const YOURS_MAX = 5;

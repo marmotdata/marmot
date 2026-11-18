@@ -1,7 +1,7 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
-	import { m } from '$lib/paraglide/messages';
-	import type { EditorDiagnostic } from '$lib/document/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { EditorDiagnostic } from '#lib/document/types.ts';
 
 	// The problems and warnings in a document as a list beside its editor; choosing one moves the editor's cursor to it.
 	let {

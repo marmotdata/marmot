@@ -10,16 +10,16 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { setCrumbs } from '$lib/mm';
-	import { toasts, parseApiError, isLimitExceeded } from '$lib/stores/toast';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
-	import { getTerm, listTerms, searchTerms } from '$lib/glossary/api';
-	import { ancestorIds, flatNodes, termTree } from '$lib/glossary/tree';
-	import type { CreateTermInput, GlossaryTerm } from '$lib/glossary/types';
-	import GlossaryTermView from '$components/glossary/GlossaryTermView.svelte';
-	import TermForm from '$components/glossary/TermForm.svelte';
+	import { setCrumbs } from '#lib/mm/index.ts';
+	import { toasts, parseApiError, isLimitExceeded } from '#lib/stores/toast.ts';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getTerm, listTerms, searchTerms } from '#lib/glossary/api.ts';
+	import { ancestorIds, flatNodes, termTree } from '#lib/glossary/tree.ts';
+	import type { CreateTermInput, GlossaryTerm } from '#lib/glossary/types.ts';
+	import GlossaryTermView from '#components/glossary/GlossaryTermView.svelte';
+	import TermForm from '#components/glossary/TermForm.svelte';
 
 	// The list endpoint caps a page at 100, so a glossary is read in pages up to this many terms for the tree and pickers
 	const PAGE_SIZE = 100;
@@ -161,16 +161,15 @@
 		if (!loaded || error || creating || termId || query || !first) return;
 		untrack(() =>
 			goto(resolve(`/glossary/[[id]]?${termQuery()}`, { id: first }), {
-				replaceState: true,
-				noScroll: true,
-				keepFocus: true
+				replace: true,
+				reset: false
 			})
 		);
 	});
 
 	// Keeps the search when moving between terms, and drops the create-only parameters
 	function termQuery(): string {
-		const params = new SvelteURLSearchParams(page.url.searchParams);
+		const params = new SvelteURLSearchParams(page.url.search);
 		params.delete('name');
 		params.delete('parent');
 		return params.toString();
@@ -184,14 +183,13 @@
 
 	function commitSearch(value: string) {
 		clearTimeout(searchTimer);
-		const params = new SvelteURLSearchParams(page.url.searchParams);
+		const params = new SvelteURLSearchParams(page.url.search);
 		if (value.trim()) params.set('q', value.trim());
 		else params.delete('q');
 		const qs = params.toString();
 		goto(resolve(`/glossary/[[id]]?${qs}`, { id: page.params.id }), {
-			replaceState: true,
-			noScroll: true,
-			keepFocus: true
+			replace: true,
+			reset: false
 		});
 	}
 
@@ -199,7 +197,7 @@
 		const id = e.detail.selected[0];
 		// Selecting the current term again would clear the selection; the article stays put instead
 		if (!id || id === termId) return;
-		goto(resolve(`/glossary/[[id]]?${termQuery()}`, { id }), { noScroll: true, keepFocus: true });
+		goto(resolve(`/glossary/[[id]]?${termQuery()}`, { id }), { reset: false });
 	}
 
 	function onTreeExpand(e: CustomEvent<MmTreeExpandDetail>) {
@@ -225,7 +223,7 @@
 			total += 1;
 			selectedTerm = created;
 			await goto(resolve(`/glossary/[[id]]?${termQuery()}`, { id: created.id }), {
-				replaceState: true
+				replace: true
 			});
 			loadAll();
 		} catch (e) {
@@ -241,7 +239,7 @@
 
 	async function onDeleted() {
 		selectedTerm = null;
-		await goto(resolve(`/glossary/[[id]]?${termQuery()}`, {}), { replaceState: true });
+		await goto(resolve(`/glossary/[[id]]?${termQuery()}`, {}), { replace: true });
 		await loadAll();
 		if (query) runSearch(query);
 	}

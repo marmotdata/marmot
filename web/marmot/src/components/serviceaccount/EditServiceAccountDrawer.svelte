@@ -4,12 +4,12 @@
 	import '@marmotdata/elements/multiselect.js';
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import type { MmSwitchDetail } from '@marmotdata/elements/classes/switch.js';
-	import { updateServiceAccount } from '$lib/serviceaccounts/api';
-	import { listRoles } from '$lib/roles/api';
-	import { toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import type { Role } from '$lib/roles/types';
-	import type { ServiceAccount } from '$lib/serviceaccounts/types';
+	import { updateServiceAccount } from '#lib/serviceaccounts/api.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import { toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { Role } from '#lib/roles/types.ts';
+	import type { ServiceAccount } from '#lib/serviceaccounts/types.ts';
 
 	let {
 		sa,

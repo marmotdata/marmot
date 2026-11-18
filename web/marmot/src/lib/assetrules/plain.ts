@@ -4,7 +4,7 @@ import {
 	type SearchOperator
 } from '@marmotdata/elements/search-bar.js';
 import { getProvider } from '@marmotdata/icons';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 
 // Plain-language rendering of rule queries ("Has the glossary term PII and from Snowflake"), shared by asset rules and data product rules so both read the same way.
 

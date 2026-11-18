@@ -5,15 +5,15 @@
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
 	import type { MmCheckedDetail } from '@marmotdata/elements/classes/checkbox.js';
 	import type { MmSwitchDetail } from '@marmotdata/elements/classes/switch.js';
-	import { fetchApi } from '$lib/api';
-	import { handleApiError, toasts } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { handleApiError, toasts } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import {
 		notificationTypeOptions,
 		providerOptions,
 		type CreateWebhookInput,
 		type TeamWebhook
-	} from '$lib/teams/webhooks';
+	} from '#lib/teams/webhooks.ts';
 
 	// Adds or edits one team webhook. The API returns only a masked URL, so when editing the URL field starts empty and is sent only if replaced.
 	let {

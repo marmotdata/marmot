@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ApiKeys from '$components/auth/ApiKeys.svelte';
-	import { m } from '$lib/paraglide/messages';
+	import ApiKeys from '#components/auth/ApiKeys.svelte';
+	import { m } from '#lib/paraglide/messages.js';
 </script>
 
 <svelte:head>

@@ -3,14 +3,14 @@
 	import '@marmotdata/elements/drawer.js';
 	import type { MmSwitchDetail } from '@marmotdata/elements/classes/switch.js';
 	import '@marmotdata/elements/multiselect.js';
-	import { fetchApi } from '$lib/api';
-	import { listRoles } from '$lib/roles/api';
-	import { toasts, handleApiError } from '$lib/stores/toast';
-	import { m } from '$lib/paraglide/messages';
-	import { providerName } from '$lib/users/format';
-	import MrnValue from '$components/shared/MrnValue.svelte';
-	import type { User } from '$lib/users/types';
-	import type { Role } from '$lib/roles/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { listRoles } from '#lib/roles/api.ts';
+	import { toasts, handleApiError } from '#lib/stores/toast.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { providerName } from '#lib/users/format.ts';
+	import MrnValue from '#components/shared/MrnValue.svelte';
+	import type { User } from '#lib/users/types.ts';
+	import type { Role } from '#lib/roles/types.ts';
 
 	let { user, onClose, onSaved }: { user: User; onClose: () => void; onSaved: () => void } =
 		$props();

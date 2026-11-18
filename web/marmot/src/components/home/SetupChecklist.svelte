@@ -5,8 +5,8 @@
 <script lang="ts">
 	import '@marmotdata/elements/progress.js';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { skippedSteps } from '$lib/stores/setup.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { skippedSteps } from '#lib/stores/setup.svelte.ts';
 
 	interface Props {
 		done: Record<SetupStep, boolean>;
@@ -70,7 +70,7 @@
 			done: m.home_step_context_done(),
 			icon: 'menu-book',
 			action: m.home_step_context_glossary(),
-			href: resolve('/glossary'),
+			href: resolve('/glossary/[[id]]', {}),
 			allowed: true
 		},
 		{

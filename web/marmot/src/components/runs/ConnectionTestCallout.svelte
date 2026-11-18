@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import { formatNumber } from '$lib/utils/format';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatNumber } from '#lib/utils/format.ts';
 	import type { ConnectionTestResult } from './pipeline';
 
 	// What the last connection test found: what the plugin can see, why it could not connect, or that it ran out of time

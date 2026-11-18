@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { MmValueDetail } from '@marmotdata/elements/classes/form-field.js';
-	import { fetchApi } from '$lib/api';
-	import { m } from '$lib/paraglide/messages';
-	import type { OwnerResult } from '$lib/teams/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import type { OwnerResult } from '#lib/teams/types.ts';
 
 	// Finds people to add to a team. Each result has its own Add button that acts at once, and people already chosen are left out of the results, so chosen and unchosen never mix in one list.
 	let {

@@ -7,9 +7,9 @@
 	import '@marmotdata/elements/code-sample.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import { m } from '$lib/paraglide/messages';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import AgentClientSnippet from './AgentClientSnippet.svelte';
 
 	let { tab = 'agent', onClose }: { tab?: ConnectTab; onClose: () => void } = $props();

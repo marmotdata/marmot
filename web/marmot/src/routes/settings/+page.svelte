@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import ActionCentre from '$components/settings/ActionCentre.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { myAccess } from '$lib/iam/myAccess';
-	import { mmIcon } from '$lib/mm';
-	import { visibleGroups } from '$lib/settings/sections';
+	import ActionCentre from '#components/settings/ActionCentre.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { myAccess } from '#lib/iam/myAccess.ts';
+	import { mmIcon } from '#lib/mm/index.ts';
+	import { visibleGroups } from '#lib/settings/sections.ts';
 
 	let groups = $derived(visibleGroups($myAccess));
 </script>

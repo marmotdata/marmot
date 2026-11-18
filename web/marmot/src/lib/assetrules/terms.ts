@@ -1,5 +1,5 @@
-import { getTerm } from '$lib/glossary/api';
-import type { GlossaryTerm } from '$lib/glossary/types';
+import { getTerm } from '#lib/glossary/api.ts';
+import type { GlossaryTerm } from '#lib/glossary/types.ts';
 
 // Rules store glossary term IDs only, so names are fetched once per term and shared across every rule shown on the page.
 const cache = new Map<string, Promise<GlossaryTerm | null>>();

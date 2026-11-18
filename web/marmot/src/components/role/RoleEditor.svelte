@@ -2,25 +2,25 @@
 	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { toasts } from '$lib/stores/toast';
+	import { m } from '#lib/paraglide/messages.js';
+	import { toasts } from '#lib/stores/toast.ts';
 	import {
 		createRole,
 		deleteRole,
 		listPermissions,
 		replacePermissions,
 		updateRole
-	} from '$lib/roles/api';
+	} from '#lib/roles/api.ts';
 	import {
 		documentFromForm,
 		documentFromRole,
 		idsFromKeys,
 		type RoleDocument
-	} from '$lib/roles/document';
-	import { permissionMatrix } from '$lib/roles/summary';
-	import { DocumentError } from '$lib/document/errors';
-	import type { DocumentView } from '$lib/document/format';
-	import type { Permission, Role } from '$lib/roles/types';
+	} from '#lib/roles/document.ts';
+	import { permissionMatrix } from '#lib/roles/summary.ts';
+	import { DocumentError } from '#lib/document/errors.ts';
+	import type { DocumentView } from '#lib/document/format.ts';
+	import type { Permission, Role } from '#lib/roles/types.ts';
 	import RoleDocumentEditor from './RoleDocumentEditor.svelte';
 
 	// One page for a role: its permissions as a grid of areas and actions, or the same role as a JSON or YAML document. With no role it creates one, starting from `initial` when duplicating.

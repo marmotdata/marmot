@@ -1063,7 +1063,6 @@
 	"query_range_separator": "HASTA",
 	"query_range_to_placeholder": "Hasta",
 	"query_raw_query_label": "Consulta sin formato",
-	"query_raw_query_placeholder": "p. ej., @kind = &quot;asset&quot; AND @type = &quot;table&quot;",
 	"query_remove_filter_title": "Quitar filtro",
 	"query_run_button": "Ejecutar consulta",
 	"query_select_placeholder": "Seleccionar...",

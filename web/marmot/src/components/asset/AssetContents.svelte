@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Asset } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import type { Asset } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 	import { html } from 'lit';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
 	import { assetHref, providerKey } from './assetFormat';

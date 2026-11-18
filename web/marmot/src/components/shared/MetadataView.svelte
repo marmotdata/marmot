@@ -1,12 +1,12 @@
 <script lang="ts">
 	// Free-form metadata: read-only views are an mm-metadata-viewer (keys in mono, values in the text face, nested values folded), and the editable view is a table of key and value rows with Add field, saving each change straight to the endpoint.
-	import { fetchApi } from '$lib/api';
-	import { auth } from '$lib/stores/auth';
-	import type { Asset } from '$lib/assets/types';
+	import { fetchApi } from '#lib/api.ts';
+	import { auth } from '#lib/stores/auth.ts';
+	import type { Asset } from '#lib/assets/types.ts';
 	import '@marmotdata/elements/metadata-viewer.js';
-	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import { INPUT, TH, TD, TBODY } from '$lib/ui/classes';
+	import DeleteModal from '#components/ui/DeleteModal.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { INPUT, TH, TD, TBODY } from '#lib/ui/classes.ts';
 
 	let {
 		asset = undefined,

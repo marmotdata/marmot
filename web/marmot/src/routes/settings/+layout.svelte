@@ -4,17 +4,17 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { m } from '$lib/paraglide/messages';
-	import { myAccess, loadMyAccess } from '$lib/iam/myAccess';
-	import { mmIcon, setCrumbs } from '$lib/mm';
+	import { m } from '#lib/paraglide/messages.js';
+	import { myAccess, loadMyAccess } from '#lib/iam/myAccess.ts';
+	import { mmIcon, setCrumbs } from '#lib/mm/index.ts';
 	import {
 		visibleGroups,
 		searchSettings,
 		sectionForPath,
 		settingsCrumbs,
 		type SettingsItem
-	} from '$lib/settings/sections';
-	import { settingsAttentionRows } from '$lib/settings/attention';
+	} from '#lib/settings/sections.ts';
+	import { settingsAttentionRows } from '#lib/settings/attention.ts';
 
 	let { children }: { children: Snippet } = $props();
 

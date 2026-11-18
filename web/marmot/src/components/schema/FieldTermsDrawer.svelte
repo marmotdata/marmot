@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import '@marmotdata/elements/drawer.js';
-	import { searchTerms } from '$lib/glossary/api';
-	import type { GlossaryTerm } from '$lib/glossary/types';
-	import type { FieldAnnotation } from '$lib/assets/types';
-	import { m } from '$lib/paraglide/messages';
+	import { searchTerms } from '#lib/glossary/api.ts';
+	import type { GlossaryTerm } from '#lib/glossary/types.ts';
+	import type { FieldAnnotation } from '#lib/assets/types.ts';
+	import { m } from '#lib/paraglide/messages.js';
 
 	type FieldTerm = FieldAnnotation['glossary_terms'][number];
 

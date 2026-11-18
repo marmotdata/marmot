@@ -3,11 +3,11 @@
 	import type { TreeAction, TreeNode } from '@marmotdata/elements/classes/tree';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { m } from '$lib/paraglide/messages';
-	import { formatNumber } from '$lib/utils/format';
-	import { getTableColumns, listQuerySourceTables } from '$lib/dataquery/api';
-	import { assetRouteParams, formatRowCount, qualifiedName } from '$lib/dataquery/format';
-	import type { QuerySource, QuerySourceTable } from '$lib/dataquery/types';
+	import { m } from '#lib/paraglide/messages.js';
+	import { formatNumber } from '#lib/utils/format.ts';
+	import { getTableColumns, listQuerySourceTables } from '#lib/dataquery/api.ts';
+	import { assetRouteParams, formatRowCount, qualifiedName } from '#lib/dataquery/format.ts';
+	import type { QuerySource, QuerySourceTable } from '#lib/dataquery/types.ts';
 
 	let {
 		sources,
