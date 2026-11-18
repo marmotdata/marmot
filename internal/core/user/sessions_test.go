@@ -101,3 +101,18 @@ func TestUpdatePassword_ForcedChangeSkipsCurrentPassword(t *testing.T) {
 		t.Fatalf("updates = %v, want must_change_password cleared", repo.updates)
 	}
 }
+
+// A password set by an administrator is temporary, so the member has to choose their own and old sessions end.
+func TestUpdate_PasswordResetForcesChange(t *testing.T) {
+	repo := &stubSessionsRepo{}
+	password := "temporary-password"
+	if _, err := NewService(repo).Update(context.Background(), "u1", UpdateUserInput{Password: &password}); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if repo.updates["must_change_password"] != true {
+		t.Fatalf("updates = %v, want must_change_password set", repo.updates)
+	}
+	if _, ok := repo.updates["sessions_invalidated_at"].(time.Time); !ok {
+		t.Fatalf("updates = %v, want sessions_invalidated_at set", repo.updates)
+	}
+}

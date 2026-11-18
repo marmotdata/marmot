@@ -313,6 +313,9 @@ func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) 
 			return nil, fmt.Errorf("hashing password: %w", err)
 		}
 		updates["password_hash"] = string(hash)
+		// A password someone else has set is only a way back in, so the member picks their own at the next sign-in and any session started with the old password ends.
+		updates["must_change_password"] = true
+		updates["sessions_invalidated_at"] = time.Now()
 	}
 
 	if input.Active != nil {
