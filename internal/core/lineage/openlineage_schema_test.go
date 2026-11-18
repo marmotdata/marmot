@@ -40,3 +40,25 @@ func TestSchemaFromFacet_IsNilWithoutFields(t *testing.T) {
 	assert.Nil(t, schemaFromFacet(map[string]interface{}{"fields": []interface{}{}}))
 	assert.Nil(t, schemaFromFacet(map[string]interface{}{"fields": []interface{}{map[string]interface{}{"type": "INTEGER"}}}))
 }
+
+func TestSchemaFromFacet_FollowsOrdinalPositionAndLeavesNestedFieldsOut(t *testing.T) {
+	schema := schemaFromFacet(map[string]interface{}{
+		"fields": []interface{}{
+			map[string]interface{}{"name": "b", "type": "INT", "ordinal_position": float64(2)},
+			map[string]interface{}{"name": "address", "type": "STRUCT<city STRING>", "ordinal_position": float64(3), "fields": []interface{}{
+				map[string]interface{}{"name": "city", "type": "STRING"},
+			}},
+			map[string]interface{}{"name": "a", "type": "INT", "ordinal_position": float64(1)},
+		},
+	})
+	assert.Equal(t, `[{"column_name":"a","data_type":"INT"},{"column_name":"b","data_type":"INT"},{"column_name":"address","data_type":"STRUCT<city STRING>"}]`, schema["columns"])
+}
+
+func TestDatasetFieldsReadsDuckLineageSizeInBytes(t *testing.T) {
+	ds := &Dataset{Namespace: "file", Name: "out.parquet", OutputFacets: map[string]interface{}{
+		"outputStatistics": map[string]interface{}{"rowCount": float64(4), "sizeInBytes": float64(1024)},
+	}}
+	fields := datasetFields(ds, identifyDataset(ds, "https://github.com/ilum-cloud/duck_lineage"))
+	assert.EqualValues(t, 4, fields.Metadata["output_row_count"])
+	assert.EqualValues(t, 1024, fields.Metadata["output_size_bytes"])
+}

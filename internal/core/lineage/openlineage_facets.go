@@ -1,6 +1,7 @@
 package lineage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -321,9 +322,12 @@ func schemaFromFacet(schemaData map[string]interface{}) map[string]string {
 	for i, c := range columns {
 		out[i] = c.col
 	}
-	encoded, err := json.Marshal(out)
-	if err != nil {
+	// Types such as STRUCT<city STRING> stay readable in the raw schema rather than escaped for HTML.
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(out); err != nil {
 		return nil
 	}
-	return map[string]string{"columns": string(encoded)}
+	return map[string]string{"columns": strings.TrimSpace(buf.String())}
 }

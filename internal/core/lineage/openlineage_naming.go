@@ -393,6 +393,13 @@ func identifyJob(event *RunEvent) jobIdentity {
 		Name:     extractSimpleJobName(event.Job.Name),
 		MRN:      openLineageMRN(assetType, provider, event.Job.Namespace, event.Job.Name),
 	}
+	// dbt names every data test <node>.test, so the last part alone would call each one test.
+	if assetType == AssetTypeTest && strings.HasSuffix(event.Job.Name, ".test") {
+		parts := strings.Split(event.Job.Name, ".")
+		if len(parts) >= 2 {
+			id.Name = parts[len(parts)-2] + ".test"
+		}
+	}
 	legacyProvider := legacyInferProvider(event.Producer)
 	legacy := openLineageMRN(inferJobType(event, legacyProvider), legacyProvider, event.Job.Namespace, extractSimpleJobName(event.Job.Name))
 	if legacy != id.MRN {

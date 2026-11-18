@@ -166,3 +166,16 @@ func TestIdentifyJobKeepsTheWholeName(t *testing.T) {
 		})
 	}
 }
+
+func TestParentJobReadsParentAndTheOlderParentRun(t *testing.T) {
+	parent := map[string]interface{}{"run": map[string]interface{}{"runId": "d1"}, "job": map[string]interface{}{"namespace": "prod", "name": "orders_etl"}}
+	for _, key := range []string{"parent", "parentRun"} {
+		ns, name, ok := parentJob(&RunEvent{Run: Run{RunID: "t1", Facets: map[string]interface{}{key: parent}}})
+		assert.True(t, ok, key)
+		assert.Equal(t, "prod", ns, key)
+		assert.Equal(t, "orders_etl", name, key)
+	}
+	// duck_lineage sends a parent with no job when only OPENLINEAGE_PARENT_RUN_ID is set.
+	_, _, ok := parentJob(&RunEvent{Run: Run{Facets: map[string]interface{}{"parent": map[string]interface{}{"run": map[string]interface{}{"runId": "d1"}}}}})
+	assert.False(t, ok)
+}

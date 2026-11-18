@@ -179,6 +179,7 @@ func TestFacetsArePersisted(t *testing.T) {
 		"acme_lineage":       facet("https://acme.example/facets/AcmeDatasetFacet.json", map[string]any{"anything": []any{1, "two"}}),
 	})
 	input["inputFacets"] = map[string]any{
+		"subset":                facet("https://openlineage.io/spec/facets/1-0-0/BaseSubsetDatasetFacet.json", map[string]any{"inputCondition": map[string]any{"type": "location", "locations": []any{"s3://lake/orders/2026"}}}),
 		"inputStatistics":       facet("https://openlineage.io/spec/facets/1-0-0/InputStatisticsInputDatasetFacet.json", map[string]any{"rowCount": 990, "size": 60000, "fileCount": 4}),
 		"dataQualityAssertions": facet("https://openlineage.io/spec/facets/1-1-0/DataQualityAssertionsDatasetFacet.json", map[string]any{"assertions": []any{map[string]any{"assertion": "not_null", "success": true, "column": "id"}}}),
 	}
@@ -194,6 +195,7 @@ func TestFacetsArePersisted(t *testing.T) {
 		"ownership":          facet("https://openlineage.io/spec/facets/1-0-1/OwnershipJobFacet.json", map[string]any{"owners": []any{map[string]any{"name": "team:analytics"}}}),
 		"sourceCodeLocation": facet("https://openlineage.io/spec/facets/1-1-0/SourceCodeLocationJobFacet.json", map[string]any{"type": "git", "url": "https://github.com/acme/etl/blob/main/summary.sql", "repoUrl": "https://github.com/acme/etl", "path": "summary.sql", "branch": "main", "version": "abc123"}),
 		"tags":               facet("https://openlineage.io/spec/facets/1-0-0/TagsJobFacet.json", map[string]any{"tags": []any{map[string]any{"key": "team", "value": "analytics"}}}),
+		"lineage":            facet("https://openlineage.io/spec/facets/1-0-0/LineageJobFacet.json", map[string]any{"entries": []any{map[string]any{"namespace": pgNS, "name": "shop.public.summary", "type": "DATASET", "inputs": []any{map[string]any{"namespace": pgNS, "name": "shop.public.orders", "type": "DATASET"}}}}}),
 	}
 	ev["run"].(map[string]any)["facets"] = map[string]any{
 		"parent":               facet("https://openlineage.io/spec/facets/1-2-0/ParentRunFacet.json", map[string]any{"run": map[string]any{"runId": "3f5e83fa-3480-44ff-99c5-ff943904e5e8"}, "job": map[string]any{"namespace": "airflow", "name": "nightly_dag"}}),
@@ -393,4 +395,45 @@ func TestAirflowDAGContainsTaskAndDbtProjectContainsModel(t *testing.T) {
 		Nodes: []string{dag, taskMRN, pgMRN("a"), pgMRN("b")},
 		Edges: []string{e(dag, "CONTAINS", taskMRN), e(pgMRN("a"), "CONSUMES", taskMRN), e(taskMRN, "PRODUCES", pgMRN("b"))},
 	}, h.lineageOf(taskMRN, 10, "both"))
+}
+
+// A rename or drop of a table its own plugin catalogues: the rename moves the plugin's asset, keeping its id, and the drop keeps it, marked dropped, for the plugin's next run to remove.
+func TestLifecycleOnPluginOwnedTables(t *testing.T) {
+	h := newHarness(t)
+	table := func(name string) runs.CreateAssetInput {
+		m := mrn.Asset("Table", "PostgreSQL", "shop", "public", name).String()
+		return runs.CreateAssetInput{Name: name, MRN: &m, Type: "Table", Providers: []string{"PostgreSQL"}}
+	}
+	h.pluginRun("shop-pg", "postgresql", []runs.CreateAssetInput{table("old_name"), table("doomed")}, nil)
+	before := h.asset(pgMRN("old_name")).ID
+
+	lifecycle := func(state string, prev string) map[string]any {
+		f := map[string]any{"lifecycleStateChange": state}
+		if prev != "" {
+			f["previousIdentifier"] = map[string]any{"namespace": pgNS, "name": "shop.public." + prev}
+		}
+		return map[string]any{"lifecycleStateChange": facet("https://openlineage.io/spec/facets/1-0-1/LifecycleStateChangeDatasetFacet.json", f)}
+	}
+	renamed := withFacets(pgTable("new_name"), lifecycle("RENAME", "old_name"))
+	h.sendJSON(runEvent("START", "r1", "rename", nil, []ds{renamed}))
+	assert.NotContains(t, h.allMRNs(), pgMRN("new_name"), "the new name is not created before the rename has finished")
+	h.sendJSON(runEvent("COMPLETE", "r1", "rename", nil, []ds{renamed}))
+	moved := h.asset(pgMRN("new_name"))
+	assert.Equal(t, before, moved.ID, "the plugin's asset moved")
+	assert.False(t, moved.IsStub)
+	assert.NotContains(t, h.allMRNs(), pgMRN("old_name"))
+	resolved, err := h.assets.ResolveMRN(h.ctx, pgMRN("old_name"))
+	require.NoError(t, err)
+	assert.Equal(t, pgMRN("new_name"), resolved)
+
+	dropped := withFacets(pgTable("doomed"), lifecycle("DROP", ""))
+	run(h, "r2", "drop", nil, []ds{dropped})
+	kept := h.asset(pgMRN("doomed"))
+	assert.False(t, kept.IsStub)
+	assert.Equal(t, "DROP", kept.Metadata["lifecycle_state"])
+	assert.NotContains(t, h.allEdges(), e(jobMRN("drop"), "PRODUCES", pgMRN("doomed")), "a drop does not link the job to the table")
+
+	// A drop of a table nobody has seen creates nothing.
+	run(h, "r3", "drop", nil, []ds{withFacets(pgTable("never_seen"), lifecycle("DROP", ""))})
+	assert.NotContains(t, h.allMRNs(), pgMRN("never_seen"))
 }

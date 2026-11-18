@@ -178,6 +178,8 @@ func TestReplayDbt(t *testing.T) {
 	require.Len(t, brokenRuns, 1)
 	assert.Equal(t, "FAIL", brokenRuns[0].Status)
 	assert.Equal(t, "Test", h.asset(tSource).Type)
+	assert.Equal(t, "orders.test", *h.asset(tSource).Name, "a data test is named after what it checks")
+	assert.Equal(t, "customer_orders.test", *h.asset(tCustomerOrders).Name)
 	assert.Equal(t, "Model", h.asset(mStgOrders).Type)
 	assert.Equal(t, "stg_orders", *h.asset(mStgOrders).Name)
 }
