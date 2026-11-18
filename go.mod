@@ -26,6 +26,7 @@ require (
 	github.com/prometheus/client_golang v1.24.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.35.1
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/sigstore/sigstore v1.11.1
 	github.com/sigstore/sigstore/pkg/signature/kms/aws v1.11.1
 	github.com/sigstore/sigstore/pkg/signature/kms/azure v1.11.1

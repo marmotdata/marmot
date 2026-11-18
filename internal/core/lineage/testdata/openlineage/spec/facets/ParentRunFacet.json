@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openlineage.io/spec/facets/1-2-0/ParentRunFacet.json",
+  "$defs": {
+    "RootRun": {
+      "type": "object",
+      "properties": {
+        "runId": {
+          "description": "The globally unique ID of the root run associated with the root job.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "facets": {
+          "description": "Selected subset of facets of the root run (not the current run), forwarded here for convenience. See the root run's own event for full information.",
+          "type": "object",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": { "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet" }
+            }
+          ]
+        }
+      },
+      "required": ["runId"]
+    },
+    "RootJob": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "description": "The namespace containing root job",
+          "type": "string",
+          "example": "my-scheduler-namespace"
+        },
+        "name": {
+          "description": "The unique name containing root job within that namespace",
+          "type": "string",
+          "example": "myjob.mytask"
+        },
+        "facets": {
+          "description": "Selected subset of facets of the root job (not the current job), forwarded here for convenience. See the root job's own event for full information.",
+          "type": "object",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": { "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/JobFacet" }
+            }
+          ]
+        }
+      },
+      "required": ["namespace", "name"]
+    },
+    "ParentRunFacet": {
+      "description": "the id of the parent run and job, iff this run was spawn from an other run (for example, the Dag run scheduling its tasks)",
+      "allOf": [
+        {
+          "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "run": {
+              "type": "object",
+              "properties": {
+                "runId": {
+                  "description": "The globally unique ID of the run associated with the job.",
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "facets": {
+                  "description": "Selected subset of facets of the parent run (not the current run), forwarded here for convenience. See the parent run's own event for full information.",
+                  "type": "object",
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet"
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": ["runId"]
+            },
+            "job": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "description": "The namespace containing that job",
+                  "type": "string",
+                  "example": "my-scheduler-namespace"
+                },
+                "name": {
+                  "description": "The unique name for that job within that namespace",
+                  "type": "string",
+                  "example": "myjob.mytask"
+                },
+                "facets": {
+                  "description": "Selected subset of facets of the parent job (not the current job), forwarded here for convenience. See the parent job's own event for full information.",
+                  "type": "object",
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/JobFacet"
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": ["namespace", "name"]
+            },
+            "root": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "$ref": "#/$defs/RootRun"
+                },
+                "job": {
+                  "$ref": "#/$defs/RootJob"
+                }
+              },
+              "required": ["run", "job"]
+            }
+          },
+          "required": ["run", "job"]
+        }
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "properties": {
+    "parent": {
+      "$ref": "#/$defs/ParentRunFacet"
+    }
+  }
+}

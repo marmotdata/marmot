@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openlineage.io/spec/facets/2-0-4/JobTypeJobFacet.json",
+  "$defs": {
+    "JobTypeJobFacet": {
+      "allOf": [
+        {
+          "$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/JobFacet"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "processingType": {
+              "description": "Job processing type: BATCH (finite jobs with clear start/end), STREAMING (continuous jobs processing data streams), or SERVICE (continuous long-running services). BATCH jobs are finite and emit START/COMPLETE/FAIL/ABORT events. STREAMING and SERVICE jobs are continuous with no natural completion point.",
+              "type": "string",
+              "example": "BATCH"
+            },
+            "integration": {
+              "description": "OpenLineage integration type of this job: for example SPARK|DBT|AIRFLOW|FLINK",
+              "type": "string",
+              "example": "SPARK"
+            },
+            "jobType": {
+              "description": "Run type, for example: QUERY|COMMAND|DAG|TASK|JOB|MODEL. This is an integration-specific field.",
+              "type": "string",
+              "example": "QUERY"
+            },
+            "emissionPattern": {
+              "description": "Describes how and what the job emits in its events",
+              "type": "object",
+              "properties": {
+                "eventTrigger": {
+                  "description": "Defines when events are emitted. EVENT_BASED: events emitted on lifecycle transitions (START/COMPLETE/FAIL/ABORT). PERIODIC: events emitted at regular time intervals.",
+                  "type": "string",
+                  "example": "EVENT_BASED"
+                },
+                "eventContentMode": {
+                  "description": "Define if individual events are self-sufficient and can be processed individually, or need to be combined by consumer. ACCUMULATIVE: Events may contain only partial information and the complete information can be collected by combining information from all the events emitted by a specific job run. COMPLETE_SNAPSHOT: events contain complete state for a specific time window (events can be processed independently).",
+                  "type": "string",
+                  "example": "ACCUMULATIVE"
+                },
+                "windowDuration": {
+                  "description": "Time window duration for periodic event emissions in seconds. Only applicable when eventTrigger is PERIODIC. Required when eventTrigger is PERIODIC and eventContentMode is COMPLETE_SNAPSHOT.",
+                  "type": "integer",
+                  "minimum": 1,
+                  "example": 300
+                }
+              },
+              "required": ["eventTrigger", "eventContentMode"]
+            }
+          },
+          "required": ["processingType", "integration"]
+        }
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "properties": {
+    "jobType": {
+      "$ref": "#/$defs/JobTypeJobFacet"
+    }
+  }
+}
