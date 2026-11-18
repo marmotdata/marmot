@@ -4442,7 +4442,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Process OpenLineage run events and update assets/lineage accordingly",
+                "description": "Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4456,7 +4456,7 @@ const docTemplate = `{
                 "operationId": "postLineage",
                 "parameters": [
                     {
-                        "description": "OpenLineage run event",
+                        "description": "OpenLineage event",
                         "name": "event",
                         "in": "body",
                         "required": true,
@@ -4471,6 +4471,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -4579,7 +4591,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create lineage edges in batch",
+                "description": "Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4589,11 +4601,11 @@ const docTemplate = `{
                 "tags": [
                     "lineage"
                 ],
-                "summary": "Batch create lineage edges",
+                "summary": "Batch create lineage edges or ingest OpenLineage events",
                 "operationId": "postLineageBatch",
                 "parameters": [
                     {
-                        "description": "Array of lineage edges to create",
+                        "description": "Array of lineage edges to create, or of OpenLineage events",
                         "name": "edges",
                         "in": "body",
                         "required": true,
@@ -4617,6 +4629,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -17266,6 +17284,14 @@ const docTemplate = `{
         "RunEvent": {
             "type": "object",
             "properties": {
+                "dataset": {
+                    "description": "Dataset is the dataset a DatasetEvent describes.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/Dataset"
+                        }
+                    ]
+                },
                 "eventTime": {
                     "type": "string"
                 },
