@@ -2,6 +2,7 @@ package lineage
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -600,7 +601,7 @@ func extractDatasetMetadata(metadata map[string]interface{}, facets, inputFacets
 
 		if schemaFacet, ok := facets["schema"]; ok {
 			if schemaData, ok := schemaFacet.(map[string]interface{}); ok {
-				schema = convertSchemaToJSONSchema(schemaData)
+				schema = schemaFromFacet(schemaData)
 			}
 		}
 
@@ -855,42 +856,44 @@ func inferDatasetType(dataset *Dataset) string {
 	return AssetTypeDataset
 }
 
-func convertSchemaToJSONSchema(schemaData map[string]interface{}) map[string]string {
-	result := make(map[string]string)
-	if fields, ok := schemaData["fields"].([]interface{}); ok {
-		for _, field := range fields {
-			if fieldMap, ok := field.(map[string]interface{}); ok {
-				if name, ok := fieldMap["name"].(string); ok {
-					if fieldType, ok := fieldMap["type"].(string); ok {
-						jsonSchemaType := convertToJSONSchemaType(fieldType)
-						result[name] = jsonSchemaType
-					}
-				}
-			}
-		}
-	}
-	return result
+// schemaColumn is one column in the list table plugins store under the columns schema, which is the form the catalog reads everywhere.
+type schemaColumn struct {
+	Name        string `json:"column_name"`
+	Type        string `json:"data_type"`
+	Description string `json:"description,omitempty"`
 }
 
-func convertToJSONSchemaType(olType string) string {
-	switch strings.ToLower(olType) {
-	case "string", "varchar", "char", "text":
-		return "string"
-	case "integer", "int", "bigint", "smallint":
-		return "integer"
-	case "double", "float", "decimal", "numeric":
-		return "number"
-	case "boolean", "bool":
-		return "boolean"
-	case "timestamp", "datetime", "date", "time":
-		return "string"
-	case "array":
-		return "array"
-	case "object", "struct", "record":
-		return "object"
-	default:
-		return "string"
+// schemaFromFacet turns an OpenLineage schema facet into the columns schema table plugins write, keeping the producer's field order and type names. It returns nil when the facet names no fields, so an event without them leaves the schema alone.
+func schemaFromFacet(schemaData map[string]interface{}) map[string]string {
+	fields, ok := schemaData["fields"].([]interface{})
+	if !ok {
+		return nil
 	}
+	columns := make([]schemaColumn, 0, len(fields))
+	for _, field := range fields {
+		fieldMap, ok := field.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name, _ := fieldMap["name"].(string)
+		if name == "" {
+			continue
+		}
+		column := schemaColumn{Name: name, Type: "unknown"}
+		if fieldType, _ := fieldMap["type"].(string); fieldType != "" {
+			column.Type = fieldType
+		}
+		column.Description, _ = fieldMap["description"].(string)
+		columns = append(columns, column)
+	}
+	if len(columns) == 0 {
+		return nil
+	}
+	encoded, err := json.Marshal(columns)
+	if err != nil {
+		return nil
+	}
+	return map[string]string{"columns": string(encoded)}
 }
 
 func extractSimpleJobName(fullJobName string) string {
