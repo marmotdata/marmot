@@ -4,9 +4,13 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // KnowledgeSaveInput knowledge save input
@@ -14,17 +18,20 @@ import (
 // swagger:model KnowledgeSaveInput
 type KnowledgeSaveInput struct {
 
-	// applies to
-	AppliesTo []string `json:"applies_to"`
-
 	// effective from
 	EffectiveFrom string `json:"effective_from,omitempty"`
 
 	// fields
 	Fields map[string]any `json:"fields,omitempty"`
 
+	// Links and Rules replace the entry's links and rules; leave both out to keep what is there. Only changes are written, so resending thousands of unchanged links is cheap.
+	Links []*KnowledgeLinkInput `json:"links"`
+
 	// review by
 	ReviewBy string `json:"review_by,omitempty"`
+
+	// rules
+	Rules []*KnowledgeRuleInput `json:"rules"`
 
 	// status
 	Status string `json:"status,omitempty"`
@@ -34,12 +41,156 @@ type KnowledgeSaveInput struct {
 }
 
 // Validate validates this knowledge save input
-func (m *KnowledgeSaveInput) Validate(_ strfmt.Registry) error {
+func (m *KnowledgeSaveInput) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateLinks(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRules(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this knowledge save input based on context it is used
-func (m *KnowledgeSaveInput) ContextValidate(_ context.Context, _ strfmt.Registry) error {
+func (m *KnowledgeSaveInput) validateLinks(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Links) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Links); i++ {
+		if typeutils.IsZero(m.Links[i]) { // not required
+			continue
+		}
+
+		if m.Links[i] != nil {
+			if err := m.Links[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *KnowledgeSaveInput) validateRules(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Rules) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Rules); i++ {
+		if typeutils.IsZero(m.Rules[i]) { // not required
+			continue
+		}
+
+		if m.Rules[i] != nil {
+			if err := m.Rules[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this knowledge save input based on the context it is used
+func (m *KnowledgeSaveInput) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateLinks(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRules(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *KnowledgeSaveInput) contextValidateLinks(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Links); i++ {
+
+		if m.Links[i] != nil {
+
+			if typeutils.IsZero(m.Links[i]) { // not required
+				return nil
+			}
+
+			if err := m.Links[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *KnowledgeSaveInput) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Rules); i++ {
+
+		if m.Rules[i] != nil {
+
+			if typeutils.IsZero(m.Rules[i]) { // not required
+				return nil
+			}
+
+			if err := m.Rules[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

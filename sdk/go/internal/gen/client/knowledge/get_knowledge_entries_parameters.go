@@ -97,13 +97,18 @@ type GetKnowledgeEntriesParams struct {
 
 	// Sort.
 	//
-	// updated (default), name or review
+	// updated (default, or relevance when searching), name, review or relevance
 	Sort *string
 
 	// Status.
 	//
 	// Comma-separated statuses, such as in_force,accepted
 	Status *string
+
+	// Team.
+	//
+	// Comma-separated team IDs; only entries those teams own
+	Team *string
 
 	HTTPClient *http.Client
 
@@ -261,6 +266,17 @@ func (o *GetKnowledgeEntriesParams) SetStatus(status *string) {
 	o.Status = status
 }
 
+// WithTeam adds the team to the get knowledge entries params.
+func (o *GetKnowledgeEntriesParams) WithTeam(team *string) *GetKnowledgeEntriesParams {
+	o.SetTeam(team)
+	return o
+}
+
+// SetTeam adds the team to the get knowledge entries params.
+func (o *GetKnowledgeEntriesParams) SetTeam(team *string) {
+	o.Team = team
+}
+
 // WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetKnowledgeEntriesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 	if err := r.SetTimeout(o.inner.timeout); err != nil {
@@ -399,6 +415,23 @@ func (o *GetKnowledgeEntriesParams) WriteToRequest(r runtime.ClientRequest, reg 
 		if qStatus != "" {
 
 			if err := r.SetQueryParam("status", qStatus); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Team != nil {
+
+		// query param team
+		var qrTeam string
+
+		if o.Team != nil {
+			qrTeam = *o.Team
+		}
+		qTeam := qrTeam
+		if qTeam != "" {
+
+			if err := r.SetQueryParam("team", qTeam); err != nil {
 				return err
 			}
 		}

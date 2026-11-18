@@ -47,8 +47,19 @@ export interface KnowledgeKind {
 /** The provider every entry written in Marmot carries, since an asset needs one and the entry lives nowhere else. */
 export const KNOWLEDGE_PROVIDER = 'Marmot';
 
+/** How an entry relates to another asset, with the label read from the other end. */
+export interface KnowledgeRelation {
+	id: string;
+	label: string;
+	inverse_label: string;
+	description: string;
+}
+
 /** The kinds, empty until loadKinds resolves. */
 export const knowledgeKinds = writable<KnowledgeKind[]>([]);
+
+/** The relations, empty until loadKinds resolves. */
+export const knowledgeRelations = writable<KnowledgeRelation[]>([]);
 
 let pending: Promise<KnowledgeKind[]> | null = null;
 
@@ -58,9 +69,10 @@ export function loadKinds(): Promise<KnowledgeKind[]> {
 		pending = fetchApi('/knowledge/kinds')
 			.then(async (res) => {
 				if (!res.ok) throw new Error(`kinds: ${res.status}`);
-				const data: { kinds?: KnowledgeKind[] } = await res.json();
+				const data: { kinds?: KnowledgeKind[]; relations?: KnowledgeRelation[] } = await res.json();
 				const kinds = data.kinds ?? [];
 				knowledgeKinds.set(kinds);
+				knowledgeRelations.set(data.relations ?? []);
 				return kinds;
 			})
 			.catch((err) => {
@@ -99,4 +111,12 @@ export function statusOf(
 /** Whether a field must be filled in, given the status the entry will have. */
 export function isRequired(field: KnowledgeField, status: string): boolean {
 	return !!field.required || !!field.required_when?.includes(status);
+}
+
+/** The relation with the given key. */
+export function relationOf(
+	id: string,
+	relations: KnowledgeRelation[] = get(knowledgeRelations)
+): KnowledgeRelation | undefined {
+	return relations.find((r) => r.id === id);
 }

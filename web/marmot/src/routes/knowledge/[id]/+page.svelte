@@ -11,14 +11,25 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { formatDate, formatRelativeTime } from '#lib/utils/format.ts';
 	import { discoverPath, discoverPathname } from '#lib/mrn.ts';
-	import { kindById, loadKinds, statusOf, type KnowledgeKind } from '#lib/knowledge/kinds.ts';
 	import {
+		kindById,
+		knowledgeRelations,
+		loadKinds,
+		relationOf,
+		statusOf,
+		type KnowledgeKind
+	} from '#lib/knowledge/kinds.ts';
+	import { ruleCoverage, ruleDiscoverHref, ruleLabel } from '#lib/knowledge/rules.ts';
+	import {
+		allEntryLinks,
+		entryLinks,
 		getEntry,
 		markReviewed,
 		monthsFromToday,
 		saveEntry,
 		type KnowledgeAssetRef,
-		type KnowledgeEntry
+		type KnowledgeEntry,
+		type KnowledgeLink
 	} from '#lib/knowledge/api.ts';
 	import {
 		draftErrors,
@@ -69,6 +80,8 @@
 
 	async function load(assetId: string) {
 		loading = true;
+		allLinks = null;
+		linksCursor = '';
 		failed = '';
 		editing = false;
 		try {
@@ -125,13 +138,41 @@
 		else toasts.error(m.asset_page_owner_remove_error());
 	}
 
-	function startEditing() {
+	async function startEditing() {
 		if (!kind || !entry) return;
-		draft = draftFrom(kind, entry);
+		const d = draftFrom(kind, entry);
+		// The entry carries only its first links, so the rest are read before editing; past a thousand, links are left alone and rules are the way to change coverage.
+		if (d.links === null && asset) {
+			try {
+				d.links = await allEntryLinks(asset.id);
+			} catch {
+				d.links = null;
+			}
+		}
+		draft = d;
 		summaryDraft = asset?.user_description ?? '';
 		fieldErrors = {};
 		saveError = '';
 		editing = true;
+	}
+
+	async function showAllLinks() {
+		if (!asset) return;
+		loadingLinks = true;
+		try {
+			const page = await entryLinks(asset.id, linksCursor, 100);
+			allLinks = [
+				...(allLinks ?? entry?.links ?? []).filter(
+					(l) => !page.links.some((p) => p.target.id === l.target.id && p.relation === l.relation)
+				),
+				...page.links
+			];
+			linksCursor = page.next ?? '';
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : m.knowledge_entry_load_error());
+		} finally {
+			loadingLinks = false;
+		}
 	}
 
 	async function save() {
@@ -151,6 +192,8 @@
 				asset.user_description = summary || undefined;
 			}
 			entry = await saveEntry(asset.id, toInput(draft));
+			allLinks = null;
+			linksCursor = '';
 			editing = false;
 			toasts.success(m.knowledge_entry_saved());
 		} catch (err) {
@@ -213,7 +256,27 @@
 	let missing = $derived(
 		kind && entry ? kind.fields.filter((f) => !hasValue(entry!.fields[f.key]) && f.required) : []
 	);
-	let knowledgeRefs = $derived((refs: KnowledgeAssetRef[]) => refs.filter((r) => r.id));
+	let allLinks = $state<KnowledgeLink[] | null>(null);
+	let linksCursor = $state('');
+	let loadingLinks = $state(false);
+	let shownLinks = $derived(allLinks ?? entry?.links ?? []);
+	let linkGroups = $derived.by(() => {
+		const groups: { relation: string; label: string; links: KnowledgeLink[] }[] = [];
+		for (const l of shownLinks) {
+			let g = groups.find((x) => x.relation === l.relation);
+			if (!g) {
+				g = {
+					relation: l.relation,
+					label: relationOf(l.relation, $knowledgeRelations)?.label ?? l.relation,
+					links: []
+				};
+				groups.push(g);
+			}
+			g.links.push(l);
+		}
+		return groups;
+	});
+	let moreLinks = $derived(entry ? entry.link_count > shownLinks.length : false);
 </script>
 
 <svelte:head>
@@ -453,18 +516,51 @@
 						{/if}
 					</mm-description-list>
 
-					<div class="mm-stack" style="--mm-gap: var(--space-2)">
-						<mm-text variant="label" tone="secondary" block>{m.knowledge_group_applies()}</mm-text>
-						{#if entry.applies_to.length}
+					{#each linkGroups as g (g.relation)}
+						<div class="mm-stack" style="--mm-gap: var(--space-2)">
+							<mm-text variant="label" tone="secondary" block>{g.label}</mm-text>
 							<ul class="refs">
-								{#each knowledgeRefs(entry.applies_to) as r (r.id)}
-									<li><mm-link href={refHref(r)}>{r.name}</mm-link></li>
+								{#each g.links as l (l.target.id)}
+									<li><mm-link href={refHref(l.target)}>{l.target.name}</mm-link></li>
 								{/each}
 							</ul>
-						{:else}
+						</div>
+					{/each}
+					{#if moreLinks}
+						<div>
+							<mm-button size="sm" variant="ghost" loading={loadingLinks} onclick={showAllLinks}
+								>{m.knowledge_links_show_more({
+									count: entry.link_count - shownLinks.length
+								})}</mm-button
+							>
+						</div>
+					{/if}
+					{#if entry.rules.length}
+						<div class="mm-stack" style="--mm-gap: var(--space-2)">
+							<mm-text variant="label" tone="secondary" block>{m.knowledge_group_rules()}</mm-text>
+							<ul class="refs">
+								{#each entry.rules as r (r.id)}
+									<li class="mm-stack" style="--mm-gap: 0">
+										<span
+											>{relationOf(r.relation, $knowledgeRelations)?.label ?? r.relation} · {ruleLabel(
+												r
+											)}</span
+										>
+										<mm-text variant="caption" tone="secondary">
+											<mm-link href={resolve(ruleDiscoverHref(r) as '/')}>{ruleCoverage(r)}</mm-link
+											>
+										</mm-text>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+					{#if !entry.link_count && !entry.rules.length}
+						<div class="mm-stack" style="--mm-gap: var(--space-2)">
+							<mm-text variant="label" tone="secondary" block>{m.knowledge_group_links()}</mm-text>
 							<mm-text tone="tertiary" variant="dense">{m.knowledge_applies_none()}</mm-text>
-						{/if}
-					</div>
+						</div>
+					{/if}
 
 					{#if entry.supersedes || entry.superseded_by.length}
 						<div class="mm-stack" style="--mm-gap: var(--space-2)">

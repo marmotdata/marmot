@@ -21,6 +21,7 @@ from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.knowledge_kind import KnowledgeKind
+from marmot.generated.models.knowledge_relation import KnowledgeRelation
 
 
 class KnowledgeKindsResponse(BaseModel):
@@ -29,7 +30,8 @@ class KnowledgeKindsResponse(BaseModel):
     """
 
     kinds: list[KnowledgeKind] | None = None
-    __properties: ClassVar[list[str]] = ["kinds"]
+    relations: list[KnowledgeRelation] | None = None
+    __properties: ClassVar[list[str]] = ["kinds", "relations"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -75,6 +77,13 @@ class KnowledgeKindsResponse(BaseModel):
                 if _item_kinds:
                     _items.append(_item_kinds.to_dict())
             _dict["kinds"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in relations (list)
+        _items = []
+        if self.relations:
+            for _item_relations in self.relations:
+                if _item_relations:
+                    _items.append(_item_relations.to_dict())
+            _dict["relations"] = _items
         return _dict
 
     @classmethod
@@ -90,6 +99,9 @@ class KnowledgeKindsResponse(BaseModel):
             {
                 "kinds": [KnowledgeKind.from_dict(_item) for _item in obj["kinds"]]
                 if obj.get("kinds") is not None
-                else None
+                else None,
+                "relations": [KnowledgeRelation.from_dict(_item) for _item in obj["relations"]]
+                if obj.get("relations") is not None
+                else None,
             }
         )

@@ -20,6 +20,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
+from marmot.generated.models.knowledge_team_count import KnowledgeTeamCount
+
 
 class KnowledgeCounts(BaseModel):
     """
@@ -28,12 +30,20 @@ class KnowledgeCounts(BaseModel):
 
     by_kind: dict[str, StrictInt] | None = None
     by_state: dict[str, StrictInt] | None = None
+    by_team: list[KnowledgeTeamCount] | None = None
     review_due: StrictInt | None = None
     total: StrictInt | None = None
     unset: StrictInt | None = Field(
         default=None, description="Unset counts entries nobody has given a status yet."
     )
-    __properties: ClassVar[list[str]] = ["by_kind", "by_state", "review_due", "total", "unset"]
+    __properties: ClassVar[list[str]] = [
+        "by_kind",
+        "by_state",
+        "by_team",
+        "review_due",
+        "total",
+        "unset",
+    ]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -67,11 +77,19 @@ class KnowledgeCounts(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in by_team (list)
+        _items = []
+        if self.by_team:
+            for _item_by_team in self.by_team:
+                if _item_by_team:
+                    _items.append(_item_by_team.to_dict())
+            _dict["by_team"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -86,6 +104,9 @@ class KnowledgeCounts(BaseModel):
             {
                 "by_kind": obj.get("by_kind"),
                 "by_state": obj.get("by_state"),
+                "by_team": [KnowledgeTeamCount.from_dict(_item) for _item in obj["by_team"]]
+                if obj.get("by_team") is not None
+                else None,
                 "review_due": obj.get("review_due"),
                 "total": obj.get("total"),
                 "unset": obj.get("unset"),

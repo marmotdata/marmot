@@ -18,9 +18,6 @@ import (
 // swagger:model KnowledgeEntry
 type KnowledgeEntry struct {
 
-	// applies to
-	AppliesTo []*KnowledgeAssetRef `json:"applies_to"`
-
 	// asset id
 	AssetID string `json:"asset_id,omitempty"`
 
@@ -39,11 +36,20 @@ type KnowledgeEntry struct {
 	// last reviewed by
 	LastReviewedBy string `json:"last_reviewed_by,omitempty"`
 
+	// link count
+	LinkCount int64 `json:"link_count,omitempty"`
+
+	// Links holds the first EntryLinkLimit links, and LinkCount how many there are; page through the rest with the entry's links endpoint.
+	Links []*KnowledgeLink `json:"links"`
+
 	// review by
 	ReviewBy string `json:"review_by,omitempty"`
 
 	// review due
 	ReviewDue bool `json:"review_due,omitempty"`
+
+	// rules
+	Rules []*KnowledgeRule `json:"rules"`
 
 	// State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.
 	State struct {
@@ -72,7 +78,11 @@ type KnowledgeEntry struct {
 func (m *KnowledgeEntry) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAppliesTo(formats); err != nil {
+	if err := m.validateLinks(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRules(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -94,25 +104,55 @@ func (m *KnowledgeEntry) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *KnowledgeEntry) validateAppliesTo(formats strfmt.Registry) error {
-	if typeutils.IsZero(m.AppliesTo) { // not required
+func (m *KnowledgeEntry) validateLinks(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Links) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(m.AppliesTo); i++ {
-		if typeutils.IsZero(m.AppliesTo[i]) { // not required
+	for i := 0; i < len(m.Links); i++ {
+		if typeutils.IsZero(m.Links[i]) { // not required
 			continue
 		}
 
-		if m.AppliesTo[i] != nil {
-			if err := m.AppliesTo[i].Validate(formats); err != nil {
+		if m.Links[i] != nil {
+			if err := m.Links[i].Validate(formats); err != nil {
 				ve := new(errors.Validation)
 				if stderrors.As(err, &ve) {
-					return ve.ValidateName("applies_to" + "." + strconv.Itoa(i))
+					return ve.ValidateName("links" + "." + strconv.Itoa(i))
 				}
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
-					return ce.ValidateName("applies_to" + "." + strconv.Itoa(i))
+					return ce.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *KnowledgeEntry) validateRules(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Rules) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Rules); i++ {
+		if typeutils.IsZero(m.Rules[i]) { // not required
+			continue
+		}
+
+		if m.Rules[i] != nil {
+			if err := m.Rules[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("rules" + "." + strconv.Itoa(i))
 				}
 
 				return err
@@ -174,7 +214,11 @@ func (m *KnowledgeEntry) validateSupersedes(formats strfmt.Registry) error {
 func (m *KnowledgeEntry) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateAppliesTo(ctx, formats); err != nil {
+	if err := m.contextValidateLinks(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRules(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -196,24 +240,53 @@ func (m *KnowledgeEntry) ContextValidate(ctx context.Context, formats strfmt.Reg
 	return nil
 }
 
-func (m *KnowledgeEntry) contextValidateAppliesTo(ctx context.Context, formats strfmt.Registry) error {
+func (m *KnowledgeEntry) contextValidateLinks(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(m.AppliesTo); i++ {
+	for i := 0; i < len(m.Links); i++ {
 
-		if m.AppliesTo[i] != nil {
+		if m.Links[i] != nil {
 
-			if typeutils.IsZero(m.AppliesTo[i]) { // not required
+			if typeutils.IsZero(m.Links[i]) { // not required
 				return nil
 			}
 
-			if err := m.AppliesTo[i].ContextValidate(ctx, formats); err != nil {
+			if err := m.Links[i].ContextValidate(ctx, formats); err != nil {
 				ve := new(errors.Validation)
 				if stderrors.As(err, &ve) {
-					return ve.ValidateName("applies_to" + "." + strconv.Itoa(i))
+					return ve.ValidateName("links" + "." + strconv.Itoa(i))
 				}
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
-					return ce.ValidateName("applies_to" + "." + strconv.Itoa(i))
+					return ce.ValidateName("links" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *KnowledgeEntry) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Rules); i++ {
+
+		if m.Rules[i] != nil {
+
+			if typeutils.IsZero(m.Rules[i]) { // not required
+				return nil
+			}
+
+			if err := m.Rules[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("rules" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("rules" + "." + strconv.Itoa(i))
 				}
 
 				return err

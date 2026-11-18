@@ -34,6 +34,7 @@
 		q: string;
 		kinds: string[];
 		states: string[];
+		teams: string[];
 		attention: string[];
 		sort: Sort;
 		page: number;
@@ -65,6 +66,7 @@
 			q: p.get('q') ?? '',
 			kinds: list('kind'),
 			states: list('state'),
+			teams: list('team'),
 			attention: list('show'),
 			sort: SORTS.includes(sort) ? sort : 'updated',
 			page: Math.max(1, Number(p.get('page')) || 1)
@@ -75,6 +77,7 @@
 		!!filters.q ||
 			filters.kinds.length > 0 ||
 			filters.states.length > 0 ||
+			filters.teams.length > 0 ||
 			filters.attention.length > 0
 	);
 	let onlyKind = $derived(
@@ -87,6 +90,7 @@
 		if (f.q) p.set('q', f.q);
 		if (f.kinds.length) p.set('kind', f.kinds.join(','));
 		if (f.states.length) p.set('state', f.states.join(','));
+		if (f.teams.length) p.set('team', f.teams.join(','));
 		if (f.attention.length) p.set('show', f.attention.join(','));
 		if (f.sort !== 'updated') p.set('sort', f.sort);
 		if (f.page > 1) p.set('page', String(f.page));
@@ -135,6 +139,7 @@
 				statuses: f.states.length ? statusesFor(f.states) : undefined,
 				reviewDue: f.attention.includes('review'),
 				mine: f.attention.includes('mine'),
+				teams: f.teams,
 				sort: f.sort,
 				limit: PAGE,
 				offset: (f.page - 1) * PAGE
@@ -156,7 +161,12 @@
 	}
 
 	function onFacets(facets: Record<string, string[]>) {
-		apply({ kinds: facets.kind ?? [], states: facets.state ?? [], attention: facets.show ?? [] });
+		apply({
+			kinds: facets.kind ?? [],
+			states: facets.state ?? [],
+			teams: facets.team ?? [],
+			attention: facets.show ?? []
+		});
 	}
 
 	let kindOptions = $derived<MmFacetOption[]>(
@@ -174,6 +184,15 @@
 	};
 	let stateOptions = $derived<MmFacetOption[]>(
 		STATES.map((s) => ({ value: s, label: stateLabel[s](), count: counts?.by_state[s] ?? 0 }))
+	);
+	// Teams that own entries, busiest first, so "what does payments know" is one click.
+	let teamOptions = $derived<MmFacetOption[]>(
+		(counts?.by_team ?? []).map((t) => ({
+			value: t.id,
+			label: t.name,
+			icon: 'groups',
+			count: t.count
+		}))
 	);
 	let showOptions = $derived<MmFacetOption[]>([
 		{
@@ -271,6 +290,16 @@
 					options={stateOptions}
 					value={filters.states}
 				></mm-facet>
+				{#if teamOptions.length}
+					<mm-facet
+						name="team"
+						label={m.knowledge_facet_team()}
+						options={teamOptions}
+						value={filters.teams}
+						limit={6}
+						filter-threshold={10}
+					></mm-facet>
+				{/if}
 				<mm-facet
 					name="show"
 					label={m.knowledge_facet_show()}
@@ -330,7 +359,7 @@
 						{#if filtering}
 							<mm-button
 								slot="action"
-								onclick={() => apply({ q: '', kinds: [], states: [], attention: [] })}
+								onclick={() => apply({ q: '', kinds: [], states: [], teams: [], attention: [] })}
 								>{m.knowledge_clear_filters()}</mm-button
 							>
 						{/if}

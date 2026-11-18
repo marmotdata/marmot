@@ -23,16 +23,16 @@ class TestKnowledgeApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_get_knowledge_applies_to(self) -> None:
-        """Test case for get_knowledge_applies_to
+    async def test_get_knowledge_about(self) -> None:
+        """Test case for get_knowledge_about
 
-        List entries that apply to an asset
+        List knowledge about an asset
         """
 
-    def test_get_knowledge_applies_to_sync(self) -> None:
-        """Test case for get_knowledge_applies_to (synchronous)
+    def test_get_knowledge_about_sync(self) -> None:
+        """Test case for get_knowledge_about (synchronous)
 
-        List entries that apply to an asset
+        List knowledge about an asset
         """
 
     async def test_get_knowledge_counts(self) -> None:
@@ -69,6 +69,18 @@ class TestKnowledgeApi(unittest.IsolatedAsyncioTestCase):
         """Test case for get_knowledge_entry (synchronous)
 
         Get a knowledge entry
+        """
+
+    async def test_get_knowledge_entry_links(self) -> None:
+        """Test case for get_knowledge_entry_links
+
+        List a knowledge entry's links
+        """
+
+    def test_get_knowledge_entry_links_sync(self) -> None:
+        """Test case for get_knowledge_entry_links (synchronous)
+
+        List a knowledge entry's links
         """
 
     async def test_get_knowledge_kinds(self) -> None:

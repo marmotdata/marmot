@@ -33,14 +33,22 @@ class TestKnowledgeSaveInput(unittest.TestCase):
         model = KnowledgeSaveInput()
         if include_optional:
             return KnowledgeSaveInput(
-                applies_to = [
-                    ''
-                    ],
                 effective_from = '',
                 fields = {
                     'key' : null
                     },
+                links = [
+                    marmot.generated.models.knowledge_link_input.KnowledgeLinkInput(
+                        relation = '',
+                        target_id = '', )
+                    ],
                 review_by = '',
+                rules = [
+                    marmot.generated.models.knowledge_rule_input.KnowledgeRuleInput(
+                        relation = '',
+                        selector_type = '',
+                        selector_value = '', )
+                    ],
                 status = '',
                 supersedes = ''
             )

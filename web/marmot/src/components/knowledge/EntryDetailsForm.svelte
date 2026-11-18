@@ -9,6 +9,8 @@
 	import { visibleFields, type EntryDraft } from '#lib/knowledge/draft.ts';
 	import FieldEditor from './FieldEditor.svelte';
 	import AssetLinks from './AssetLinks.svelte';
+	import LinksEditor from './LinksEditor.svelte';
+	import RulesEditor from './RulesEditor.svelte';
 
 	// The typed half of an entry, in the order the entry page shows it: the kind's own fields, then status and review, then what it is linked to. When writing a new entry only the required fields show at first, and the rest are a click away, so a first draft stays short.
 	let {
@@ -27,7 +29,7 @@
 		compact?: boolean;
 	} = $props();
 
-	type Group = 'review' | 'applies' | 'replaces';
+	type Group = 'review' | 'links' | 'rules' | 'replaces';
 
 	const opened = new SvelteSet<string>();
 
@@ -37,13 +39,15 @@
 
 	let show = $derived({
 		review: !compact || opened.has('review') || !!draft.review_by || !!draft.effective_from,
-		applies: !compact || opened.has('applies') || draft.applies_to.length > 0,
+		links: !compact || opened.has('links') || (draft.links?.length ?? 0) > 0,
+		rules: !compact || opened.has('rules') || draft.rules.length > 0,
 		replaces: !compact || opened.has('replaces') || draft.supersedes.length > 0
 	});
 
 	const groupLabel: Record<Group, () => string> = {
 		review: m.knowledge_group_review,
-		applies: m.knowledge_group_applies,
+		links: m.knowledge_group_links,
+		rules: m.knowledge_group_rules,
 		replaces: m.knowledge_group_replaces
 	};
 	let hiddenGroups = $derived((Object.keys(show) as Group[]).filter((g) => !show[g]));
@@ -145,17 +149,27 @@
 		</div>
 	</mm-section>
 
-	{#if show.applies || show.replaces}
-		<mm-section heading={m.knowledge_section_links()}>
-			<div class="mm-stack" style="--mm-gap: var(--space-5)">
-				{#if show.applies}
-					<AssetLinks
-						label={m.knowledge_group_applies()}
-						help={m.knowledge_applies_help()}
-						value={draft.applies_to}
-						exclude={assetId}
-						onchange={(v) => (draft = { ...draft, applies_to: v })}
-					/>
+	{#if show.links || show.rules || show.replaces}
+		<mm-section
+			heading={m.knowledge_section_links()}
+			description={m.knowledge_section_links_description()}
+		>
+			<div class="mm-stack" style="--mm-gap: var(--space-6)">
+				{#if show.links}
+					{#if draft.links}
+						<LinksEditor
+							value={draft.links}
+							exclude={assetId}
+							onchange={(v) => (draft = { ...draft, links: v })}
+						/>
+					{:else}
+						<mm-callout tone="info" heading={m.knowledge_links_too_many()}>
+							{m.knowledge_links_too_many_body()}
+						</mm-callout>
+					{/if}
+				{/if}
+				{#if show.rules}
+					<RulesEditor value={draft.rules} onchange={(v) => (draft = { ...draft, rules: v })} />
 				{/if}
 				{#if show.replaces}
 					<AssetLinks

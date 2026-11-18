@@ -15,10 +15,12 @@ from pydantic import Field, StrictBool, StrictFloat, StrictInt, StrictStr, valid
 
 from marmot.generated.api_client import ApiClient, RequestSerialized
 from marmot.generated.api_response import ApiResponse
+from marmot.generated.models.knowledge_about_page import KnowledgeAboutPage
 from marmot.generated.models.knowledge_counts import KnowledgeCounts
 from marmot.generated.models.knowledge_entries_response import KnowledgeEntriesResponse
 from marmot.generated.models.knowledge_entry import KnowledgeEntry
 from marmot.generated.models.knowledge_kinds_response import KnowledgeKindsResponse
+from marmot.generated.models.knowledge_link_page import KnowledgeLinkPage
 from marmot.generated.models.knowledge_reviewed_request import KnowledgeReviewedRequest
 from marmot.generated.models.knowledge_save_input import KnowledgeSaveInput
 from marmot.generated.rest import RESTResponseType
@@ -38,9 +40,26 @@ class KnowledgeApi:
         self.api_client = api_client
 
     @validate_call
-    async def get_knowledge_applies_to(
+    async def get_knowledge_about(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -48,12 +67,24 @@ class KnowledgeApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> KnowledgeEntriesResponse:
-        """List entries that apply to an asset
+    ) -> KnowledgeAboutPage:
+        """List knowledge about an asset
 
 
         :param asset_id: Asset ID (required)
         :type asset_id: str
+        :param kind: Comma-separated kind keys
+        :type kind: str
+        :param state: Comma-separated states: current, pending, historical
+        :type state: str
+        :param source: Comma-separated sources: direct, rule, inherited
+        :type source: str
+        :param relation: Only entries linked by this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Entries per page, at most 100
+        :type limit: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -76,8 +107,14 @@ class KnowledgeApi:
         :return: Returns the result object.
         """
 
-        _param = self._get_knowledge_applies_to_serialize(
+        _param = self._get_knowledge_about_serialize(
             asset_id=asset_id,
+            kind=kind,
+            state=state,
+            source=source,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -85,7 +122,9 @@ class KnowledgeApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "KnowledgeEntriesResponse",
+            "200": "KnowledgeAboutPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -95,9 +134,26 @@ class KnowledgeApi:
         ).data
 
     @validate_call
-    async def get_knowledge_applies_to_with_http_info(
+    async def get_knowledge_about_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -105,12 +161,24 @@ class KnowledgeApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[KnowledgeEntriesResponse]:
-        """List entries that apply to an asset
+    ) -> ApiResponse[KnowledgeAboutPage]:
+        """List knowledge about an asset
 
 
         :param asset_id: Asset ID (required)
         :type asset_id: str
+        :param kind: Comma-separated kind keys
+        :type kind: str
+        :param state: Comma-separated states: current, pending, historical
+        :type state: str
+        :param source: Comma-separated sources: direct, rule, inherited
+        :type source: str
+        :param relation: Only entries linked by this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Entries per page, at most 100
+        :type limit: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -133,8 +201,14 @@ class KnowledgeApi:
         :return: Returns the result object.
         """
 
-        _param = self._get_knowledge_applies_to_serialize(
+        _param = self._get_knowledge_about_serialize(
             asset_id=asset_id,
+            kind=kind,
+            state=state,
+            source=source,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -142,7 +216,9 @@ class KnowledgeApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "KnowledgeEntriesResponse",
+            "200": "KnowledgeAboutPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -152,9 +228,26 @@ class KnowledgeApi:
         )
 
     @validate_call
-    async def get_knowledge_applies_to_without_preload_content(
+    async def get_knowledge_about_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -163,11 +256,23 @@ class KnowledgeApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List entries that apply to an asset
+        """List knowledge about an asset
 
 
         :param asset_id: Asset ID (required)
         :type asset_id: str
+        :param kind: Comma-separated kind keys
+        :type kind: str
+        :param state: Comma-separated states: current, pending, historical
+        :type state: str
+        :param source: Comma-separated sources: direct, rule, inherited
+        :type source: str
+        :param relation: Only entries linked by this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Entries per page, at most 100
+        :type limit: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -190,8 +295,14 @@ class KnowledgeApi:
         :return: Returns the result object.
         """
 
-        _param = self._get_knowledge_applies_to_serialize(
+        _param = self._get_knowledge_about_serialize(
             asset_id=asset_id,
+            kind=kind,
+            state=state,
+            source=source,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -199,15 +310,34 @@ class KnowledgeApi:
         )
 
         _response_types_map: dict[str, str | None] = {
-            "200": "KnowledgeEntriesResponse",
+            "200": "KnowledgeAboutPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
 
     @validate_call
-    def get_knowledge_applies_to_sync(
+    def get_knowledge_about_sync(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -215,15 +345,21 @@ class KnowledgeApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> KnowledgeEntriesResponse:
-        """List entries that apply to an asset (synchronous)
+    ) -> KnowledgeAboutPage:
+        """List knowledge about an asset (synchronous)
 
-        Synchronous variant of :meth:`get_knowledge_applies_to`. It calls the asynchronous
+        Synchronous variant of :meth:`get_knowledge_about`. It calls the asynchronous
         method and blocks until it completes.
         """
         return run_sync(
-            self.get_knowledge_applies_to(
+            self.get_knowledge_about(
                 asset_id=asset_id,
+                kind=kind,
+                state=state,
+                source=source,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -233,9 +369,26 @@ class KnowledgeApi:
         )
 
     @validate_call
-    def get_knowledge_applies_to_sync_with_http_info(
+    def get_knowledge_about_sync_with_http_info(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -243,15 +396,21 @@ class KnowledgeApi:
         _content_type: StrictStr | None = None,
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[KnowledgeEntriesResponse]:
-        """List entries that apply to an asset (synchronous)
+    ) -> ApiResponse[KnowledgeAboutPage]:
+        """List knowledge about an asset (synchronous)
 
-        Synchronous variant of :meth:`get_knowledge_applies_to_with_http_info`. It calls the
+        Synchronous variant of :meth:`get_knowledge_about_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.get_knowledge_applies_to_with_http_info(
+            self.get_knowledge_about_with_http_info(
                 asset_id=asset_id,
+                kind=kind,
+                state=state,
+                source=source,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -261,9 +420,26 @@ class KnowledgeApi:
         )
 
     @validate_call
-    def get_knowledge_applies_to_sync_without_preload_content(
+    def get_knowledge_about_sync_without_preload_content(
         self,
         asset_id: Annotated[StrictStr, Field(description="Asset ID")],
+        kind: Annotated[StrictStr | None, Field(description="Comma-separated kind keys")] = None,
+        state: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated states: current, pending, historical"),
+        ] = None,
+        source: Annotated[
+            StrictStr | None, Field(description="Comma-separated sources: direct, rule, inherited")
+        ] = None,
+        relation: Annotated[
+            StrictStr | None, Field(description="Only entries linked by this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[
+            StrictInt | None, Field(description="Entries per page, at most 100")
+        ] = None,
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -272,14 +448,20 @@ class KnowledgeApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """List entries that apply to an asset (synchronous)
+        """List knowledge about an asset (synchronous)
 
-        Synchronous variant of :meth:`get_knowledge_applies_to_without_preload_content`. It calls
+        Synchronous variant of :meth:`get_knowledge_about_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.
         """
         return run_sync(
-            self.get_knowledge_applies_to_without_preload_content(
+            self.get_knowledge_about_without_preload_content(
                 asset_id=asset_id,
+                kind=kind,
+                state=state,
+                source=source,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
                 _request_timeout=_request_timeout,
                 _request_auth=_request_auth,
                 _content_type=_content_type,
@@ -288,9 +470,15 @@ class KnowledgeApi:
             )
         )
 
-    def _get_knowledge_applies_to_serialize(
+    def _get_knowledge_about_serialize(
         self,
         asset_id,
+        kind,
+        state,
+        source,
+        relation,
+        cursor,
+        limit,
         _request_auth,
         _content_type,
         _headers,
@@ -312,6 +500,24 @@ class KnowledgeApi:
         if asset_id is not None:
             _path_params["asset_id"] = asset_id
         # process the query parameters
+        if kind is not None:
+            _query_params.append(("kind", kind))
+
+        if state is not None:
+            _query_params.append(("state", state))
+
+        if source is not None:
+            _query_params.append(("source", source))
+
+        if relation is not None:
+            _query_params.append(("relation", relation))
+
+        if cursor is not None:
+            _query_params.append(("cursor", cursor))
+
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
         # process the header parameters
         # process the form parameters
         # process the body parameter
@@ -325,7 +531,7 @@ class KnowledgeApi:
 
         return self.api_client.param_serialize(
             method="GET",
-            resource_path="/api/v1/knowledge/applies-to/{asset_id}",
+            resource_path="/api/v1/knowledge/about/{asset_id}",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -640,8 +846,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -668,7 +881,9 @@ class KnowledgeApi:
         :type review_due: bool
         :param mine: Only entries owned by the caller or a team they are in
         :type mine: bool
-        :param sort: updated (default), name or review
+        :param team: Comma-separated team IDs; only entries those teams own
+        :type team: str
+        :param sort: updated (default, or relevance when searching), name, review or relevance
         :type sort: str
         :param limit: Entries per page, at most 100
         :type limit: int
@@ -702,6 +917,7 @@ class KnowledgeApi:
             q=q,
             review_due=review_due,
             mine=mine,
+            team=team,
             sort=sort,
             limit=limit,
             offset=offset,
@@ -743,8 +959,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -771,7 +994,9 @@ class KnowledgeApi:
         :type review_due: bool
         :param mine: Only entries owned by the caller or a team they are in
         :type mine: bool
-        :param sort: updated (default), name or review
+        :param team: Comma-separated team IDs; only entries those teams own
+        :type team: str
+        :param sort: updated (default, or relevance when searching), name, review or relevance
         :type sort: str
         :param limit: Entries per page, at most 100
         :type limit: int
@@ -805,6 +1030,7 @@ class KnowledgeApi:
             q=q,
             review_due=review_due,
             mine=mine,
+            team=team,
             sort=sort,
             limit=limit,
             offset=offset,
@@ -846,8 +1072,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -874,7 +1107,9 @@ class KnowledgeApi:
         :type review_due: bool
         :param mine: Only entries owned by the caller or a team they are in
         :type mine: bool
-        :param sort: updated (default), name or review
+        :param team: Comma-separated team IDs; only entries those teams own
+        :type team: str
+        :param sort: updated (default, or relevance when searching), name, review or relevance
         :type sort: str
         :param limit: Entries per page, at most 100
         :type limit: int
@@ -908,6 +1143,7 @@ class KnowledgeApi:
             q=q,
             review_due=review_due,
             mine=mine,
+            team=team,
             sort=sort,
             limit=limit,
             offset=offset,
@@ -945,8 +1181,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -972,6 +1215,7 @@ class KnowledgeApi:
                 q=q,
                 review_due=review_due,
                 mine=mine,
+                team=team,
                 sort=sort,
                 limit=limit,
                 offset=offset,
@@ -1005,8 +1249,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -1032,6 +1283,7 @@ class KnowledgeApi:
                 q=q,
                 review_due=review_due,
                 mine=mine,
+                team=team,
                 sort=sort,
                 limit=limit,
                 offset=offset,
@@ -1065,8 +1317,15 @@ class KnowledgeApi:
             StrictBool | None,
             Field(description="Only entries owned by the caller or a team they are in"),
         ] = None,
+        team: Annotated[
+            StrictStr | None,
+            Field(description="Comma-separated team IDs; only entries those teams own"),
+        ] = None,
         sort: Annotated[
-            StrictStr | None, Field(description="updated (default), name or review")
+            StrictStr | None,
+            Field(
+                description="updated (default, or relevance when searching), name, review or relevance"
+            ),
         ] = None,
         limit: Annotated[
             StrictInt | None, Field(description="Entries per page, at most 100")
@@ -1092,6 +1351,7 @@ class KnowledgeApi:
                 q=q,
                 review_due=review_due,
                 mine=mine,
+                team=team,
                 sort=sort,
                 limit=limit,
                 offset=offset,
@@ -1110,6 +1370,7 @@ class KnowledgeApi:
         q,
         review_due,
         mine,
+        team,
         sort,
         limit,
         offset,
@@ -1146,6 +1407,9 @@ class KnowledgeApi:
 
         if mine is not None:
             _query_params.append(("mine", mine))
+
+        if team is not None:
+            _query_params.append(("team", team))
 
         if sort is not None:
             _query_params.append(("sort", sort))
@@ -1474,6 +1738,403 @@ class KnowledgeApi:
         return self.api_client.param_serialize(
             method="GET",
             resource_path="/api/v1/knowledge/entries/{asset_id}",
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth,
+        )
+
+    @validate_call
+    async def get_knowledge_entry_links(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> KnowledgeLinkPage:
+        """List a knowledge entry's links
+
+
+        :param asset_id: Asset ID of the entry (required)
+        :type asset_id: str
+        :param relation: Only links of this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Links per page, at most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_knowledge_entry_links_serialize(
+            asset_id=asset_id,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "KnowledgeLinkPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+    @validate_call
+    async def get_knowledge_entry_links_with_http_info(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[KnowledgeLinkPage]:
+        """List a knowledge entry's links
+
+
+        :param asset_id: Asset ID of the entry (required)
+        :type asset_id: str
+        :param relation: Only links of this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Links per page, at most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_knowledge_entry_links_serialize(
+            asset_id=asset_id,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "KnowledgeLinkPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+    @validate_call
+    async def get_knowledge_entry_links_without_preload_content(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List a knowledge entry's links
+
+
+        :param asset_id: Asset ID of the entry (required)
+        :type asset_id: str
+        :param relation: Only links of this relation
+        :type relation: str
+        :param cursor: The next value of the previous page
+        :type cursor: str
+        :param limit: Links per page, at most 100
+        :type limit: int
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """
+
+        _param = self._get_knowledge_entry_links_serialize(
+            asset_id=asset_id,
+            relation=relation,
+            cursor=cursor,
+            limit=limit,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index,
+        )
+
+        _response_types_map: dict[str, str | None] = {
+            "200": "KnowledgeLinkPage",
+            "400": "ErrorResponse",
+            "404": "ErrorResponse",
+        }
+        response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
+        return response_data.response
+
+    @validate_call
+    def get_knowledge_entry_links_sync(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> KnowledgeLinkPage:
+        """List a knowledge entry's links (synchronous)
+
+        Synchronous variant of :meth:`get_knowledge_entry_links`. It calls the asynchronous
+        method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_knowledge_entry_links(
+                asset_id=asset_id,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_knowledge_entry_links_sync_with_http_info(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[KnowledgeLinkPage]:
+        """List a knowledge entry's links (synchronous)
+
+        Synchronous variant of :meth:`get_knowledge_entry_links_with_http_info`. It calls the
+        asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_knowledge_entry_links_with_http_info(
+                asset_id=asset_id,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    @validate_call
+    def get_knowledge_entry_links_sync_without_preload_content(
+        self,
+        asset_id: Annotated[StrictStr, Field(description="Asset ID of the entry")],
+        relation: Annotated[
+            StrictStr | None, Field(description="Only links of this relation")
+        ] = None,
+        cursor: Annotated[
+            StrictStr | None, Field(description="The next value of the previous page")
+        ] = None,
+        limit: Annotated[StrictInt | None, Field(description="Links per page, at most 100")] = None,
+        _request_timeout: None
+        | Annotated[StrictFloat, Field(gt=0)]
+        | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
+        _request_auth: dict[StrictStr, Any] | None = None,
+        _content_type: StrictStr | None = None,
+        _headers: dict[StrictStr, Any] | None = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """List a knowledge entry's links (synchronous)
+
+        Synchronous variant of :meth:`get_knowledge_entry_links_without_preload_content`. It calls
+        the asynchronous method and blocks until it completes.
+        """
+        return run_sync(
+            self.get_knowledge_entry_links_without_preload_content(
+                asset_id=asset_id,
+                relation=relation,
+                cursor=cursor,
+                limit=limit,
+                _request_timeout=_request_timeout,
+                _request_auth=_request_auth,
+                _content_type=_content_type,
+                _headers=_headers,
+                _host_index=_host_index,
+            )
+        )
+
+    def _get_knowledge_entry_links_serialize(
+        self,
+        asset_id,
+        relation,
+        cursor,
+        limit,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: dict[str, str] = {}
+
+        _path_params: dict[str, str] = {}
+        _query_params: list[tuple[str, str]] = []
+        _header_params: dict[str, str | None] = _headers or {}
+        _form_params: list[tuple[str, str]] = []
+        _files: dict[str, str | bytes | list[str] | list[bytes] | list[tuple[str, bytes]]] = {}
+        _body_params: bytes | None = None
+
+        # process the path parameters
+        if asset_id is not None:
+            _path_params["asset_id"] = asset_id
+        # process the query parameters
+        if relation is not None:
+            _query_params.append(("relation", relation))
+
+        if cursor is not None:
+            _query_params.append(("cursor", cursor))
+
+        if limit is not None:
+            _query_params.append(("limit", limit))
+
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+        # set the HTTP header `Accept`
+        if "Accept" not in _header_params:
+            _header_params["Accept"] = self.api_client.select_header_accept(["application/json"])
+
+        # authentication setting
+        _auth_settings: list[str] = ["ApiKeyAuth", "BearerAuth"]
+
+        return self.api_client.param_serialize(
+            method="GET",
+            resource_path="/api/v1/knowledge/entries/{asset_id}/links",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

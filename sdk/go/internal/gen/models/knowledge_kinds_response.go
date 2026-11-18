@@ -20,6 +20,9 @@ type KnowledgeKindsResponse struct {
 
 	// kinds
 	Kinds []*KnowledgeKind `json:"kinds"`
+
+	// relations
+	Relations []*KnowledgeRelation `json:"relations"`
 }
 
 // Validate validates this knowledge kinds response
@@ -27,6 +30,10 @@ func (m *KnowledgeKindsResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateKinds(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRelations(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -66,11 +73,45 @@ func (m *KnowledgeKindsResponse) validateKinds(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *KnowledgeKindsResponse) validateRelations(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Relations) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Relations); i++ {
+		if typeutils.IsZero(m.Relations[i]) { // not required
+			continue
+		}
+
+		if m.Relations[i] != nil {
+			if err := m.Relations[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("relations" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("relations" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // ContextValidate validate this knowledge kinds response based on the context it is used
 func (m *KnowledgeKindsResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateKinds(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRelations(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -98,6 +139,35 @@ func (m *KnowledgeKindsResponse) contextValidateKinds(ctx context.Context, forma
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("kinds" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *KnowledgeKindsResponse) contextValidateRelations(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Relations); i++ {
+
+		if m.Relations[i] != nil {
+
+			if typeutils.IsZero(m.Relations[i]) { // not required
+				return nil
+			}
+
+			if err := m.Relations[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("relations" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("relations" + "." + strconv.Itoa(i))
 				}
 
 				return err

@@ -2067,6 +2067,62 @@ definitions:
       writing_at:
         type: string
     type: object
+  KnowledgeAboutItem:
+    properties:
+      asset_id:
+        type: string
+      effective_from:
+        type: string
+      kind:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/KnowledgeOwner'
+        type: array
+      relation:
+        type: string
+      review_by:
+        type: string
+      review_due:
+        type: boolean
+      rule:
+        $ref: '#/definitions/KnowledgeRule'
+      source:
+        type: string
+      state:
+        $ref: '#/definitions/knowledge.State'
+      status:
+        type: string
+      summary:
+        type: string
+      updated_at:
+        type: string
+      via:
+        $ref: '#/definitions/KnowledgeAssetRef'
+    type: object
+  KnowledgeAboutPage:
+    properties:
+      by_kind:
+        additionalProperties:
+          type: integer
+        type: object
+      by_source:
+        additionalProperties:
+          type: integer
+        type: object
+      entries:
+        items:
+          $ref: '#/definitions/KnowledgeAboutItem'
+        type: array
+      next:
+        type: string
+      total:
+        type: integer
+    type: object
   KnowledgeAssetRef:
     properties:
       id:
@@ -2090,6 +2146,10 @@ definitions:
         additionalProperties:
           type: integer
         type: object
+      by_team:
+        items:
+          $ref: '#/definitions/KnowledgeTeamCount'
+        type: array
       review_due:
         type: integer
       total:
@@ -2109,10 +2169,6 @@ definitions:
     type: object
   KnowledgeEntry:
     properties:
-      applies_to:
-        items:
-          $ref: '#/definitions/KnowledgeAssetRef'
-        type: array
       asset_id:
         type: string
       effective_from:
@@ -2127,10 +2183,22 @@ definitions:
         type: string
       last_reviewed_by:
         type: string
+      link_count:
+        type: integer
+      links:
+        description: Links holds the first EntryLinkLimit links, and LinkCount how
+          many there are; page through the rest with the entry's links endpoint.
+        items:
+          $ref: '#/definitions/KnowledgeLink'
+        type: array
       review_by:
         type: string
       review_due:
         type: boolean
+      rules:
+        items:
+          $ref: '#/definitions/KnowledgeRule'
+        type: array
       state:
         allOf:
         - $ref: '#/definitions/knowledge.State'
@@ -2217,6 +2285,35 @@ definitions:
         items:
           $ref: '#/definitions/KnowledgeKind'
         type: array
+      relations:
+        items:
+          $ref: '#/definitions/KnowledgeRelation'
+        type: array
+    type: object
+  KnowledgeLink:
+    properties:
+      relation:
+        type: string
+      target:
+        $ref: '#/definitions/KnowledgeAssetRef'
+    type: object
+  KnowledgeLinkInput:
+    properties:
+      relation:
+        type: string
+      target_id:
+        type: string
+    type: object
+  KnowledgeLinkPage:
+    properties:
+      links:
+        items:
+          $ref: '#/definitions/KnowledgeLink'
+        type: array
+      next:
+        type: string
+      total:
+        type: integer
     type: object
   KnowledgeOption:
     properties:
@@ -2234,6 +2331,17 @@ definitions:
       type:
         type: string
     type: object
+  KnowledgeRelation:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      inverse_label:
+        type: string
+      label:
+        type: string
+    type: object
   KnowledgeReviewedRequest:
     properties:
       review_by:
@@ -2241,19 +2349,48 @@ definitions:
           to keep the current one.
         type: string
     type: object
+  KnowledgeRule:
+    properties:
+      id:
+        type: string
+      matches:
+        type: integer
+      relation:
+        type: string
+      selector_type:
+        type: string
+      selector_value:
+        type: string
+    type: object
+  KnowledgeRuleInput:
+    properties:
+      relation:
+        type: string
+      selector_type:
+        type: string
+      selector_value:
+        type: string
+    type: object
   KnowledgeSaveInput:
     properties:
-      applies_to:
-        items:
-          type: string
-        type: array
       effective_from:
         type: string
       fields:
         additionalProperties: {}
         type: object
+      links:
+        description: Links and Rules replace the entry's links and rules; leave both
+          out to keep what is there. Only changes are written, so resending thousands
+          of unchanged links is cheap.
+        items:
+          $ref: '#/definitions/KnowledgeLinkInput'
+        type: array
       review_by:
         type: string
+      rules:
+        items:
+          $ref: '#/definitions/KnowledgeRuleInput'
+        type: array
       status:
         type: string
       supersedes:
@@ -2297,6 +2434,15 @@ definitions:
       summary:
         type: string
       updated_at:
+        type: string
+    type: object
+  KnowledgeTeamCount:
+    properties:
+      count:
+        type: integer
+      id:
+        type: string
+      name:
         type: string
     type: object
   LineageEdge:
@@ -8550,26 +8696,59 @@ paths:
       summary: Accept an invitation
       tags:
       - users
-  /api/v1/knowledge/applies-to/{asset_id}:
+  /api/v1/knowledge/about/{asset_id}:
     get:
-      operationId: getKnowledgeAppliesTo
+      operationId: getKnowledgeAbout
       parameters:
       - description: Asset ID
         in: path
         name: asset_id
         required: true
         type: string
+      - description: Comma-separated kind keys
+        in: query
+        name: kind
+        type: string
+      - description: 'Comma-separated states: current, pending, historical'
+        in: query
+        name: state
+        type: string
+      - description: 'Comma-separated sources: direct, rule, inherited'
+        in: query
+        name: source
+        type: string
+      - description: Only entries linked by this relation
+        in: query
+        name: relation
+        type: string
+      - description: The next value of the previous page
+        in: query
+        name: cursor
+        type: string
+      - default: 25
+        description: Entries per page, at most 100
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/KnowledgeEntriesResponse'
+            $ref: '#/definitions/KnowledgeAboutPage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: List entries that apply to an asset
+      summary: List knowledge about an asset
       tags:
       - knowledge
   /api/v1/knowledge/counts:
@@ -8612,7 +8791,12 @@ paths:
         in: query
         name: mine
         type: boolean
-      - description: updated (default), name or review
+      - description: Comma-separated team IDs; only entries those teams own
+        in: query
+        name: team
+        type: string
+      - description: updated (default, or relevance when searching), name, review
+          or relevance
         in: query
         name: sort
         type: string
@@ -8699,6 +8883,49 @@ paths:
       - ApiKeyAuth: []
       - BearerAuth: []
       summary: Save a knowledge entry
+      tags:
+      - knowledge
+  /api/v1/knowledge/entries/{asset_id}/links:
+    get:
+      operationId: getKnowledgeEntryLinks
+      parameters:
+      - description: Asset ID of the entry
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: Only links of this relation
+        in: query
+        name: relation
+        type: string
+      - description: The next value of the previous page
+        in: query
+        name: cursor
+        type: string
+      - default: 25
+        description: Links per page, at most 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/KnowledgeLinkPage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List a knowledge entry's links
       tags:
       - knowledge
   /api/v1/knowledge/entries/{asset_id}/reviewed:

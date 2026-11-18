@@ -16,11 +16,13 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.knowledge_asset_ref import KnowledgeAssetRef
+from marmot.generated.models.knowledge_link import KnowledgeLink
+from marmot.generated.models.knowledge_rule import KnowledgeRule
 from marmot.generated.models.knowledge_state import KnowledgeState
 
 
@@ -29,7 +31,6 @@ class KnowledgeEntry(BaseModel):
     KnowledgeEntry
     """
 
-    applies_to: list[KnowledgeAssetRef] | None = None
     asset_id: StrictStr | None = None
     effective_from: StrictStr | None = Field(
         default=None, description="EffectiveFrom and ReviewBy are dates written as YYYY-MM-DD."
@@ -38,8 +39,14 @@ class KnowledgeEntry(BaseModel):
     kind: StrictStr | None = None
     last_reviewed_at: StrictStr | None = None
     last_reviewed_by: StrictStr | None = None
+    link_count: StrictInt | None = None
+    links: list[KnowledgeLink] | None = Field(
+        default=None,
+        description="Links holds the first EntryLinkLimit links, and LinkCount how many there are; page through the rest with the entry's links endpoint.",
+    )
     review_by: StrictStr | None = None
     review_due: StrictBool | None = None
+    rules: list[KnowledgeRule] | None = None
     state: KnowledgeState | None = Field(
         default=None,
         description="State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.",
@@ -56,15 +63,17 @@ class KnowledgeEntry(BaseModel):
     updated_at: StrictStr | None = None
     updated_by: StrictStr | None = None
     __properties: ClassVar[list[str]] = [
-        "applies_to",
         "asset_id",
         "effective_from",
         "fields",
         "kind",
         "last_reviewed_at",
         "last_reviewed_by",
+        "link_count",
+        "links",
         "review_by",
         "review_due",
+        "rules",
         "state",
         "status",
         "superseded_by",
@@ -110,13 +119,20 @@ class KnowledgeEntry(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in applies_to (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in links (list)
         _items = []
-        if self.applies_to:
-            for _item_applies_to in self.applies_to:
-                if _item_applies_to:
-                    _items.append(_item_applies_to.to_dict())
-            _dict["applies_to"] = _items
+        if self.links:
+            for _item_links in self.links:
+                if _item_links:
+                    _items.append(_item_links.to_dict())
+            _dict["links"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in rules (list)
+        _items = []
+        if self.rules:
+            for _item_rules in self.rules:
+                if _item_rules:
+                    _items.append(_item_rules.to_dict())
+            _dict["rules"] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in superseded_by (list)
         _items = []
         if self.superseded_by:
@@ -140,17 +156,21 @@ class KnowledgeEntry(BaseModel):
 
         return cls.model_validate(
             {
-                "applies_to": [KnowledgeAssetRef.from_dict(_item) for _item in obj["applies_to"]]
-                if obj.get("applies_to") is not None
-                else None,
                 "asset_id": obj.get("asset_id"),
                 "effective_from": obj.get("effective_from"),
                 "fields": obj.get("fields"),
                 "kind": obj.get("kind"),
                 "last_reviewed_at": obj.get("last_reviewed_at"),
                 "last_reviewed_by": obj.get("last_reviewed_by"),
+                "link_count": obj.get("link_count"),
+                "links": [KnowledgeLink.from_dict(_item) for _item in obj["links"]]
+                if obj.get("links") is not None
+                else None,
                 "review_by": obj.get("review_by"),
                 "review_due": obj.get("review_due"),
+                "rules": [KnowledgeRule.from_dict(_item) for _item in obj["rules"]]
+                if obj.get("rules") is not None
+                else None,
                 "state": obj.get("state"),
                 "status": obj.get("status"),
                 "superseded_by": [

@@ -84,6 +84,13 @@ class TestKnowledgeKindsResponse(unittest.TestCase):
                             ],
                         template = '',
                         type = '', )
+                    ],
+                relations = [
+                    marmot.generated.models.knowledge_relation.KnowledgeRelation(
+                        description = '',
+                        id = '',
+                        inverse_label = '',
+                        label = '', )
                     ]
             )
         else:

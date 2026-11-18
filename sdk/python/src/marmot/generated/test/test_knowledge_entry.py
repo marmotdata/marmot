@@ -33,14 +33,6 @@ class TestKnowledgeEntry(unittest.TestCase):
         model = KnowledgeEntry()
         if include_optional:
             return KnowledgeEntry(
-                applies_to = [
-                    marmot.generated.models.knowledge_asset_ref.KnowledgeAssetRef(
-                        id = '',
-                        mrn = '',
-                        name = '',
-                        status = '',
-                        type = '', )
-                    ],
                 asset_id = '',
                 effective_from = '',
                 fields = {
@@ -49,8 +41,27 @@ class TestKnowledgeEntry(unittest.TestCase):
                 kind = '',
                 last_reviewed_at = '',
                 last_reviewed_by = '',
+                link_count = 56,
+                links = [
+                    marmot.generated.models.knowledge_link.KnowledgeLink(
+                        relation = '',
+                        target = marmot.generated.models.knowledge_asset_ref.KnowledgeAssetRef(
+                            id = '',
+                            mrn = '',
+                            name = '',
+                            status = '',
+                            type = '', ), )
+                    ],
                 review_by = '',
                 review_due = True,
+                rules = [
+                    marmot.generated.models.knowledge_rule.KnowledgeRule(
+                        id = '',
+                        matches = 56,
+                        relation = '',
+                        selector_type = '',
+                        selector_value = '', )
+                    ],
                 state = 'pending',
                 status = '',
                 superseded_by = [

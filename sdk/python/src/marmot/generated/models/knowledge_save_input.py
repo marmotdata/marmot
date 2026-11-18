@@ -20,26 +20,34 @@ from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
+from marmot.generated.models.knowledge_link_input import KnowledgeLinkInput
+from marmot.generated.models.knowledge_rule_input import KnowledgeRuleInput
+
 
 class KnowledgeSaveInput(BaseModel):
     """
     KnowledgeSaveInput
     """
 
-    applies_to: list[StrictStr] | None = None
     effective_from: StrictStr | None = None
     fields: dict[str, Any] | None = None
+    links: list[KnowledgeLinkInput] | None = Field(
+        default=None,
+        description="Links and Rules replace the entry's links and rules; leave both out to keep what is there. Only changes are written, so resending thousands of unchanged links is cheap.",
+    )
     review_by: StrictStr | None = None
+    rules: list[KnowledgeRuleInput] | None = None
     status: StrictStr | None = None
     supersedes: StrictStr | None = Field(
         default=None,
         description="Supersedes is the asset ID of the entry this one replaces. It must be the same kind, and is marked superseded once this entry is current.",
     )
     __properties: ClassVar[list[str]] = [
-        "applies_to",
         "effective_from",
         "fields",
+        "links",
         "review_by",
+        "rules",
         "status",
         "supersedes",
     ]
@@ -76,11 +84,26 @@ class KnowledgeSaveInput(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in links (list)
+        _items = []
+        if self.links:
+            for _item_links in self.links:
+                if _item_links:
+                    _items.append(_item_links.to_dict())
+            _dict["links"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in rules (list)
+        _items = []
+        if self.rules:
+            for _item_rules in self.rules:
+                if _item_rules:
+                    _items.append(_item_rules.to_dict())
+            _dict["rules"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -93,10 +116,15 @@ class KnowledgeSaveInput(BaseModel):
 
         return cls.model_validate(
             {
-                "applies_to": obj.get("applies_to"),
                 "effective_from": obj.get("effective_from"),
                 "fields": obj.get("fields"),
+                "links": [KnowledgeLinkInput.from_dict(_item) for _item in obj["links"]]
+                if obj.get("links") is not None
+                else None,
                 "review_by": obj.get("review_by"),
+                "rules": [KnowledgeRuleInput.from_dict(_item) for _item in obj["rules"]]
+                if obj.get("rules") is not None
+                else None,
                 "status": obj.get("status"),
                 "supersedes": obj.get("supersedes"),
             }

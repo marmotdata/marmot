@@ -5,6 +5,8 @@ import type {
 	FieldValue,
 	KnowledgeAssetRef,
 	KnowledgeEntry,
+	KnowledgeLink,
+	KnowledgeRule,
 	SaveEntryInput
 } from './api.ts';
 
@@ -15,7 +17,9 @@ export interface EntryDraft {
 	effective_from: string;
 	review_by: string;
 	supersedes: KnowledgeAssetRef[];
-	applies_to: KnowledgeAssetRef[];
+	/** Null until every link is loaded, and while there are too many to edit one by one; then links are left as they are. */
+	links: KnowledgeLink[] | null;
+	rules: KnowledgeRule[];
 }
 
 export function newDraft(kind: KnowledgeKind): EntryDraft {
@@ -25,7 +29,8 @@ export function newDraft(kind: KnowledgeKind): EntryDraft {
 		effective_from: '',
 		review_by: '',
 		supersedes: [],
-		applies_to: []
+		links: [],
+		rules: []
 	};
 }
 
@@ -36,7 +41,8 @@ export function draftFrom(kind: KnowledgeKind, e: KnowledgeEntry): EntryDraft {
 		effective_from: e.effective_from ?? '',
 		review_by: e.review_by ?? '',
 		supersedes: e.supersedes ? [e.supersedes] : [],
-		applies_to: [...(e.applies_to ?? [])]
+		links: e.link_count <= e.links.length ? structuredClone(e.links) : null,
+		rules: structuredClone(e.rules ?? [])
 	};
 }
 
@@ -47,7 +53,14 @@ export function toInput(d: EntryDraft): SaveEntryInput {
 		effective_from: d.effective_from || undefined,
 		review_by: d.review_by || undefined,
 		supersedes: d.supersedes[0]?.id,
-		applies_to: d.applies_to.map((a) => a.id)
+		links: d.links?.map((l) => ({ relation: l.relation, target_id: l.target.id })),
+		rules: d.rules
+			.filter((r) => r.selector_value.trim())
+			.map(({ relation, selector_type, selector_value }) => ({
+				relation,
+				selector_type,
+				selector_value: selector_value.trim()
+			}))
 	};
 }
 

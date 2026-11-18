@@ -39,6 +39,12 @@ class TestKnowledgeCounts(unittest.TestCase):
                 by_state = {
                     'key' : 56
                     },
+                by_team = [
+                    marmot.generated.models.knowledge_team_count.KnowledgeTeamCount(
+                        count = 56,
+                        id = '',
+                        name = '', )
+                    ],
                 review_due = 56,
                 total = 56,
                 unset = 56

@@ -5133,7 +5133,7 @@
                 }
             }
         },
-        "/api/v1/knowledge/applies-to/{asset_id}": {
+        "/api/v1/knowledge/about/{asset_id}": {
             "get": {
                 "security": [
                     {
@@ -5149,8 +5149,8 @@
                 "tags": [
                     "knowledge"
                 ],
-                "summary": "List entries that apply to an asset",
-                "operationId": "getKnowledgeAppliesTo",
+                "summary": "List knowledge about an asset",
+                "operationId": "getKnowledgeAbout",
                 "parameters": [
                     {
                         "type": "string",
@@ -5158,13 +5158,62 @@
                         "name": "asset_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated kind keys",
+                        "name": "kind",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated states: current, pending, historical",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated sources: direct, rule, inherited",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only entries linked by this relation",
+                        "name": "relation",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The next value of the previous page",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 25,
+                        "description": "Entries per page, at most 100",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/KnowledgeEntriesResponse"
+                            "$ref": "#/definitions/KnowledgeAboutPage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -5249,7 +5298,13 @@
                     },
                     {
                         "type": "string",
-                        "description": "updated (default), name or review",
+                        "description": "Comma-separated team IDs; only entries those teams own",
+                        "name": "team",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "updated (default, or relevance when searching), name, review or relevance",
                         "name": "sort",
                         "in": "query"
                     },
@@ -5362,6 +5417,74 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/KnowledgeEntry"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/entries/{asset_id}/links": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "List a knowledge entry's links",
+                "operationId": "getKnowledgeEntryLinks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID of the entry",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only links of this relation",
+                        "name": "relation",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The next value of the previous page",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 25,
+                        "description": "Links per page, at most 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/KnowledgeLinkPage"
                         }
                     },
                     "400": {
@@ -16335,6 +16458,91 @@
                 }
             }
         },
+        "KnowledgeAboutItem": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "effective_from": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeOwner"
+                    }
+                },
+                "relation": {
+                    "type": "string"
+                },
+                "review_by": {
+                    "type": "string"
+                },
+                "review_due": {
+                    "type": "boolean"
+                },
+                "rule": {
+                    "$ref": "#/definitions/KnowledgeRule"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/knowledge.State"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "via": {
+                    "$ref": "#/definitions/KnowledgeAssetRef"
+                }
+            }
+        },
+        "KnowledgeAboutPage": {
+            "type": "object",
+            "properties": {
+                "by_kind": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "by_source": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeAboutItem"
+                    }
+                },
+                "next": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "KnowledgeAssetRef": {
             "type": "object",
             "properties": {
@@ -16370,6 +16578,12 @@
                         "type": "integer"
                     }
                 },
+                "by_team": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeTeamCount"
+                    }
+                },
                 "review_due": {
                     "type": "integer"
                 },
@@ -16399,12 +16613,6 @@
         "KnowledgeEntry": {
             "type": "object",
             "properties": {
-                "applies_to": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/KnowledgeAssetRef"
-                    }
-                },
                 "asset_id": {
                     "type": "string"
                 },
@@ -16425,11 +16633,27 @@
                 "last_reviewed_by": {
                     "type": "string"
                 },
+                "link_count": {
+                    "type": "integer"
+                },
+                "links": {
+                    "description": "Links holds the first EntryLinkLimit links, and LinkCount how many there are; page through the rest with the entry's links endpoint.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeLink"
+                    }
+                },
                 "review_by": {
                     "type": "string"
                 },
                 "review_due": {
                     "type": "boolean"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeRule"
+                    }
                 },
                 "state": {
                     "description": "State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.",
@@ -16557,6 +16781,51 @@
                     "items": {
                         "$ref": "#/definitions/KnowledgeKind"
                     }
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeRelation"
+                    }
+                }
+            }
+        },
+        "KnowledgeLink": {
+            "type": "object",
+            "properties": {
+                "relation": {
+                    "type": "string"
+                },
+                "target": {
+                    "$ref": "#/definitions/KnowledgeAssetRef"
+                }
+            }
+        },
+        "KnowledgeLinkInput": {
+            "type": "object",
+            "properties": {
+                "relation": {
+                    "type": "string"
+                },
+                "target_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeLinkPage": {
+            "type": "object",
+            "properties": {
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeLink"
+                    }
+                },
+                "next": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -16585,6 +16854,23 @@
                 }
             }
         },
+        "KnowledgeRelation": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inverse_label": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "KnowledgeReviewedRequest": {
             "type": "object",
             "properties": {
@@ -16594,15 +16880,43 @@
                 }
             }
         },
+        "KnowledgeRule": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "matches": {
+                    "type": "integer"
+                },
+                "relation": {
+                    "type": "string"
+                },
+                "selector_type": {
+                    "type": "string"
+                },
+                "selector_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeRuleInput": {
+            "type": "object",
+            "properties": {
+                "relation": {
+                    "type": "string"
+                },
+                "selector_type": {
+                    "type": "string"
+                },
+                "selector_value": {
+                    "type": "string"
+                }
+            }
+        },
         "KnowledgeSaveInput": {
             "type": "object",
             "properties": {
-                "applies_to": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "effective_from": {
                     "type": "string"
                 },
@@ -16610,8 +16924,21 @@
                     "type": "object",
                     "additionalProperties": {}
                 },
+                "links": {
+                    "description": "Links and Rules replace the entry's links and rules; leave both out to keep what is there. Only changes are written, so resending thousands of unchanged links is cheap.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeLinkInput"
+                    }
+                },
                 "review_by": {
                     "type": "string"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KnowledgeRuleInput"
+                    }
                 },
                 "status": {
                     "type": "string"
@@ -16676,6 +17003,20 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "KnowledgeTeamCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

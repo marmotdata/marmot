@@ -3853,9 +3853,7 @@
 	"knowledge_review_in_6_months": "In 6 months",
 	"knowledge_review_in_a_year": "In a year",
 	"knowledge_group_review": "Review date",
-	"knowledge_group_applies": "Applies to",
 	"knowledge_group_replaces": "Replaces",
-	"knowledge_applies_help": "Tables, dashboards, services or anything else in the catalog this entry governs. It is shown on their pages too.",
 	"knowledge_replaces_help": "The older {kind} this one replaces. Once this one is in use, the older one is marked superseded.",
 	"knowledge_applies_none": "Nothing linked",
 	"knowledge_links_add": "Add an asset",
@@ -3937,5 +3935,69 @@
 	"knowledge_last_reviewed_value": "{when} by {who}",
 	"knowledge_updated_label": "Last changed",
 	"knowledge_replaced_by_label": "Replaced by",
-	"knowledge_blade_heading": "Knowledge that applies here"
+	"knowledge_blade_heading": "Knowledge that applies here",
+	"knowledge_group_links": "Linked assets",
+	"knowledge_group_rules": "Rules",
+	"knowledge_links_help": "Anything in the catalog this entry governs, documents or relates to. It shows on their pages too.",
+	"knowledge_rules_help": "Cover every asset with a tag, of a type or from a provider, including ones added later. Use a rule rather than linking assets one by one.",
+	"knowledge_section_links_description": "Where this entry applies. Tables and other assets inside a linked database or schema inherit it.",
+	"knowledge_link_relation_for": "How this entry relates to {name}",
+	"knowledge_link_relation_new": "Relation",
+	"knowledge_links_too_many": "Linked to too many assets to edit here",
+	"knowledge_links_too_many_body": "This entry has more than a thousand links, so they are left as they are. Use rules to change what it covers.",
+	"knowledge_links_show_more": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Show {count} more",
+				"countPlural=other": "Show {count} more"
+			}
+		}
+	],
+	"knowledge_rule_selector_label": "Match by",
+	"knowledge_rule_selector_tag": "Tag",
+	"knowledge_rule_selector_type": "Type",
+	"knowledge_rule_selector_provider": "Provider",
+	"knowledge_rule_value_label": "Value to match",
+	"knowledge_rule_remove": "Remove rule {n}",
+	"knowledge_rule_add": "Add rule",
+	"knowledge_rule_tagged": "Everything tagged {value}",
+	"knowledge_rule_of_type": "Every {value}",
+	"knowledge_rule_from_provider": "Everything from {value}",
+	"knowledge_rule_covers": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Covers {count} asset today",
+				"countPlural=other": "Covers {count} assets today"
+			}
+		}
+	],
+	"knowledge_rule_covers_many": "Covers {count} or more assets today",
+	"knowledge_about_via": "From {name}",
+	"knowledge_about_see_all": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "See all {count} entries",
+				"countPlural=other": "See all {count} entries"
+			}
+		}
+	],
+	"knowledge_about_crumb": "About {name}",
+	"knowledge_about_heading": "Knowledge about {name}",
+	"knowledge_about_page_title": "Knowledge about {name} - Marmot",
+	"knowledge_about_description": "Entries linked to this asset, matched to it by a rule, or inherited from the database or schema that contains it. Entries in use come first.",
+	"knowledge_about_open_asset": "Open asset",
+	"knowledge_about_empty_title": "Nothing written about this asset yet",
+	"knowledge_about_empty_description": "Link a policy, decision or runbook to it, or to the database or schema that contains it.",
+	"knowledge_about_load_more": "Show more ({shown} of {total})",
+	"knowledge_facet_source": "How it applies",
+	"knowledge_facet_team": "Owning team",
+	"knowledge_source_direct": "Linked directly",
+	"knowledge_source_rule": "Matched by a rule",
+	"knowledge_source_inherited": "From a container"
 }

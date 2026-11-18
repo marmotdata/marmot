@@ -4,9 +4,13 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // KnowledgeCounts knowledge counts
@@ -20,6 +24,9 @@ type KnowledgeCounts struct {
 	// by state
 	ByState map[string]int64 `json:"by_state,omitempty"`
 
+	// by team
+	ByTeam []*KnowledgeTeamCount `json:"by_team"`
+
 	// review due
 	ReviewDue int64 `json:"review_due,omitempty"`
 
@@ -31,12 +38,89 @@ type KnowledgeCounts struct {
 }
 
 // Validate validates this knowledge counts
-func (m *KnowledgeCounts) Validate(_ strfmt.Registry) error {
+func (m *KnowledgeCounts) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateByTeam(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this knowledge counts based on context it is used
-func (m *KnowledgeCounts) ContextValidate(_ context.Context, _ strfmt.Registry) error {
+func (m *KnowledgeCounts) validateByTeam(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.ByTeam) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ByTeam); i++ {
+		if typeutils.IsZero(m.ByTeam[i]) { // not required
+			continue
+		}
+
+		if m.ByTeam[i] != nil {
+			if err := m.ByTeam[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("by_team" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("by_team" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this knowledge counts based on the context it is used
+func (m *KnowledgeCounts) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateByTeam(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *KnowledgeCounts) contextValidateByTeam(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.ByTeam); i++ {
+
+		if m.ByTeam[i] != nil {
+
+			if typeutils.IsZero(m.ByTeam[i]) { // not required
+				return nil
+			}
+
+			if err := m.ByTeam[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("by_team" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("by_team" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

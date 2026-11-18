@@ -56,11 +56,11 @@ type ClientOption func(*runtime.ClientOperation)
 // ClientService is the interface for Client methods.
 type ClientService interface {
 
-	// GetKnowledgeAppliesTo list entries that apply to an asset.
-	GetKnowledgeAppliesTo(params *GetKnowledgeAppliesToParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAppliesToOK, error)
+	// GetKnowledgeAbout list knowledge about an asset.
+	GetKnowledgeAbout(params *GetKnowledgeAboutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAboutOK, error)
 
-	// GetKnowledgeAppliesToContext list entries that apply to an asset.
-	GetKnowledgeAppliesToContext(ctx context.Context, params *GetKnowledgeAppliesToParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAppliesToOK, error)
+	// GetKnowledgeAboutContext list knowledge about an asset.
+	GetKnowledgeAboutContext(ctx context.Context, params *GetKnowledgeAboutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAboutOK, error)
 
 	// GetKnowledgeCounts count knowledge entries.
 	GetKnowledgeCounts(params *GetKnowledgeCountsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeCountsOK, error)
@@ -79,6 +79,12 @@ type ClientService interface {
 
 	// GetKnowledgeEntryContext get a knowledge entry.
 	GetKnowledgeEntryContext(ctx context.Context, params *GetKnowledgeEntryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeEntryOK, error)
+
+	// GetKnowledgeEntryLinks list a knowledge entry s links.
+	GetKnowledgeEntryLinks(params *GetKnowledgeEntryLinksParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeEntryLinksOK, error)
+
+	// GetKnowledgeEntryLinksContext list a knowledge entry s links.
+	GetKnowledgeEntryLinksContext(ctx context.Context, params *GetKnowledgeEntryLinksParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeEntryLinksOK, error)
 
 	// GetKnowledgeKinds list knowledge kinds.
 	GetKnowledgeKinds(params *GetKnowledgeKindsParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeKindsOK, error)
@@ -101,13 +107,13 @@ type ClientService interface {
 	SetTransport(transport runtime.ContextualTransport)
 }
 
-// GetKnowledgeAppliesTo lists entries that apply to an asset.
+// GetKnowledgeAbout lists knowledge about an asset.
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
-// If you need to pass a specific context, use [Client.GetKnowledgeAppliesToContext] instead.
-func (a *Client) GetKnowledgeAppliesTo(params *GetKnowledgeAppliesToParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAppliesToOK, error) {
+// If you need to pass a specific context, use [Client.GetKnowledgeAboutContext] instead.
+func (a *Client) GetKnowledgeAbout(params *GetKnowledgeAboutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAboutOK, error) {
 	var ctx context.Context
 	if params != nil && params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -115,27 +121,27 @@ func (a *Client) GetKnowledgeAppliesTo(params *GetKnowledgeAppliesToParams, auth
 		ctx = context.Background()
 	}
 
-	return a.GetKnowledgeAppliesToContext(ctx, params, authInfo, opts...)
+	return a.GetKnowledgeAboutContext(ctx, params, authInfo, opts...)
 }
 
-// GetKnowledgeAppliesToContext lists entries that apply to an asset.
+// GetKnowledgeAboutContext lists knowledge about an asset.
 //
-// Do not use the deprecated [GetKnowledgeAppliesToParams.Context] with this method: it would be ignored.
-func (a *Client) GetKnowledgeAppliesToContext(ctx context.Context, params *GetKnowledgeAppliesToParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAppliesToOK, error) {
+// Do not use the deprecated [GetKnowledgeAboutParams.Context] with this method: it would be ignored.
+func (a *Client) GetKnowledgeAboutContext(ctx context.Context, params *GetKnowledgeAboutParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeAboutOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
-		params = NewGetKnowledgeAppliesToParams()
+		params = NewGetKnowledgeAboutParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "getKnowledgeAppliesTo",
+		ID:                 "getKnowledgeAbout",
 		Method:             "GET",
-		PathPattern:        "/api/v1/knowledge/applies-to/{asset_id}",
+		PathPattern:        "/api/v1/knowledge/about/{asset_id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetKnowledgeAppliesToReader{formats: a.formats},
+		Reader:             &GetKnowledgeAboutReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Client:             params.HTTPClient,
 	}
@@ -150,7 +156,7 @@ func (a *Client) GetKnowledgeAppliesToContext(ctx context.Context, params *GetKn
 	}
 
 	// only one success response has to be checked
-	success, ok := result.(*GetKnowledgeAppliesToOK)
+	success, ok := result.(*GetKnowledgeAboutOK)
 	if ok {
 		return success, nil
 	}
@@ -160,7 +166,7 @@ func (a *Client) GetKnowledgeAppliesToContext(ctx context.Context, params *GetKn
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getKnowledgeAppliesTo: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getKnowledgeAbout: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -350,6 +356,69 @@ func (a *Client) GetKnowledgeEntryContext(ctx context.Context, params *GetKnowle
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getKnowledgeEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetKnowledgeEntryLinks lists a knowledge entry s links.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetKnowledgeEntryLinksContext] instead.
+func (a *Client) GetKnowledgeEntryLinks(params *GetKnowledgeEntryLinksParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeEntryLinksOK, error) {
+	var ctx context.Context
+	if params != nil && params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetKnowledgeEntryLinksContext(ctx, params, authInfo, opts...)
+}
+
+// GetKnowledgeEntryLinksContext lists a knowledge entry s links.
+//
+// Do not use the deprecated [GetKnowledgeEntryLinksParams.Context] with this method: it would be ignored.
+func (a *Client) GetKnowledgeEntryLinksContext(ctx context.Context, params *GetKnowledgeEntryLinksParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetKnowledgeEntryLinksOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetKnowledgeEntryLinksParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "getKnowledgeEntryLinks",
+		Method:             "GET",
+		PathPattern:        "/api/v1/knowledge/entries/{asset_id}/links",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetKnowledgeEntryLinksReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetKnowledgeEntryLinksOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getKnowledgeEntryLinks: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -8,9 +8,7 @@
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import { assetHref, providerKey } from './assetFormat';
-	import { resolve } from '$app/paths';
-	import { entriesApplyingTo, type KnowledgeSummary } from '#lib/knowledge/api.ts';
-	import { kindById, knowledgeKinds } from '#lib/knowledge/kinds.ts';
+	import AboutPanel from '#components/knowledge/AboutPanel.svelte';
 
 	// The asset page's blade: what decides whether the asset can be used, then what it means and where it flows; owners, tags and freshness live in the page header so they are not repeated here.
 	let {
@@ -30,18 +28,6 @@
 	let lineage = $state<LineageResponse | null>(null);
 	let lineageError = $state(false);
 	let latestRun = $state<LatestRun | null>(null);
-	let knowledge = $state<KnowledgeSummary[]>([]);
-
-	// Policies, decisions and runbooks that say they apply to this asset, so someone reading a table learns the rules for it where they are.
-	$effect(() => {
-		const id = asset.id;
-		knowledge = [];
-		entriesApplyingTo(id)
-			.then((list) => {
-				if (asset.id === id) knowledge = list;
-			})
-			.catch(() => {});
-	});
 
 	let isAgent = $derived((asset.type || '').toLowerCase() === 'agent');
 	let upstream = $derived(lineage?.nodes.filter((n) => n.depth < 0) ?? []);
@@ -136,28 +122,7 @@
 
 	<AssetGlossaryTerms {asset} />
 
-	{#if knowledge.length > 0}
-		<mm-blade-section heading={m.knowledge_blade_heading()}>
-			<ul class="knowledge">
-				{#each knowledge as k (k.asset_id)}
-					<li>
-						<mm-icon
-							name={kindById(k.kind, $knowledgeKinds)?.icon ?? 'description'}
-							size={16}
-							aria-hidden="true"
-						></mm-icon>
-						<mm-link href={resolve('/knowledge/[id]', { id: k.asset_id })}>{k.name}</mm-link>
-						{#if k.state === 'historical' || k.state === 'pending'}
-							<mm-text variant="caption" tone="secondary"
-								>{kindById(k.kind, $knowledgeKinds)?.statuses.find((s) => s.value === k.status)
-									?.label ?? ''}</mm-text
-							>
-						{/if}
-					</li>
-				{/each}
-			</ul>
-		</mm-blade-section>
-	{/if}
+	<AboutPanel assetId={asset.id} />
 
 	<mm-blade-section
 		heading={isAgent ? m.asset_page_what_it_reads() : m.asset_page_where_it_flows()}
@@ -200,19 +165,3 @@
 		</mm-description-list>
 	</mm-blade-section>
 </mm-details-blade>
-
-<style>
-	.knowledge {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-	.knowledge li {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-	}
-</style>

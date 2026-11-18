@@ -41,12 +41,14 @@ func (h *Handler) Routes() []common.Route {
 		{Path: "/api/v1/knowledge/entries/{asset_id}", Method: http.MethodGet, Handler: h.getEntry, Middleware: view},
 		{Path: "/api/v1/knowledge/entries/{asset_id}", Method: http.MethodPut, Handler: h.saveEntry, Middleware: manage},
 		{Path: "/api/v1/knowledge/entries/{asset_id}/reviewed", Method: http.MethodPost, Handler: h.markReviewed, Middleware: manage},
-		{Path: "/api/v1/knowledge/applies-to/{asset_id}", Method: http.MethodGet, Handler: h.applyingTo, Middleware: view},
+		{Path: "/api/v1/knowledge/entries/{asset_id}/links", Method: http.MethodGet, Handler: h.listLinks, Middleware: view},
+		{Path: "/api/v1/knowledge/about/{asset_id}", Method: http.MethodGet, Handler: h.about, Middleware: view},
 	}
 }
 
 type KindsResponse struct {
-	Kinds []knowledge.Kind `json:"kinds"`
+	Kinds     []knowledge.Kind     `json:"kinds"`
+	Relations []knowledge.Relation `json:"relations"`
 } // @name KnowledgeKindsResponse
 
 type EntriesResponse struct {
@@ -54,7 +56,7 @@ type EntriesResponse struct {
 	Total   int                 `json:"total"`
 } // @name KnowledgeEntriesResponse
 
-// listKinds returns the kinds of knowledge entry, with their statuses, typed fields and starting outline.
+// listKinds returns the kinds of knowledge entry, with their statuses, typed fields and starting outline, and the relations an entry can have to other assets.
 //
 // @Summary  List knowledge kinds
 // @Tags     knowledge
@@ -65,7 +67,7 @@ type EntriesResponse struct {
 // @ID getKnowledgeKinds
 // @Router   /api/v1/knowledge/kinds [get]
 func (h *Handler) listKinds(w http.ResponseWriter, _ *http.Request) {
-	common.RespondJSON(w, http.StatusOK, KindsResponse{Kinds: knowledge.Kinds()})
+	common.RespondJSON(w, http.StatusOK, KindsResponse{Kinds: knowledge.Kinds(), Relations: knowledge.Relations()})
 }
 
 // counts sums knowledge entries by kind and state, and counts those due for review.
@@ -97,7 +99,8 @@ func (h *Handler) counts(w http.ResponseWriter, r *http.Request) {
 // @Param    q          query string false "Text to find in the title, summary, fields or pages"
 // @Param    review_due query bool   false "Only entries whose review date has passed"
 // @Param    mine       query bool   false "Only entries owned by the caller or a team they are in"
-// @Param    sort       query string false "updated (default), name or review"
+// @Param    team       query string false "Comma-separated team IDs; only entries those teams own"
+// @Param    sort       query string false "updated (default, or relevance when searching), name, review or relevance"
 // @Param    limit      query int    false "Entries per page, at most 100" default(25)
 // @Param    offset     query int    false "Entries to skip"
 // @Security ApiKeyAuth
@@ -113,6 +116,7 @@ func (h *Handler) listEntries(w http.ResponseWriter, r *http.Request) {
 		Query:     q.Get("q"),
 		ReviewDue: q.Get("review_due") == "true",
 		Sort:      q.Get("sort"),
+		TeamIDs:   splitList(q.Get("team")),
 	}
 	if q.Get("mine") == "true" {
 		if p, ok := common.PrincipalFromContext(r.Context()); ok {
@@ -232,24 +236,75 @@ func respondEntry(w http.ResponseWriter, e *knowledge.Entry, err error) {
 	}
 }
 
-// applyingTo lists the knowledge entries that apply to an asset, such as the policies governing a table.
+// listLinks pages through an entry's links, by target name.
 //
-// @Summary  List entries that apply to an asset
+// @Summary  List a knowledge entry's links
 // @Tags     knowledge
 // @Produce  json
-// @Param    asset_id path string true "Asset ID"
+// @Param    asset_id path  string true  "Asset ID of the entry"
+// @Param    relation query string false "Only links of this relation"
+// @Param    cursor   query string false "The next value of the previous page"
+// @Param    limit    query int    false "Links per page, at most 100" default(25)
 // @Security ApiKeyAuth
 // @Security BearerAuth
-// @Success  200 {object} EntriesResponse
-// @ID getKnowledgeAppliesTo
-// @Router   /api/v1/knowledge/applies-to/{asset_id} [get]
-func (h *Handler) applyingTo(w http.ResponseWriter, r *http.Request) {
-	entries, err := h.service.ApplyingTo(r.Context(), r.PathValue("asset_id"))
-	if err != nil {
-		common.RespondError(w, http.StatusInternalServerError, "Failed to list knowledge entries")
-		return
+// @Success  200 {object} knowledge.LinkPage
+// @Failure  400 {object} common.ErrorResponse
+// @Failure  404 {object} common.ErrorResponse
+// @ID getKnowledgeEntryLinks
+// @Router   /api/v1/knowledge/entries/{asset_id}/links [get]
+func (h *Handler) listLinks(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	page, err := h.service.Links(r.Context(), r.PathValue("asset_id"), q.Get("relation"), q.Get("cursor"), limit)
+	respond(w, page, err)
+}
+
+// about lists the knowledge entries about any asset: linked to it, matched to it by a rule on its tags, type or provider, or linked to something that contains it, such as its schema. Entries in use come first, then those not yet in use, then those no longer in use, each by name.
+//
+// @Summary  List knowledge about an asset
+// @Tags     knowledge
+// @Produce  json
+// @Param    asset_id path  string true  "Asset ID"
+// @Param    kind     query string false "Comma-separated kind keys"
+// @Param    state    query string false "Comma-separated states: current, pending, historical"
+// @Param    source   query string false "Comma-separated sources: direct, rule, inherited"
+// @Param    relation query string false "Only entries linked by this relation"
+// @Param    cursor   query string false "The next value of the previous page"
+// @Param    limit    query int    false "Entries per page, at most 100" default(25)
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success  200 {object} knowledge.AboutPage
+// @Failure  400 {object} common.ErrorResponse
+// @Failure  404 {object} common.ErrorResponse
+// @ID getKnowledgeAbout
+// @Router   /api/v1/knowledge/about/{asset_id} [get]
+func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	f := knowledge.AboutFilter{
+		Kinds:    splitList(q.Get("kind")),
+		Sources:  splitList(q.Get("source")),
+		Relation: q.Get("relation"),
+		Cursor:   q.Get("cursor"),
 	}
-	common.RespondJSON(w, http.StatusOK, EntriesResponse{Entries: entries, Total: len(entries)})
+	for _, s := range splitList(q.Get("state")) {
+		f.States = append(f.States, knowledge.State(s))
+	}
+	f.Limit, _ = strconv.Atoi(q.Get("limit"))
+	page, err := h.service.About(r.Context(), r.PathValue("asset_id"), f)
+	respond(w, page, err)
+}
+
+func respond[T any](w http.ResponseWriter, v *T, err error) {
+	switch {
+	case errors.Is(err, knowledge.ErrNotFound):
+		common.RespondError(w, http.StatusNotFound, "No asset has that ID")
+	case errors.Is(err, knowledge.ErrInvalid):
+		common.RespondError(w, http.StatusBadRequest, strings.TrimPrefix(err.Error(), knowledge.ErrInvalid.Error()+": "))
+	case err != nil:
+		common.RespondError(w, http.StatusInternalServerError, "Failed to read knowledge")
+	default:
+		common.RespondJSON(w, http.StatusOK, v)
+	}
 }
 
 func splitList(s string) []string {
