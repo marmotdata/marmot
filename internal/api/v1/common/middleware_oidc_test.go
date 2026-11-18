@@ -111,7 +111,7 @@ func (m *mockUserService) UpdateJobTitle(_ context.Context, _, _ string) error {
 func (m *mockUserService) UpdatePreferences(_ context.Context, _ string, _ map[string]interface{}) error {
 	return nil
 }
-func (m *mockUserService) UpdatePassword(_ context.Context, _, _ string) (*user.User, error) {
+func (m *mockUserService) UpdatePassword(_ context.Context, _, _, _ string) (*user.User, error) {
 	return nil, nil
 }
 

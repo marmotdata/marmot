@@ -11584,7 +11584,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update current user's password",
+                "description": "Update current user's password. current_password is required unless the account is waiting on a forced password change.",
                 "consumes": [
                     "application/json"
                 ],
@@ -18475,6 +18475,10 @@ const docTemplate = `{
                 "new_password"
             ],
             "properties": {
+                "current_password": {
+                    "description": "Required unless the account is waiting on a forced password change.",
+                    "type": "string"
+                },
                 "new_password": {
                     "type": "string",
                     "minLength": 8

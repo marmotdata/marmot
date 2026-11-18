@@ -4266,6 +4266,9 @@ definitions:
     type: object
   UpdatePasswordRequest:
     properties:
+      current_password:
+        description: Required unless the account is waiting on a forced password change.
+        type: string
       new_password:
         minLength: 8
         type: string
@@ -12347,7 +12350,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update current user's password
+      description: Update current user's password. current_password is required unless
+        the account is waiting on a forced password change.
       operationId: postUsersUpdatePassword
       parameters:
       - description: Password update request

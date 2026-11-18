@@ -13,7 +13,9 @@ import (
 )
 
 type UpdatePasswordRequest struct {
-	NewPassword string `json:"new_password" validate:"required,min=8"`
+	// Required unless the account is waiting on a forced password change.
+	CurrentPassword string `json:"current_password,omitempty"`
+	NewPassword     string `json:"new_password" validate:"required,min=8"`
 } // @name UpdatePasswordRequest
 
 type LoginRequest struct {
@@ -221,7 +223,7 @@ func (h *Handler) signOutAllSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary Update user password
-// @Description Update current user's password
+// @Description Update current user's password. current_password is required unless the account is waiting on a forced password change.
 // @Tags users
 // @Accept json
 // @Produce json
@@ -246,7 +248,7 @@ func (h *Handler) updatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedUser, err := h.userService.UpdatePassword(r.Context(), usr.ID, input.NewPassword)
+	updatedUser, err := h.userService.UpdatePassword(r.Context(), usr.ID, input.CurrentPassword, input.NewPassword)
 	if err != nil {
 		if respondUserError(w, err) {
 			return

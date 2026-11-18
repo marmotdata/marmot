@@ -137,7 +137,7 @@ type Service interface {
 	UpdateJobTitle(ctx context.Context, userID string, jobTitle string) error
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
-	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
+	UpdatePassword(ctx context.Context, userID string, currentPassword string, newPassword string) (*User, error)
 	InvalidateSessions(ctx context.Context, userID string) error
 
 	// Invitations
@@ -453,7 +453,7 @@ func (s *service) HasPermission(ctx context.Context, userID string, resourceType
 	return hasPermission, nil
 }
 
-func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error) {
+func (s *service) UpdatePassword(ctx context.Context, userID string, currentPassword string, newPassword string) (*User, error) {
 	// Var validation has no struct field, so the name comes from the request
 	// body rather than being left blank.
 	if err := s.validator.Var(newPassword, "required,min=8"); err != nil {
@@ -461,6 +461,30 @@ func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword
 			Field:   "new_password",
 			Message: "is required and must be at least 8 characters",
 		}}}
+	}
+
+	existing, err := s.repo.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// A forced change follows a sign-in that has just proved the password, so only a voluntary change asks for it again, which stops a stolen session token from being turned into a permanent account takeover.
+	if !existing.MustChangePassword {
+		if currentPassword == "" {
+			return nil, &InvalidInputError{Fields: []FieldError{{
+				Field:   "current_password",
+				Message: "is required",
+			}}}
+		}
+		if err := s.repo.ValidatePassword(ctx, userID, currentPassword); err != nil {
+			if errors.Is(err, ErrInvalidPassword) {
+				return nil, &InvalidInputError{Fields: []FieldError{{
+					Field:   "current_password",
+					Message: "is incorrect",
+				}}}
+			}
+			return nil, fmt.Errorf("checking current password: %w", err)
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
