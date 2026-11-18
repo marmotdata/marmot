@@ -91,6 +91,8 @@ type CreateInput struct {
 }
 
 type UpdateInput struct {
+	// IsStub, when set, marks the asset a stub or a real asset. Only the contribution merge sets it.
+	IsStub           *bool                  `json:"-"`
 	Name             *string                `json:"name"`
 	Description      *string                `json:"description"`
 	UserDescription  *string                `json:"user_description"`
@@ -229,6 +231,8 @@ type Service interface {
 	GetByExactMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error)
 	ResolveMRNs(ctx context.Context, mrns []string) ([]string, error)
 	MoveMRN(ctx context.Context, assetID, newMRN, reason string) error
+	// AddAlias makes an asset answer to another MRN as well as its own, as when an OpenLineage symlinks facet names the same dataset two ways. It returns ErrAlreadyExists when another asset has that MRN.
+	AddAlias(ctx context.Context, assetID, alias, reason string) error
 	Merge(ctx context.Context, loserID, winnerID string) (*Asset, error)
 	Aliases(ctx context.Context, assetID string) ([]string, error)
 	Contributions(ctx context.Context, assetID string) ([]Contribution, error)
@@ -674,6 +678,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 	}
 	if input.Sources != nil {
 		asset.Sources = UpdateSources(asset.Sources, input.Sources)
+		updated = true
+	}
+	if input.IsStub != nil && asset.IsStub != *input.IsStub {
+		asset.IsStub = *input.IsStub
 		updated = true
 	}
 	if input.Environments != nil {

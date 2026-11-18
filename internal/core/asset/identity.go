@@ -280,6 +280,30 @@ func (r *PostgresRepository) MoveMRN(ctx context.Context, assetID, newMRN, reaso
 	return tx.Commit(ctx)
 }
 
+// AddAlias records alias as an MRN the asset answers to. It refuses an alias that is any asset's current MRN, and leaves alone an alias that already leads to another asset, so the first asset to claim a name keeps it.
+func (r *PostgresRepository) AddAlias(ctx context.Context, assetID, alias, reason string) error {
+	tag, err := r.db.Exec(ctx, `
+		INSERT INTO mrn_aliases (alias, kind, entity_id, reason)
+		SELECT $1, 'asset', $2, $3
+		WHERE EXISTS (SELECT 1 FROM assets WHERE id = $2)
+		  AND NOT EXISTS (SELECT 1 FROM assets WHERE mrn = $1)
+		ON CONFLICT (alias) DO NOTHING`, alias, assetID, reason)
+	if err != nil {
+		return fmt.Errorf("recording alias: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		var owner string
+		err := r.db.QueryRow(ctx, `SELECT id FROM assets WHERE mrn = $1`, alias).Scan(&owner)
+		switch {
+		case err == nil && owner != assetID:
+			return ErrConflict
+		case err != nil && !errors.Is(err, pgx.ErrNoRows):
+			return fmt.Errorf("checking alias owner: %w", err)
+		}
+	}
+	return nil
+}
+
 // MergeAssets folds loser into winner; see marmot_merge_assets.
 func (r *PostgresRepository) MergeAssets(ctx context.Context, loserID, winnerID string) error {
 	if _, err := r.db.Exec(ctx, `SELECT marmot_merge_assets($1, $2)`, loserID, winnerID); err != nil {
@@ -480,6 +504,21 @@ func (s *service) MoveMRN(ctx context.Context, assetID, newMRN, reason string) e
 	return nil
 }
 
+// AddAlias makes an asset answer to another MRN as well; see PostgresRepository.AddAlias.
+func (s *service) AddAlias(ctx context.Context, assetID, alias, reason string) error {
+	canonical, err := CanonicalMRN(alias)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.AddAlias(ctx, assetID, canonical, reason); err != nil {
+		if errors.Is(err, ErrConflict) {
+			return ErrAlreadyExists
+		}
+		return err
+	}
+	return nil
+}
+
 // Merge folds loser into winner and recomputes the winner from the contributions it now holds.
 func (s *service) Merge(ctx context.Context, loserID, winnerID string) (*Asset, error) {
 	if loserID == winnerID {
@@ -598,7 +637,16 @@ func (s *service) recompute(ctx context.Context, assetID string, skipNotificatio
 		return s.Get(ctx, assetID)
 	}
 	merged := MergeContributions(contribs)
+	// An asset is a stub while only systems that merely mention it, such as OpenLineage events, say anything about it. Once its own system or a person writes to it, it is a real asset and shows up in search.
+	stub := true
+	for _, c := range contribs {
+		if c.Role != RoleReference {
+			stub = false
+			break
+		}
+	}
 	input := UpdateInput{
+		IsStub:           &stub,
 		Name:             merged.Name,
 		Type:             merged.Type,
 		Providers:        merged.Providers,

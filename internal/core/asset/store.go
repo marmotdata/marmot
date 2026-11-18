@@ -68,6 +68,7 @@ type Repository interface {
 
 	ResolveMRNs(ctx context.Context, mrns []string) ([]string, error)
 	MoveMRN(ctx context.Context, assetID, newMRN, reason string) error
+	AddAlias(ctx context.Context, assetID, alias, reason string) error
 	MergeAssets(ctx context.Context, loserID, winnerID string) error
 	Aliases(ctx context.Context, assetID string) ([]string, error)
 	ListContributions(ctx context.Context, assetID string) ([]Contribution, error)
@@ -1162,28 +1163,28 @@ func (r *PostgresRepository) GetRunHistory(ctx context.Context, assetID string, 
 
 	query := `
    	WITH run_status AS (
-   		SELECT 
+   		SELECT
    			run_id,
    			job_namespace,
    			job_name,
-   			CASE 
-   				WHEN bool_or(event_type IN ('COMPLETE', 'FAIL', 'ABORT')) THEN
-   					(SELECT event_type FROM run_history rh2 
-   					 WHERE rh2.asset_id = $1 AND rh2.run_id = rh.run_id 
-   					 AND rh2.event_type IN ('COMPLETE', 'FAIL', 'ABORT')
-   					 ORDER BY event_time DESC LIMIT 1)
+   			-- A run that failed or was aborted stays failed even when the producer sends COMPLETE afterwards, as Spark does.
+   			CASE
+   				WHEN bool_or(event_type = 'FAIL') THEN 'FAIL'
+   				WHEN bool_or(event_type = 'ABORT') THEN 'ABORT'
+   				WHEN bool_or(event_type = 'COMPLETE') THEN 'COMPLETE'
    				ELSE 'RUNNING'
    			END as status,
    			MAX(event_time) as latest_event_time,
-   			(SELECT run_facets FROM run_history rh3 
-   			 WHERE rh3.asset_id = $1 AND rh3.run_id = rh.run_id 
-   			 ORDER BY event_time DESC LIMIT 1) as run_facets,
-   			(SELECT job_facets FROM run_history rh4 
-   			 WHERE rh4.asset_id = $1 AND rh4.run_id = rh.run_id 
-   			 ORDER BY event_time DESC LIMIT 1) as job_facets,
+   			-- Events of one run are cumulative, so the run's facets are every event's facets, a later event winning a facet two of them carry.
+   			COALESCE((SELECT jsonb_object_agg(f.key, f.value ORDER BY rh3.event_time, rh3.created_at)
+   			 FROM run_history rh3, jsonb_each(CASE WHEN jsonb_typeof(rh3.run_facets) = 'object' THEN rh3.run_facets ELSE '{}'::jsonb END) f
+   			 WHERE rh3.asset_id = $1 AND rh3.run_id = rh.run_id), '{}'::jsonb) as run_facets,
+   			COALESCE((SELECT jsonb_object_agg(f.key, f.value ORDER BY rh4.event_time, rh4.created_at)
+   			 FROM run_history rh4, jsonb_each(CASE WHEN jsonb_typeof(rh4.job_facets) = 'object' THEN rh4.job_facets ELSE '{}'::jsonb END) f
+   			 WHERE rh4.asset_id = $1 AND rh4.run_id = rh.run_id), '{}'::jsonb) as job_facets,
    			MAX(created_at) as created_at
    		FROM run_history rh
-   		WHERE asset_id = $1 
+   		WHERE asset_id = $1
    		GROUP BY run_id, job_namespace, job_name
    	),
    	start_events AS (
@@ -1263,6 +1264,9 @@ func (r *PostgresRepository) GetRunHistory(ctx context.Context, assetID string, 
 
 		processedRuns = append(processedRuns, run)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("reading run history: %w", err)
+	}
 
 	return processedRuns, total, nil
 }
@@ -1280,12 +1284,10 @@ func (r *PostgresRepository) GetRunHistoryHistogram(ctx context.Context, assetID
 		SELECT 
 			DATE(event_time) as event_date,
 			run_id,
-			CASE 
-				WHEN bool_or(event_type IN ('COMPLETE', 'FAIL', 'ABORT')) THEN
-					(SELECT event_type FROM run_history rh2 
-					 WHERE rh2.asset_id = $1 AND rh2.run_id = rh.run_id 
-					 AND rh2.event_type IN ('COMPLETE', 'FAIL', 'ABORT')
-					 ORDER BY event_time DESC LIMIT 1)
+			CASE
+				WHEN bool_or(event_type = 'FAIL') THEN 'FAIL'
+				WHEN bool_or(event_type = 'ABORT') THEN 'ABORT'
+				WHEN bool_or(event_type = 'COMPLETE') THEN 'COMPLETE'
 				ELSE 'RUNNING'
 			END as final_status
 		FROM run_history rh
