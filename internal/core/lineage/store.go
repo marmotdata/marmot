@@ -3,6 +3,7 @@ package lineage
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -23,6 +24,8 @@ type Repository interface {
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
 	GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error)
 	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
+	// RunInputs lists the input datasets earlier events of a run named, newest first.
+	RunInputs(ctx context.Context, runID string) ([]Dataset, error)
 }
 
 // ObservedEdge represents a runtime-observed lineage edge — typically emitted by
@@ -190,48 +193,52 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 
 // CreateDeclaredLineage writes a declared edge, or returns the existing one. declaredBy, when set, records who declared it and takes over an existing edge, so the latest pipeline to write an edge is the one shown. columnLineage, when set, replaces the edge's column mappings, so the newest parse wins.
 func (r *PostgresRepository) CreateDeclaredLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string, declaredBy string, columnLineage []ColumnEdge) (string, error) {
-	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
+	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return "", fmt.Errorf("checking edge existence: %w", err)
+		return "", fmt.Errorf("starting transaction: %w", err)
 	}
-	if exists {
+	defer tx.Rollback(ctx)
+
+	// Writers racing to declare the same edge, such as OpenLineage events for one job arriving together, take turns, so the edge is created once.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1 || chr(10) || $2, 0))`, sourceMRN, targetMRN); err != nil {
+		return "", fmt.Errorf("locking edge: %w", err)
+	}
+
+	var existingID string
+	err = tx.QueryRow(ctx,
+		"SELECT id FROM lineage_edges WHERE source_mrn = $1 AND target_mrn = $2 LIMIT 1",
+		sourceMRN, targetMRN).Scan(&existingID)
+	switch {
+	case err == nil:
 		// Existing edge: keep its ID, but merge in new column lineage if any
 		// was supplied. Newer parse results win over older ones.
-		var edgeID string
-		err := r.db.QueryRow(ctx,
-			"SELECT id FROM lineage_edges WHERE source_mrn = $1 AND target_mrn = $2 LIMIT 1",
-			sourceMRN, targetMRN).Scan(&edgeID)
-		if err != nil {
-			return "", fmt.Errorf("getting existing edge ID: %w", err)
-		}
 		if len(columnLineage) > 0 {
 			columnLineageJSON, err := json.Marshal(columnLineage)
 			if err != nil {
 				return "", fmt.Errorf("marshaling column lineage: %w", err)
 			}
-			if _, err := r.db.Exec(ctx,
+			if _, err := tx.Exec(ctx,
 				`UPDATE lineage_edges SET column_lineage = $1 WHERE id = $2`,
-				columnLineageJSON, edgeID,
+				columnLineageJSON, existingID,
 			); err != nil {
 				return "", fmt.Errorf("updating column lineage: %w", err)
 			}
 		}
 		if declaredBy != "" {
-			if _, err := r.db.Exec(ctx, `
+			if _, err := tx.Exec(ctx, `
 				UPDATE lineage_edges SET declared_by = $3
 				WHERE source_mrn = $1 AND target_mrn = $2 AND origin = 'declared' AND declared_by IS DISTINCT FROM $3`,
 				sourceMRN, targetMRN, declaredBy); err != nil {
 				return "", fmt.Errorf("recording who declared the edge: %w", err)
 			}
 		}
-		return edgeID, nil
+		if err := tx.Commit(ctx); err != nil {
+			return "", fmt.Errorf("committing transaction: %w", err)
+		}
+		return existingID, nil
+	case !errors.Is(err, pgx.ErrNoRows):
+		return "", fmt.Errorf("checking edge existence: %w", err)
 	}
-
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return "", fmt.Errorf("starting transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
 
 	eventID := uuid.New()
 	edgeID := uuid.New()
@@ -364,6 +371,8 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 		}
 		nodes = append(nodes, downstreamNodes...)
 	}
+
+	nodes = uniqueNodes(nodes)
 
 	edges, err := r.getLineageEdges(ctx, tx, nodes)
 	if err != nil {
@@ -596,6 +605,7 @@ func (r *PostgresRepository) StoreRunHistory(ctx context.Context, entry *RunHist
 			event_type, event_time, producer, run_facets, job_facets, 
 			inputs, outputs, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		ON CONFLICT (asset_id, run_id, event_type, event_time) DO NOTHING
 	`
 
 	_, err = r.db.Exec(ctx, query,
@@ -609,6 +619,28 @@ func (r *PostgresRepository) StoreRunHistory(ctx context.Context, entry *RunHist
 	}
 
 	return nil
+}
+
+// RunInputs lists the input datasets every stored event of a run named, newest event first, so a later event that names an input only by namespace and name can be matched to the facets an earlier event gave it.
+func (r *PostgresRepository) RunInputs(ctx context.Context, runID string) ([]Dataset, error) {
+	rows, err := r.db.Query(ctx, `SELECT inputs FROM run_history WHERE run_id = $1 AND inputs <> '[]'::jsonb ORDER BY event_time DESC, created_at DESC`, runID)
+	if err != nil {
+		return nil, fmt.Errorf("reading run inputs: %w", err)
+	}
+	defer rows.Close()
+	var out []Dataset
+	for rows.Next() {
+		var raw []byte
+		if err := rows.Scan(&raw); err != nil {
+			return nil, fmt.Errorf("scanning run inputs: %w", err)
+		}
+		var ds []Dataset
+		if err := json.Unmarshal(raw, &ds); err != nil {
+			continue
+		}
+		out = append(out, ds...)
+	}
+	return out, rows.Err()
 }
 
 // BatchObservedLineage upserts a batch of runtime-observed edges in a single
@@ -745,11 +777,25 @@ func (r *PostgresRepository) fillLastRunStatus(ctx context.Context, tx pgx.Tx, n
 			ids = append(ids, n.Asset.ID)
 		}
 	}
+	// The latest run's outcome, a failure winning over a COMPLETE the producer sent after it.
 	rows, err := tx.Query(ctx, `
-		SELECT DISTINCT ON (asset_id) asset_id, event_type
-		FROM run_history
-		WHERE asset_id = ANY($1)
-		ORDER BY asset_id, event_time DESC`, ids)
+		WITH latest AS (
+			SELECT DISTINCT ON (asset_id) asset_id, run_id
+			FROM run_history
+			WHERE asset_id = ANY($1)
+			ORDER BY asset_id, event_time DESC
+		)
+		SELECT l.asset_id,
+			CASE
+				WHEN bool_or(rh.event_type = 'FAIL') THEN 'FAIL'
+				WHEN bool_or(rh.event_type = 'ABORT') THEN 'ABORT'
+				WHEN bool_or(rh.event_type = 'COMPLETE') THEN 'COMPLETE'
+				WHEN bool_or(rh.event_type IN ('START', 'RUNNING')) THEN 'RUNNING'
+				ELSE 'OTHER'
+			END
+		FROM latest l
+		JOIN run_history rh ON rh.asset_id = l.asset_id AND rh.run_id = l.run_id
+		GROUP BY l.asset_id`, ids)
 	if err != nil {
 		return fmt.Errorf("querying last runs: %w", err)
 	}
@@ -785,4 +831,32 @@ func RunStatusOf(eventType string) string {
 		return "running"
 	}
 	return ""
+}
+
+// uniqueNodes keeps one node per asset. An asset that is both upstream and downstream of the root, such as a job that reads and writes the same table, is found by both walks; the copy nearest the root is kept.
+func uniqueNodes(nodes []LineageNode) []LineageNode {
+	index := make(map[string]int, len(nodes))
+	out := make([]LineageNode, 0, len(nodes))
+	for _, n := range nodes {
+		key := n.ID
+		if n.Asset != nil && n.Asset.MRN != nil {
+			key = *n.Asset.MRN
+		}
+		if i, ok := index[key]; ok {
+			if abs(n.Depth) < abs(out[i].Depth) {
+				out[i] = n
+			}
+			continue
+		}
+		index[key] = len(out)
+		out = append(out, n)
+	}
+	return out
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }
