@@ -225,6 +225,7 @@ func TestReplaySpark(t *testing.T) {
 	failed := h.runsOf(writeNegative)
 	require.Len(t, failed, 1)
 	assert.Equal(t, "FAIL", failed[0].Status)
+	assert.Equal(t, "[USER_RAISED_EXCEPTION] amount must be negative SQLSTATE: P0001", failed[0].ErrorMessage, "read from Spark's own spark.exception facet")
 	scans := h.runsOf(schemaScan)
 	require.Len(t, scans, 2)
 	for _, r := range scans {

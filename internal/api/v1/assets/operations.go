@@ -223,6 +223,12 @@ func (h *Handler) applyCreateExtras(r *http.Request, created *asset.Asset, req C
 }
 
 func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
+	// The asset page shows its Run history tab from this flag, which the asset queries leave unset.
+	if has, err := h.assetService.HasRunHistory(r.Context(), result.ID); err != nil {
+		log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to check for run history")
+	} else {
+		result.HasRunHistory = has
+	}
 	resp := &AssetResponse{Asset: result}
 
 	enrichedLinks, err := h.assetRuleService.GetEnrichedLinks(r.Context(), result.ID)

@@ -111,7 +111,15 @@ func TestRunFacetsAccumulateAcrossARun(t *testing.T) {
 	assert.Contains(t, facets, "processing_engine")
 	assert.Contains(t, facets, "nominalTime")
 	assert.Equal(t, "division by zero", facets["errorMessage"].(map[string]any)["message"])
-	assert.Equal(t, "FAIL", h.runsOf(jobMRN("nightly"))[0].Status)
+	has, err := h.assets.HasRunHistory(h.ctx, h.asset(jobMRN("nightly")).ID)
+	require.NoError(t, err)
+	assert.True(t, has, "the asset page offers the job's Run history tab")
+	has, err = h.assets.HasRunHistory(h.ctx, h.asset(pgMRN("a")).ID)
+	require.NoError(t, err)
+	assert.False(t, has)
+	run := h.runsOf(jobMRN("nightly"))[0]
+	assert.Equal(t, "FAIL", run.Status)
+	assert.Equal(t, "division by zero", run.ErrorMessage, "the run history shows why the run failed")
 }
 
 func TestJobTypeComesFromMergedJobFacets(t *testing.T) {

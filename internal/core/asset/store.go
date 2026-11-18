@@ -69,6 +69,7 @@ type Repository interface {
 	ResolveMRNs(ctx context.Context, mrns []string) ([]string, error)
 	MoveMRN(ctx context.Context, assetID, newMRN, reason string) error
 	AddAlias(ctx context.Context, assetID, alias, reason string) error
+	HasRunHistory(ctx context.Context, assetID string) (bool, error)
 	MergeAssets(ctx context.Context, loserID, winnerID string) error
 	Aliases(ctx context.Context, assetID string) ([]string, error)
 	ListContributions(ctx context.Context, assetID string) ([]Contribution, error)
@@ -1250,6 +1251,7 @@ func (r *PostgresRepository) GetRunHistory(ctx context.Context, assetID string, 
 			EndTime:      endTime,
 			Type:         jobType,
 			EventTime:    eventTime,
+			ErrorMessage: runErrorMessage(runFacetsJSON),
 		}
 
 		if run.StartTime != nil && run.EndTime != nil {
@@ -1557,4 +1559,49 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 
 	r.recorder.RecordDBQuery(ctx, "get_my_assets", time.Since(queryStart), true)
 	return assets, total, nil
+}
+
+// maxRunErrorLength keeps a run's error to a readable summary; the full facet stays in the run history.
+const maxRunErrorLength = 2000
+
+// runErrorMessage reads why a run failed from its merged run facets: the OpenLineage errorMessage facet, or the spark.exception facet openlineage-spark sends instead.
+func runErrorMessage(runFacetsJSON []byte) string {
+	if len(runFacetsJSON) == 0 {
+		return ""
+	}
+	var facets map[string]json.RawMessage
+	if err := json.Unmarshal(runFacetsJSON, &facets); err != nil {
+		return ""
+	}
+	for _, key := range []string{"errorMessage", "spark.exception"} {
+		var f struct {
+			Message    string `json:"message"`
+			StackTrace string `json:"stackTrace"`
+			Deleted    bool   `json:"_deleted"`
+		}
+		if raw, ok := facets[key]; !ok || json.Unmarshal(raw, &f) != nil || f.Deleted {
+			continue
+		}
+		msg := strings.TrimSpace(f.Message)
+		if msg == "" {
+			msg, _, _ = strings.Cut(strings.TrimSpace(f.StackTrace), "\n")
+		}
+		if msg == "" {
+			continue
+		}
+		if r := []rune(msg); len(r) > maxRunErrorLength {
+			msg = string(r[:maxRunErrorLength]) + "…"
+		}
+		return msg
+	}
+	return ""
+}
+
+// HasRunHistory reports whether any run has been recorded against an asset, through the run_history asset_id index.
+func (r *PostgresRepository) HasRunHistory(ctx context.Context, assetID string) (bool, error) {
+	var has bool
+	if err := r.db.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM run_history WHERE asset_id = $1)`, assetID).Scan(&has); err != nil {
+		return false, fmt.Errorf("checking run history: %w", err)
+	}
+	return has, nil
 }

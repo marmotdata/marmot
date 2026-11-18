@@ -167,6 +167,8 @@ type RunHistory struct {
 	DurationMs   *int64     `json:"duration_ms,omitempty"`
 	Type         string     `json:"type"`
 	EventTime    time.Time  `json:"event_time"`
+	// ErrorMessage is why a run failed, from the OpenLineage errorMessage facet or a producer's own exception facet; empty when no event said.
+	ErrorMessage string `json:"error_message,omitempty"`
 } // @name RunHistory
 
 type HistogramBucket struct {
@@ -214,6 +216,8 @@ type Service interface {
 	GetMetadataValues(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error)
 	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error)
+	// HasRunHistory reports whether any run has been recorded against an asset; Asset.HasRunHistory is left unset by list queries to keep them fast.
+	HasRunHistory(ctx context.Context, assetID string) (bool, error)
 	GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error)
 
 	AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error
@@ -354,6 +358,10 @@ func (s *service) GetRunHistoryHistogram(ctx context.Context, assetID string, da
 	}
 
 	return s.repo.GetRunHistoryHistogram(ctx, assetID, days)
+}
+
+func (s *service) HasRunHistory(ctx context.Context, assetID string) (bool, error) {
+	return s.repo.HasRunHistory(ctx, assetID)
 }
 
 func (s *service) GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error) {

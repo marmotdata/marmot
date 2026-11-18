@@ -17333,6 +17333,10 @@ const docTemplate = `{
                 "end_time": {
                     "type": "string"
                 },
+                "error_message": {
+                    "description": "ErrorMessage is why a run failed, from the OpenLineage errorMessage facet or a producer's own exception facet; empty when no event said.",
+                    "type": "string"
+                },
                 "event_time": {
                     "type": "string"
                 },
