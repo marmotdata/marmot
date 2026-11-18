@@ -5,7 +5,7 @@
 	import '../app.css';
 	import { page } from '$app/state';
 	import { auth, isAnonymousMode } from '$lib/stores/auth';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { m } from '$lib/paraglide/messages';
@@ -45,6 +45,14 @@
 	let checkingAnonymousMode = $state(true);
 	let manualNavigation = false;
 	let palette = $state<MmCommandPalette>();
+	let shell = $state<HTMLElement & { mainElement: HTMLElement | null }>();
+
+	// SvelteKit resets the window scroll, but under mm-app-shell its shadow <main> is what scrolls.
+	afterNavigate(({ type, from, to }) => {
+		if (type === 'link' && !to?.url.hash && from?.url.pathname !== to?.url.pathname) {
+			shell?.mainElement?.scrollTo({ top: 0 });
+		}
+	});
 
 	const path = $derived(page.url.pathname);
 	// Invitation links are opened by people who cannot sign in yet, so they get the bare sign-in layout too
@@ -396,7 +404,7 @@
 	{#if bare}
 		{@render children()}
 	{:else}
-		<mm-app-shell {bleed}>
+		<mm-app-shell {bleed} bind:this={shell}>
 			{#if activeAdvisory}
 				<div slot="banner">
 					<PluginAdvisoryBanner
