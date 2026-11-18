@@ -1,0 +1,12 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    description: Tables written by the upstream order loader.
+    tables:
+      - name: orders
+        description: One row per order.
+        columns:
+          - name: id
+            data_tests:
+              - not_null

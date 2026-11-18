@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
+.PHONY: swagger build run test clean dev release docker-build openlineage-it dev-deps generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
 	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
 	sdk-go sdk-go-generate sdk-go-lint sdk-go-test sdk-go-build sdk-go-clean \
 	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean \
@@ -79,6 +79,11 @@ fix:
 
 actionlint:
 	actionlint
+
+openlineage-it: ## Run real OpenLineage producers against a throwaway Marmot built from this checkout
+	test/integration/openlineage/stack.sh up
+	go test -tags openlineage_it -count=1 -v ./test/integration/openlineage/
+	@echo "Marmot is still running for a look; stop it with test/integration/openlineage/stack.sh down"
 
 docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .

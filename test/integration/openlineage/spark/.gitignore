@@ -1,0 +1,6 @@
+work/
+.ivy/
+logs/
+spark-warehouse/
+metastore_db/
+derby.log

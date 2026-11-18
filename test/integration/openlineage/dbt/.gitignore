@@ -1,0 +1,9 @@
+.venv/
+target/
+target-fail/
+dbt_packages/
+logs/
+warehouse/
+*.duckdb
+*.duckdb.wal
+.user.yml

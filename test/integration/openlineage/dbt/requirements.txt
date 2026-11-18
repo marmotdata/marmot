@@ -1,0 +1,7 @@
+openlineage-dbt==1.55.0
+openlineage-python==1.55.0
+openlineage-integration-common==1.55.0
+openlineage-sql==1.55.0
+dbt-core==1.12.7
+dbt-duckdb==1.11.1
+duckdb==2.0.0

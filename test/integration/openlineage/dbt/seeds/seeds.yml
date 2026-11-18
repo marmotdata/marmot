@@ -1,0 +1,10 @@
+version: 2
+seeds:
+  - name: raw_customers
+    description: Customer master data loaded from CSV.
+    config:
+      column_types:
+        id: integer
+        first_name: varchar
+        last_name: varchar
+        country: varchar

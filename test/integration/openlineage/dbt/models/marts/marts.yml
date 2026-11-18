@@ -1,0 +1,12 @@
+version: 2
+models:
+  - name: customer_orders
+    description: Order totals per customer.
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique
+          - not_null
+      - name: order_count
+        data_tests:
+          - not_null

@@ -1,0 +1,24 @@
+name: shop
+version: "1.0.0"
+config-version: 2
+profile: shop
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+target-path: target
+clean-targets: [target, dbt_packages, logs]
+
+# The raw.orders source is not managed by dbt: an upstream loader would normally create it, here the hook stands in for that loader.
+on-run-start:
+  - "{{ create_raw_orders() }}"
+
+vars:
+  include_broken: false
+
+models:
+  shop:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
