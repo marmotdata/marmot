@@ -52,8 +52,9 @@ func TestParseEventAcceptsEveryRunEventType(t *testing.T) {
 }
 
 func TestParseEventNormalisesTheEventType(t *testing.T) {
-	cases := map[string]string{"complete": "COMPLETE", " Fail ": "FAIL", "": "OTHER", "PAUSED": "OTHER"}
-	for in, want := range cases {
+	cases := []struct{ in, want string }{{"complete", "COMPLETE"}, {"\tFail\n", "FAIL"}, {"", "OTHER"}, {"PAUSED", "OTHER"}}
+	for _, c := range cases {
+		in, want := c.in, c.want
 		e := runEventJSON(in)
 		if in == "" {
 			delete(e, "eventType")

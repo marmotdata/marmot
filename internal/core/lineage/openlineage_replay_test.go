@@ -125,7 +125,7 @@ func dbtTest(name string) string  { return "mrn://asset/test/dbt/dbt-shop." + na
 
 func cols(pairs ...string) []string {
 	out := make([]string, 0, len(pairs)/2)
-	for i := 0; i < len(pairs); i += 2 {
+	for i := 0; i+1 < len(pairs); i += 2 {
 		out = append(out, pairs[i]+" => "+pairs[i+1])
 	}
 	return out
