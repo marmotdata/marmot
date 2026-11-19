@@ -59,7 +59,7 @@
 		"@lezer/common": "1.5.4",
 		"@lezer/highlight": "1.2.5",
 		"@marmotdata/css": "^0.1.8",
-		"@marmotdata/elements": "^0.1.8",
+		"@marmotdata/elements": "^0.1.9",
 		"@marmotdata/icons": "^0.1.8",
 		"@marmotdata/svelte": "^0.1.8",
 		"@marmotdata/tokens": "^0.1.8",

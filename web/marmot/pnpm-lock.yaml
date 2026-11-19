@@ -71,14 +71,14 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8
       '@marmotdata/elements':
-        specifier: ^0.1.8
-        version: 0.1.8
+        specifier: ^0.1.9
+        version: 0.1.9
       '@marmotdata/icons':
         specifier: ^0.1.8
         version: 0.1.8
       '@marmotdata/svelte':
         specifier: ^0.1.8
-        version: 0.1.8(@marmotdata/elements@0.1.8)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
+        version: 0.1.8(@marmotdata/elements@0.1.9)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
       '@marmotdata/tokens':
         specifier: ^0.1.8
         version: 0.1.8
@@ -563,11 +563,14 @@ packages:
   '@marmotdata/css@0.1.8':
     resolution: {integrity: sha512-uW/9nnvIYosIyMHcv2jTBqXN716qoWeI8At6gx+eFUH1GDtQoYHZhzcl+Fe2yr37DYHCjHxaYVv3H8H1d+0/jA==}
 
-  '@marmotdata/elements@0.1.8':
-    resolution: {integrity: sha512-Omb3buX+2yMY72z77aUvEk3pQmhI4yy+Gu466VMfPExBNWmr61dEeH7W26w/DLLDk6ggW320mGXEX4yQHn3kUg==}
+  '@marmotdata/elements@0.1.9':
+    resolution: {integrity: sha512-G0Sumr5zsAf92Q46TiX50bxLJoCHIlRGQ6b9wZDo+k2JWZRm42uD9rfLZb/gRTyY0OW5+81p4SmJ6ctzveyyFQ==}
 
   '@marmotdata/icons@0.1.8':
     resolution: {integrity: sha512-zSPSWwfNPpCztuz9VE5iKxW1pmVJ7ehngMmJelkNgHptN2PMaB4/fz+BqGt0ZxF14u06oUDNlShH9mPYvvd8ew==}
+
+  '@marmotdata/icons@0.1.9':
+    resolution: {integrity: sha512-SAcXO9Or7hAN2CThlTaiGNEYdCIAwljyfSgoqoHzAw9qmSae90mb9l5OR55Zad2h0fovOnKhQwF6jGc/HrQmDg==}
 
   '@marmotdata/svelte@0.1.8':
     resolution: {integrity: sha512-V7lmLNt5WhYEgpUSaR6QZoKJtciHEemfaQdt3pV2BxOPgmkNsgfdg0U7q7XxOgAv35U6bxrEb/m9g19Iq85zvg==}
@@ -577,6 +580,9 @@ packages:
 
   '@marmotdata/tokens@0.1.8':
     resolution: {integrity: sha512-zecFqh5QNDLN9B1VHo6yOV39ATd6btIAsL+W4gB7fwJ6j0XydxFUaw8FVYDYoOFoE/UnXeqX2SWSZjCh2/NMZA==}
+
+  '@marmotdata/tokens@0.1.9':
+    resolution: {integrity: sha512-pQK/7qNn09aiUDD7UhBCkrFQCKQZwEY5IVkfqfBgyehxF2HnUyX1llds/c8ZPYIOTWENzvMutmv/QKM/b/nKig==}
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -3462,7 +3468,7 @@ snapshots:
     dependencies:
       '@marmotdata/tokens': 0.1.8
 
-  '@marmotdata/elements@0.1.8':
+  '@marmotdata/elements@0.1.9':
     dependencies:
       '@codemirror/autocomplete': 6.20.4
       '@codemirror/commands': 6.11.1
@@ -3477,8 +3483,8 @@ snapshots:
       '@floating-ui/dom': 1.8.0
       '@lezer/highlight': 1.2.5
       '@lit-labs/virtualizer': 2.1.1
-      '@marmotdata/icons': 0.1.8
-      '@marmotdata/tokens': 0.1.8
+      '@marmotdata/icons': 0.1.9
+      '@marmotdata/tokens': 0.1.9
       '@tanstack/virtual-core': 3.19.8
       codemirror: 6.0.2
       d3-array: 3.2.4
@@ -3495,12 +3501,19 @@ snapshots:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@marmotdata/svelte@0.1.8(@marmotdata/elements@0.1.8)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
+  '@marmotdata/icons@0.1.9':
     dependencies:
-      '@marmotdata/elements': 0.1.8
+      lit: 3.3.3
+      tslib: 2.8.1
+
+  '@marmotdata/svelte@0.1.8(@marmotdata/elements@0.1.9)(svelte@5.57.2(@typescript-eslint/types@8.71.2))':
+    dependencies:
+      '@marmotdata/elements': 0.1.9
       svelte: 5.57.2(@typescript-eslint/types@8.71.2)
 
   '@marmotdata/tokens@0.1.8': {}
+
+  '@marmotdata/tokens@0.1.9': {}
 
   '@mixmark-io/domino@2.2.0': {}
 
