@@ -159,7 +159,45 @@ func (s *service) ProcessOpenLineageEvent(ctx context.Context, event *RunEvent, 
 	if err := s.storeRunHistory(ctx, event, job.assetID); err != nil {
 		return fmt.Errorf("failed to store run history: %w", err)
 	}
+	s.linkParentRuns(ctx, event, job)
 	return nil
+}
+
+// linkParentRuns shows which job started which: a run's parent facet names the run that started it, such as a Spark application starting its jobs, a dbt invocation its models and tests, or an Airflow task a Spark application. Marmot knows which job recorded that run, so the parent job contains the child job, whatever produced either. Parents and children can arrive in either order, so a run also links the jobs whose runs named it as their parent.
+func (s *service) linkParentRuns(ctx context.Context, event *RunEvent, job filedJob) {
+	link := func(parent, child string) {
+		if parent == "" || child == "" || parent == child {
+			return
+		}
+		if _, err := s.CreateDirectLineage(ctx, parent, child, "CONTAINS", ""); err != nil {
+			log.Warn().Err(err).Str("parent", parent).Str("child", child).Msg("Failed to link a job to the job that started it")
+		}
+	}
+	if runID := parentRunID(event); runID != "" && runID != event.Run.RunID {
+		parent, err := s.repo.RunJob(ctx, runID)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to find the parent run's job")
+		}
+		link(parent, job.mrn)
+	}
+	children, err := s.repo.ChildJobs(ctx, event.Run.RunID)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to find the runs this run started")
+	}
+	for _, child := range children {
+		link(job.mrn, child)
+	}
+}
+
+// parentRunID reads the run id a run's parent facet names.
+func parentRunID(event *RunEvent) string {
+	parent := facetMap(event.Run.Facets, "parent")
+	if parent == nil {
+		parent = facetMap(event.Run.Facets, "parentRun")
+	}
+	run, _ := parent["run"].(map[string]interface{})
+	id, _ := run["runId"].(string)
+	return id
 }
 
 // filedJob is a job asset an event was filed against.

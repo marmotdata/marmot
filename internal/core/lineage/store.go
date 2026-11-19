@@ -26,6 +26,10 @@ type Repository interface {
 	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
 	// RunInputs lists the input datasets earlier events of a run named, newest first.
 	RunInputs(ctx context.Context, runID string) ([]Dataset, error)
+	// RunJob returns the MRN of the job asset that recorded a run, or an empty string when no event of that run has arrived.
+	RunJob(ctx context.Context, runID string) (string, error)
+	// ChildJobs lists the MRNs of the job assets whose runs name runID as their parent run.
+	ChildJobs(ctx context.Context, runID string) ([]string, error)
 }
 
 // ObservedEdge represents a runtime-observed lineage edge — typically emitted by
@@ -641,6 +645,33 @@ func (r *PostgresRepository) RunInputs(ctx context.Context, runID string) ([]Dat
 		out = append(out, ds...)
 	}
 	return out, rows.Err()
+}
+
+// RunJob returns the MRN of the job asset that recorded a run.
+func (r *PostgresRepository) RunJob(ctx context.Context, runID string) (string, error) {
+	var m string
+	err := r.db.QueryRow(ctx, `
+		SELECT a.mrn FROM run_history rh JOIN assets a ON a.id = rh.asset_id
+		WHERE rh.run_id = $1 LIMIT 1`, runID).Scan(&m)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("finding the job of run %s: %w", runID, err)
+	}
+	return m, nil
+}
+
+// ChildJobs lists the job assets whose runs name runID in their parent run facet.
+func (r *PostgresRepository) ChildJobs(ctx context.Context, runID string) ([]string, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT DISTINCT a.mrn FROM run_history rh JOIN assets a ON a.id = rh.asset_id
+		WHERE (rh.run_facets ? 'parent' OR rh.run_facets ? 'parentRun')
+		  AND COALESCE(rh.run_facets->'parent'->'run'->>'runId', rh.run_facets->'parentRun'->'run'->>'runId') = $1`, runID)
+	if err != nil {
+		return nil, fmt.Errorf("finding the runs %s started: %w", runID, err)
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[string])
 }
 
 // BatchObservedLineage upserts a batch of runtime-observed edges in a single

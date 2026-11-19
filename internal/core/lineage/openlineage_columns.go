@@ -131,7 +131,7 @@ func columnMappings(out *Dataset) map[datasetKey]columnSources {
 	return result
 }
 
-// transformationLabels describes how an input field became the output column: the subtype of each transformation, or its type when it has none, with its description and a note when the value is masked. Producers on facets before 1-2-0 describe it once per output column instead.
+// transformationLabels describes how an input field became the output column: the subtype of each transformation, or its type when it has none, with its description and a note when the value is masked. A plain copy, IDENTITY or a bare DIRECT, is no transformation and gets no label, so only columns that really changed are marked as transformed. Producers on facets before 1-2-0 describe it once per output column instead.
 func transformationLabels(field map[string]interface{}, legacyType, legacyDesc string) []string {
 	var out []string
 	list, _ := field["transformations"].([]interface{})
@@ -144,23 +144,30 @@ func transformationLabels(field map[string]interface{}, legacyType, legacyDesc s
 		if label == "" {
 			label, _ = t["type"].(string)
 		}
-		if d, _ := t["description"].(string); d != "" {
-			label = strings.TrimSpace(label + " " + d)
+		desc, _ := t["description"].(string)
+		masked, _ := t["masking"].(bool)
+		if isPlainCopy(label) && desc == "" && !masked {
+			continue
 		}
-		if masked, _ := t["masking"].(bool); masked {
+		label = strings.TrimSpace(label + " " + desc)
+		if masked {
 			label = strings.TrimSpace(label + " (masked)")
 		}
 		if label != "" {
 			out = append(out, label)
 		}
 	}
-	if len(out) == 0 {
-		label := strings.TrimSpace(strings.TrimSpace(legacyType + " " + legacyDesc))
-		if label != "" {
+	if len(list) == 0 && !(isPlainCopy(legacyType) && legacyDesc == "") {
+		if label := strings.TrimSpace(legacyType + " " + legacyDesc); label != "" {
 			out = append(out, label)
 		}
 	}
 	return out
+}
+
+// isPlainCopy reports whether a transformation name says the value was carried over unchanged.
+func isPlainCopy(label string) bool {
+	return strings.EqualFold(label, "IDENTITY") || strings.EqualFold(label, "DIRECT")
 }
 
 func appendLabel(existing, label string) string {

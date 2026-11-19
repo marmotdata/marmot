@@ -15,7 +15,7 @@ func duck(table string) string { return "mrn://asset/table/duckdb/shopdb.main." 
 func directCols(cols ...string) []string {
 	out := make([]string, len(cols))
 	for i, c := range cols {
-		out[i] = c + " => " + c + " (DIRECT)"
+		out[i] = c + " => " + c
 	}
 	return out
 }
@@ -163,6 +163,8 @@ func TestReplayDbt(t *testing.T) {
 		// broken_orders failed to build; its START still named its input, output and columns.
 		e(stgOrders, "CONSUMES", mBroken), e(mBroken, "PRODUCES", broken),
 		colEdge(stgOrders, broken, mBroken, cols("no_such_column", "no_such_column", "order_id", "order_id")...),
+		// dbt-ol test ran each data test as a child of the project run, so the project contains them too.
+		e(project, "CONTAINS", tCustomerOrders), e(project, "CONTAINS", tStgOrders), e(project, "CONTAINS", tStgCustomers), e(project, "CONTAINS", tSource),
 		// Each data test reads the dataset it checks.
 		e(customerOrders, "CONSUMES", tCustomerOrders), e(stgOrders, "CONSUMES", tStgOrders), e(stgCustomers, "CONSUMES", tStgCustomers), e(rawOrders, "CONSUMES", tSource),
 	}
@@ -198,21 +200,24 @@ func TestReplaySpark(t *testing.T) {
 
 	wantAssets := []string{rawOrders, customersCSV, customerOrders, revenue, negative, app, writeRaw, schemaScan, join, drop, ctas, ctasPlan, writeNegative}
 	wantEdges := []string{
+		// Every Spark job's parent facet names the application run, so the application contains each of them.
+		e(app, "CONTAINS", writeRaw), e(app, "CONTAINS", schemaScan), e(app, "CONTAINS", join), e(app, "CONTAINS", drop),
+		e(app, "CONTAINS", ctas), e(app, "CONTAINS", ctasPlan), e(app, "CONTAINS", writeNegative),
 		// df.write.parquet('/data/raw/orders')
 		e(writeRaw, "PRODUCES", rawOrders),
 		// Spark's schema-inference jobs read a dataset and are never finished.
 		e(rawOrders, "CONSUMES", schemaScan), e(customerOrders, "CONSUMES", schemaScan),
 		// The join of orders and customers.csv into marts/customer_orders.
 		e(rawOrders, "CONSUMES", join), e(customersCSV, "CONSUMES", join), e(join, "PRODUCES", customerOrders),
-		colEdge(customersCSV, customerOrders, join, "country => country (IDENTITY)", "customer_id => customer_id (IDENTITY)", "customer_name => customer_name (IDENTITY)"),
+		colEdge(customersCSV, customerOrders, join, "country => country", "customer_id => customer_id", "customer_name => customer_name"),
 		colEdge(rawOrders, customerOrders, join, "amount => lifetime_value (AGGREGATION, CONDITIONAL)", "order_id => order_count (AGGREGATION (masked))"), // Spark marks a count as masking its input.
 		// DROP TABLE IF EXISTS of a table that did not exist yet files nothing. The CTAS is reported twice, under the command and under its plan; the direct edge keeps the job that declared it first.
 		e(customerOrders, "CONSUMES", ctas), e(ctas, "PRODUCES", revenue),
 		e(customerOrders, "CONSUMES", ctasPlan), e(ctasPlan, "PRODUCES", revenue),
-		colEdge(customerOrders, revenue, ctas, "country => country (IDENTITY)", "lifetime_value => revenue (AGGREGATION)", "order_count => orders (AGGREGATION)"),
+		colEdge(customerOrders, revenue, ctas, "country => country", "lifetime_value => revenue (AGGREGATION)", "order_count => orders (AGGREGATION)"),
 		// The write that failed its assertion.
 		e(rawOrders, "CONSUMES", writeNegative), e(writeNegative, "PRODUCES", negative),
-		colEdge(rawOrders, negative, writeNegative, "amount => amount (IDENTITY)", "amount => check (CONDITIONAL)", "customer_id => customer_id (IDENTITY)", "order_id => order_id (IDENTITY)", "ordered_at => ordered_at (IDENTITY)", "status => status (IDENTITY)"),
+		colEdge(rawOrders, negative, writeNegative, "amount => amount", "amount => check (CONDITIONAL)", "customer_id => customer_id", "order_id => order_id", "ordered_at => ordered_at", "status => status"),
 	}
 	requireGraph(t, graph{Nodes: wantAssets, Edges: wantEdges}, graph{Nodes: h.allMRNs(), Edges: h.allEdges()})
 

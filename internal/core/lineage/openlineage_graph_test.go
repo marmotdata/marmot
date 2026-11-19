@@ -251,7 +251,7 @@ func TestColumnLineageLandsOnTheRightColumns(t *testing.T) {
 		Edges: []string{
 			e(orders, "CONSUMES", j), e(customers, "CONSUMES", j), e(j, "PRODUCES", revenue),
 			colEdge(orders, revenue, j, "status,total => revenue (AGGREGATION sum, FILTER)"),
-			colEdge(customers, revenue, j, "name => customer (IDENTITY)"),
+			colEdge(customers, revenue, j, "name => customer"),
 		},
 	}, h.lineageOf(revenue, 10, "upstream"))
 }
@@ -275,4 +275,40 @@ func TestConcurrentEventsMakeOneAssetAndOneEdge(t *testing.T) {
 	a, b, j1 := pgMRN("a"), pgMRN("b"), jobMRN("j1")
 	assert.ElementsMatch(t, []string{a, b, j1}, h.allMRNs())
 	assert.Equal(t, sorted([]string{e(a, "CONSUMES", j1), e(j1, "PRODUCES", b)}), h.allEdges())
+}
+
+// A run's parent facet names the run that started it. The job that recorded that run contains the child job, whichever arrives first and whatever produced them.
+func TestParentRunsContainTheirChildren(t *testing.T) {
+	child := func(runID, job, parentRun string) map[string]any {
+		ev := runEvent("COMPLETE", runID, job, []ds{pgTable("a")}, []ds{pgTable("b")})
+		ev["run"].(map[string]any)["facets"] = map[string]any{
+			"parent": facet("https://openlineage.io/spec/facets/1-2-0/ParentRunFacet.json", map[string]any{
+				"run": map[string]any{"runId": parentRun},
+				"job": map[string]any{"namespace": "shop", "name": "app"},
+			}),
+		}
+		return ev
+	}
+	t.Run("parent first", func(t *testing.T) {
+		h := newHarness(t)
+		h.sendJSON(runEvent("START", "app-run", "app", nil, nil))
+		h.sendJSON(child("c1", "app.step_one", "app-run"))
+		h.sendJSON(child("c2", "app.step_two", "app-run"))
+		assert.Contains(t, h.allEdges(), e(jobMRN("app"), "CONTAINS", jobMRN("app.step_one")))
+		assert.Contains(t, h.allEdges(), e(jobMRN("app"), "CONTAINS", jobMRN("app.step_two")))
+	})
+	t.Run("children first", func(t *testing.T) {
+		h := newHarness(t)
+		h.sendJSON(child("c1", "app.step_one", "app-run"))
+		assert.NotContains(t, h.allMRNs(), jobMRN("app"), "an unseen parent is not invented")
+		h.sendJSON(runEvent("COMPLETE", "app-run", "app", nil, nil))
+		assert.Contains(t, h.allEdges(), e(jobMRN("app"), "CONTAINS", jobMRN("app.step_one")))
+	})
+	t.Run("a parent run that never arrives links nothing", func(t *testing.T) {
+		h := newHarness(t)
+		h.sendJSON(child("c1", "app.step_one", "unknown-run"))
+		for _, edge := range h.allEdges() {
+			assert.NotContains(t, edge, "CONTAINS")
+		}
+	})
 }
