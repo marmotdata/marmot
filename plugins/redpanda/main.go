@@ -3,26 +3,12 @@ package main
 import (
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 
-	"github.com/marmotdata/marmot/plugins/kafka/kafka"
+	"github.com/marmotdata/marmot/plugins/redpanda/redpanda"
 )
 
 func main() {
-	spec := pluginsdk.DeriveSpec(kafka.Config{},
-		pluginsdk.Override("bootstrap_servers",
-			pluginsdk.Placeholder("seed-xxxxx.cloud.redpanda.com:9092"),
-		),
-	)
-
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
-		Meta: pluginsdk.Meta{
-			ID:            "redpanda",
-			MarmotVersion: ">=0.13.0",
-			Name:          "Redpanda",
-			Description:   "Discover topics from Redpanda clusters",
-			Icon:          "redpanda",
-			Category:      "streaming",
-			ConfigSpec:    spec,
-		},
-		Source: &kafka.Source{},
+		Meta:   redpanda.Meta(),
+		Source: &redpanda.Source{},
 	})
 }

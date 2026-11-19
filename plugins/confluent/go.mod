@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/confluent
 go 1.26.10
 
 require (
-	github.com/marmotdata/marmot/plugins/kafka v0.0.0-00010101000000-000000000000
+	github.com/marmotdata/marmot/plugins/kafka v0.4.1
 	github.com/marmotdata/plugin-sdk v0.0.0-20261109181633-c7fd293ab06a
 )
 
