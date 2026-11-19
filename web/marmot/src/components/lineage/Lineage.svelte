@@ -5,6 +5,7 @@
 		MmLineageCanvas,
 		MmLineageActivateDetail,
 		MmLineageAddDetail,
+		MmLineageEdgeActivateDetail,
 		MmLineageEdgeDeleteDetail,
 		MmLineageFullscreenDetail,
 		MmLineageOptionsDetail,
@@ -114,11 +115,19 @@
 		return () => window.removeEventListener('resize', measure);
 	});
 
+	// Selecting a job that moved columns draws its column edges and traces the first, so the columns of the tables either side open up on the canvas. Choosing anything else puts the job back.
+	let tracedJob = $derived(
+		selectedId &&
+			(lineageData?.edges ?? []).some((e) => e.job_mrn === selectedId && e.column_lineage?.length)
+			? selectedId
+			: ''
+	);
 	let graph = $derived(
 		buildGraph(lineageData, currentAsset, {
 			groupNeighbours: isAgentAsset,
 			expanded: expandedGroups,
-			groupName: (count, type) => m.lineage_cluster_asset_count({ count, type })
+			groupName: (count, type) => m.lineage_cluster_asset_count({ count, type }),
+			tracedJob
 		})
 	);
 
@@ -146,6 +155,65 @@
 				)
 			: []
 	);
+
+	// For a job, the column mappings it made between the assets it read and wrote, which the canvas draws through the job rather than as their own edge.
+	let selectedColumnEdges = $derived(
+		selectedNode
+			? (lineageData?.edges ?? []).filter(
+					(e) =>
+						e.column_lineage?.length &&
+						(e.job_mrn === selectedNode.id ||
+							(e.source === selectedNode.id && e.target === currentId) ||
+							(e.target === selectedNode.id && e.source === currentId))
+				)
+			: []
+	);
+
+	let tracing = false;
+	$effect(() => {
+		const job = tracedJob;
+		const target = canvas;
+		if (!target) return;
+		if (!job) {
+			if (tracing) target.clearColumnTrace();
+			tracing = false;
+			return;
+		}
+		const first = (lineageData?.edges ?? []).find(
+			(e) => e.job_mrn === job && e.column_lineage?.length
+		);
+		if (!first) return;
+		// The canvas lays the new edges out on its next frames, so wait for the edge before tracing it.
+		let tries = 0;
+		const attempt = () => {
+			if (target.traceColumns(first.source, first.target)) {
+				tracing = true;
+			} else if (++tries < 20) {
+				requestAnimationFrame(attempt);
+			}
+		};
+		requestAnimationFrame(attempt);
+	});
+
+	function isJob(id: string): boolean {
+		return lineageData?.edges.some((e) => e.job_mrn === id) ?? false;
+	}
+
+	// An edge that carries column mappings traces them on the canvas. Any other edge opens what it connects: the job it runs into or out of, or the asset at its far end.
+	function onEdgeActivate(e: CustomEvent<MmLineageEdgeActivateDetail>) {
+		if (e.detail.columns?.length) return;
+		const { source, target } = e.detail;
+		const pick = isJob(source)
+			? source
+			: isJob(target)
+				? target
+				: source === currentId
+					? target
+					: source;
+		if (!pick || pick === currentId || isGroupId(pick)) return;
+		selectedId = pick;
+		if (canvas) canvas.selected = pick;
+	}
 
 	let caption = $derived.by(() => {
 		if (error && !lineageData) return m.lineage_caption_not_loaded();
@@ -318,11 +386,11 @@
 			class="lineage__canvas"
 			label={m.lineage_of({ name: currentAsset.name })}
 			{depth}
-			max-depth={20}
-			show-observed={showObserved}
-			hide-structure={!showStructure}
+			maxDepth={20}
+			{showObserved}
+			hideStructure={!showStructure}
 			fullscreen={full}
-			hide-minimap={!full}
+			hideMinimap={!full}
 			editable={canManageAssets}
 			loading={loading && !lineageData}
 			error={lineageData ? '' : error}
@@ -333,6 +401,7 @@
 			onmm-fullscreen-change={onFullscreen}
 			onmm-add-lineage={onAddLineage}
 			onmm-edge-delete={onEdgeDelete}
+			onmm-edge-activate={onEdgeActivate}
 			onmm-retry={fetchLineage}
 		>
 			{#if expandedGroups.size}
@@ -350,6 +419,8 @@
 				node={selectedNode}
 				currentName={currentAsset.name}
 				edges={selectedEdges}
+				columnEdges={selectedColumnEdges}
+				{nameOf}
 				onClose={() => (selectedId = '')}
 			/>
 		{/if}
@@ -362,6 +433,8 @@
 			node={selectedNode}
 			currentName={currentAsset.name}
 			edges={selectedEdges}
+			columnEdges={selectedColumnEdges}
+			{nameOf}
 			onClose={() => (selectedId = '')}
 		/>
 	</BladeSlot>

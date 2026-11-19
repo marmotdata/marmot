@@ -19,6 +19,8 @@
 		node,
 		currentName,
 		edges,
+		columnEdges = edges,
+		nameOf = (id: string) => id,
 		onClose
 	}: {
 		node: LineageNode;
@@ -26,6 +28,10 @@
 		currentName: string;
 		/** Stored edges directly between this asset and the current one. */
 		edges: LineageEdge[];
+		/** Edges whose column mappings to list: those between this asset and the current one, and for a job every edge that names it. */
+		columnEdges?: LineageEdge[];
+		/** Names an asset by its id, to label each mapping with the assets it joins. */
+		nameOf?: (id: string) => string;
 		onClose: () => void;
 	} = $props();
 
@@ -97,14 +103,20 @@
 			.pop() ?? ''
 	);
 	let job = $derived(edges.find((e) => e.job_mrn)?.job_mrn ?? '');
-	// Column mappings on the edges between this asset and the one in view, one line per output column, so they stay readable when the canvas hides the direct edge behind its job.
-	let columnMappings = $derived(
-		edges.flatMap((e) =>
-			(e.column_lineage ?? []).map(
-				(c) =>
-					`${(c.from_columns ?? []).join(', ')} → ${c.to_column}${c.transform ? ` (${c.transform})` : ''}`
-			)
-		)
+	// Column mappings, one line per output column, each naming the assets it joins, so they stay readable when the canvas draws the data flowing through a job rather than straight across.
+	// Column mappings grouped by the pair of assets they join, each output column next to the columns it came from, so they stay readable when the canvas draws the data flowing through a job.
+	let columnGroups = $derived(
+		columnEdges
+			.filter((e) => e.column_lineage?.length)
+			.map((e) => ({
+				key: `${e.source}\n${e.target}`,
+				heading: `${nameOf(e.source)} → ${nameOf(e.target)}`,
+				rows: (e.column_lineage ?? []).map((c) => ({
+					to: c.to_column,
+					from: (c.from_columns ?? []).join(', '),
+					how: c.transform ?? ''
+				}))
+			}))
 	);
 	let declaredBy = $derived(
 		[...new Set(edges.map((e) => e.declared_by).filter((d): d is string => !!d))].join(', ')
@@ -226,13 +238,24 @@
 		</mm-description-list>
 	</mm-blade-section>
 
-	{#if columnMappings.length}
+	{#if columnGroups.length}
 		<mm-blade-section heading={m.lineage_blade_columns()}>
-			<mm-list dense aria-label={m.lineage_blade_columns()}>
-				{#each columnMappings as mapping (mapping)}
-					<mm-list-item>{mapping}</mm-list-item>
+			<div class="mm-stack" style="--mm-gap: var(--space-4)">
+				{#each columnGroups as group (group.key)}
+					<div class="mm-stack" style="--mm-gap: var(--space-2)">
+						<mm-text variant="caption" tone="secondary">{group.heading}</mm-text>
+						<mm-description-list>
+							{#each group.rows as row (row.to)}
+								<mm-description term={row.to} mono
+									>{row.from}{#if row.how}<mm-text variant="caption" tone="secondary">
+											· {row.how.toLowerCase()}</mm-text
+										>{/if}</mm-description
+								>
+							{/each}
+						</mm-description-list>
+					</div>
 				{/each}
-			</mm-list>
+			</div>
 		</mm-blade-section>
 	{/if}
 

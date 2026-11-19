@@ -8,6 +8,9 @@
 	import '@marmotdata/elements/line-chart.js';
 	import type { Run } from '@marmotdata/elements/classes/run-strip.js';
 	import type { DataTableColumn } from '@marmotdata/elements/classes/data-table.js';
+	import { html } from 'lit';
+	import '@marmotdata/elements/code-sample.js';
+	import { BladeSlot } from '#lib/mm/index.ts';
 
 	// The Run history tab: the last 30 runs as a strip and a build-time line, then every run in a paged table.
 	let { asset }: { asset: Asset } = $props();
@@ -42,6 +45,19 @@
 
 	let recent = $state<RunHistoryEntry[]>([]);
 	let pageRuns = $state<RunHistoryEntry[]>([]);
+	// The run whose details are open beside the table, with its full error.
+	let openRun = $state<RunHistoryEntry | null>(null);
+
+	function dateTime(v?: string): string {
+		if (!v) return '';
+		return new Date(v).toLocaleString(getLocale(), {
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		});
+	}
 	let total = $state(0);
 	let currentPage = $state(1);
 	let loading = $state(true);
@@ -90,7 +106,13 @@
 
 	const baseColumns: DataTableColumn<Row>[] = [
 		{ key: 'run', header: m.asset_page_runs_col_run(), type: 'mono', width: 140 },
-		{ key: 'status', header: m.asset_page_runs_col_status(), type: 'status', width: 120 },
+		{
+			key: 'status',
+			header: m.asset_page_runs_col_status(),
+			width: 130,
+			// Every run gets a pill, a succeeded one too, so a column of outcomes reads at a glance.
+			render: (r) => html`<mm-status-pill state=${r.status}></mm-status-pill>`
+		},
 		{ key: 'job', header: m.asset_page_runs_col_job() },
 		{
 			key: 'started',
@@ -208,6 +230,8 @@
 				{loading}
 				error={error || undefined}
 				onmm-retry={load}
+				onmm-row-activate={(e: CustomEvent<{ row: Row }>) =>
+					(openRun = pageRuns.find((r) => r.id === e.detail.row.id) ?? null)}
 			></mm-data-table>
 			{#if total > PAGE_SIZE}
 				<mm-pagination
@@ -221,4 +245,45 @@
 			{/if}
 		</div>
 	</div>
+{/if}
+
+{#if openRun}
+	<BladeSlot label={m.asset_page_run_label()}>
+		<mm-details-blade closable onmm-close={() => (openRun = null)}>
+			<span slot="heading">{m.asset_page_run_heading({ id: openRun.run_id.slice(0, 12) })}</span>
+			<mm-blade-section heading={m.lineage_blade_at_a_glance()}>
+				<mm-description-list>
+					<mm-description term={m.asset_page_runs_col_status()}
+						><mm-status-pill state={status(openRun.status)}></mm-status-pill></mm-description
+					>
+					<mm-description term={m.asset_page_runs_col_job()}
+						>{openRun.job_namespace
+							? `${openRun.job_namespace} / ${openRun.job_name}`
+							: openRun.job_name}</mm-description
+					>
+					{#if openRun.start_time}
+						<mm-description term={m.asset_page_runs_col_started()}
+							>{dateTime(openRun.start_time)}</mm-description
+						>
+					{/if}
+					{#if openRun.end_time}
+						<mm-description term={m.asset_page_run_ended()}
+							>{dateTime(openRun.end_time)}</mm-description
+						>
+					{/if}
+					{#if openRun.duration_ms}
+						<mm-description term={m.asset_page_runs_col_duration()}
+							>{formatMs(openRun.duration_ms)}</mm-description
+						>
+					{/if}
+					<mm-description term={m.asset_page_run_id()} mono>{openRun.run_id}</mm-description>
+				</mm-description-list>
+			</mm-blade-section>
+			{#if openRun.error_message}
+				<mm-blade-section heading={m.asset_page_runs_col_error()}>
+					<mm-code-sample language="text" wrap code={openRun.error_message}></mm-code-sample>
+				</mm-blade-section>
+			{/if}
+		</mm-details-blade>
+	</BladeSlot>
 {/if}

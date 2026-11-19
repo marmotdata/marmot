@@ -65,19 +65,23 @@ interface BuildOptions {
 	expanded: ReadonlySet<string>;
 	/** Names a group node, e.g. "12 tables". */
 	groupName: (count: number, type: string) => string;
+	/** A job whose column edges are drawn so their columns can be traced, while the person has it selected. */
+	tracedJob?: string;
 }
 
 /**
- * Drops the direct dataset edges OpenLineage adds alongside a job, which carry the job's column mappings, when the job and both of its edges are drawn: the data already visibly flows through the job, and a second line straight across reads as another path. The node blade still lists the mappings, and with the job off the canvas the direct edge is drawn so its columns can be traced.
+ * Drops the direct dataset edges OpenLineage adds alongside a job, which carry the job's column mappings, when the job and both of its edges are drawn: the data already visibly flows through the job, and a second line straight across reads as another path. The job's own edges stay drawn while it is selected (`tracedJob`), so its columns can be traced; with the job off the canvas they are always drawn.
  */
 function withoutJobShortcuts(
 	edges: LineageEdge[],
-	nodes: Map<string, LineageGraphNode>
+	nodes: Map<string, LineageGraphNode>,
+	tracedJob = ''
 ): LineageEdge[] {
 	const pairs = new Set(edges.map((e) => `${e.source}\n${e.target}`));
 	return edges.filter(
 		(e) =>
 			!e.job_mrn ||
+			e.job_mrn === tracedJob ||
 			e.source === e.job_mrn ||
 			e.target === e.job_mrn ||
 			!nodes.has(e.job_mrn) ||
@@ -118,16 +122,18 @@ export function buildGraph(
 		});
 	}
 
-	let edges: LineageGraphEdge[] = withoutJobShortcuts(data?.edges ?? [], nodes).map((e) => ({
-		source: e.source,
-		target: e.target,
-		kind: edgeKind(e.type),
-		origin: edgeOrigin(e),
-		...(e.observation_count ? { observations: e.observation_count } : {}),
-		...(e.last_seen_at ? { lastSeen: e.last_seen_at } : {}),
-		...(e.job_mrn ? { job: e.job_mrn } : {}),
-		...edgeColumns(e)
-	}));
+	let edges: LineageGraphEdge[] = withoutJobShortcuts(data?.edges ?? [], nodes, opts.tracedJob).map(
+		(e) => ({
+			source: e.source,
+			target: e.target,
+			kind: edgeKind(e.type),
+			origin: edgeOrigin(e),
+			...(e.observation_count ? { observations: e.observation_count } : {}),
+			...(e.last_seen_at ? { lastSeen: e.last_seen_at } : {}),
+			...(e.job_mrn ? { job: e.job_mrn } : {}),
+			...edgeColumns(e)
+		})
+	);
 
 	if (opts.groupNeighbours) {
 		const groups = new Map<string, string[]>();
