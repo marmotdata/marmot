@@ -74,6 +74,8 @@ Releases up to 0.13 named a job by the last part of its name, and named some dat
 - Lineage accumulates. When a job stops reading a dataset, the edge from it stays until someone removes it on the **Lineage** tab, because OpenLineage events never say that an input stopped being one.
 - A namespace Marmot has no mapping for, such as `crate://` or `azurecosmos://`, keeps the naming Marmot 0.13 used, so its datasets don't line up with any plugin's assets.
 - duck_lineage 0.2 reports a statement that fails as COMPLETE, so DuckDB runs always show as succeeded.
+- openlineage-spark reports the jobs Spark runs to work out a file's schema with a START and nothing after, so they show as running. It also reports a `CREATE TABLE AS SELECT` under two job names, so the table has two jobs writing it.
+- dbt-ol leaves seeds out of a model's inputs and sends no error message with a failed model. A seed reaches the models built on it through their column lineage only, and a failed model's run shows no error.
 - Facets Marmot doesn't read, such as `dataQualityAssertions` and `nominalTime`, are kept in the run history but not shown.
 
 ## Next steps

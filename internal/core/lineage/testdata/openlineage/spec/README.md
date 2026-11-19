@@ -14,4 +14,4 @@ These files are copied unchanged from the OpenLineage project so the tests can v
 - `facets/` is `spec/facets/*.json`.
 - `facet-examples/` is `spec/tests/`, the example facets the project validates its own schemas with.
 
-To move to a newer release, replace the three from the same tag and update the table above and `test/integration/openlineage/CONFORMANCE.md`.
+To move to a newer release, replace the three from the same tag and update the table above and `../events/README.md`.
