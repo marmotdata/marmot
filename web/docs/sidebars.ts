@@ -85,7 +85,15 @@ const sidebars: SidebarsConfig = {
         doc('Populating/Terraform', 'Terraform'),
         doc('Populating/Pulumi', 'Pulumi'),
         doc('Populating/Operator', 'Kubernetes operator'),
-        doc('open-lineage', 'OpenLineage'),
+        {
+          type: 'category',
+          label: 'OpenLineage',
+          link: {type: 'doc', id: 'open-lineage'},
+          items: [
+            doc('Populating/send-openlineage-events', 'Send events'),
+            doc('Populating/openlineage-reference', 'Reference'),
+          ],
+        },
         doc('Populating/API', 'API'),
         doc('Configure/serving-plugins', 'Serve queries from your network'),
         doc('Plugins/index', 'Plugins'),
