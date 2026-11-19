@@ -46,8 +46,8 @@
       "digest": "sha256:987fa235889f38aae2f93439ad58e5031bf4bf232056a7cc3948d6fdb919f722"
     },
     "confluent": {
-      "version": "0.4.1",
-      "digest": "sha256:1912134061905228200ef827556540332e9905e604247a0d9b877c8c569a5116"
+      "version": "0.5.0",
+      "digest": "sha256:9a0cbc302f77bcad2df590df1ad2734645360f38137179d221b3ccf68d936af9"
     },
     "couchbase": {
       "version": "0.4.0",
@@ -230,8 +230,8 @@
       "digest": "sha256:55fa64797e7f0c45315fda0a1545c881cc3ef26c1db71459e418728a55c5de7d"
     },
     "redpanda": {
-      "version": "0.4.1",
-      "digest": "sha256:ff05e7ae1ad1595b04767d7eea7046ac169e7e3c2f00be2addb6a902d9f41b2f"
+      "version": "0.5.0",
+      "digest": "sha256:46e5575231656bb9cbde88a5470c2008e3ed184792ee0341c52cbaf5b890b2d7"
     },
     "s3": {
       "version": "0.4.0",
