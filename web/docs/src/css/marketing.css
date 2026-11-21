@@ -25,6 +25,10 @@
 	html {
 		scroll-padding-top: var(--ifm-navbar-height, 57px);
 	}
+	/* Redoc offsets its own jumps and scroll spy by scrollYOffset (docusaurus.config.ts), so the padding here would push each section down twice and the menu would highlight the one before it. */
+	html:has(.redocusaurus) {
+		scroll-padding-top: 0;
+	}
 	.site-header {
 		display: contents;
 	}

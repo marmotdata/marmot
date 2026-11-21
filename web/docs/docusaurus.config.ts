@@ -302,6 +302,8 @@ Preferred paths: connect agents through the built-in MCP server (https://marmotd
         theme: {
           // Change with your site colors
           primaryColor: "#d25a30",
+          // Redoc's default offset is the selector nav.navbar, which mm-site-header does not render, so it fell back to 0 and the menu highlighted the section before the one in view. The header is sticky and 57px tall (--ifm-navbar-height).
+          options: { scrollYOffset: 57 },
         },
       },
     ] satisfies Redocusaurus.PresetEntry,
