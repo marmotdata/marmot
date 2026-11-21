@@ -73,7 +73,9 @@
 	$effect(() => {
 		setCrumbs([
 			{ label: m.knowledge_heading(), href: resolve('/knowledge') },
-			...(kind ? [{ label: kind.label, href: `${resolve('/knowledge')}?kind=${kind.id}` }] : []),
+			...(kind
+				? [{ label: kind.label, href: `${resolve('/knowledge/browse')}?kind=${kind.id}` }]
+				: []),
 			{ label: asset?.name ?? m.knowledge_entry_loading() }
 		]);
 	});

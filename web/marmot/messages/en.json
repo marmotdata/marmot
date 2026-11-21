@@ -3798,7 +3798,6 @@
 	"nav_knowledge": "Knowledge",
 	"knowledge_heading": "Knowledge",
 	"knowledge_page_title": "Knowledge - Marmot",
-	"knowledge_description": "Policies, decisions, runbooks, brand voice, writing style and design systems: what your company knows that is not a dataset. Each entry has an owner and a status, so people and assistants can tell what is current.",
 	"knowledge_new": "New entry",
 	"knowledge_new_heading": "New knowledge entry",
 	"knowledge_new_page_title": "New knowledge entry - Marmot",
@@ -3894,11 +3893,6 @@
 			}
 		}
 	],
-	"knowledge_kpi_label": "Knowledge at a glance",
-	"knowledge_kpi_total": "Entries",
-	"knowledge_kpi_current": "In use",
-	"knowledge_kpi_pending": "Not in use yet",
-	"knowledge_kpi_review_due": "Review due",
 	"knowledge_entry_page_title": "{name} - Knowledge - Marmot",
 	"knowledge_entry_loading": "Loading",
 	"knowledge_entry_not_found": "This entry does not exist, or it is not a knowledge entry.",
@@ -3999,5 +3993,39 @@
 	"knowledge_facet_team": "Owning team",
 	"knowledge_source_direct": "Linked directly",
 	"knowledge_source_rule": "Matched by a rule",
-	"knowledge_source_inherited": "From a container"
+	"knowledge_source_inherited": "From a container",
+	"knowledge_home_description": "Policies, decisions, runbooks and the rules for how you write and design, each with an owner and a status, so you can tell what is current.",
+	"knowledge_browse_heading": "Browse knowledge",
+	"knowledge_browse_page_title": "Browse knowledge - Marmot",
+	"knowledge_browse_all": "Browse all",
+	"knowledge_ask_label": "Search knowledge",
+	"knowledge_ask_placeholder": "What do you need to know? Try expenses, on-call or tone of voice",
+	"knowledge_ask_hint": "Searches titles, summaries, details and write-ups. Entries in use come first.",
+	"knowledge_ask_no_match": "Nothing written down matches yet. Try other words, or write it down so the next person finds it.",
+	"knowledge_ask_write_it": "Write it down",
+	"knowledge_ask_who": "Ask {names}",
+	"knowledge_best_match": "Best match",
+	"knowledge_more_results": "More results",
+	"knowledge_results_label": "Search results",
+	"knowledge_see_all_results": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "See all {count} results",
+				"countPlural=other": "See all {count} results"
+			}
+		}
+	],
+	"knowledge_shelf_heading": "What is here",
+	"knowledge_shelf_description": "Each kind holds a different sort of knowledge. The number is how many are in use.",
+	"knowledge_shelf_count": "{kind} in use",
+	"knowledge_recent_heading": "Recently changed",
+	"knowledge_attention_mine": "Needs your attention",
+	"knowledge_attention_all": "Needs attention",
+	"knowledge_attention_link": "All overdue reviews",
+	"knowledge_attention_review": "Review was due {date}",
+	"knowledge_attention_pending": "Still {status}",
+	"knowledge_attention_clear": "Nothing is overdue for review and nothing is waiting in draft.",
+	"knowledge_teams_heading": "By team"
 }
