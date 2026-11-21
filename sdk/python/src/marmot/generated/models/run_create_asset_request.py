@@ -31,7 +31,15 @@ class RunCreateAssetRequest(BaseModel):
     description: StrictStr | None = None
     external_links: list[dict[str, StrictStr]] | None = None
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None,
+        description="MRN is the plugin's own MRN for the asset. Without it the server builds one from type, provider and name, which cannot tell apart two tables of the same name in different schemas.",
+    )
     name: StrictStr | None = None
+    previous_mrns: list[StrictStr] | None = Field(
+        default=None,
+        description="PreviousMRNs are MRNs earlier versions of the plugin gave the asset.",
+    )
     providers: list[StrictStr] | None = None
     var_schema: dict[str, Any] | None = Field(default=None, alias="schema")
     sources: list[AssetSource] | None = None
@@ -44,7 +52,9 @@ class RunCreateAssetRequest(BaseModel):
         "description",
         "external_links",
         "metadata",
+        "mrn",
         "name",
+        "previous_mrns",
         "providers",
         "schema",
         "sources",
@@ -113,7 +123,9 @@ class RunCreateAssetRequest(BaseModel):
                 "description": obj.get("description"),
                 "external_links": obj.get("external_links"),
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
+                "previous_mrns": obj.get("previous_mrns"),
                 "providers": obj.get("providers"),
                 "schema": obj.get("schema"),
                 "sources": [AssetSource.from_dict(_item) for _item in obj["sources"]]

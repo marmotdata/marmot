@@ -39,6 +39,7 @@ class TestRunHistoryResponse(unittest.TestCase):
                     marmot.generated.models.run_history.RunHistory(
                         duration_ms = 56,
                         end_time = '',
+                        error_message = '',
                         event_time = '',
                         id = '',
                         job_name = '',

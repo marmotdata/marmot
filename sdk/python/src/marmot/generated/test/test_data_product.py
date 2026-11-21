@@ -46,6 +46,7 @@ class TestDataProduct(unittest.TestCase):
                 id = '',
                 manual_asset_count = 56,
                 metadata = { },
+                mrn = '',
                 name = '',
                 owners = [
                     marmot.generated.models.data_product_owner.DataProductOwner(

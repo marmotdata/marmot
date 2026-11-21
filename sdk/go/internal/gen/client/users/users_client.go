@@ -1694,7 +1694,7 @@ func (a *Client) PostUsersSignOutContext(ctx context.Context, params *PostUsersS
 
 // PostUsersUpdatePassword updates user password.
 //
-// Update current user's password.
+// Update current user's password. current_password is required unless the account is waiting on a forced password change..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -1713,7 +1713,7 @@ func (a *Client) PostUsersUpdatePassword(params *PostUsersUpdatePasswordParams, 
 
 // PostUsersUpdatePasswordContext updates user password.
 //
-// Update current user's password.
+// Update current user's password. current_password is required unless the account is waiting on a forced password change..
 //
 // Do not use the deprecated [PostUsersUpdatePasswordParams.Context] with this method: it would be ignored.
 func (a *Client) PostUsersUpdatePasswordContext(ctx context.Context, params *PostUsersUpdatePasswordParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostUsersUpdatePasswordOK, error) {

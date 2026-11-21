@@ -20,6 +20,9 @@ type RunHistory struct {
 	// end time
 	EndTime string `json:"end_time,omitempty"`
 
+	// ErrorMessage is why a run failed, from the OpenLineage errorMessage facet or a producer's own exception facet; empty when no event said.
+	ErrorMessage string `json:"error_message,omitempty"`
+
 	// event time
 	EventTime string `json:"event_time,omitempty"`
 

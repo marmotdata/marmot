@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -36,6 +36,9 @@ class TeamSummary(BaseModel):
     id: StrictStr | None = None
     member_count: StrictInt | None = None
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None, description="MRN is mrn://team/<slug>, derived from the name."
+    )
     name: StrictStr | None = None
     sso_groups: list[SSOGroupRef] | None = None
     sso_provider: StrictStr | None = None
@@ -51,6 +54,7 @@ class TeamSummary(BaseModel):
         "id",
         "member_count",
         "metadata",
+        "mrn",
         "name",
         "sso_groups",
         "sso_provider",
@@ -124,6 +128,7 @@ class TeamSummary(BaseModel):
                 "id": obj.get("id"),
                 "member_count": obj.get("member_count"),
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "sso_groups": [SSOGroupRef.from_dict(_item) for _item in obj["sso_groups"]]
                 if obj.get("sso_groups") is not None

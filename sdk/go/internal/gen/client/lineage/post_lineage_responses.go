@@ -33,6 +33,18 @@ func (o *PostLineageReader) ReadResponse(response runtime.ClientResponse, consum
 			return nil, err
 		}
 		return nil, result
+	case 413:
+		result := NewPostLineageRequestEntityTooLarge()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 415:
+		result := NewPostLineageUnsupportedMediaType()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewPostLineageInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -155,6 +167,142 @@ func (o *PostLineageBadRequest) GetPayload() *models.ErrorResponse {
 }
 
 func (o *PostLineageBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostLineageRequestEntityTooLarge creates a PostLineageRequestEntityTooLarge with default headers values
+func NewPostLineageRequestEntityTooLarge() *PostLineageRequestEntityTooLarge {
+	return &PostLineageRequestEntityTooLarge{}
+}
+
+// PostLineageRequestEntityTooLarge describes a response with status code 413, with default header values.
+//
+// Request Entity Too Large
+type PostLineageRequestEntityTooLarge struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this post lineage request entity too large response has a 2xx status code
+func (o *PostLineageRequestEntityTooLarge) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post lineage request entity too large response has a 3xx status code
+func (o *PostLineageRequestEntityTooLarge) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post lineage request entity too large response has a 4xx status code
+func (o *PostLineageRequestEntityTooLarge) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post lineage request entity too large response has a 5xx status code
+func (o *PostLineageRequestEntityTooLarge) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post lineage request entity too large response a status code equal to that given
+func (o *PostLineageRequestEntityTooLarge) IsCode(code int) bool {
+	return code == 413
+}
+
+// Code gets the status code for the post lineage request entity too large response
+func (o *PostLineageRequestEntityTooLarge) Code() int {
+	return 413
+}
+
+func (o *PostLineageRequestEntityTooLarge) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageRequestEntityTooLarge %s", 413, payload)
+}
+
+func (o *PostLineageRequestEntityTooLarge) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageRequestEntityTooLarge %s", 413, payload)
+}
+
+func (o *PostLineageRequestEntityTooLarge) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *PostLineageRequestEntityTooLarge) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostLineageUnsupportedMediaType creates a PostLineageUnsupportedMediaType with default headers values
+func NewPostLineageUnsupportedMediaType() *PostLineageUnsupportedMediaType {
+	return &PostLineageUnsupportedMediaType{}
+}
+
+// PostLineageUnsupportedMediaType describes a response with status code 415, with default header values.
+//
+// Unsupported Media Type
+type PostLineageUnsupportedMediaType struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this post lineage unsupported media type response has a 2xx status code
+func (o *PostLineageUnsupportedMediaType) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post lineage unsupported media type response has a 3xx status code
+func (o *PostLineageUnsupportedMediaType) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post lineage unsupported media type response has a 4xx status code
+func (o *PostLineageUnsupportedMediaType) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post lineage unsupported media type response has a 5xx status code
+func (o *PostLineageUnsupportedMediaType) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post lineage unsupported media type response a status code equal to that given
+func (o *PostLineageUnsupportedMediaType) IsCode(code int) bool {
+	return code == 415
+}
+
+// Code gets the status code for the post lineage unsupported media type response
+func (o *PostLineageUnsupportedMediaType) Code() int {
+	return 415
+}
+
+func (o *PostLineageUnsupportedMediaType) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageUnsupportedMediaType %s", 415, payload)
+}
+
+func (o *PostLineageUnsupportedMediaType) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage][%d] postLineageUnsupportedMediaType %s", 415, payload)
+}
+
+func (o *PostLineageUnsupportedMediaType) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *PostLineageUnsupportedMediaType) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 

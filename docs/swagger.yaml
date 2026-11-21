@@ -1549,6 +1549,52 @@ definitions:
       lineage_deleted:
         type: integer
     type: object
+  DocsCreatePageRequest:
+    properties:
+      content:
+        type: string
+      emoji:
+        type: string
+      parent_id:
+        type: string
+      title:
+        type: string
+    type: object
+  DocsMovePageRequest:
+    properties:
+      parent_id:
+        type: string
+      position:
+        type: integer
+    type: object
+  DocsSearchPagesResponse:
+    properties:
+      pages:
+        items:
+          $ref: '#/definitions/docs.Page'
+        type: array
+      total:
+        type: integer
+    type: object
+  DocsUpdatePageRequest:
+    properties:
+      content:
+        type: string
+      emoji:
+        type: string
+      title:
+        type: string
+    type: object
+  DocsUploadImageRequest:
+    properties:
+      content_type:
+        type: string
+      data:
+        description: Base64 encoded
+        type: string
+      filename:
+        type: string
+    type: object
   DocumentErrorResponse:
     properties:
       error:
@@ -4641,6 +4687,90 @@ definitions:
       type:
         type: string
     type: object
+  docs.EntityType:
+    enum:
+    - asset
+    - data_product
+    type: string
+    x-enum-varnames:
+    - EntityTypeAsset
+    - EntityTypeDataProduct
+  docs.ImageMeta:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      page_id:
+        type: string
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
+  docs.Page:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/docs.Page'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      emoji:
+        type: string
+      entity_id:
+        type: string
+      entity_type:
+        $ref: '#/definitions/docs.EntityType'
+      id:
+        type: string
+      image_count:
+        type: integer
+      parent_id:
+        type: string
+      position:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  docs.PageTree:
+    properties:
+      pages:
+        items:
+          $ref: '#/definitions/docs.Page'
+        type: array
+      stats:
+        $ref: '#/definitions/docs.StorageStats'
+      total_pages:
+        type: integer
+    type: object
+  docs.StorageStats:
+    properties:
+      entity_id:
+        type: string
+      entity_type:
+        $ref: '#/definitions/docs.EntityType'
+      image_count:
+        type: integer
+      max_bytes:
+        type: integer
+      page_count:
+        type: integer
+      used_bytes:
+        type: integer
+      used_percent:
+        type: number
+    type: object
   pluginsdk.AssetField:
     properties:
       description:
@@ -5808,7 +5938,9 @@ paths:
       - assets
   /api/v1/assets/documentation/{mrn}:
     get:
-      description: Get documentation for a specific asset
+      description: 'Documentation that plugins and `marmot ingest` attached to an
+        asset, such as a dbt model''s description, keyed by source. Pages people write
+        on the asset''s Docs tab are separate: list them with GET /api/v1/docs/entity/asset/{mrn}/pages.'
       operationId: getAssetsDocumentationMrn
       parameters:
       - description: Asset MRN
@@ -5837,7 +5969,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Get asset documentation
+      summary: Get plugin-sourced asset documentation
       tags:
       - assets
   /api/v1/assets/documentation/batch:
@@ -6705,6 +6837,463 @@ paths:
       summary: Add glossary terms to asset
       tags:
       - assets
+  /api/v1/docs/entity/{entityType}/{entityId}/pages:
+    get:
+      description: The documentation pages written for an asset or data product, as
+        a tree, with the entity's storage use. This is the documentation the Docs
+        tab shows; page bodies are Markdown.
+      operationId: getDocsEntityPages
+      parameters:
+      - description: Kind of entity the pages belong to
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Asset MRN or data product ID, URL-encoded
+        in: path
+        name: entityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docs.PageTree'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List documentation pages
+      tags:
+      - docs
+    post:
+      consumes:
+      - application/json
+      description: Adds a page to an asset or data product, at the top level or under
+        parent_id.
+      operationId: postDocsEntityPages
+      parameters:
+      - description: Kind of entity the pages belong to
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Asset MRN or data product ID, URL-encoded
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: The new page
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/DocsCreatePageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/docs.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Create a documentation page
+      tags:
+      - docs
+  /api/v1/docs/entity/{entityType}/{entityId}/search:
+    get:
+      description: Full-text search across one asset's or data product's pages.
+      operationId: getDocsEntitySearch
+      parameters:
+      - description: Kind of entity the pages belong to
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Asset MRN or data product ID, URL-encoded
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: Search text
+        in: query
+        name: q
+        type: string
+      - default: 20
+        description: Maximum number of pages to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of pages to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DocsSearchPagesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Search documentation pages
+      tags:
+      - docs
+  /api/v1/docs/entity/{entityType}/{entityId}/stats:
+    get:
+      description: Page count, image count and bytes used against the limit for one
+        asset or data product.
+      operationId: getDocsEntityStats
+      parameters:
+      - description: Kind of entity the pages belong to
+        enum:
+        - asset
+        - data_product
+        in: path
+        name: entityType
+        required: true
+        type: string
+      - description: Asset MRN or data product ID, URL-encoded
+        in: path
+        name: entityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docs.StorageStats'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get documentation storage use
+      tags:
+      - docs
+  /api/v1/docs/images/{imageId}:
+    delete:
+      operationId: deleteDocsImage
+      parameters:
+      - description: Image ID
+        in: path
+        name: imageId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete an image
+      tags:
+      - docs
+    get:
+      description: The image's bytes, with its content type.
+      operationId: getDocsImage
+      parameters:
+      - description: Image ID
+        in: path
+        name: imageId
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "304":
+          description: Not Modified
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get an image
+      tags:
+      - docs
+  /api/v1/docs/pages/{pageId}:
+    delete:
+      description: Deletes a page along with its child pages and images.
+      operationId: deleteDocsPage
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Delete a documentation page
+      tags:
+      - docs
+    get:
+      description: One page with its Markdown content.
+      operationId: getDocsPage
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docs.Page'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Get a documentation page
+      tags:
+      - docs
+    put:
+      consumes:
+      - application/json
+      description: Changes a page's title, emoji or content; fields left out stay
+        as they are.
+      operationId: putDocsPage
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      - description: Fields to change
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/DocsUpdatePageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docs.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Update a documentation page
+      tags:
+      - docs
+  /api/v1/docs/pages/{pageId}/images:
+    get:
+      operationId: getDocsPageImages
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/docs.ImageMeta'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: List a page's images
+      tags:
+      - docs
+    post:
+      consumes:
+      - application/json
+      description: Takes base64 data or a data URL; JPEG, PNG, GIF or WebP up to 5MB.
+        Reference the returned url from the page's Markdown.
+      operationId: postDocsPageImages
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      - description: The image
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/DocsUploadImageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/docs.ImageMeta'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Upload an image to a page
+      tags:
+      - docs
+  /api/v1/docs/pages/{pageId}/move:
+    put:
+      consumes:
+      - application/json
+      description: Moves a page under another parent, or to the top level when parent_id
+        is omitted, at the given position.
+      operationId: putDocsPageMove
+      parameters:
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      - description: New parent and position
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/DocsMovePageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docs.Page'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Move a documentation page
+      tags:
+      - docs
   /api/v1/glossary/:
     post:
       consumes:

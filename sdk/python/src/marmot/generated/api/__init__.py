@@ -7,6 +7,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.api.asset_rules_api import AssetRulesApi
     from marmot.generated.api.assets_api import AssetsApi
     from marmot.generated.api.auth_api import AuthApi
+    from marmot.generated.api.docs_api import DocsApi
     from marmot.generated.api.glossary_api import GlossaryApi
     from marmot.generated.api.ingestion_api import IngestionApi
     from marmot.generated.api.lineage_api import LineageApi
@@ -39,6 +40,7 @@ from marmot.generated.api.agents_api import AgentsApi
 from marmot.generated.api.asset_rules_api import AssetRulesApi
 from marmot.generated.api.assets_api import AssetsApi
 from marmot.generated.api.auth_api import AuthApi
+from marmot.generated.api.docs_api import DocsApi
 from marmot.generated.api.glossary_api import GlossaryApi
 from marmot.generated.api.ingestion_api import IngestionApi
 from marmot.generated.api.lineage_api import LineageApi

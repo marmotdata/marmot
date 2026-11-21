@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Annotated, Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -26,8 +26,12 @@ class UpdatePasswordRequest(BaseModel):
     UpdatePasswordRequest
     """
 
+    current_password: StrictStr | None = Field(
+        default=None,
+        description="Required unless the account is waiting on a forced password change.",
+    )
     new_password: Annotated[str, Field(min_length=8, strict=True)]
-    __properties: ClassVar[list[str]] = ["new_password"]
+    __properties: ClassVar[list[str]] = ["current_password", "new_password"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -76,4 +80,9 @@ class UpdatePasswordRequest(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        return cls.model_validate({"new_password": obj.get("new_password")})
+        return cls.model_validate(
+            {
+                "current_password": obj.get("current_password"),
+                "new_password": obj.get("new_password"),
+            }
+        )

@@ -40,7 +40,11 @@ class TestRunCreateAssetRequest(unittest.TestCase):
                         }
                     ],
                 metadata = { },
+                mrn = '',
                 name = '',
+                previous_mrns = [
+                    ''
+                    ],
                 providers = [
                     ''
                     ],

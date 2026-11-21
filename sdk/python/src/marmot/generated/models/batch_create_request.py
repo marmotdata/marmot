@@ -26,6 +26,7 @@ from marmot.generated.models.create_lineage_request import CreateLineageRequest
 from marmot.generated.models.create_run_history_request import CreateRunHistoryRequest
 from marmot.generated.models.create_stat_request import CreateStatRequest
 from marmot.generated.models.run_create_asset_request import RunCreateAssetRequest
+from marmot.generated.models.zone_binding import ZoneBinding
 
 
 class BatchCreateRequest(BaseModel):
@@ -43,6 +44,10 @@ class BatchCreateRequest(BaseModel):
     run_id: StrictStr
     source_name: StrictStr
     statistics: list[CreateStatRequest] | None = None
+    zone_bindings: list[ZoneBinding] | None = Field(
+        default=None,
+        description="ZoneBindings are the hosts the plugin connected to and the zone each belongs to.",
+    )
     __properties: ClassVar[list[str]] = [
         "assets",
         "config",
@@ -54,6 +59,7 @@ class BatchCreateRequest(BaseModel):
         "run_id",
         "source_name",
         "statistics",
+        "zone_bindings",
     ]
 
     model_config = ConfigDict(
@@ -135,6 +141,13 @@ class BatchCreateRequest(BaseModel):
                 if _item_statistics:
                     _items.append(_item_statistics.to_dict())
             _dict["statistics"] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in zone_bindings (list)
+        _items = []
+        if self.zone_bindings:
+            for _item_zone_bindings in self.zone_bindings:
+                if _item_zone_bindings:
+                    _items.append(_item_zone_bindings.to_dict())
+            _dict["zone_bindings"] = _items
         return _dict
 
     @classmethod
@@ -175,6 +188,9 @@ class BatchCreateRequest(BaseModel):
                 "source_name": obj.get("source_name"),
                 "statistics": [CreateStatRequest.from_dict(_item) for _item in obj["statistics"]]
                 if obj.get("statistics") is not None
+                else None,
+                "zone_bindings": [ZoneBinding.from_dict(_item) for _item in obj["zone_bindings"]]
+                if obj.get("zone_bindings") is not None
                 else None,
             }
         )

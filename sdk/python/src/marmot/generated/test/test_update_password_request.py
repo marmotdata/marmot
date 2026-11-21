@@ -33,6 +33,7 @@ class TestUpdatePasswordRequest(unittest.TestCase):
         model = UpdatePasswordRequest()
         if include_optional:
             return UpdatePasswordRequest(
+                current_password = '',
                 new_password = '01234567'
             )
         else:

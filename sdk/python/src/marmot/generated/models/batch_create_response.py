@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -33,12 +33,21 @@ class BatchCreateResponse(BaseModel):
     assets: list[BatchAssetResult] | None = None
     documentation: list[DocumentationResult] | None = None
     lineage: list[LineageResult] | None = None
+    stale_contributions_withdrawn: list[StrictStr] | None = Field(
+        default=None,
+        description="StaleContributionsWithdrawn are assets the run no longer found that another writer still describes, so they were kept.",
+    )
     stale_entities_removed: list[StrictStr] | None = None
+    warnings: list[StrictStr] | None = Field(
+        default=None, description="Warnings are identity problems the run worked around."
+    )
     __properties: ClassVar[list[str]] = [
         "assets",
         "documentation",
         "lineage",
+        "stale_contributions_withdrawn",
         "stale_entities_removed",
+        "warnings",
     ]
 
     model_config = ConfigDict(
@@ -123,6 +132,8 @@ class BatchCreateResponse(BaseModel):
                 "lineage": [LineageResult.from_dict(_item) for _item in obj["lineage"]]
                 if obj.get("lineage") is not None
                 else None,
+                "stale_contributions_withdrawn": obj.get("stale_contributions_withdrawn"),
                 "stale_entities_removed": obj.get("stale_entities_removed"),
+                "warnings": obj.get("warnings"),
             }
         )

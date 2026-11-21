@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -34,6 +34,10 @@ class PluginRun(BaseModel):
     created_by: StrictStr | None = None
     error_message: StrictStr | None = None
     id: StrictStr | None = None
+    owner: StrictStr | None = Field(
+        default=None,
+        description="Owner is who started the run: the schedule for a scheduled run, the principal for a CLI or API run. Checkpoints and the run's contributions to assets belong to the pipeline, source and owner together, so two people running the same pipeline file never treat each other's assets as stale.",
+    )
     pipeline_name: StrictStr | None = None
     run_id: StrictStr | None = None
     source_name: StrictStr | None = None
@@ -46,6 +50,7 @@ class PluginRun(BaseModel):
         "created_by",
         "error_message",
         "id",
+        "owner",
         "pipeline_name",
         "run_id",
         "source_name",
@@ -112,6 +117,7 @@ class PluginRun(BaseModel):
                 "created_by": obj.get("created_by"),
                 "error_message": obj.get("error_message"),
                 "id": obj.get("id"),
+                "owner": obj.get("owner"),
                 "pipeline_name": obj.get("pipeline_name"),
                 "run_id": obj.get("run_id"),
                 "source_name": obj.get("source_name"),

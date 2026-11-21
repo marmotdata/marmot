@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -28,6 +28,10 @@ class BatchAssetResult(BaseModel):
 
     asset: Any | None = None
     error: StrictStr | None = None
+    moved_from: StrictStr | None = Field(
+        default=None,
+        description="MovedFrom is the MRN the asset had before this run gave it a new one.",
+    )
     mrn: StrictStr | None = None
     name: StrictStr | None = None
     provider: StrictStr | None = None
@@ -36,6 +40,7 @@ class BatchAssetResult(BaseModel):
     __properties: ClassVar[list[str]] = [
         "asset",
         "error",
+        "moved_from",
         "mrn",
         "name",
         "provider",
@@ -100,6 +105,7 @@ class BatchAssetResult(BaseModel):
             {
                 "asset": obj.get("asset"),
                 "error": obj.get("error"),
+                "moved_from": obj.get("moved_from"),
                 "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "provider": obj.get("provider"),

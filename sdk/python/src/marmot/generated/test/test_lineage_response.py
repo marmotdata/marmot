@@ -78,8 +78,12 @@ class TestLineageResponse(unittest.TestCase):
                             last_sync_at = '',
                             metadata = { },
                             mrn = '',
+                            mrn_parts = null,
                             name = '',
                             parent_mrn = '',
+                            previous_mrns = [
+                                ''
+                                ],
                             providers = [
                                 ''
                                 ],

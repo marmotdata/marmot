@@ -50,6 +50,7 @@ class TestCurrentUser(unittest.TestCase):
                 invite_expires_at = '',
                 job_title = '',
                 last_seen_at = '',
+                mrn = '',
                 must_change_password = True,
                 name = '',
                 preferences = { },

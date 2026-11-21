@@ -52,6 +52,7 @@ class TestListSchedulesResponse(unittest.TestCase):
                         last_run_at = '',
                         last_run_status = '',
                         managed_by = '',
+                        mrn = '',
                         name = '',
                         next_run_at = '',
                         owner_id = '',

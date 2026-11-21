@@ -22,6 +22,7 @@ from typing_extensions import Self
 
 from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField
+from marmot.generated.models.pluginsdk_identity_scope import PluginsdkIdentityScope
 
 
 class PluginInfo(BaseModel):
@@ -38,8 +39,16 @@ class PluginInfo(BaseModel):
     config_spec: list[PluginsdkConfigField] | None = None
     description: StrictStr | None = None
     features: list[StrictStr] | None = None
+    federates: StrictBool | None = Field(
+        default=None,
+        description="Federates is true for a plugin that catalogues assets other systems own, such as Trino, OpenMetadata or dbt, so that when it and the system's own plugin describe the same asset the owner's description, schema and metadata win.",
+    )
     icon: StrictStr | None = None
     id: StrictStr | None = None
+    identity_scope: PluginsdkIdentityScope | None = Field(
+        default=None,
+        description="IdentityScope says how the systems this plugin reads are told apart, which decides the zone used when the config sets none. See the IdentityScope constants; empty is IdentityScopeNetwork.",
+    )
     marmot_version: StrictStr | None = None
     name: StrictStr | None = None
     produces_lineage: StrictBool | None = Field(
@@ -57,8 +66,10 @@ class PluginInfo(BaseModel):
         "config_spec",
         "description",
         "features",
+        "federates",
         "icon",
         "id",
+        "identity_scope",
         "marmot_version",
         "name",
         "produces_lineage",
@@ -146,8 +157,10 @@ class PluginInfo(BaseModel):
                 else None,
                 "description": obj.get("description"),
                 "features": obj.get("features"),
+                "federates": obj.get("federates"),
                 "icon": obj.get("icon"),
                 "id": obj.get("id"),
+                "identity_scope": obj.get("identity_scope"),
                 "marmot_version": obj.get("marmot_version"),
                 "name": obj.get("name"),
                 "produces_lineage": obj.get("produces_lineage"),

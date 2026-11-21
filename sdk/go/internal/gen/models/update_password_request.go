@@ -16,6 +16,9 @@ import (
 // swagger:model UpdatePasswordRequest
 type UpdatePasswordRequest struct {
 
+	// Required unless the account is waiting on a forced password change.
+	CurrentPassword string `json:"current_password,omitempty"`
+
 	// new password
 	// Required: true
 	// Min Length: 8

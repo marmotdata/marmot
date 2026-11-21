@@ -44,6 +44,9 @@ class Schedule(BaseModel):
     last_run_at: StrictStr | None = None
     last_run_status: StrictStr | None = None
     managed_by: StrictStr | None = None
+    mrn: StrictStr | None = Field(
+        default=None, description="MRN is mrn://pipeline/<name>, derived from the name."
+    )
     name: StrictStr | None = None
     next_run_at: StrictStr | None = None
     owner_id: StrictStr | None = None
@@ -77,6 +80,7 @@ class Schedule(BaseModel):
         "last_run_at",
         "last_run_status",
         "managed_by",
+        "mrn",
         "name",
         "next_run_at",
         "owner_id",
@@ -151,6 +155,7 @@ class Schedule(BaseModel):
                 "last_run_at": obj.get("last_run_at"),
                 "last_run_status": obj.get("last_run_status"),
                 "managed_by": obj.get("managed_by"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "next_run_at": obj.get("next_run_at"),
                 "owner_id": obj.get("owner_id"),

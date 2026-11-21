@@ -42,7 +42,11 @@ class TestBatchCreateRequest(unittest.TestCase):
                                 }
                             ],
                         metadata = { },
+                        mrn = '',
                         name = '',
+                        previous_mrns = [
+                            ''
+                            ],
                         providers = [
                             ''
                             ],
@@ -118,6 +122,14 @@ class TestBatchCreateRequest(unittest.TestCase):
                         asset_mrn = '',
                         metric_name = '',
                         value = 1.337, )
+                    ],
+                zone_bindings = [
+                    marmot.generated.models.zone_binding.ZoneBinding(
+                        host = '',
+                        origin = '',
+                        provider = '',
+                        updated_at = '',
+                        zone = '', )
                     ]
             )
         else:
@@ -131,7 +143,11 @@ class TestBatchCreateRequest(unittest.TestCase):
                                 }
                             ],
                         metadata = { },
+                        mrn = '',
                         name = '',
+                        previous_mrns = [
+                            ''
+                            ],
                         providers = [
                             ''
                             ],

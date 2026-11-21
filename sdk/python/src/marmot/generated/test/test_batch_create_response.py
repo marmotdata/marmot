@@ -37,6 +37,7 @@ class TestBatchCreateResponse(unittest.TestCase):
                     marmot.generated.models.batch_asset_result.BatchAssetResult(
                         asset = null,
                         error = '',
+                        moved_from = '',
                         mrn = '',
                         name = '',
                         provider = '',
@@ -58,7 +59,13 @@ class TestBatchCreateResponse(unittest.TestCase):
                         target = '',
                         type = '', )
                     ],
+                stale_contributions_withdrawn = [
+                    ''
+                    ],
                 stale_entities_removed = [
+                    ''
+                    ],
+                warnings = [
                     ''
                     ]
             )

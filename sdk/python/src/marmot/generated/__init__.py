@@ -22,6 +22,7 @@ __all__ = [
     "AssetRulesApi",
     "AssetsApi",
     "AuthApi",
+    "DocsApi",
     "GlossaryApi",
     "IngestionApi",
     "LineageApi",
@@ -61,8 +62,11 @@ __all__ = [
     "AgentRun",
     "AggregatedMetric",
     "Asset",
+    "AssetContribution",
+    "AssetContributionFields",
     "AssetCount",
     "AssetExternalLink",
+    "AssetIdentityResponse",
     "AssetRule",
     "AssetRuleAsset",
     "AssetRuleAssetsResponse",
@@ -76,6 +80,7 @@ __all__ = [
     "AssetTermLink",
     "AssetTermLinkGroup",
     "AssetTypeSummary",
+    "AssetWriterInfo",
     "AssetsByOwnerResponse",
     "AssetsByProviderResponse",
     "AssetsByTermResponse",
@@ -138,6 +143,16 @@ __all__ = [
     "DataProductTypeCount",
     "Dataset",
     "DestroyRunResponse",
+    "DocsCreatePageRequest",
+    "DocsEntityType",
+    "DocsImageMeta",
+    "DocsMovePageRequest",
+    "DocsPage",
+    "DocsPageTree",
+    "DocsSearchPagesResponse",
+    "DocsStorageStats",
+    "DocsUpdatePageRequest",
+    "DocsUploadImageRequest",
     "DocumentErrorResponse",
     "DocumentFieldError",
     "Documentation",
@@ -183,6 +198,8 @@ __all__ = [
     "ListTeamsResponse",
     "ListUsersResponse",
     "LoginRequest",
+    "MRNParts",
+    "MergeAssetRequest",
     "MessageResponse",
     "MetadataFieldSuggestion",
     "MetadataValueSuggestion",
@@ -206,6 +223,7 @@ __all__ = [
     "PluginsdkConfigField",
     "PluginsdkFieldOption",
     "PluginsdkFieldType",
+    "PluginsdkIdentityScope",
     "PluginsdkShowWhen",
     "PluginsdkValidation",
     "PluginserveEnrolInput",
@@ -249,6 +267,7 @@ __all__ = [
     "RelatedTermsResponse",
     "RemoveTermRequest",
     "ReorderDataProductRulesRequest",
+    "ResolveMRNResponse",
     "Result",
     "ResultType",
     "Role",
@@ -318,6 +337,7 @@ __all__ = [
     "UpdateTeamRequest",
     "UpdateTermRequest",
     "UpdateUserInput",
+    "UpsertAssetRequest",
     "User",
     "UserIdentity",
     "UserRole",
@@ -329,6 +349,7 @@ __all__ = [
     "ValidateRoleResponse",
     "ValidationErrorDetail",
     "ValidationErrorResponse",
+    "ZoneBinding",
 ]
 
 if __import__("typing").TYPE_CHECKING:
@@ -338,6 +359,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.api.asset_rules_api import AssetRulesApi as AssetRulesApi
     from marmot.generated.api.assets_api import AssetsApi as AssetsApi
     from marmot.generated.api.auth_api import AuthApi as AuthApi
+    from marmot.generated.api.docs_api import DocsApi as DocsApi
     from marmot.generated.api.glossary_api import GlossaryApi as GlossaryApi
     from marmot.generated.api.ingestion_api import IngestionApi as IngestionApi
     from marmot.generated.api.lineage_api import LineageApi as LineageApi
@@ -389,8 +411,15 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.agent_run import AgentRun as AgentRun
     from marmot.generated.models.aggregated_metric import AggregatedMetric as AggregatedMetric
     from marmot.generated.models.asset import Asset as Asset
+    from marmot.generated.models.asset_contribution import AssetContribution as AssetContribution
+    from marmot.generated.models.asset_contribution_fields import (
+        AssetContributionFields as AssetContributionFields,
+    )
     from marmot.generated.models.asset_count import AssetCount as AssetCount
     from marmot.generated.models.asset_external_link import AssetExternalLink as AssetExternalLink
+    from marmot.generated.models.asset_identity_response import (
+        AssetIdentityResponse as AssetIdentityResponse,
+    )
     from marmot.generated.models.asset_rule import AssetRule as AssetRule
     from marmot.generated.models.asset_rule_asset import AssetRuleAsset as AssetRuleAsset
     from marmot.generated.models.asset_rule_assets_response import (
@@ -416,6 +445,7 @@ if __import__("typing").TYPE_CHECKING:
         AssetTermLinkGroup as AssetTermLinkGroup,
     )
     from marmot.generated.models.asset_type_summary import AssetTypeSummary as AssetTypeSummary
+    from marmot.generated.models.asset_writer_info import AssetWriterInfo as AssetWriterInfo
     from marmot.generated.models.assets_by_owner_response import (
         AssetsByOwnerResponse as AssetsByOwnerResponse,
     )
@@ -562,6 +592,26 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.destroy_run_response import (
         DestroyRunResponse as DestroyRunResponse,
     )
+    from marmot.generated.models.docs_create_page_request import (
+        DocsCreatePageRequest as DocsCreatePageRequest,
+    )
+    from marmot.generated.models.docs_entity_type import DocsEntityType as DocsEntityType
+    from marmot.generated.models.docs_image_meta import DocsImageMeta as DocsImageMeta
+    from marmot.generated.models.docs_move_page_request import (
+        DocsMovePageRequest as DocsMovePageRequest,
+    )
+    from marmot.generated.models.docs_page import DocsPage as DocsPage
+    from marmot.generated.models.docs_page_tree import DocsPageTree as DocsPageTree
+    from marmot.generated.models.docs_search_pages_response import (
+        DocsSearchPagesResponse as DocsSearchPagesResponse,
+    )
+    from marmot.generated.models.docs_storage_stats import DocsStorageStats as DocsStorageStats
+    from marmot.generated.models.docs_update_page_request import (
+        DocsUpdatePageRequest as DocsUpdatePageRequest,
+    )
+    from marmot.generated.models.docs_upload_image_request import (
+        DocsUploadImageRequest as DocsUploadImageRequest,
+    )
     from marmot.generated.models.document_error_response import (
         DocumentErrorResponse as DocumentErrorResponse,
     )
@@ -647,6 +697,8 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.list_teams_response import ListTeamsResponse as ListTeamsResponse
     from marmot.generated.models.list_users_response import ListUsersResponse as ListUsersResponse
     from marmot.generated.models.login_request import LoginRequest as LoginRequest
+    from marmot.generated.models.mrn_parts import MRNParts as MRNParts
+    from marmot.generated.models.merge_asset_request import MergeAssetRequest as MergeAssetRequest
     from marmot.generated.models.message_response import MessageResponse as MessageResponse
     from marmot.generated.models.metadata_field_suggestion import (
         MetadataFieldSuggestion as MetadataFieldSuggestion,
@@ -697,6 +749,9 @@ if __import__("typing").TYPE_CHECKING:
     )
     from marmot.generated.models.pluginsdk_field_type import (
         PluginsdkFieldType as PluginsdkFieldType,
+    )
+    from marmot.generated.models.pluginsdk_identity_scope import (
+        PluginsdkIdentityScope as PluginsdkIdentityScope,
     )
     from marmot.generated.models.pluginsdk_show_when import PluginsdkShowWhen as PluginsdkShowWhen
     from marmot.generated.models.pluginsdk_validation import (
@@ -776,6 +831,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.remove_term_request import RemoveTermRequest as RemoveTermRequest
     from marmot.generated.models.reorder_data_product_rules_request import (
         ReorderDataProductRulesRequest as ReorderDataProductRulesRequest,
+    )
+    from marmot.generated.models.resolve_mrn_response import (
+        ResolveMRNResponse as ResolveMRNResponse,
     )
     from marmot.generated.models.result import Result as Result
     from marmot.generated.models.result_type import ResultType as ResultType
@@ -900,6 +958,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.update_team_request import UpdateTeamRequest as UpdateTeamRequest
     from marmot.generated.models.update_term_request import UpdateTermRequest as UpdateTermRequest
     from marmot.generated.models.update_user_input import UpdateUserInput as UpdateUserInput
+    from marmot.generated.models.upsert_asset_request import (
+        UpsertAssetRequest as UpsertAssetRequest,
+    )
     from marmot.generated.models.user import User as User
     from marmot.generated.models.user_identity import UserIdentity as UserIdentity
     from marmot.generated.models.user_role import UserRole as UserRole
@@ -927,6 +988,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.validation_error_response import (
         ValidationErrorResponse as ValidationErrorResponse,
     )
+    from marmot.generated.models.zone_binding import ZoneBinding as ZoneBinding
 
 else:
     from lazy_imports import LazyModule, as_package, load
@@ -942,6 +1004,7 @@ from marmot.generated.api.agents_api import AgentsApi as AgentsApi
 from marmot.generated.api.asset_rules_api import AssetRulesApi as AssetRulesApi
 from marmot.generated.api.assets_api import AssetsApi as AssetsApi
 from marmot.generated.api.auth_api import AuthApi as AuthApi
+from marmot.generated.api.docs_api import DocsApi as DocsApi
 from marmot.generated.api.glossary_api import GlossaryApi as GlossaryApi
 from marmot.generated.api.ingestion_api import IngestionApi as IngestionApi
 from marmot.generated.api.lineage_api import LineageApi as LineageApi
@@ -985,8 +1048,11 @@ from marmot.generated.models.add_terms_request import AddTermsRequest as AddTerm
 from marmot.generated.models.agent_run import AgentRun as AgentRun
 from marmot.generated.models.aggregated_metric import AggregatedMetric as AggregatedMetric
 from marmot.generated.models.asset import Asset as Asset
+from marmot.generated.models.asset_contribution import AssetContribution as AssetContribution
+from marmot.generated.models.asset_contribution_fields import AssetContributionFields as AssetContributionFields
 from marmot.generated.models.asset_count import AssetCount as AssetCount
 from marmot.generated.models.asset_external_link import AssetExternalLink as AssetExternalLink
+from marmot.generated.models.asset_identity_response import AssetIdentityResponse as AssetIdentityResponse
 from marmot.generated.models.asset_rule import AssetRule as AssetRule
 from marmot.generated.models.asset_rule_asset import AssetRuleAsset as AssetRuleAsset
 from marmot.generated.models.asset_rule_assets_response import AssetRuleAssetsResponse as AssetRuleAssetsResponse
@@ -1000,6 +1066,7 @@ from marmot.generated.models.asset_term import AssetTerm as AssetTerm
 from marmot.generated.models.asset_term_link import AssetTermLink as AssetTermLink
 from marmot.generated.models.asset_term_link_group import AssetTermLinkGroup as AssetTermLinkGroup
 from marmot.generated.models.asset_type_summary import AssetTypeSummary as AssetTypeSummary
+from marmot.generated.models.asset_writer_info import AssetWriterInfo as AssetWriterInfo
 from marmot.generated.models.assets_by_owner_response import AssetsByOwnerResponse as AssetsByOwnerResponse
 from marmot.generated.models.assets_by_provider_response import AssetsByProviderResponse as AssetsByProviderResponse
 from marmot.generated.models.assets_by_term_response import AssetsByTermResponse as AssetsByTermResponse
@@ -1062,6 +1129,16 @@ from marmot.generated.models.data_product_tag_facet import DataProductTagFacet a
 from marmot.generated.models.data_product_type_count import DataProductTypeCount as DataProductTypeCount
 from marmot.generated.models.dataset import Dataset as Dataset
 from marmot.generated.models.destroy_run_response import DestroyRunResponse as DestroyRunResponse
+from marmot.generated.models.docs_create_page_request import DocsCreatePageRequest as DocsCreatePageRequest
+from marmot.generated.models.docs_entity_type import DocsEntityType as DocsEntityType
+from marmot.generated.models.docs_image_meta import DocsImageMeta as DocsImageMeta
+from marmot.generated.models.docs_move_page_request import DocsMovePageRequest as DocsMovePageRequest
+from marmot.generated.models.docs_page import DocsPage as DocsPage
+from marmot.generated.models.docs_page_tree import DocsPageTree as DocsPageTree
+from marmot.generated.models.docs_search_pages_response import DocsSearchPagesResponse as DocsSearchPagesResponse
+from marmot.generated.models.docs_storage_stats import DocsStorageStats as DocsStorageStats
+from marmot.generated.models.docs_update_page_request import DocsUpdatePageRequest as DocsUpdatePageRequest
+from marmot.generated.models.docs_upload_image_request import DocsUploadImageRequest as DocsUploadImageRequest
 from marmot.generated.models.document_error_response import DocumentErrorResponse as DocumentErrorResponse
 from marmot.generated.models.document_field_error import DocumentFieldError as DocumentFieldError
 from marmot.generated.models.documentation import Documentation as Documentation
@@ -1107,6 +1184,8 @@ from marmot.generated.models.list_schedules_response import ListSchedulesRespons
 from marmot.generated.models.list_teams_response import ListTeamsResponse as ListTeamsResponse
 from marmot.generated.models.list_users_response import ListUsersResponse as ListUsersResponse
 from marmot.generated.models.login_request import LoginRequest as LoginRequest
+from marmot.generated.models.mrn_parts import MRNParts as MRNParts
+from marmot.generated.models.merge_asset_request import MergeAssetRequest as MergeAssetRequest
 from marmot.generated.models.message_response import MessageResponse as MessageResponse
 from marmot.generated.models.metadata_field_suggestion import MetadataFieldSuggestion as MetadataFieldSuggestion
 from marmot.generated.models.metadata_value_suggestion import MetadataValueSuggestion as MetadataValueSuggestion
@@ -1130,6 +1209,7 @@ from marmot.generated.models.pluginsdk_asset_schema import PluginsdkAssetSchema 
 from marmot.generated.models.pluginsdk_config_field import PluginsdkConfigField as PluginsdkConfigField
 from marmot.generated.models.pluginsdk_field_option import PluginsdkFieldOption as PluginsdkFieldOption
 from marmot.generated.models.pluginsdk_field_type import PluginsdkFieldType as PluginsdkFieldType
+from marmot.generated.models.pluginsdk_identity_scope import PluginsdkIdentityScope as PluginsdkIdentityScope
 from marmot.generated.models.pluginsdk_show_when import PluginsdkShowWhen as PluginsdkShowWhen
 from marmot.generated.models.pluginsdk_validation import PluginsdkValidation as PluginsdkValidation
 from marmot.generated.models.pluginserve_enrol_input import PluginserveEnrolInput as PluginserveEnrolInput
@@ -1173,6 +1253,7 @@ from marmot.generated.models.reindex_status_response import ReindexStatusRespons
 from marmot.generated.models.related_terms_response import RelatedTermsResponse as RelatedTermsResponse
 from marmot.generated.models.remove_term_request import RemoveTermRequest as RemoveTermRequest
 from marmot.generated.models.reorder_data_product_rules_request import ReorderDataProductRulesRequest as ReorderDataProductRulesRequest
+from marmot.generated.models.resolve_mrn_response import ResolveMRNResponse as ResolveMRNResponse
 from marmot.generated.models.result import Result as Result
 from marmot.generated.models.result_type import ResultType as ResultType
 from marmot.generated.models.role import Role as Role
@@ -1242,6 +1323,7 @@ from marmot.generated.models.update_service_account_request import UpdateService
 from marmot.generated.models.update_team_request import UpdateTeamRequest as UpdateTeamRequest
 from marmot.generated.models.update_term_request import UpdateTermRequest as UpdateTermRequest
 from marmot.generated.models.update_user_input import UpdateUserInput as UpdateUserInput
+from marmot.generated.models.upsert_asset_request import UpsertAssetRequest as UpsertAssetRequest
 from marmot.generated.models.user import User as User
 from marmot.generated.models.user_identity import UserIdentity as UserIdentity
 from marmot.generated.models.user_role import UserRole as UserRole
@@ -1253,6 +1335,7 @@ from marmot.generated.models.validate_config_response import ValidateConfigRespo
 from marmot.generated.models.validate_role_response import ValidateRoleResponse as ValidateRoleResponse
 from marmot.generated.models.validation_error_detail import ValidationErrorDetail as ValidationErrorDetail
 from marmot.generated.models.validation_error_response import ValidationErrorResponse as ValidationErrorResponse
+from marmot.generated.models.zone_binding import ZoneBinding as ZoneBinding
 
 """,
             name=__name__,

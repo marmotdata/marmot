@@ -98,10 +98,10 @@ type ClientService interface {
 	// GetAssetsCountsIDContext get asset tab counts.
 	GetAssetsCountsIDContext(ctx context.Context, params *GetAssetsCountsIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsCountsIDOK, error)
 
-	// GetAssetsDocumentationMrn get asset documentation.
+	// GetAssetsDocumentationMrn get plugin sourced asset documentation.
 	GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
-	// GetAssetsDocumentationMrnContext get asset documentation.
+	// GetAssetsDocumentationMrnContext get plugin sourced asset documentation.
 	GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
 	// GetAssetsFieldAnnotationsID list field annotations.
@@ -746,9 +746,9 @@ func (a *Client) GetAssetsCountsIDContext(ctx context.Context, params *GetAssets
 	panic(msg)
 }
 
-// GetAssetsDocumentationMrn gets asset documentation.
+// GetAssetsDocumentationMrn gets plugin sourced asset documentation.
 //
-// Get documentation for a specific asset.
+// Documentation that plugins and `marmot ingest` attached to an asset, such as a dbt model's description, keyed by source. Pages people write on the asset's Docs tab are separate: list them with GET /api/v1/docs/entity/asset/{mrn}/pages..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -765,9 +765,9 @@ func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnPara
 	return a.GetAssetsDocumentationMrnContext(ctx, params, authInfo, opts...)
 }
 
-// GetAssetsDocumentationMrnContext gets asset documentation.
+// GetAssetsDocumentationMrnContext gets plugin sourced asset documentation.
 //
-// Get documentation for a specific asset.
+// Documentation that plugins and `marmot ingest` attached to an asset, such as a dbt model's description, keyed by source. Pages people write on the asset's Docs tab are separate: list them with GET /api/v1/docs/entity/asset/{mrn}/pages..
 //
 // Do not use the deprecated [GetAssetsDocumentationMrnParams.Context] with this method: it would be ignored.
 func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {

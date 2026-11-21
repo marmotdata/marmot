@@ -65,7 +65,7 @@ type PostLineageParams struct {
 
 	// Event.
 	//
-	// OpenLineage run event
+	// OpenLineage event
 	Event *models.RunEvent
 
 	HTTPClient *http.Client

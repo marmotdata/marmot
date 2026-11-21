@@ -69,8 +69,8 @@ func (h *Handler) createAssetDocumentation(w http.ResponseWriter, r *http.Reques
 	common.RespondJSON(w, http.StatusOK, doc)
 }
 
-// @Summary Get asset documentation
-// @Description Get documentation for a specific asset
+// @Summary Get plugin-sourced asset documentation
+// @Description Documentation that plugins and `marmot ingest` attached to an asset, such as a dbt model's description, keyed by source. Pages people write on the asset's Docs tab are separate: list them with GET /api/v1/docs/entity/asset/{mrn}/pages.
 // @Tags assets
 // @Produce json
 // @Param mrn path string true "Asset MRN" format(url)

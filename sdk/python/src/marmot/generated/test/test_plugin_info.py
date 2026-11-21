@@ -109,8 +109,10 @@ class TestPluginInfo(unittest.TestCase):
                 features = [
                     ''
                     ],
+                federates = True,
                 icon = '',
                 id = '',
+                identity_scope = 'network',
                 marmot_version = '',
                 name = '',
                 produces_lineage = True,

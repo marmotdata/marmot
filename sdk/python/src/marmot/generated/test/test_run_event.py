@@ -33,6 +33,12 @@ class TestRunEvent(unittest.TestCase):
         model = RunEvent()
         if include_optional:
             return RunEvent(
+                dataset = marmot.generated.models.dataset.Dataset(
+                    facets = { },
+                    input_facets = { },
+                    name = '',
+                    namespace = '',
+                    output_facets = { }, ),
                 event_time = '',
                 event_type = '',
                 inputs = [

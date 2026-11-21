@@ -35,6 +35,7 @@ class TestBatchAssetResult(unittest.TestCase):
             return BatchAssetResult(
                 asset = None,
                 error = '',
+                moved_from = '',
                 mrn = '',
                 name = '',
                 provider = '',

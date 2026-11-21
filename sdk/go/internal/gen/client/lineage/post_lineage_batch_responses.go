@@ -33,6 +33,12 @@ func (o *PostLineageBatchReader) ReadResponse(response runtime.ClientResponse, c
 			return nil, err
 		}
 		return nil, result
+	case 413:
+		result := NewPostLineageBatchRequestEntityTooLarge()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[POST /api/v1/lineage/batch] postLineageBatch", response, response.Code())
 	}
@@ -161,6 +167,74 @@ func (o *PostLineageBatchBadRequest) GetPayload() *models.ErrorResponse {
 }
 
 func (o *PostLineageBatchBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostLineageBatchRequestEntityTooLarge creates a PostLineageBatchRequestEntityTooLarge with default headers values
+func NewPostLineageBatchRequestEntityTooLarge() *PostLineageBatchRequestEntityTooLarge {
+	return &PostLineageBatchRequestEntityTooLarge{}
+}
+
+// PostLineageBatchRequestEntityTooLarge describes a response with status code 413, with default header values.
+//
+// Request Entity Too Large
+type PostLineageBatchRequestEntityTooLarge struct {
+	Payload *models.ErrorResponse
+}
+
+// IsSuccess returns true when this post lineage batch request entity too large response has a 2xx status code
+func (o *PostLineageBatchRequestEntityTooLarge) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post lineage batch request entity too large response has a 3xx status code
+func (o *PostLineageBatchRequestEntityTooLarge) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post lineage batch request entity too large response has a 4xx status code
+func (o *PostLineageBatchRequestEntityTooLarge) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post lineage batch request entity too large response has a 5xx status code
+func (o *PostLineageBatchRequestEntityTooLarge) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post lineage batch request entity too large response a status code equal to that given
+func (o *PostLineageBatchRequestEntityTooLarge) IsCode(code int) bool {
+	return code == 413
+}
+
+// Code gets the status code for the post lineage batch request entity too large response
+func (o *PostLineageBatchRequestEntityTooLarge) Code() int {
+	return 413
+}
+
+func (o *PostLineageBatchRequestEntityTooLarge) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchRequestEntityTooLarge %s", 413, payload)
+}
+
+func (o *PostLineageBatchRequestEntityTooLarge) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /api/v1/lineage/batch][%d] postLineageBatchRequestEntityTooLarge %s", 413, payload)
+}
+
+func (o *PostLineageBatchRequestEntityTooLarge) GetPayload() *models.ErrorResponse {
+	return o.Payload
+}
+
+func (o *PostLineageBatchRequestEntityTooLarge) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 

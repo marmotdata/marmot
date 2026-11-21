@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/asset_rules"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/assets"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/auth"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/docs"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/glossary"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ingestion"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/lineage"
@@ -82,6 +83,7 @@ func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot
 	cli.AssetRules = asset_rules.New(transport, formats)
 	cli.Assets = assets.New(transport, formats)
 	cli.Auth = auth.New(transport, formats)
+	cli.Docs = docs.New(transport, formats)
 	cli.Glossary = glossary.New(transport, formats)
 	cli.Ingestion = ingestion.New(transport, formats)
 	cli.Lineage = lineage.New(transport, formats)
@@ -170,6 +172,8 @@ type Marmot struct {
 
 	Auth auth.ClientService
 
+	Docs docs.ClientService
+
 	Glossary glossary.ClientService
 
 	Ingestion ingestion.ClientService
@@ -219,6 +223,7 @@ func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.AssetRules.SetTransport(transport)
 	c.Assets.SetTransport(transport)
 	c.Auth.SetTransport(transport)
+	c.Docs.SetTransport(transport)
 	c.Glossary.SetTransport(transport)
 	c.Ingestion.SetTransport(transport)
 	c.Lineage.SetTransport(transport)

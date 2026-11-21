@@ -80,10 +80,10 @@ type ClientService interface {
 	// PostLineageContext ingest open lineage event.
 	PostLineageContext(ctx context.Context, params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error)
 
-	// PostLineageBatch batch create lineage edges.
+	// PostLineageBatch batch create lineage edges or ingest open lineage events.
 	PostLineageBatch(params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error)
 
-	// PostLineageBatchContext batch create lineage edges.
+	// PostLineageBatchContext batch create lineage edges or ingest open lineage events.
 	PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error)
 
 	// PostLineageDirect create direct lineage.
@@ -298,7 +298,7 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 
 // PostLineage ingests open lineage event.
 //
-// Process OpenLineage run events and update assets/lineage accordingly.
+// Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -317,7 +317,7 @@ func (a *Client) PostLineage(params *PostLineageParams, authInfo runtime.ClientA
 
 // PostLineageContext ingests open lineage event.
 //
-// Process OpenLineage run events and update assets/lineage accordingly.
+// Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it..
 //
 // Do not use the deprecated [PostLineageParams.Context] with this method: it would be ignored.
 func (a *Client) PostLineageContext(ctx context.Context, params *PostLineageParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageOK, error) {
@@ -363,9 +363,9 @@ func (a *Client) PostLineageContext(ctx context.Context, params *PostLineagePara
 	panic(msg)
 }
 
-// PostLineageBatch batches create lineage edges.
+// PostLineageBatch batches create lineage edges or ingest open lineage events.
 //
-// Create lineage edges in batch.
+// Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -382,9 +382,9 @@ func (a *Client) PostLineageBatch(params *PostLineageBatchParams, authInfo runti
 	return a.PostLineageBatchContext(ctx, params, authInfo, opts...)
 }
 
-// PostLineageBatchContext batches create lineage edges.
+// PostLineageBatchContext batches create lineage edges or ingest open lineage events.
 //
-// Create lineage edges in batch.
+// Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key..
 //
 // Do not use the deprecated [PostLineageBatchParams.Context] with this method: it would be ignored.
 func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostLineageBatchOK, error) {

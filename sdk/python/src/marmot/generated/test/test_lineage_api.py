@@ -74,13 +74,13 @@ class TestLineageApi(unittest.IsolatedAsyncioTestCase):
     async def test_post_lineage_batch(self) -> None:
         """Test case for post_lineage_batch
 
-        Batch create lineage edges
+        Batch create lineage edges or ingest OpenLineage events
         """
 
     def test_post_lineage_batch_sync(self) -> None:
         """Test case for post_lineage_batch (synchronous)
 
-        Batch create lineage edges
+        Batch create lineage edges or ingest OpenLineage events
         """
 
     async def test_post_lineage_direct(self) -> None:

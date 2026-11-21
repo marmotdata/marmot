@@ -65,7 +65,7 @@ type PostLineageBatchParams struct {
 
 	// Edges.
 	//
-	// Array of lineage edges to create
+	// Array of lineage edges to create, or of OpenLineage events
 	Edges []*models.LineageEdge
 
 	HTTPClient *http.Client

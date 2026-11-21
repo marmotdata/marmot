@@ -7079,7 +7079,7 @@ class UsersApi:
     ) -> TokenResponse:
         """Update user password
 
-        Update current user's password
+        Update current user's password. current_password is required unless the account is waiting on a forced password change.
 
         :param update_password_request: Password update request (required)
         :type update_password_request: UpdatePasswordRequest
@@ -7141,7 +7141,7 @@ class UsersApi:
     ) -> ApiResponse[TokenResponse]:
         """Update user password
 
-        Update current user's password
+        Update current user's password. current_password is required unless the account is waiting on a forced password change.
 
         :param update_password_request: Password update request (required)
         :type update_password_request: UpdatePasswordRequest
@@ -7203,7 +7203,7 @@ class UsersApi:
     ) -> RESTResponseType:
         """Update user password
 
-        Update current user's password
+        Update current user's password. current_password is required unless the account is waiting on a forced password change.
 
         :param update_password_request: Password update request (required)
         :type update_password_request: UpdatePasswordRequest

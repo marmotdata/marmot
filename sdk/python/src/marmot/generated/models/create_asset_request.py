@@ -35,6 +35,10 @@ class CreateAssetRequest(BaseModel):
     environments: dict[str, Environment] | None = None
     external_links: list[AssetExternalLink] | None = None
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None,
+        description="MRN sets the asset's identity explicitly, for example mrn://asset/table/postgresql@prod-eu/analytics.public.orders. Without it the MRN is built from type, the first provider, zone and name.",
+    )
     name: StrictStr
     owners: list[CreateAssetOwner] | None = Field(
         default=None, description="Owners are the users and teams to own the asset."
@@ -51,11 +55,16 @@ class CreateAssetRequest(BaseModel):
         default=None,
         description="UserDescription is the people-written description, kept apart from the source's own.",
     )
+    zone: StrictStr | None = Field(
+        default=None,
+        description="Zone tells apart two systems of the same provider when the MRN is built from the name; ignored when MRN is set.",
+    )
     __properties: ClassVar[list[str]] = [
         "description",
         "environments",
         "external_links",
         "metadata",
+        "mrn",
         "name",
         "owners",
         "providers",
@@ -65,6 +74,7 @@ class CreateAssetRequest(BaseModel):
         "terms",
         "type",
         "user_description",
+        "zone",
     ]
 
     model_config = ConfigDict(
@@ -157,6 +167,7 @@ class CreateAssetRequest(BaseModel):
                 if obj.get("external_links") is not None
                 else None,
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "owners": [CreateAssetOwner.from_dict(_item) for _item in obj["owners"]]
                 if obj.get("owners") is not None
@@ -170,5 +181,6 @@ class CreateAssetRequest(BaseModel):
                 "terms": obj.get("terms"),
                 "type": obj.get("type"),
                 "user_description": obj.get("user_description"),
+                "zone": obj.get("zone"),
             }
         )

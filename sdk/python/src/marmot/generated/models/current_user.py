@@ -41,6 +41,9 @@ class CurrentUser(BaseModel):
         default=None,
         description="LastSeenAt is refreshed at most every LastSeenInterval, so it is accurate to a few minutes.",
     )
+    mrn: StrictStr | None = Field(
+        default=None, description="MRN is mrn://user/<username>, derived from the name."
+    )
     must_change_password: StrictBool | None = None
     name: StrictStr | None = None
     preferences: dict[str, Any] | None = None
@@ -66,6 +69,7 @@ class CurrentUser(BaseModel):
         "invite_expires_at",
         "job_title",
         "last_seen_at",
+        "mrn",
         "must_change_password",
         "name",
         "preferences",
@@ -166,6 +170,7 @@ class CurrentUser(BaseModel):
                 "invite_expires_at": obj.get("invite_expires_at"),
                 "job_title": obj.get("job_title"),
                 "last_seen_at": obj.get("last_seen_at"),
+                "mrn": obj.get("mrn"),
                 "must_change_password": obj.get("must_change_password"),
                 "name": obj.get("name"),
                 "preferences": obj.get("preferences"),

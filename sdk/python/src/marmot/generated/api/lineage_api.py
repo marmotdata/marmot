@@ -1098,7 +1098,7 @@ class LineageApi:
     @validate_call
     async def post_lineage(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1109,9 +1109,9 @@ class LineageApi:
     ) -> None:
         """Ingest OpenLineage event
 
-        Process OpenLineage run events and update assets/lineage accordingly
+        Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it.
 
-        :param run_event: OpenLineage run event (required)
+        :param run_event: OpenLineage event (required)
         :type run_event: RunEvent
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1146,6 +1146,8 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": None,
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
+            "415": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -1158,7 +1160,7 @@ class LineageApi:
     @validate_call
     async def post_lineage_with_http_info(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1169,9 +1171,9 @@ class LineageApi:
     ) -> ApiResponse[None]:
         """Ingest OpenLineage event
 
-        Process OpenLineage run events and update assets/lineage accordingly
+        Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it.
 
-        :param run_event: OpenLineage run event (required)
+        :param run_event: OpenLineage event (required)
         :type run_event: RunEvent
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1206,6 +1208,8 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": None,
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
+            "415": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -1218,7 +1222,7 @@ class LineageApi:
     @validate_call
     async def post_lineage_without_preload_content(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1229,9 +1233,9 @@ class LineageApi:
     ) -> RESTResponseType:
         """Ingest OpenLineage event
 
-        Process OpenLineage run events and update assets/lineage accordingly
+        Accepts one OpenLineage event: a RunEvent, a JobEvent or a DatasetEvent. The body may be gzip-compressed with Content-Encoding: gzip. A malformed event is answered with 400 so the producer does not retry it.
 
-        :param run_event: OpenLineage run event (required)
+        :param run_event: OpenLineage event (required)
         :type run_event: RunEvent
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1266,6 +1270,8 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": None,
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
+            "415": "ErrorResponse",
             "500": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
@@ -1274,7 +1280,7 @@ class LineageApi:
     @validate_call
     def post_lineage_sync(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1302,7 +1308,7 @@ class LineageApi:
     @validate_call
     def post_lineage_sync_with_http_info(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1330,7 +1336,7 @@ class LineageApi:
     @validate_call
     def post_lineage_sync_without_preload_content(
         self,
-        run_event: Annotated[RunEvent, Field(description="OpenLineage run event")],
+        run_event: Annotated[RunEvent, Field(description="OpenLineage event")],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
         | tuple[Annotated[StrictFloat, Field(gt=0)], Annotated[StrictFloat, Field(gt=0)]] = None,
@@ -1417,7 +1423,8 @@ class LineageApi:
     async def post_lineage_batch(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1427,11 +1434,11 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> list[BatchLineageResult]:
-        """Batch create lineage edges
+        """Batch create lineage edges or ingest OpenLineage events
 
-        Create lineage edges in batch
+        Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key.
 
-        :param lineage_edge: Array of lineage edges to create (required)
+        :param lineage_edge: Array of lineage edges to create, or of OpenLineage events (required)
         :type lineage_edge: List[LineageEdge]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1466,6 +1473,7 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": "List[BatchLineageResult]",
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1478,7 +1486,8 @@ class LineageApi:
     async def post_lineage_batch_with_http_info(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1488,11 +1497,11 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[list[BatchLineageResult]]:
-        """Batch create lineage edges
+        """Batch create lineage edges or ingest OpenLineage events
 
-        Create lineage edges in batch
+        Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key.
 
-        :param lineage_edge: Array of lineage edges to create (required)
+        :param lineage_edge: Array of lineage edges to create, or of OpenLineage events (required)
         :type lineage_edge: List[LineageEdge]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1527,6 +1536,7 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": "List[BatchLineageResult]",
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         await response_data.read()
@@ -1539,7 +1549,8 @@ class LineageApi:
     async def post_lineage_batch_without_preload_content(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1549,11 +1560,11 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Batch create lineage edges
+        """Batch create lineage edges or ingest OpenLineage events
 
-        Create lineage edges in batch
+        Takes an array of lineage edges, or an array of OpenLineage events as the OpenLineage batch endpoint does. An array whose first element has an eventTime is read as OpenLineage events, processed in order and answered with an OpenLineageBatchResponse; anything else is read as edges. The body may be gzip-compressed. Unlike POST /api/v1/lineage, this endpoint always requires an API key.
 
-        :param lineage_edge: Array of lineage edges to create (required)
+        :param lineage_edge: Array of lineage edges to create, or of OpenLineage events (required)
         :type lineage_edge: List[LineageEdge]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -1588,6 +1599,7 @@ class LineageApi:
         _response_types_map: dict[str, str | None] = {
             "200": "List[BatchLineageResult]",
             "400": "ErrorResponse",
+            "413": "ErrorResponse",
         }
         response_data = await self.api_client.call_api(*_param, _request_timeout=_request_timeout)
         return response_data.response
@@ -1596,7 +1608,8 @@ class LineageApi:
     def post_lineage_batch_sync(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1606,7 +1619,7 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> list[BatchLineageResult]:
-        """Batch create lineage edges (synchronous)
+        """Batch create lineage edges or ingest OpenLineage events (synchronous)
 
         Synchronous variant of :meth:`post_lineage_batch`. It calls the asynchronous
         method and blocks until it completes.
@@ -1626,7 +1639,8 @@ class LineageApi:
     def post_lineage_batch_sync_with_http_info(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1636,7 +1650,7 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[list[BatchLineageResult]]:
-        """Batch create lineage edges (synchronous)
+        """Batch create lineage edges or ingest OpenLineage events (synchronous)
 
         Synchronous variant of :meth:`post_lineage_batch_with_http_info`. It calls the
         asynchronous method and blocks until it completes.
@@ -1656,7 +1670,8 @@ class LineageApi:
     def post_lineage_batch_sync_without_preload_content(
         self,
         lineage_edge: Annotated[
-            list[LineageEdge], Field(description="Array of lineage edges to create")
+            list[LineageEdge],
+            Field(description="Array of lineage edges to create, or of OpenLineage events"),
         ],
         _request_timeout: None
         | Annotated[StrictFloat, Field(gt=0)]
@@ -1666,7 +1681,7 @@ class LineageApi:
         _headers: dict[StrictStr, Any] | None = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Batch create lineage edges (synchronous)
+        """Batch create lineage edges or ingest OpenLineage events (synchronous)
 
         Synchronous variant of :meth:`post_lineage_batch_without_preload_content`. It calls
         the asynchronous method and blocks until it completes.

@@ -35,6 +35,7 @@ class TestRunHistory(unittest.TestCase):
             return RunHistory(
                 duration_ms = 56,
                 end_time = '',
+                error_message = '',
                 event_time = '',
                 id = '',
                 job_name = '',

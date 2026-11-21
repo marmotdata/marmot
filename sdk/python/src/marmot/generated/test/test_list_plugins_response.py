@@ -84,8 +84,10 @@ class TestListPluginsResponse(unittest.TestCase):
                         features = [
                             ''
                             ],
+                        federates = True,
                         icon = '',
                         id = '',
+                        identity_scope = null,
                         marmot_version = '',
                         name = '',
                         produces_lineage = True,

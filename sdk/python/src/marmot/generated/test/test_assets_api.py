@@ -71,6 +71,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Remove glossary term from asset
         """
 
+    async def test_delete_zone_bindings(self) -> None:
+        """Test case for delete_zone_bindings
+
+        Delete a zone binding
+        """
+
+    def test_delete_zone_bindings_sync(self) -> None:
+        """Test case for delete_zone_bindings (synchronous)
+
+        Delete a zone binding
+        """
+
     async def test_get_assets_by_glossary_term_term_id(self) -> None:
         """Test case for get_assets_by_glossary_term_term_id
 
@@ -98,13 +110,13 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
     async def test_get_assets_documentation_mrn(self) -> None:
         """Test case for get_assets_documentation_mrn
 
-        Get asset documentation
+        Get plugin-sourced asset documentation
         """
 
     def test_get_assets_documentation_mrn_sync(self) -> None:
         """Test case for get_assets_documentation_mrn (synchronous)
 
-        Get asset documentation
+        Get plugin-sourced asset documentation
         """
 
     async def test_get_assets_field_annotations_id(self) -> None:
@@ -153,6 +165,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for get_assets_id_run_history_histogram (synchronous)
 
         Get asset run history histogram
+        """
+
+    async def test_get_assets_identity_id(self) -> None:
+        """Test case for get_assets_identity_id
+
+        Get an asset's identity
+        """
+
+    def test_get_assets_identity_id_sync(self) -> None:
+        """Test case for get_assets_identity_id (synchronous)
+
+        Get an asset's identity
         """
 
     async def test_get_assets_lookup_type_service_name(self) -> None:
@@ -287,6 +311,30 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Get asset's glossary terms
         """
 
+    async def test_get_mrn_resolve(self) -> None:
+        """Test case for get_mrn_resolve
+
+        Resolve an MRN
+        """
+
+    def test_get_mrn_resolve_sync(self) -> None:
+        """Test case for get_mrn_resolve (synchronous)
+
+        Resolve an MRN
+        """
+
+    async def test_get_zone_bindings(self) -> None:
+        """Test case for get_zone_bindings
+
+        List zone bindings
+        """
+
+    def test_get_zone_bindings_sync(self) -> None:
+        """Test case for get_zone_bindings (synchronous)
+
+        List zone bindings
+        """
+
     async def test_post_assets(self) -> None:
         """Test case for post_assets
 
@@ -335,6 +383,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Batch create documentation
         """
 
+    async def test_post_assets_merge_id(self) -> None:
+        """Test case for post_assets_merge_id
+
+        Merge an asset into another
+        """
+
+    def test_post_assets_merge_id_sync(self) -> None:
+        """Test case for post_assets_merge_id (synchronous)
+
+        Merge an asset into another
+        """
+
     async def test_post_assets_tags_id(self) -> None:
         """Test case for post_assets_tags_id
 
@@ -359,6 +419,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         Add glossary terms to asset
         """
 
+    async def test_put_assets_by_mrn(self) -> None:
+        """Test case for put_assets_by_mrn
+
+        Create or update an asset by MRN
+        """
+
+    def test_put_assets_by_mrn_sync(self) -> None:
+        """Test case for put_assets_by_mrn (synchronous)
+
+        Create or update an asset by MRN
+        """
+
     async def test_put_assets_field_annotations_id(self) -> None:
         """Test case for put_assets_field_annotations_id
 
@@ -381,6 +453,18 @@ class TestAssetsApi(unittest.IsolatedAsyncioTestCase):
         """Test case for put_assets_id (synchronous)
 
         Update an asset
+        """
+
+    async def test_put_zone_bindings(self) -> None:
+        """Test case for put_zone_bindings
+
+        Pin a zone binding
+        """
+
+    def test_put_zone_bindings_sync(self) -> None:
+        """Test case for put_zone_bindings (synchronous)
+
+        Pin a zone binding
         """
 
 

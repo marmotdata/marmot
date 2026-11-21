@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -32,6 +32,9 @@ class Team(BaseModel):
     description: StrictStr | None = None
     id: StrictStr | None = None
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None, description="MRN is mrn://team/<slug>, derived from the name."
+    )
     name: StrictStr | None = None
     sso_provider: StrictStr | None = None
     tags: list[StrictStr] | None = None
@@ -43,6 +46,7 @@ class Team(BaseModel):
         "description",
         "id",
         "metadata",
+        "mrn",
         "name",
         "sso_provider",
         "tags",
@@ -104,6 +108,7 @@ class Team(BaseModel):
                 "description": obj.get("description"),
                 "id": obj.get("id"),
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "sso_provider": obj.get("sso_provider"),
                 "tags": obj.get("tags"),

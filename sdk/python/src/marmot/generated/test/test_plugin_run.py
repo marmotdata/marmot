@@ -38,6 +38,7 @@ class TestPluginRun(unittest.TestCase):
                 created_by = '',
                 error_message = '',
                 id = '',
+                owner = '',
                 pipeline_name = '',
                 run_id = '',
                 source_name = '',

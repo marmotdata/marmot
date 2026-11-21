@@ -42,6 +42,10 @@ class DataProduct(BaseModel):
     id: StrictStr | None = None
     manual_asset_count: StrictInt | None = None
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None,
+        description="MRN is mrn://data-product/<slug>, kept up to date by the database as the product is renamed.",
+    )
     name: StrictStr | None = None
     owners: list[DataProductOwner] | None = None
     popularity: StrictInt | None = Field(
@@ -62,6 +66,7 @@ class DataProduct(BaseModel):
         "id",
         "manual_asset_count",
         "metadata",
+        "mrn",
         "name",
         "owners",
         "popularity",
@@ -155,6 +160,7 @@ class DataProduct(BaseModel):
                 "id": obj.get("id"),
                 "manual_asset_count": obj.get("manual_asset_count"),
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "owners": [DataProductOwner.from_dict(_item) for _item in obj["owners"]]
                 if obj.get("owners") is not None

@@ -30,6 +30,9 @@ class RunEvent(BaseModel):
     RunEvent
     """
 
+    dataset: Dataset | None = Field(
+        default=None, description="Dataset is the dataset a DatasetEvent describes."
+    )
     event_time: StrictStr | None = Field(default=None, alias="eventTime")
     event_type: StrictStr | None = Field(default=None, alias="eventType")
     inputs: list[Dataset] | None = None
@@ -39,6 +42,7 @@ class RunEvent(BaseModel):
     run: LineageRun | None = None
     schema_url: StrictStr | None = Field(default=None, alias="schemaURL")
     __properties: ClassVar[list[str]] = [
+        "dataset",
         "eventTime",
         "eventType",
         "inputs",
@@ -86,6 +90,9 @@ class RunEvent(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of dataset
+        if self.dataset:
+            _dict["dataset"] = self.dataset.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in inputs (list)
         _items = []
         if self.inputs:
@@ -119,6 +126,9 @@ class RunEvent(BaseModel):
 
         return cls.model_validate(
             {
+                "dataset": Dataset.from_dict(obj["dataset"])
+                if obj.get("dataset") is not None
+                else None,
                 "eventTime": obj.get("eventTime"),
                 "eventType": obj.get("eventType"),
                 "inputs": [Dataset.from_dict(_item) for _item in obj["inputs"]]

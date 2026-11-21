@@ -47,6 +47,10 @@ class GlossaryTerm(BaseModel):
         description="LinkedAssetCount counts every asset linked to the term, by hand or by an asset rule, so a tree can show it without a request per term.",
     )
     metadata: dict[str, Any] | None = None
+    mrn: StrictStr | None = Field(
+        default=None,
+        description="MRN is mrn://glossary-term/<source>/<path>, kept up to date by the database as the term is renamed or moved.",
+    )
     name: StrictStr | None = None
     owners: list[GlossaryOwner] | None = None
     parent_term_id: StrictStr | None = None
@@ -69,6 +73,7 @@ class GlossaryTerm(BaseModel):
         "id",
         "linked_asset_count",
         "metadata",
+        "mrn",
         "name",
         "owners",
         "parent_term_id",
@@ -151,6 +156,7 @@ class GlossaryTerm(BaseModel):
                 "id": obj.get("id"),
                 "linked_asset_count": obj.get("linked_asset_count"),
                 "metadata": obj.get("metadata"),
+                "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
                 "owners": [GlossaryOwner.from_dict(_item) for _item in obj["owners"]]
                 if obj.get("owners") is not None

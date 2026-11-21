@@ -18,6 +18,11 @@ import (
 // swagger:model RunEvent
 type RunEvent struct {
 
+	// Dataset is the dataset a DatasetEvent describes.
+	Dataset struct {
+		Dataset
+	} `json:"dataset,omitempty"`
+
 	// event time
 	EventTime string `json:"eventTime,omitempty"`
 
@@ -47,6 +52,10 @@ type RunEvent struct {
 func (m *RunEvent) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateDataset(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateInputs(formats); err != nil {
 		res = append(res, err)
 	}
@@ -66,6 +75,14 @@ func (m *RunEvent) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *RunEvent) validateDataset(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Dataset) { // not required
+		return nil
+	}
+
 	return nil
 }
 
@@ -179,6 +196,10 @@ func (m *RunEvent) validateRun(formats strfmt.Registry) error {
 func (m *RunEvent) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateDataset(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateInputs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -198,6 +219,11 @@ func (m *RunEvent) ContextValidate(ctx context.Context, formats strfmt.Registry)
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *RunEvent) contextValidateDataset(ctx context.Context, formats strfmt.Registry) error {
+
 	return nil
 }
 

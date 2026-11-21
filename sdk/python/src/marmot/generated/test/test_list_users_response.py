@@ -54,6 +54,7 @@ class TestListUsersResponse(unittest.TestCase):
                             ],
                         invite_expires_at = '',
                         last_seen_at = '',
+                        mrn = '',
                         must_change_password = True,
                         name = '',
                         preferences = { },

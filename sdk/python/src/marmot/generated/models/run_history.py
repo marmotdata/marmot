@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -28,6 +28,10 @@ class RunHistory(BaseModel):
 
     duration_ms: StrictInt | None = None
     end_time: StrictStr | None = None
+    error_message: StrictStr | None = Field(
+        default=None,
+        description="ErrorMessage is why a run failed, from the OpenLineage errorMessage facet or a producer's own exception facet; empty when no event said.",
+    )
     event_time: StrictStr | None = None
     id: StrictStr | None = None
     job_name: StrictStr | None = None
@@ -39,6 +43,7 @@ class RunHistory(BaseModel):
     __properties: ClassVar[list[str]] = [
         "duration_ms",
         "end_time",
+        "error_message",
         "event_time",
         "id",
         "job_name",
@@ -100,6 +105,7 @@ class RunHistory(BaseModel):
             {
                 "duration_ms": obj.get("duration_ms"),
                 "end_time": obj.get("end_time"),
+                "error_message": obj.get("error_message"),
                 "event_time": obj.get("event_time"),
                 "id": obj.get("id"),
                 "job_name": obj.get("job_name"),

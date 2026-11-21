@@ -1,4 +1,4 @@
-package docs
+package docpages
 
 import (
 	"encoding/base64"
@@ -21,25 +21,43 @@ type CreatePageRequest struct {
 	Title    string  `json:"title"`
 	Emoji    *string `json:"emoji,omitempty"`
 	Content  *string `json:"content,omitempty"`
-}
+} // @name DocsCreatePageRequest
 
 type UpdatePageRequest struct {
 	Title   *string `json:"title,omitempty"`
 	Emoji   *string `json:"emoji,omitempty"`
 	Content *string `json:"content,omitempty"`
-}
+} // @name DocsUpdatePageRequest
 
 type MovePageRequest struct {
 	ParentID *string `json:"parent_id,omitempty"`
 	Position int     `json:"position"`
-}
+} // @name DocsMovePageRequest
+
+type SearchPagesResponse struct {
+	Pages []*docs.Page `json:"pages"`
+	Total int          `json:"total"`
+} // @name DocsSearchPagesResponse
 
 type UploadImageRequest struct {
 	Filename    string `json:"filename"`
 	ContentType string `json:"content_type"`
 	Data        string `json:"data"` // Base64 encoded
-}
+} // @name DocsUploadImageRequest
 
+// @Summary List documentation pages
+// @Description The documentation pages written for an asset or data product, as a tree, with the entity's storage use. This is the documentation the Docs tab shows; page bodies are Markdown.
+// @Tags docs
+// @Produce json
+// @Param entityType path string true "Kind of entity the pages belong to" Enums(asset, data_product)
+// @Param entityId path string true "Asset MRN or data product ID, URL-encoded"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} docs.PageTree
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsEntityPages
+// @Router /api/v1/docs/entity/{entityType}/{entityId}/pages [get]
 func (h *Handler) getPageTree(w http.ResponseWriter, r *http.Request) {
 	entityType := docs.EntityType(r.PathValue("entityType"))
 	encodedEntityID := r.PathValue("entityId")
@@ -65,6 +83,21 @@ func (h *Handler) getPageTree(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, tree)
 }
 
+// @Summary Create a documentation page
+// @Description Adds a page to an asset or data product, at the top level or under parent_id.
+// @Tags docs
+// @Accept json
+// @Produce json
+// @Param entityType path string true "Kind of entity the pages belong to" Enums(asset, data_product)
+// @Param entityId path string true "Asset MRN or data product ID, URL-encoded"
+// @Param request body CreatePageRequest true "The new page"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 201 {object} docs.Page
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID postDocsEntityPages
+// @Router /api/v1/docs/entity/{entityType}/{entityId}/pages [post]
 func (h *Handler) createPage(w http.ResponseWriter, r *http.Request) {
 	entityType := docs.EntityType(r.PathValue("entityType"))
 	encodedEntityID := r.PathValue("entityId")
@@ -109,6 +142,18 @@ func (h *Handler) createPage(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, page)
 }
 
+// @Summary Get a documentation page
+// @Description One page with its Markdown content.
+// @Tags docs
+// @Produce json
+// @Param pageId path string true "Page ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} docs.Page
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsPage
+// @Router /api/v1/docs/pages/{pageId} [get]
 func (h *Handler) getPage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -126,6 +171,21 @@ func (h *Handler) getPage(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, page)
 }
 
+// @Summary Update a documentation page
+// @Description Changes a page's title, emoji or content; fields left out stay as they are.
+// @Tags docs
+// @Accept json
+// @Produce json
+// @Param pageId path string true "Page ID"
+// @Param request body UpdatePageRequest true "Fields to change"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} docs.Page
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID putDocsPage
+// @Router /api/v1/docs/pages/{pageId} [put]
 func (h *Handler) updatePage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -164,6 +224,17 @@ func (h *Handler) updatePage(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, page)
 }
 
+// @Summary Delete a documentation page
+// @Description Deletes a page along with its child pages and images.
+// @Tags docs
+// @Param pageId path string true "Page ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 204
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID deleteDocsPage
+// @Router /api/v1/docs/pages/{pageId} [delete]
 func (h *Handler) deletePage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -181,6 +252,21 @@ func (h *Handler) deletePage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Move a documentation page
+// @Description Moves a page under another parent, or to the top level when parent_id is omitted, at the given position.
+// @Tags docs
+// @Accept json
+// @Produce json
+// @Param pageId path string true "Page ID"
+// @Param request body MovePageRequest true "New parent and position"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} docs.Page
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID putDocsPageMove
+// @Router /api/v1/docs/pages/{pageId}/move [put]
 func (h *Handler) movePage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -209,6 +295,22 @@ func (h *Handler) movePage(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, page)
 }
 
+// @Summary Search documentation pages
+// @Description Full-text search across one asset's or data product's pages.
+// @Tags docs
+// @Produce json
+// @Param entityType path string true "Kind of entity the pages belong to" Enums(asset, data_product)
+// @Param entityId path string true "Asset MRN or data product ID, URL-encoded"
+// @Param q query string false "Search text"
+// @Param limit query int false "Maximum number of pages to return" default(20)
+// @Param offset query int false "Number of pages to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} SearchPagesResponse
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsEntitySearch
+// @Router /api/v1/docs/entity/{entityType}/{entityId}/search [get]
 func (h *Handler) searchPages(w http.ResponseWriter, r *http.Request) {
 	entityType := docs.EntityType(r.PathValue("entityType"))
 	encodedEntityID := r.PathValue("entityId")
@@ -242,12 +344,22 @@ func (h *Handler) searchPages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"pages": pages,
-		"total": total,
-	})
+	common.RespondJSON(w, http.StatusOK, SearchPagesResponse{Pages: pages, Total: total})
 }
 
+// @Summary Get documentation storage use
+// @Description Page count, image count and bytes used against the limit for one asset or data product.
+// @Tags docs
+// @Produce json
+// @Param entityType path string true "Kind of entity the pages belong to" Enums(asset, data_product)
+// @Param entityId path string true "Asset MRN or data product ID, URL-encoded"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {object} docs.StorageStats
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsEntityStats
+// @Router /api/v1/docs/entity/{entityType}/{entityId}/stats [get]
 func (h *Handler) getStorageStats(w http.ResponseWriter, r *http.Request) {
 	entityType := docs.EntityType(r.PathValue("entityType"))
 	encodedEntityID := r.PathValue("entityId")
@@ -268,6 +380,16 @@ func (h *Handler) getStorageStats(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, stats)
 }
 
+// @Summary List a page's images
+// @Tags docs
+// @Produce json
+// @Param pageId path string true "Page ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {array} docs.ImageMeta
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsPageImages
+// @Router /api/v1/docs/pages/{pageId}/images [get]
 func (h *Handler) listPageImages(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -281,6 +403,21 @@ func (h *Handler) listPageImages(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, images)
 }
 
+// @Summary Upload an image to a page
+// @Description Takes base64 data or a data URL; JPEG, PNG, GIF or WebP up to 5MB. Reference the returned url from the page's Markdown.
+// @Tags docs
+// @Accept json
+// @Produce json
+// @Param pageId path string true "Page ID"
+// @Param request body UploadImageRequest true "The image"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 201 {object} docs.ImageMeta
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID postDocsPageImages
+// @Router /api/v1/docs/pages/{pageId}/images [post]
 func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
@@ -339,6 +476,19 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, imageMeta)
 }
 
+// @Summary Get an image
+// @Description The image's bytes, with its content type.
+// @Tags docs
+// @Produce image/jpeg,image/png,image/gif,image/webp
+// @Param imageId path string true "Image ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 200 {file} binary
+// @Success 304
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID getDocsImage
+// @Router /api/v1/docs/images/{imageId} [get]
 func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	imageID := r.PathValue("imageId")
 
@@ -372,6 +522,16 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(image.Data) //nolint:gosec // G705: image is re-encoded on upload, served with CSP default-src 'none' and nosniff
 }
 
+// @Summary Delete an image
+// @Tags docs
+// @Param imageId path string true "Image ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
+// @Success 204
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @ID deleteDocsImage
+// @Router /api/v1/docs/images/{imageId} [delete]
 func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
 	imageID := r.PathValue("imageId")
 

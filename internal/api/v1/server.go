@@ -22,7 +22,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
 	queryAPI "github.com/marmotdata/marmot/internal/api/v1/dataquery"
-	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
+	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docpages"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"

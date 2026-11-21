@@ -39,6 +39,7 @@ class TestTeam(unittest.TestCase):
                 description = '',
                 id = '',
                 metadata = { },
+                mrn = '',
                 name = '',
                 sso_provider = '',
                 tags = [

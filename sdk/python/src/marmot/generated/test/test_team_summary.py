@@ -41,6 +41,7 @@ class TestTeamSummary(unittest.TestCase):
                 id = '',
                 member_count = 56,
                 metadata = { },
+                mrn = '',
                 name = '',
                 sso_groups = [
                     marmot.generated.models.sso_group_ref.SSOGroupRef(

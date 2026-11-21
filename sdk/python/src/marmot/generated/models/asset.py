@@ -23,6 +23,7 @@ from typing_extensions import Self
 from marmot.generated.models.asset_external_link import AssetExternalLink
 from marmot.generated.models.asset_source import AssetSource
 from marmot.generated.models.environment import Environment
+from marmot.generated.models.mrn_parts import MRNParts
 
 
 class Asset(BaseModel):
@@ -41,8 +42,16 @@ class Asset(BaseModel):
     last_sync_at: StrictStr | None = None
     metadata: dict[str, Any] | None = None
     mrn: StrictStr | None = None
+    mrn_parts: MRNParts | None = Field(
+        default=None,
+        description="MRNParts is the MRN split into kind, type, provider, zone and name, so clients never split the string themselves.",
+    )
     name: StrictStr | None = None
     parent_mrn: StrictStr | None = None
+    previous_mrns: list[StrictStr] | None = Field(
+        default=None,
+        description="PreviousMRNs carries the MRNs a plugin gave this asset before; input only, like Terms.",
+    )
     providers: list[StrictStr] | None = None
     query: StrictStr | None = None
     query_language: StrictStr | None = None
@@ -68,8 +77,10 @@ class Asset(BaseModel):
         "last_sync_at",
         "metadata",
         "mrn",
+        "mrn_parts",
         "name",
         "parent_mrn",
+        "previous_mrns",
         "providers",
         "query",
         "query_language",
@@ -133,6 +144,9 @@ class Asset(BaseModel):
                 if _item_external_links:
                     _items.append(_item_external_links.to_dict())
             _dict["external_links"] = _items
+        # override the default output from pydantic by calling `to_dict()` of mrn_parts
+        if self.mrn_parts:
+            _dict["mrn_parts"] = self.mrn_parts.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in sources (list)
         _items = []
         if self.sources:
@@ -172,8 +186,12 @@ class Asset(BaseModel):
                 "last_sync_at": obj.get("last_sync_at"),
                 "metadata": obj.get("metadata"),
                 "mrn": obj.get("mrn"),
+                "mrn_parts": MRNParts.from_dict(obj["mrn_parts"])
+                if obj.get("mrn_parts") is not None
+                else None,
                 "name": obj.get("name"),
                 "parent_mrn": obj.get("parent_mrn"),
+                "previous_mrns": obj.get("previous_mrns"),
                 "providers": obj.get("providers"),
                 "query": obj.get("query"),
                 "query_language": obj.get("query_language"),

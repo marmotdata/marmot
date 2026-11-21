@@ -54,8 +54,20 @@ class TestAsset(unittest.TestCase):
                 last_sync_at = '',
                 metadata = { },
                 mrn = '',
+                mrn_parts = marmot.generated.models.mrn_parts.MRNParts(
+                    kind = '',
+                    name = '',
+                    path = [
+                        ''
+                        ],
+                    provider = '',
+                    type = '',
+                    zone = '', ),
                 name = '',
                 parent_mrn = '',
+                previous_mrns = [
+                    ''
+                    ],
                 providers = [
                     ''
                     ],

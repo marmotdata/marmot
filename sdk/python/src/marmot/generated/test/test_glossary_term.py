@@ -42,6 +42,7 @@ class TestGlossaryTerm(unittest.TestCase):
                 id = '',
                 linked_asset_count = 56,
                 metadata = { },
+                mrn = '',
                 name = '',
                 owners = [
                     marmot.generated.models.glossary_owner.GlossaryOwner(
