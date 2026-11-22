@@ -9,6 +9,7 @@
 	import SetupChecklist, { type SetupStep } from '#components/home/SetupChecklist.svelte';
 	import QueryBlade from '#components/home/QueryBlade.svelte';
 	import { fetchApi } from '#lib/api.ts';
+	import { kindOfType, knowledgeKinds } from '#lib/knowledge/kinds.ts';
 	import { auth } from '#lib/stores/auth.ts';
 	import { userProfile } from '#lib/stores/user.ts';
 	import { setupHidden, setupRemoved, skippedSteps } from '#lib/stores/setup.svelte.ts';
@@ -171,6 +172,16 @@
 		saved_query: 'terminal'
 	};
 
+	// An asset's mark in a list: a knowledge entry's kind icon, since every entry has Marmot as its provider, otherwise the provider's logo.
+	function assetMark(
+		type: string | undefined,
+		provider: string | undefined
+	): { provider?: string; icon?: string } {
+		const kind = kindOfType(type, $knowledgeKinds);
+		if (kind) return { icon: kind.icon };
+		return { provider: provider?.toLowerCase() || undefined };
+	}
+
 	function kindLabel(r: RecentItem): string {
 		if (r.kind === 'glossary_term') return m.home_jump_kind_term();
 		if (r.kind === 'data_product') return m.home_jump_kind_product();
@@ -208,8 +219,8 @@
 						when: ago(r.viewed_at)
 					}),
 					href: recentHref(r),
-					provider: r.kind === 'asset' ? r.provider?.toLowerCase() || undefined : undefined,
-					icon: KIND_ICONS[r.kind] ?? 'table'
+					icon: KIND_ICONS[r.kind] ?? 'table',
+					...(r.kind === 'asset' ? assetMark(r.type, r.provider) : {})
 				}
 			}));
 		for (const q of savedQueries) {
@@ -245,7 +256,7 @@
 			key: a.id,
 			name: a.name,
 			caption: a.type,
-			provider: a.providers?.[0]?.toLowerCase() || undefined,
+			...assetMark(a.type, a.providers?.[0]),
 			href: resolve('/discover/[type]/[service]/[name]', myAssetParams(a))
 		}));
 		const popular = viewed
@@ -254,7 +265,7 @@
 				key: v.asset_id,
 				name: v.asset_name,
 				caption: v.asset_type,
-				provider: v.asset_provider?.toLowerCase() || undefined,
+				...assetMark(v.asset_type, v.asset_provider),
 				href: resolve('/discover/[type]/[service]/[name]', {
 					type: v.asset_type,
 					service: v.asset_provider,
