@@ -516,7 +516,8 @@
 				onmm-open-search={() => palette?.show()}
 				onmm-open-notifications={() => goto(resolve('/notifications'))}
 			>
-				{#if crumbs.length}
+				<!-- A single crumb only repeats the page title under it, so the top bar shows a trail once there is somewhere to go back to; a page without such a title asks for its lone crumb. -->
+				{#if crumbs.length > 1 || (crumbs.length === 1 && $chrome.path === path && $chrome.showLoneCrumb)}
 					<mm-breadcrumbs slot="start">
 						<!-- Keyed by label so a crumb whose name arrives later is a new child, which makes mm-breadcrumbs re-fit instead of keeping the "…" it collapsed to for the placeholder -->
 						{#each crumbs as crumb, i (`${i}:${crumb.label}`)}

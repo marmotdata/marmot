@@ -12,7 +12,8 @@
 	const initialStatement = page.url.searchParams.get('q') ?? '';
 	const autoRun = page.url.searchParams.get('run') === '1';
 
-	setCrumbs([{ label: m.nav_query() }]);
+	// The workspace has no page title, so the top bar names it.
+	setCrumbs([{ label: m.nav_query() }], { showLoneCrumb: true });
 </script>
 
 <svelte:head>

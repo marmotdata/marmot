@@ -171,12 +171,17 @@
 		});
 	}
 
+	// Counts are across every entry, so they would contradict a filtered list; they show only while nothing is filtered.
+	function shownCount(n: number): number | undefined {
+		return filtering ? undefined : n;
+	}
+
 	let kindOptions = $derived<MmFacetOption[]>(
 		$knowledgeKinds.map((k) => ({
 			value: k.id,
 			label: k.label,
 			icon: k.icon,
-			count: counts?.by_kind[k.id] ?? 0
+			count: shownCount(counts?.by_kind[k.id] ?? 0)
 		}))
 	);
 	const stateLabel: Record<KnowledgeState, () => string> = {
@@ -185,7 +190,11 @@
 		historical: m.knowledge_state_historical
 	};
 	let stateOptions = $derived<MmFacetOption[]>(
-		STATES.map((s) => ({ value: s, label: stateLabel[s](), count: counts?.by_state[s] ?? 0 }))
+		STATES.map((s) => ({
+			value: s,
+			label: stateLabel[s](),
+			count: shownCount(counts?.by_state[s] ?? 0)
+		}))
 	);
 	// Teams that own entries, busiest first, so "what does payments know" is one click.
 	let teamOptions = $derived<MmFacetOption[]>(
@@ -193,7 +202,7 @@
 			value: t.id,
 			label: t.name,
 			icon: 'groups',
-			count: t.count
+			count: shownCount(t.count)
 		}))
 	);
 	let showOptions = $derived<MmFacetOption[]>([
@@ -201,14 +210,20 @@
 			value: 'review',
 			label: m.knowledge_show_review_due(),
 			icon: 'schedule',
-			count: counts?.review_due ?? 0
+			count: shownCount(counts?.review_due ?? 0)
 		},
 		{ value: 'mine', label: m.knowledge_show_mine(), icon: 'person' }
 	]);
 
+	// One quiet line, as Discover writes it: what it says, then its kind, owners and when it last changed.
 	function caption(e: KnowledgeSummary): string {
 		const kind = kindById(e.kind, $knowledgeKinds)?.label ?? '';
-		return [kind, m.knowledge_updated({ date: formatRelativeTime(e.updated_at) })]
+		return [
+			e.summary,
+			kind,
+			e.owners.map((o) => o.name).join(', '),
+			m.knowledge_updated({ date: formatRelativeTime(e.updated_at) })
+		]
 			.filter(Boolean)
 			.join(' · ');
 	}
@@ -259,8 +274,20 @@
 			</mm-section>
 		{/if}
 	{:else}
+		<mm-search-field
+			class="search"
+			label={m.knowledge_search_label()}
+			hide-label
+			placeholder={m.knowledge_search_hint()}
+			shortcut="/"
+			value={search}
+			onmm-input={(e: CustomEvent<{ value: string }>) => onSearch(e.detail.value)}
+		></mm-search-field>
+
 		<div class="mm-split mm-split--sidebar">
+			<!-- Each facet already says how many are selected, and a long team name in the applied-filters row ran into the results. -->
 			<mm-facet-sidebar
+				hide-applied
 				heading={m.knowledge_filters_heading()}
 				onmm-filter-change={(e: CustomEvent<{ facets: Record<string, string[]> }>) =>
 					onFacets(e.detail.facets)}
@@ -300,31 +327,6 @@
 				style="--mm-gap: var(--space-4)"
 				aria-label={m.knowledge_entries_label()}
 			>
-				<mm-toolbar label={m.knowledge_filter_label()}>
-					<mm-search-field
-						class="search"
-						label={m.knowledge_search_label()}
-						hide-label
-						placeholder={m.knowledge_search_hint()}
-						shortcut="/"
-						value={search}
-						onmm-input={(e: CustomEvent<{ value: string }>) => onSearch(e.detail.value)}
-					></mm-search-field>
-					<mm-select
-						slot="end"
-						class="sort"
-						label={m.knowledge_sort_label()}
-						hide-label
-						value={filters.sort}
-						onmm-change={(e: CustomEvent<{ value: string }>) =>
-							apply({ sort: e.detail.value as Sort })}
-					>
-						<mm-option value="updated">{m.knowledge_sort_updated()}</mm-option>
-						<mm-option value="name">{m.knowledge_sort_name()}</mm-option>
-						<mm-option value="review">{m.knowledge_sort_review()}</mm-option>
-					</mm-select>
-				</mm-toolbar>
-
 				{#if onlyKind}
 					<mm-text variant="dense" tone="secondary" block>{onlyKind.description}</mm-text>
 				{/if}
@@ -352,45 +354,50 @@
 						{/if}
 					</mm-empty-state>
 				{:else}
-					<mm-text variant="dense" tone="secondary" role="status"
-						>{m.knowledge_results({ count: total })}</mm-text
-					>
-					<ul class="mm-list entries" aria-label={m.knowledge_entries_label()} aria-busy={loading}>
+					<div class="mm-cluster mm-cluster--between">
+						<mm-text variant="dense" tone="secondary" role="status"
+							>{m.knowledge_results({ count: total })}</mm-text
+						>
+						<mm-select
+							style="inline-size: 12rem"
+							label={m.knowledge_sort_label()}
+							hide-label
+							value={filters.sort}
+							onmm-change={(e: CustomEvent<{ value: string }>) =>
+								apply({ sort: e.detail.value as Sort })}
+						>
+							<mm-option value="updated">{m.knowledge_sort_updated()}</mm-option>
+							<mm-option value="name">{m.knowledge_sort_name()}</mm-option>
+							<mm-option value="review">{m.knowledge_sort_review()}</mm-option>
+						</mm-select>
+					</div>
+					<mm-list class="results" aria-label={m.knowledge_entries_label()} aria-busy={loading}>
 						{#each rows as e (e.asset_id)}
 							{@const kind = kindById(e.kind, $knowledgeKinds)}
-							<li class:historical={e.state === 'historical'}>
-								<mm-icon name={kind?.icon ?? 'description'} size={20} aria-hidden="true"></mm-icon>
-								<div class="body">
-									<div class="mm-cluster" style="--mm-gap: var(--space-2)">
-										<a
-											class="mm-link mm-link--quiet name"
-											href={resolve('/knowledge/[id]', { id: e.asset_id })}>{e.name}</a
-										>
-										<StatusPill {kind} status={e.status} state={e.state} reviewDue={e.review_due} />
-									</div>
-									<mm-text variant="dense" tone="secondary" block class="truncate"
-										>{e.summary || caption(e)}</mm-text
-									>
-								</div>
-								<div class="side">
-									{#if e.owners.length}
-										<mm-avatar-stack label={m.common_owners()} size={20}>
-											{#each e.owners as o (o.type + o.id)}
-												<mm-avatar
-													name={o.name}
-													kind={o.type === 'team' ? 'team' : 'person'}
-													size={20}
-												></mm-avatar>
-											{/each}
-										</mm-avatar-stack>
-									{/if}
-									<mm-text variant="caption" tone="secondary"
-										>{formatRelativeTime(e.updated_at)}</mm-text
-									>
-								</div>
-							</li>
+							<mm-list-item
+								href={resolve('/knowledge/[id]', { id: e.asset_id })}
+								title={e.summary || undefined}
+								secondary={caption(e)}
+								muted={e.state === 'historical'}
+							>
+								<mm-icon
+									slot="start"
+									name={kind?.icon ?? 'description'}
+									size={20}
+									aria-hidden="true"
+								></mm-icon>
+								{e.name}
+								<span slot="badges" class="pills"
+									><StatusPill
+										{kind}
+										status={e.status}
+										state={e.state}
+										reviewDue={e.review_due}
+									/></span
+								>
+							</mm-list-item>
 						{/each}
-					</ul>
+					</mm-list>
 					{#if total > PAGE}
 						<mm-pagination
 							{total}
@@ -408,44 +415,15 @@
 </div>
 
 <style>
-	.search {
-		width: 24rem;
-		max-width: 100%;
-	}
-	.sort {
-		width: 12rem;
-	}
-	.entries {
+	.results {
 		border-block: 1px solid var(--mm-rule);
 	}
-	.entries > li {
-		display: flex;
-		align-items: center;
-		gap: var(--space-4);
-		padding-block: var(--space-3);
+	.pills {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
-	.entries > li.historical .name {
-		color: var(--mm-text-2);
-	}
-	.body {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		flex: 1;
-		min-width: 0;
-	}
-	.name {
-		font: var(--text-body-strong);
-	}
-	.truncate {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.side {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		flex: none;
+	.search {
+		width: 100%;
 	}
 </style>

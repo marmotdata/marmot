@@ -235,26 +235,33 @@
 					<mm-text variant="dense" tone="secondary" role="status"
 						>{m.knowledge_results({ count: total })}</mm-text
 					>
-					<ul class="mm-list entries" aria-label={m.knowledge_entries_label()} aria-busy={loading}>
+					<mm-list class="results" aria-label={m.knowledge_entries_label()} aria-busy={loading}>
 						{#each items as e (e.asset_id)}
 							{@const kind = kindById(e.kind, $knowledgeKinds)}
-							<li class:historical={e.state === 'historical'}>
-								<mm-icon name={kind?.icon ?? 'description'} size={20} aria-hidden="true"></mm-icon>
-								<div class="body">
-									<div class="mm-cluster" style="--mm-gap: var(--space-2)">
-										<a
-											class="mm-link mm-link--quiet name"
-											href={resolve('/knowledge/[id]', { id: e.asset_id })}>{e.name}</a
-										>
-										<StatusPill {kind} status={e.status} state={e.state} reviewDue={e.review_due} />
-									</div>
-									<mm-text variant="dense" tone="secondary" block class="truncate"
-										>{note(e)}</mm-text
-									>
-								</div>
-							</li>
+							<mm-list-item
+								href={resolve('/knowledge/[id]', { id: e.asset_id })}
+								title={e.summary || undefined}
+								secondary={note(e)}
+								muted={e.state === 'historical'}
+							>
+								<mm-icon
+									slot="start"
+									name={kind?.icon ?? 'description'}
+									size={20}
+									aria-hidden="true"
+								></mm-icon>
+								{e.name}
+								<span slot="badges" class="pills"
+									><StatusPill
+										{kind}
+										status={e.status}
+										state={e.state}
+										reviewDue={e.review_due}
+									/></span
+								>
+							</mm-list-item>
 						{/each}
-					</ul>
+					</mm-list>
 					{#if next}
 						<div>
 							<mm-button
@@ -271,31 +278,12 @@
 </div>
 
 <style>
-	.entries {
+	.results {
 		border-block: 1px solid var(--mm-rule);
 	}
-	.entries > li {
-		display: flex;
-		align-items: center;
-		gap: var(--space-4);
-		padding-block: var(--space-3);
-	}
-	.entries > li.historical .name {
-		color: var(--mm-text-2);
-	}
-	.body {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		flex: 1;
-		min-width: 0;
-	}
-	.name {
-		font: var(--text-body-strong);
-	}
-	.truncate {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+	.pills {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 </style>

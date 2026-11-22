@@ -3983,7 +3983,7 @@
 	"knowledge_browse_page_title": "Browse knowledge - Marmot",
 	"knowledge_browse_all": "Browse all",
 	"knowledge_ask_label": "Search knowledge",
-	"knowledge_ask_placeholder": "What do you need to know? Try expenses, on-call or tone of voice",
+	"knowledge_ask_placeholder": "Search knowledge, such as expenses, on-call or tone of voice",
 	"knowledge_ask_no_match": "Nothing written down matches yet. Try other words, or write it down so the next person finds it.",
 	"knowledge_ask_write_it": "Write it down",
 	"knowledge_ask_who": "Ask {names}",
@@ -4006,11 +4006,9 @@
 	"knowledge_attention_mine": "Needs your attention",
 	"knowledge_attention_all": "Needs attention",
 	"knowledge_attention_link": "All overdue reviews",
-	"knowledge_attention_review": "Review was due {date}",
-	"knowledge_attention_pending": "Still {status}",
+	"knowledge_attention_review": "Review was due {ago}",
 	"knowledge_attention_clear": "Nothing is overdue for review and nothing is waiting in draft.",
 	"knowledge_teams_heading": "By team",
-	"knowledge_ask_heading": "What do you need to know?",
 	"knowledge_links_manage": "Manage",
 	"knowledge_links_manage_heading": "Links for {name}",
 	"knowledge_links_empty": "Not linked to anything yet. Link the tables, services or dashboards this applies to, or add a rule to cover them by tag.",
@@ -4030,5 +4028,8 @@
 	"knowledge_links_page_heading": "Linked to {name}",
 	"knowledge_links_all_relations": "All relations",
 	"knowledge_links_none_title": "Nothing linked",
-	"docs_overview_tab": "Overview"
+	"docs_overview_tab": "Overview",
+	"knowledge_attention_waiting": "Waiting since {ago}",
+	"knowledge_attention_overdue": "Overdue",
+	"knowledge_attention_long_overdue": "Long overdue"
 }

@@ -36,6 +36,7 @@
 		providerLabel,
 		typeLabel
 	} from '#components/query/catalogSearch.ts';
+	import { PROVIDER_ICON_FALLBACK, hasProviderMark, typeIcon } from '@marmotdata/icons';
 	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	interface SearchResultMetadata {
@@ -507,11 +508,11 @@
 		}
 	]);
 	let typeOptions = $derived<MmFacetOption[]>(
-		// Knowledge kinds carry their own icons, so policies and decisions read apart from tables in the Type list.
+		// Knowledge kinds carry their own icons, so policies and decisions read apart from tables; other types take the shared type icon.
 		facets.asset_types.map((f) => ({
 			value: f.value,
 			label: typeLabel(f.value),
-			icon: kindOfType(f.value, $knowledgeKinds)?.icon,
+			icon: kindOfType(f.value, $knowledgeKinds)?.icon ?? typeIcon(f.value),
 			count: f.count
 		}))
 	);
@@ -519,7 +520,9 @@
 		facets.providers.map((f) => ({
 			value: f.value,
 			label: providerLabel(f.value),
-			provider: f.value.toLowerCase(),
+			...(hasProviderMark(f.value)
+				? { provider: f.value.toLowerCase() }
+				: { icon: PROVIDER_ICON_FALLBACK }),
 			count: f.count
 		}))
 	);
@@ -697,58 +700,44 @@
 						</mm-select>
 					</div>
 					<mm-skeleton loading={loading && !results.length} shape="table-row" count={8}>
-						<ul class="mm-list results" aria-label={m.discover_results_label()} aria-busy={loading}>
+						<mm-list class="results" aria-label={m.discover_results_label()} aria-busy={loading}>
 							{#each results as r (r.type + r.id)}
-								<li
-									aria-current={selectedAsset?.id === r.id || selectedProduct?.id === r.id
-										? 'true'
-										: undefined}
+								<mm-list-item
+									href={resolve(r.url as '/')}
+									title={r.description || undefined}
+									secondary={caption(r)}
+									selected={selectedAsset?.id === r.id || selectedProduct?.id === r.id}
+									onclick={(e: MouseEvent) =>
+										r.type === 'asset'
+											? preview(e, () => openAsset(r.id))
+											: r.type === 'data_product'
+												? preview(e, () => openProduct(r.id))
+												: undefined}
 								>
-									{#if r.type === 'asset' && providerOf(r)}
-										<span class="lead"
-											><AssetMark
-												asset={{ type: r.metadata?.type, provider: providerOf(r) }}
-											/></span
-										>
-									{:else}
-										<mm-icon
-											class="lead"
-											name={kindIcons[r.type] ?? 'database'}
-											size={20}
-											aria-hidden="true"
-										></mm-icon>
+									<span slot="start" class="lead">
+										{#if r.type === 'asset' && providerOf(r)}
+											<AssetMark asset={{ type: r.metadata?.type, provider: providerOf(r) }} />
+										{:else}
+											<mm-icon name={kindIcons[r.type] ?? 'database'} size={20} aria-hidden="true"
+											></mm-icon>
+										{/if}
+									</span>
+									{r.name}
+									{#if r.metadata?.tags?.includes('pii')}
+										<mm-tag slot="badges" variant="pii"></mm-tag>
 									{/if}
-									<div class="mm-stack" style="--mm-gap: var(--space-1); flex: 1; min-width: 0">
-										<div class="mm-cluster" style="--mm-gap: var(--space-2)">
-											<a
-												class="mm-link mm-link--quiet name"
-												href={resolve(r.url as '/')}
-												title={r.description ?? ''}
-												onclick={(e) =>
-													r.type === 'asset'
-														? preview(e, () => openAsset(r.id))
-														: r.type === 'data_product'
-															? preview(e, () => openProduct(r.id))
-															: undefined}>{r.name}</a
-											>
-											{#if r.metadata?.tags?.includes('pii')}
-												<mm-tag variant="pii"></mm-tag>
-											{/if}
-											{#if r.metadata?.tags?.includes('certified')}
-												<mm-tag variant="certified"></mm-tag>
-											{/if}
-											{#if r.stale}
-												<mm-status-pill state="stale"></mm-status-pill>
-											{/if}
-										</div>
-										<mm-text variant="caption" tone="secondary" block>{caption(r)}</mm-text>
-									</div>
+									{#if r.metadata?.tags?.includes('certified')}
+										<mm-tag slot="badges" variant="certified"></mm-tag>
+									{/if}
+									{#if r.stale}
+										<mm-status-pill slot="badges" state="stale"></mm-status-pill>
+									{/if}
 									{#if r.type === 'asset' && popularityLevel(r)}
-										<mm-popularity class="popularity" level={popularityLevel(r)}></mm-popularity>
+										<mm-popularity slot="end" level={popularityLevel(r)}></mm-popularity>
 									{/if}
-								</li>
+								</mm-list-item>
 							{/each}
-						</ul>
+						</mm-list>
 					</mm-skeleton>
 					{#if total > PAGE_SIZE}
 						<mm-pagination
@@ -777,38 +766,7 @@
 	.results {
 		border-block: 1px solid var(--mm-rule);
 	}
-	/* The whole row is the target: the name's link stretches over it, so modified clicks and keyboard focus still go to one real link */
-	.results > li {
-		position: relative;
-		align-items: flex-start;
-		gap: var(--space-3);
-		padding-block: var(--space-3);
-		transition: background-color var(--mm-dur-press) var(--mm-ease);
-	}
-	.results > li:hover {
-		background: var(--mm-sunken);
-	}
-	.name::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-	}
-	.results mm-tag {
-		position: relative;
-	}
-	.popularity {
-		flex: none;
-		margin-block-start: 4px;
-	}
-	.results > li[aria-current='true'] {
-		background: var(--mm-selected);
-	}
 	.lead {
-		flex: none;
-		margin-block-start: 2px;
-		color: var(--mm-text-2);
-	}
-	.name {
-		overflow-wrap: anywhere;
+		display: inline-flex;
 	}
 </style>

@@ -11,12 +11,14 @@
 	import { setCrumbs } from '#lib/mm/index.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { formatDate, formatRelativeTime } from '#lib/utils/format.ts';
-	import { discoverPath, discoverPathname } from '#lib/mrn.ts';
+	import { discoverPath } from '#lib/mrn.ts';
 	import {
 		kindById,
 		knowledgeRelations,
 		loadKinds,
 		isRequired,
+		kindOfType,
+		knowledgeKinds,
 		relationOf,
 		statusOf,
 		type KnowledgeField,
@@ -224,9 +226,10 @@
 		}
 	}
 
-	function refHref(r: KnowledgeAssetRef): string {
-		const path = discoverPath(r.mrn);
-		return path ? resolve(discoverPathname(path)) : '#';
+	// A linked asset's page: its knowledge page for an entry, its catalog page otherwise. Callers resolve it.
+	function refPath(r: KnowledgeAssetRef): string {
+		if (kindOfType(r.type, $knowledgeKinds)) return `/knowledge/${encodeURIComponent(r.id)}`;
+		return discoverPath(r.mrn) ?? '/discover';
 	}
 
 	let status = $derived(entry && kind ? statusOf(kind, entry.status) : undefined);
@@ -564,12 +567,18 @@
 							<mm-text variant="label" tone="secondary" block>{g.label}</mm-text>
 							<ul class="refs">
 								{#each g.links as l (l.target.id)}
-									<li>
-										<AssetMark asset={l.target} size={16} />
-										<mm-link href={refHref(l.target)}>{l.target.name}</mm-link>
-										{#if l.target.type}<mm-text variant="caption" tone="secondary"
-												>{typeLabel(l.target.type)}</mm-text
-											>{/if}
+									<li class="link-row">
+										<span class="mark"><AssetMark asset={l.target} size={16} /></span>
+										<span class="link-text">
+											<a
+												class="mm-link link-name"
+												href={resolve(refPath(l.target) as '/')}
+												title={l.target.name}>{l.target.name}</a
+											>
+											{#if l.target.type}<mm-text variant="caption" tone="secondary" block
+													>{typeLabel(l.target.type)}</mm-text
+												>{/if}
+										</span>
 									</li>
 								{/each}
 							</ul>
@@ -741,6 +750,27 @@
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: var(--space-2);
+	}
+	/* A linked asset reads as one row whatever its name's length: the mark, then the name cut short with the full name on hover, then its type underneath. */
+	.refs li.link-row {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: var(--space-2);
+		flex-wrap: nowrap;
+	}
+	.mark {
+		display: flex;
+		padding-block-start: 2px;
+	}
+	.link-text {
+		min-width: 0;
+	}
+	.link-name {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.meta {
 		display: flex;

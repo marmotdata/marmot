@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '@marmotdata/elements/link-list.js';
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
@@ -119,6 +120,29 @@
 		return statusOf(kindById(e.kind, $knowledgeKinds), e.status)?.label ?? '';
 	}
 
+	const DAY = 86_400_000;
+	// Reviews more than this many days late are shown as long overdue, in the danger tone; anything less is a warning.
+	const LONG_OVERDUE_DAYS = 90;
+
+	function daysOverdue(reviewBy: string | undefined): number {
+		if (!reviewBy) return 0;
+		return Math.max(0, Math.floor((Date.now() - new Date(`${reviewBy}T00:00:00`).getTime()) / DAY));
+	}
+
+	function overdueTone(reviewBy: string | undefined): 'warning' | 'danger' {
+		return daysOverdue(reviewBy) > LONG_OVERDUE_DAYS ? 'danger' : 'warning';
+	}
+
+	// How late a review is in plain words, such as "5 months ago", whatever the distance; the shared helper switches to a date after a week.
+	function overdueFor(reviewBy: string | undefined): string {
+		const days = daysOverdue(reviewBy);
+		const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+		if (days < 14) return rtf.format(-days, 'day');
+		if (days < 60) return rtf.format(-Math.round(days / 7), 'week');
+		if (days < 365) return rtf.format(-Math.round(days / 30), 'month');
+		return rtf.format(-Math.round(days / 365), 'year');
+	}
+
 	function owners(e: KnowledgeSummary): string {
 		return e.owners.map((o) => o.name).join(', ');
 	}
@@ -178,40 +202,38 @@
 			</mm-section>
 		{/if}
 	{:else}
-		<!-- The search is the page's front door, so it sits on the faint contour field the design system keeps for welcomes, with the kinds as one row of shortcuts beneath it. -->
-		<section class="hero" aria-label={m.knowledge_ask_label()}>
-			<mm-topography seed={11} fade="edges"></mm-topography>
-			<div class="hero-body">
-				<mm-heading level={2} variant="display-section">{m.knowledge_ask_heading()}</mm-heading>
-				<mm-search-field
-					class="ask"
-					label={m.knowledge_ask_label()}
-					hide-label
-					placeholder={m.knowledge_ask_placeholder()}
-					shortcut="/"
-					value={query}
-					onmm-input={(e: CustomEvent<{ value: string }>) => onInput(e.detail.value)}
-					onmm-search={() =>
-						query.trim() && goto(resolve(browsePath({ q: query.trim() }) as '/knowledge/browse'))}
-				></mm-search-field>
-				{#if !query}
-					<nav class="kinds" aria-label={m.knowledge_shelf_heading()}>
-						{#each $knowledgeKinds as k (k.id)}
-							<a
-								class="kind"
-								href={resolve(browsePath({ kind: k.id }) as '/knowledge/browse')}
-								title={k.description}
-							>
-								<mm-icon name={k.icon} size={16} aria-hidden="true"></mm-icon>
-								<span>{k.label}</span>
+		<!-- The search sits straight under the header, as on Browse and Discover, and says it searches knowledge so it doesn't read as a second copy of the catalog search in the top bar. The kinds are one row of shortcuts beneath it. -->
+		<section class="mm-stack" style="--mm-gap: var(--space-3)" aria-label={m.knowledge_ask_label()}>
+			<mm-search-field
+				class="ask"
+				label={m.knowledge_ask_label()}
+				hide-label
+				placeholder={m.knowledge_ask_placeholder()}
+				shortcut="/"
+				value={query}
+				onmm-input={(e: CustomEvent<{ value: string }>) => onInput(e.detail.value)}
+				onmm-search={() =>
+					query.trim() && goto(resolve(browsePath({ q: query.trim() }) as '/knowledge/browse'))}
+			></mm-search-field>
+			{#if !query}
+				<nav class="kinds" aria-label={m.knowledge_shelf_heading()}>
+					{#each $knowledgeKinds as k (k.id)}
+						<a
+							class="kind"
+							href={resolve(browsePath({ kind: k.id }) as '/knowledge/browse')}
+							title={k.description}
+						>
+							<mm-icon name={k.icon} size={16} aria-hidden="true"></mm-icon>
+							<span>{k.label}</span>
+							{#if inUse(k.id) > 0}
 								<span class="kind-count" aria-label={m.knowledge_shelf_count({ kind: k.label })}
 									>{inUse(k.id)}</span
 								>
-							</a>
-						{/each}
-					</nav>
-				{/if}
-			</div>
+							{/if}
+						</a>
+					{/each}
+				</nav>
+			{/if}
 		</section>
 
 		{#if query.trim()}
@@ -303,12 +325,7 @@
 			{/if}
 
 			<div class="mm-split mm-split--even">
-				<mm-panel
-					heading={m.knowledge_recent_heading()}
-					icon="history"
-					link-href={resolve(browsePath({}) as '/knowledge/browse')}
-					link-label={m.knowledge_browse_all()}
-				>
+				<mm-panel heading={m.knowledge_recent_heading()} icon="history">
 					<mm-list aria-label={m.knowledge_recent_heading()}>
 						{#each recent as e (e.asset_id)}
 							{@const k = kindById(e.kind, $knowledgeKinds)}
@@ -340,14 +357,24 @@
 									<mm-list-item
 										href={resolve('/knowledge/[id]', { id: e.asset_id })}
 										secondary={e.review_due
-											? m.knowledge_attention_review({
-													date: formatRelativeTime(e.review_by ?? e.updated_at)
-												})
-											: m.knowledge_attention_pending({ status: statusWord(e).toLowerCase() })}
+											? m.knowledge_attention_review({ ago: overdueFor(e.review_by) })
+											: m.knowledge_attention_waiting({ ago: formatRelativeTime(e.updated_at) })}
 									>
 										<mm-icon slot="start" name={k?.icon ?? 'description'} aria-hidden="true"
 										></mm-icon>
 										{e.name}
+										{#if e.review_due}
+											{@const tone = overdueTone(e.review_by)}
+											<mm-status-pill slot="end" status={tone} icon="schedule"
+												>{tone === 'danger'
+													? m.knowledge_attention_long_overdue()
+													: m.knowledge_attention_overdue()}</mm-status-pill
+											>
+										{:else}
+											<mm-status-pill slot="end" status="neutral" icon="edit-note"
+												>{statusWord(e)}</mm-status-pill
+											>
+										{/if}
 									</mm-list-item>
 								{/each}
 							</mm-list>
@@ -380,43 +407,12 @@
 </div>
 
 <style>
-	.hero {
-		position: relative;
-		isolation: isolate;
-		padding: var(--space-8) var(--space-6);
-		border: 1px solid var(--mm-rule);
-		border-radius: var(--radius-md);
-		overflow: hidden;
-	}
-	.hero mm-topography {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-	}
-	.hero-body {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-4);
-		max-width: 44rem;
-		margin-inline: auto;
-		text-align: center;
-	}
 	.ask {
 		width: 100%;
-	}
-	.ask::part(control) {
-		min-block-size: 3.25rem;
-		background: var(--mm-surface);
-	}
-	.ask::part(input) {
-		font: var(--text-body);
-		font-size: 1.0625rem;
 	}
 	.kinds {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
 		gap: var(--space-2);
 	}
 	.kind {

@@ -21,7 +21,8 @@
 	// Crumbs belong to a path, so they are set again as the tabs change the URL
 	$effect(() => {
 		void page.url.pathname;
-		setCrumbs([{ label: m.account_title() }]);
+		// The page title is the person's name, so the top bar is where the page says it is Account.
+		setCrumbs([{ label: m.account_title() }], { showLoneCrumb: true });
 	});
 
 	onMount(() => {
