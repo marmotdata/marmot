@@ -9,6 +9,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { formatDateTime, formatRelativeTime } from '#lib/utils/index.ts';
 	import ProductIcon from './ProductIcon.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	const PREVIEW = 5;
 
@@ -123,14 +124,15 @@
 							<mm-list-item
 								href={params ? resolve('/discover/[type]/[service]/[name]', params) : undefined}
 							>
-								<mm-provider-logo
-									slot="start"
-									provider={member.providers.length === 1
-										? member.providers[0].toLowerCase()
-										: member.type}
-									size={16}
-									decorative
-								></mm-provider-logo>
+								<span slot="start" style="display: contents"
+									><AssetMark
+										size={16}
+										asset={{
+											type: member.type,
+											provider: member.providers.length === 1 ? member.providers[0] : member.type
+										}}
+									/></span
+								>
 								{member.name}
 								<span slot="end" class="mm-muted">{member.type}</span>
 							</mm-list-item>

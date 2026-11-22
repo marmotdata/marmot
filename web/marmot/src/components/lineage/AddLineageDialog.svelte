@@ -3,6 +3,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import type { Asset } from '#lib/assets/types.ts';
 	import { providerOf } from './graph';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	let {
 		open = $bindable(false),
@@ -120,8 +121,9 @@
 							onmm-activate={() => pick(asset)}
 						>
 							{#if providerOf(asset)}
-								<mm-provider-logo slot="start" provider={providerOf(asset)} size="20" decorative
-								></mm-provider-logo>
+								<span slot="start" style="display: contents"
+									><AssetMark asset={{ type: asset.type, provider: providerOf(asset) }} /></span
+								>
 							{/if}
 							{asset.name}
 						</mm-list-item>

@@ -47,7 +47,7 @@
 	import EntryDetailsForm from '#components/knowledge/EntryDetailsForm.svelte';
 	import FieldValue from '#components/knowledge/FieldValue.svelte';
 	import LinksEditor from '#components/knowledge/LinksEditor.svelte';
-	import AssetRefIcon from '#components/knowledge/AssetRefIcon.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 	import RulesEditor from '#components/knowledge/RulesEditor.svelte';
 
 	const canManage = auth.hasPermission('assets', 'manage');
@@ -480,6 +480,7 @@
 				<mm-callout
 					tone="warning"
 					icon="schedule"
+					compact
 					heading={m.knowledge_callout_review_due({ date: formatDate(entry.review_by ?? '') })}
 				>
 					{m.knowledge_callout_review_due_body()}
@@ -534,16 +535,14 @@
 							<FieldValue field={f} value={entry.fields[f.key]} />
 						</mm-section>
 					{/each}
-					<mm-section heading={m.knowledge_section_writeup()}>
-						{#if asset.mrn}
-							<DocumentationSystem
-								entityType="asset"
-								entityId={asset.mrn}
-								hideTitle={asset.name}
-								tabs
-							/>
-						{/if}
-					</mm-section>
+					{#if asset.mrn}
+						<DocumentationSystem
+							entityType="asset"
+							entityId={asset.mrn}
+							hideTitle={asset.name}
+							tabs
+						/>
+					{/if}
 				</div>
 
 				<aside class="rail" aria-label={m.knowledge_rail_label()}>
@@ -566,7 +565,7 @@
 							<ul class="refs">
 								{#each g.links as l (l.target.id)}
 									<li>
-										<AssetRefIcon asset={l.target} />
+										<AssetMark asset={l.target} size={16} />
 										<mm-link href={refHref(l.target)}>{l.target.name}</mm-link>
 										{#if l.target.type}<mm-text variant="caption" tone="secondary"
 												>{typeLabel(l.target.type)}</mm-text

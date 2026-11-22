@@ -477,6 +477,16 @@
 	.docs.single .tree {
 		display: none;
 	}
+	/* The app's reset strips list markers, and without them a list in a write-up reads as loose sentences. */
+	.doc-content :global(ul) {
+		list-style: disc;
+	}
+	.doc-content :global(ol) {
+		list-style: decimal;
+	}
+	.doc-content :global(li::marker) {
+		color: var(--mm-text-2);
+	}
 	.doc-content > :global(:first-child),
 	.doc-content > :global(h1 + *) {
 		margin-block-start: 0;

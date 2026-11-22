@@ -17,7 +17,7 @@
 		relationOf
 	} from '#lib/knowledge/kinds.ts';
 	import { entryLinks, type KnowledgeAssetRef, type KnowledgeLink } from '#lib/knowledge/api.ts';
-	import AssetRefIcon from '#components/knowledge/AssetRefIcon.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	// Every asset one entry is linked to, for entries that cover more than the side column can show. Links page in by name, a hundred at a time.
 	const PAGE = 100;
@@ -132,7 +132,7 @@
 		<ul class="mm-list rows" aria-label={m.knowledge_group_links()}>
 			{#each links as l (l.relation + l.target.id)}
 				<li>
-					<AssetRefIcon asset={l.target} size={20} />
+					<AssetMark asset={l.target} size={20} />
 					<a class="mm-link mm-link--quiet name" href={resolve(pathOf(l.target) as '/')}
 						>{l.target.name}</a
 					>

@@ -2,6 +2,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import type { Asset } from '#lib/assets/types.ts';
 	import { assetCaption, assetProvider, searchAssets } from '#lib/dataproducts/assets.ts';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	// Search results each carry their own Add button that acts at once; what is already chosen is listed elsewhere, never mixed into the results.
 	let {
@@ -79,8 +80,9 @@
 		<mm-list aria-label={m.products_picker_results()} style="--mm-list-inset: 0">
 			{#each shown as asset (asset.id)}
 				<mm-list-item secondary={assetCaption(asset)}>
-					<mm-provider-logo slot="start" provider={assetProvider(asset)} size={20} decorative
-					></mm-provider-logo>
+					<span slot="start" style="display: contents"
+						><AssetMark asset={{ type: asset.type, provider: assetProvider(asset) }} /></span
+					>
 					{asset.name}
 					<mm-button
 						slot="end"

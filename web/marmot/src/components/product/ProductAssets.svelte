@@ -10,6 +10,7 @@
 	import type { DataProduct, Member, Rule } from '#lib/dataproducts/types.ts';
 	import type { Asset } from '#lib/assets/types.ts';
 	import AssetPicker from './AssetPicker.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	const PAGE = 25;
 
@@ -161,12 +162,14 @@
 		href={params ? resolve('/discover/[type]/[service]/[name]', params) : undefined}
 		secondary={caption(member)}
 	>
-		<mm-provider-logo
-			slot="start"
-			provider={member.providers.length === 1 ? member.providers[0].toLowerCase() : member.type}
-			size={20}
-			decorative
-		></mm-provider-logo>
+		<span slot="start" style="display: contents"
+			><AssetMark
+				asset={{
+					type: member.type,
+					provider: member.providers.length === 1 ? member.providers[0] : member.type
+				}}
+			/></span
+		>
 		{member.name}
 		{#if level || removable}
 			<span slot="end" class="mm-cluster" style="--mm-gap: var(--space-4)">

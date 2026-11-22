@@ -36,6 +36,7 @@
 		providerLabel,
 		typeLabel
 	} from '#components/query/catalogSearch.ts';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	interface SearchResultMetadata {
 		type?: string;
@@ -703,21 +704,12 @@
 										? 'true'
 										: undefined}
 								>
-									{#if r.type === 'asset' && kindOfType(r.metadata?.type, $knowledgeKinds)}
-										<!-- Knowledge entries all come from Marmot, so their kind says more than the provider's logo would -->
-										<mm-icon
-											class="lead"
-											name={kindOfType(r.metadata?.type, $knowledgeKinds)?.icon}
-											size={20}
-											aria-hidden="true"
-										></mm-icon>
-									{:else if r.type === 'asset' && providerOf(r)}
-										<mm-provider-logo
-											class="lead"
-											provider={providerOf(r).toLowerCase()}
-											size={20}
-											decorative
-										></mm-provider-logo>
+									{#if r.type === 'asset' && providerOf(r)}
+										<span class="lead"
+											><AssetMark
+												asset={{ type: r.metadata?.type, provider: providerOf(r) }}
+											/></span
+										>
 									{:else}
 										<mm-icon
 											class="lead"

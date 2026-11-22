@@ -17,6 +17,7 @@
 	import { formatRelativeTime } from '#lib/utils/format.ts';
 	import { compactNumber, providerLabel, typeLabel } from '#components/query/catalogSearch.ts';
 	import '@marmotdata/elements/popularity.js';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	interface Owner {
 		id: string;
@@ -72,7 +73,6 @@
 	let fullViewUrl = $derived(
 		asset ? ((assetUrl as DiscoverAssetRoute | undefined) ?? routeOf(asset)) : ''
 	);
-	let provider = $derived(asset?.providers?.[0] ?? '');
 	let shownLineage = $derived(lineage ?? ownLineage);
 	let neighbours = $derived(
 		(shownLineage?.nodes ?? []).filter((n) => n.depth !== 0 && !n.asset?.is_stub)
@@ -236,15 +236,7 @@
 						href={route ? resolve(discoverPathname(route as DiscoverAssetRoute)) : ''}
 						secondary={nodeCaption(n)}
 					>
-						{#if n.asset.providers?.[0]}
-							<mm-provider-logo
-								slot="start"
-								provider={n.asset.providers[0].toLowerCase()}
-								decorative
-							></mm-provider-logo>
-						{:else}
-							<mm-icon slot="start" name="database" aria-hidden="true"></mm-icon>
-						{/if}
+						<span slot="start" style="display: contents"><AssetMark asset={n.asset} /></span>
 						{n.asset.name}
 					</mm-list-item>
 				{/each}
@@ -305,10 +297,7 @@
 			onmm-close={onClose}
 		>
 			<span slot="heading" class="mm-cluster" style="--mm-gap: var(--space-2); flex-wrap: nowrap">
-				{#if provider}
-					<mm-provider-logo provider={provider.toLowerCase()} size={20} decorative
-					></mm-provider-logo>
-				{/if}
+				<AssetMark {asset} />
 				{asset.name}
 			</span>
 			<span slot="actions" class="mm-cluster" style="--mm-gap: var(--space-1)">

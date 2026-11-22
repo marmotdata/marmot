@@ -3837,7 +3837,6 @@
 	"knowledge_section_details": "{kind} details",
 	"knowledge_section_status": "Status and review",
 	"knowledge_section_links": "Links",
-	"knowledge_section_writeup": "Write-up",
 	"knowledge_details_none_required": "Nothing else is required. Add details below if they help.",
 	"knowledge_status_label": "Status",
 	"knowledge_state_current_help": "In use: people and assistants treat this as the current answer.",

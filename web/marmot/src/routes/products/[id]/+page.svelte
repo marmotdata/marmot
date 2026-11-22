@@ -21,6 +21,7 @@
 	import TagField from '#components/product/TagField.svelte';
 	import ProductAssets from '#components/product/ProductAssets.svelte';
 	import ProductRules from '#components/product/ProductRules.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	type Tab = 'overview' | 'assets' | 'rules' | 'documentation' | 'metadata';
 	const TABS: Tab[] = ['overview', 'assets', 'rules', 'documentation', 'metadata'];
@@ -358,14 +359,15 @@
 													: undefined}
 												secondary={memberCaption(member)}
 											>
-												<mm-provider-logo
-													slot="start"
-													provider={member.providers.length === 1
-														? member.providers[0].toLowerCase()
-														: member.type}
-													size={20}
-													decorative
-												></mm-provider-logo>
+												<span slot="start" style="display: contents"
+													><AssetMark
+														asset={{
+															type: member.type,
+															provider:
+																member.providers.length === 1 ? member.providers[0] : member.type
+														}}
+													/></span
+												>
 												{member.name}
 												{#if level}<mm-popularity slot="end" {level}></mm-popularity>{/if}
 											</mm-list-item>

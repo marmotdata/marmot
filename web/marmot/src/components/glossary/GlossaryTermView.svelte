@@ -26,6 +26,7 @@
 	} from '#lib/glossary/assets.ts';
 	import { possibleParents } from '#lib/glossary/tree.ts';
 	import type { CreateTermInput, GlossaryTerm, UpdateTermInput } from '#lib/glossary/types.ts';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	let {
 		term,
@@ -359,12 +360,9 @@
 												assetRouteParams(a)
 											)}
 											<mm-list-item href={paths ? `${href}?tab=schema` : href}>
-												<mm-provider-logo
-													slot="start"
-													provider={a.providers?.[0] ?? a.type}
-													size={16}
-													decorative
-												></mm-provider-logo>
+												<span slot="start" style="display: contents"
+													><AssetMark asset={a} size={16} /></span
+												>
 												{a.name}
 												<span slot="secondary"
 													>{paths
