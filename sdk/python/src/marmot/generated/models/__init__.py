@@ -41,6 +41,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.asset_tab_counts import AssetTabCounts
     from marmot.generated.models.asset_term import AssetTerm
     from marmot.generated.models.asset_term_link import AssetTermLink
+    from marmot.generated.models.asset_term_link_field import AssetTermLinkField
     from marmot.generated.models.asset_term_link_group import AssetTermLinkGroup
     from marmot.generated.models.asset_type_summary import AssetTypeSummary
     from marmot.generated.models.asset_writer_info import AssetWriterInfo
@@ -356,6 +357,7 @@ from marmot.generated.models.asset_summary_response import AssetSummaryResponse
 from marmot.generated.models.asset_tab_counts import AssetTabCounts
 from marmot.generated.models.asset_term import AssetTerm
 from marmot.generated.models.asset_term_link import AssetTermLink
+from marmot.generated.models.asset_term_link_field import AssetTermLinkField
 from marmot.generated.models.asset_term_link_group import AssetTermLinkGroup
 from marmot.generated.models.asset_type_summary import AssetTypeSummary
 from marmot.generated.models.asset_writer_info import AssetWriterInfo

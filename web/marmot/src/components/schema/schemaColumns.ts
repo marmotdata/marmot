@@ -72,10 +72,11 @@ export function parseSchema(raw: unknown): ParsedSchema {
 	return { columns: fieldsToColumns(fields), source, rawText, example, warnings };
 }
 
-/** Lays the markers people set (personal data, certified, an edited description, glossary terms) onto the outline, matching each annotation by the field's dotted path. */
+/** Lays the markers people set (personal data, certified, an edited description, glossary terms) onto the outline, matching each annotation by the field's dotted path. Terms carry their id, so the field panel can remove one, and a link to their glossary page when termHref is given. */
 export function applyAnnotations(
 	columns: SchemaColumn[],
-	annotations: FieldAnnotation[] | undefined
+	annotations: FieldAnnotation[] | undefined,
+	termHref?: (id: string) => string
 ): SchemaColumn[] {
 	if (!annotations?.length) return columns;
 	const byPath = new Map(annotations.map((a) => [a.path, a]));
@@ -88,7 +89,13 @@ export function applyAnnotations(
 			if (!a) return next;
 			if (a.pii) next.pii = true;
 			if (a.certified) next.certified = true;
-			if (a.glossary_terms.length) next.glossaryTerms = a.glossary_terms.map((t) => t.name);
+			if (a.glossary_terms.length) {
+				next.glossaryTerms = a.glossary_terms.map((t) => ({
+					id: t.id,
+					name: t.name,
+					href: termHref?.(t.id)
+				}));
+			}
 			if (a.description) {
 				next.description = a.description;
 				next.descriptionSource = 'user';

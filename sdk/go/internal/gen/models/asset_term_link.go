@@ -4,9 +4,13 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // AssetTermLink asset term link
@@ -17,23 +21,103 @@ type AssetTermLink struct {
 	// asset id
 	AssetID string `json:"asset_id,omitempty"`
 
+	// Fields are the schema fields that carry the term, set when Source is "field".
+	Fields []*AssetTermLinkField `json:"fields"`
+
 	// rule id
 	RuleID string `json:"rule_id,omitempty"`
 
 	// rule name
 	RuleName string `json:"rule_name,omitempty"`
 
-	// Source is "manual" or "rule".
+	// Source is "manual", "rule" or "field".
 	Source string `json:"source,omitempty"`
 }
 
 // Validate validates this asset term link
-func (m *AssetTermLink) Validate(_ strfmt.Registry) error {
+func (m *AssetTermLink) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateFields(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this asset term link based on context it is used
-func (m *AssetTermLink) ContextValidate(_ context.Context, _ strfmt.Registry) error {
+func (m *AssetTermLink) validateFields(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Fields) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Fields); i++ {
+		if typeutils.IsZero(m.Fields[i]) { // not required
+			continue
+		}
+
+		if m.Fields[i] != nil {
+			if err := m.Fields[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("fields" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("fields" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this asset term link based on the context it is used
+func (m *AssetTermLink) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateFields(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *AssetTermLink) contextValidateFields(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Fields); i++ {
+
+		if m.Fields[i] != nil {
+
+			if typeutils.IsZero(m.Fields[i]) { // not required
+				return nil
+			}
+
+			if err := m.Fields[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("fields" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("fields" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

@@ -105,7 +105,7 @@ func (r *PostgresRepository) RemoveRelatedTerm(ctx context.Context, termID, rela
 	return nil
 }
 
-// SuggestAssets ranks assets by how many of the words match their name, then their tags, then their description. A name match counts most because that is where a table says what it holds. Stubs and assets already linked to the term are left out.
+// SuggestAssets ranks assets by how many of the words match their name, then their tags, then their description. A name match counts most because that is where a table says what it holds. Stubs and assets already linked to the term, directly or through a field, are left out.
 func (r *PostgresRepository) SuggestAssets(ctx context.Context, termID string, words []string, limit int) ([]SuggestedAsset, error) {
 	start := time.Now()
 
@@ -120,6 +120,7 @@ func (r *PostgresRepository) SuggestAssets(ctx context.Context, termID string, w
 			FROM assets a
 			WHERE a.is_stub = FALSE
 			  AND NOT EXISTS (SELECT 1 FROM asset_terms at WHERE at.asset_id = a.id AND at.glossary_term_id = $1)
+			  AND NOT EXISTS (SELECT 1 FROM asset_field_terms ft WHERE ft.asset_id = a.id AND ft.glossary_term_id = $1)
 			  AND EXISTS (
 				SELECT 1 FROM words
 				WHERE a.name ILIKE words.pattern

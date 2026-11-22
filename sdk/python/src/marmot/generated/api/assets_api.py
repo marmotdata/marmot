@@ -1753,7 +1753,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,
@@ -1767,11 +1769,11 @@ class AssetsApi:
     ) -> AssetsByTermResponse:
         """Get assets by glossary term
 
-        Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group.
+        Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group.
 
         :param term_id: Glossary Term ID (required)
         :type term_id: str
-        :param link: Only assets linked this way: manual, or rule:<asset rule id>
+        :param link: Only assets linked this way: manual, field, or rule:<asset rule id>
         :type link: str
         :param limit: Maximum number of assets
         :type limit: int
@@ -1828,7 +1830,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,
@@ -1842,11 +1846,11 @@ class AssetsApi:
     ) -> ApiResponse[AssetsByTermResponse]:
         """Get assets by glossary term
 
-        Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group.
+        Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group.
 
         :param term_id: Glossary Term ID (required)
         :type term_id: str
-        :param link: Only assets linked this way: manual, or rule:<asset rule id>
+        :param link: Only assets linked this way: manual, field, or rule:<asset rule id>
         :type link: str
         :param limit: Maximum number of assets
         :type limit: int
@@ -1903,7 +1907,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,
@@ -1917,11 +1923,11 @@ class AssetsApi:
     ) -> RESTResponseType:
         """Get assets by glossary term
 
-        Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group.
+        Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group.
 
         :param term_id: Glossary Term ID (required)
         :type term_id: str
-        :param link: Only assets linked this way: manual, or rule:<asset rule id>
+        :param link: Only assets linked this way: manual, field, or rule:<asset rule id>
         :type link: str
         :param limit: Maximum number of assets
         :type limit: int
@@ -1974,7 +1980,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,
@@ -2011,7 +2019,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,
@@ -2048,7 +2058,9 @@ class AssetsApi:
         term_id: Annotated[StrictStr, Field(description="Glossary Term ID")],
         link: Annotated[
             StrictStr | None,
-            Field(description="Only assets linked this way: manual, or rule:<asset rule id>"),
+            Field(
+                description="Only assets linked this way: manual, field, or rule:<asset rule id>"
+            ),
         ] = None,
         limit: Annotated[StrictInt | None, Field(description="Maximum number of assets")] = None,
         offset: Annotated[StrictInt | None, Field(description="Pagination offset")] = None,

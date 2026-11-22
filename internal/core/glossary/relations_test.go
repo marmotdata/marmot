@@ -69,9 +69,15 @@ func TestRelatedTermsLinkBothWaysAndCountLinkedAssets(t *testing.T) {
 	_, err = db.Exec(ctx, `INSERT INTO assets (id, name, mrn, type, providers, created_by, tags, description)
 		VALUES ('a1', 'orders_daily', 'mrn://table/postgresql/orders_daily', 'table', '{postgresql}', 'test', '{commerce}', 'Daily orders'),
 		       ('a2', 'refunds', 'mrn://table/postgresql/refunds', 'table', '{postgresql}', 'test', '{}', 'Merchandise returned'),
-		       ('a3', 'sessions', 'mrn://table/postgresql/sessions', 'table', '{postgresql}', 'test', '{}', 'Web visits')`)
+		       ('a3', 'sessions', 'mrn://table/postgresql/sessions', 'table', '{postgresql}', 'test', '{}', 'Web visits'),
+		       ('a4', 'merchandise_sales', 'mrn://table/postgresql/merchandise_sales', 'table', '{postgresql}', 'test', '{}', 'Sales by item')`)
 	require.NoError(t, err)
 	_, err = db.Exec(ctx, `INSERT INTO asset_terms (asset_id, glossary_term_id, source) VALUES ('a1', $1, 'user')`, gmv.ID)
+	require.NoError(t, err)
+	// orders_daily also carries the term on a column, so it still counts once; merchandise_sales carries it only on a column.
+	_, err = db.Exec(ctx, `INSERT INTO asset_field_annotations (asset_id, schema_name, field_path) VALUES ('a1', 'columns', 'gmv'), ('a4', 'columns', 'gmv')`)
+	require.NoError(t, err)
+	_, err = db.Exec(ctx, `INSERT INTO asset_field_terms (asset_id, schema_name, field_path, glossary_term_id) VALUES ('a1', 'columns', 'gmv', $1), ('a4', 'columns', 'gmv', $1)`, gmv.ID)
 	require.NoError(t, err)
 
 	list, err := svc.List(ctx, 0, 10)
@@ -80,7 +86,7 @@ func TestRelatedTermsLinkBothWaysAndCountLinkedAssets(t *testing.T) {
 	for _, term := range list.Terms {
 		counts[term.Name] = term.LinkedAssetCount
 	}
-	assert.Equal(t, 1, counts["Gross merchandise value"])
+	assert.Equal(t, 2, counts["Gross merchandise value"])
 	assert.Equal(t, 0, counts["Net revenue"])
 
 	suggested, err := svc.SuggestAssets(ctx, gmv.ID, 10)
@@ -89,5 +95,5 @@ func TestRelatedTermsLinkBothWaysAndCountLinkedAssets(t *testing.T) {
 	for _, a := range suggested {
 		names = append(names, a.Name)
 	}
-	assert.Equal(t, []string{"refunds"}, names, "the linked asset and the unrelated one are left out")
+	assert.Equal(t, []string{"refunds"}, names, "assets linked directly or through a column, and the unrelated one, are left out")
 }

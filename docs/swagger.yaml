@@ -448,12 +448,28 @@ definitions:
     properties:
       asset_id:
         type: string
+      fields:
+        description: Fields are the schema fields that carry the term, set when Source
+          is "field".
+        items:
+          $ref: '#/definitions/AssetTermLinkField'
+        type: array
       rule_id:
         type: string
       rule_name:
         type: string
       source:
-        description: Source is "manual" or "rule".
+        description: Source is "manual", "rule" or "field".
+        type: string
+    type: object
+  AssetTermLinkField:
+    properties:
+      path:
+        description: Path is the field's dotted path, such as customer.email.
+        type: string
+      schema:
+        description: Schema is the key of the schema the field belongs to, as in the
+          asset's schema map.
         type: string
     type: object
   AssetTermLinkGroup:
@@ -5785,10 +5801,12 @@ paths:
       - assets
   /api/v1/assets/by-glossary-term/{term_id}:
     get:
-      description: Retrieve the assets linked to a glossary term. links says how each
-        asset on the page was linked (manually or by which asset rule) and groups
-        counts all of the term's assets by how they were linked. Pass link=manual
-        or link=rule:<rule id> to page through one group.
+      description: Retrieve the assets linked to a glossary term. Assets whose schema
+        fields carry the term count as linked. links says how each asset on the page
+        was linked (manually, by which asset rule or through which fields, with one
+        entry per way) and groups counts all of the term's assets by how they were
+        linked. Pass link=manual, link=field or link=rule:<rule id> to page through
+        one group.
       operationId: getAssetsByGlossaryTermTermID
       parameters:
       - description: Glossary Term ID
@@ -5796,7 +5814,8 @@ paths:
         name: term_id
         required: true
         type: string
-      - description: 'Only assets linked this way: manual, or rule:<asset rule id>'
+      - description: 'Only assets linked this way: manual, field, or rule:<asset rule
+          id>'
         in: query
         name: link
         type: string

@@ -83,3 +83,72 @@ func TestFieldAnnotationsAndCounts(t *testing.T) {
 		t.Fatalf("unexpected counts %+v", c)
 	}
 }
+
+func TestFieldTermsAreReplacedAsASetAndGoWithTheField(t *testing.T) {
+	db := pgtest.TempDB(t)
+	ctx := context.Background()
+	exec := func(q string) {
+		t.Helper()
+		if _, err := db.Exec(ctx, q); err != nil {
+			t.Fatalf("%s: %v", q, err)
+		}
+	}
+	exec(`INSERT INTO assets (id, name, mrn, type, providers, created_by) VALUES ('a1', 'customers', 'mrn://table/postgresql/customers', 'Table', '{postgresql}', 't')`)
+	exec(`INSERT INTO glossary_terms (id, name, definition) VALUES
+		('11111111-1111-1111-1111-111111111111', 'Customer email', 'x'),
+		('22222222-2222-2222-2222-222222222222', 'Contact details', 'x')`)
+
+	s := NewStore(db)
+	email, contact := "11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"
+	authors := func() map[string]string {
+		t.Helper()
+		rows, err := db.Query(ctx, `SELECT glossary_term_id::text, COALESCE(created_by, '') FROM asset_field_terms WHERE asset_id = 'a1' AND field_path = 'email'`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+		out := map[string]string{}
+		for rows.Next() {
+			var id, by string
+			if err := rows.Scan(&id, &by); err != nil {
+				t.Fatal(err)
+			}
+			out[id] = by
+		}
+		return out
+	}
+
+	// A repeated id is linked once rather than rejected.
+	if err := s.SetFieldAnnotation(ctx, "a1", FieldAnnotationInput{Schema: "columns", Path: "email", TermIDs: &[]string{email, email}}, "jane"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SetFieldAnnotation(ctx, "a1", FieldAnnotationInput{Schema: "columns", Path: "email", TermIDs: &[]string{email, contact}}, "sam"); err != nil {
+		t.Fatal(err)
+	}
+	if got := authors(); len(got) != 2 || got[email] != "jane" || got[contact] != "sam" {
+		t.Fatalf("a kept link should keep its first author, got %v", got)
+	}
+
+	if err := s.SetFieldAnnotation(ctx, "a1", FieldAnnotationInput{Schema: "columns", Path: "email", TermIDs: &[]string{contact}}, "sam"); err != nil {
+		t.Fatal(err)
+	}
+	if got := authors(); len(got) != 1 || got[contact] != "sam" {
+		t.Fatalf("a term left out of the set should be unlinked, got %v", got)
+	}
+
+	// Leaving the terms out of an update keeps them.
+	yes := true
+	if err := s.SetFieldAnnotation(ctx, "a1", FieldAnnotationInput{Schema: "columns", Path: "email", PII: &yes}, "sam"); err != nil {
+		t.Fatal(err)
+	}
+	if got := authors(); len(got) != 1 {
+		t.Fatalf("an update without terms changed them, got %v", got)
+	}
+
+	if err := s.DeleteFieldAnnotation(ctx, "a1", "columns", "email"); err != nil {
+		t.Fatal(err)
+	}
+	if got := authors(); len(got) != 0 {
+		t.Fatalf("deleting the field should unlink its terms, got %v", got)
+	}
+}

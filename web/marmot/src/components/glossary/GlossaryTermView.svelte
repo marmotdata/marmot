@@ -54,10 +54,13 @@
 	interface LinkedSection {
 		group: LinkGroup;
 		assets: LinkedAsset[];
+		// The fields carrying the term on each asset, for the section of assets linked through their schema
+		fields: Record<string, string[]>;
 	}
 
 	let sections = $state<LinkedSection[]>([]);
-	let linkedTotal = $derived(sections.reduce((n, sec) => n + sec.group.count, 0));
+	// Counted apart from the sections because an asset linked both directly and through a field sits in two of them
+	let linkedTotal = $state(0);
 	let truncated = $derived(sections.some((sec) => sec.group.count > sec.assets.length));
 	let linkedLoading = $state(true);
 	let linkedError = $state(false);
@@ -102,28 +105,37 @@
 			.catch(() => (fetchedParent = null));
 	});
 
-	// Linked assets are grouped by how they got here: linked manually first, then each asset rule that links them
+	// Linked assets are grouped by how they got here, in the order the server gives: linked manually, then through schema fields, then each asset rule that links them
 	async function loadLinked(id: string) {
 		linkedLoading = true;
 		linkedError = false;
 		try {
-			const manual = await getLinkedAssets(id, LINKED_LIMIT, 'manual');
-			const ruled = await Promise.all(
-				manual.groups
-					.filter((g) => g.source === 'rule')
-					.map(async (group) => ({
-						group,
-						assets: (await getLinkedAssets(id, LINKED_LIMIT, groupLink(group))).assets
-					}))
+			const [manual, all] = await Promise.all([
+				getLinkedAssets(id, LINKED_LIMIT, 'manual'),
+				getLinkedAssets(id, 1)
+			]);
+			const loaded = await Promise.all(
+				manual.groups.map(async (group): Promise<LinkedSection> => {
+					const res =
+						group.source === 'manual'
+							? manual
+							: await getLinkedAssets(id, LINKED_LIMIT, groupLink(group));
+					// Only the fields section shows paths: an asset in another section may carry the term on a field too
+					const fields: Record<string, string[]> = {};
+					for (const l of group.source === 'field' ? res.links : []) {
+						if (l.source === 'field' && l.fields?.length) {
+							fields[l.asset_id] = l.fields.map((f) => f.path);
+						}
+					}
+					return { group, assets: res.assets, fields };
+				})
 			);
 			if (id !== term.id) return;
-			const manualGroup = manual.groups.find((g) => g.source === 'manual');
-			sections = [
-				...(manualGroup ? [{ group: manualGroup, assets: manual.assets }] : []),
-				...ruled
-			];
+			sections = loaded;
+			linkedTotal = all.total;
 		} catch {
 			sections = [];
+			linkedTotal = 0;
 			linkedError = true;
 		} finally {
 			linkedLoading = false;
@@ -323,11 +335,13 @@
 						<div class="mm-stack" style="--mm-gap: var(--space-5)">
 							{#each sections as sec (groupLink(sec.group))}
 								{@const label =
-									sec.group.source !== 'rule'
-										? m.glossary_linked_manually()
-										: sec.group.rule_name
-											? m.glossary_linked_from_rule({ rule: sec.group.rule_name })
-											: m.glossary_linked_from_deleted_rule()}
+									sec.group.source === 'field'
+										? m.glossary_linked_through_fields()
+										: sec.group.source !== 'rule'
+											? m.glossary_linked_manually()
+											: sec.group.rule_name
+												? m.glossary_linked_from_rule({ rule: sec.group.rule_name })
+												: m.glossary_linked_from_deleted_rule()}
 								<div class="mm-stack" style="--mm-gap: var(--space-1)">
 									<div class="mm-cluster mm-cluster--between">
 										<mm-text variant="label" tone="secondary">{label}</mm-text>
@@ -339,9 +353,12 @@
 									</div>
 									<mm-list aria-label={label}>
 										{#each sec.assets as a (a.id)}
-											<mm-list-item
-												href={resolve('/discover/[type]/[service]/[name]', assetRouteParams(a))}
-											>
+											{@const paths = sec.fields[a.id]}
+											{@const href = resolve(
+												'/discover/[type]/[service]/[name]',
+												assetRouteParams(a)
+											)}
+											<mm-list-item href={paths ? `${href}?tab=schema` : href}>
 												<mm-provider-logo
 													slot="start"
 													provider={a.providers?.[0] ?? a.type}
@@ -350,7 +367,9 @@
 												></mm-provider-logo>
 												{a.name}
 												<span slot="secondary"
-													>{[a.type, a.providers?.[0]].filter(Boolean).join(' · ')}</span
+													>{paths
+														? m.glossary_linked_fields({ fields: paths.join(', ') })
+														: [a.type, a.providers?.[0]].filter(Boolean).join(' · ')}</span
 												>
 											</mm-list-item>
 										{/each}

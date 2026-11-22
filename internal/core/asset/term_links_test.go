@@ -76,3 +76,59 @@ func TestTermLinksSayWhichRuleLinkedEachAsset(t *testing.T) {
 	assert.Equal(t, "a3", got[0].ID)
 	assert.Equal(t, "a1", got[1].ID)
 }
+
+func TestTermLinksIncludeAssetsWhoseFieldsCarryTheTerm(t *testing.T) {
+	db := pgtest.TempDB(t)
+	ctx := context.Background()
+	repo := NewPostgresRepository(db, quietRecorder{})
+
+	var termID string
+	require.NoError(t, db.QueryRow(ctx, `INSERT INTO glossary_terms (name, definition) VALUES ('Customer email', 'Where we reach a customer') RETURNING id::text`).Scan(&termID))
+	_, err := db.Exec(ctx, `INSERT INTO assets (id, name, mrn, type, providers, created_by)
+		VALUES ('a1', 'customers', 'mrn://table/pg/customers', 'table', '{postgresql}', 'test'),
+		       ('a2', 'orders', 'mrn://table/pg/orders', 'table', '{postgresql}', 'test'),
+		       ('a3', 'refunds', 'mrn://table/pg/refunds', 'table', '{postgresql}', 'test')`)
+	require.NoError(t, err)
+	// customers is linked directly and through two fields, orders only through a field, refunds not at all.
+	_, err = db.Exec(ctx, `INSERT INTO asset_terms (asset_id, glossary_term_id, source) VALUES ('a1', $1, 'user')`, termID)
+	require.NoError(t, err)
+	_, err = db.Exec(ctx, `INSERT INTO asset_field_annotations (asset_id, schema_name, field_path)
+		VALUES ('a1', 'columns', 'email'), ('a1', 'columns', 'billing.email'), ('a2', 'columns', 'customer_email')`)
+	require.NoError(t, err)
+	_, err = db.Exec(ctx, `INSERT INTO asset_field_terms (asset_id, schema_name, field_path, glossary_term_id)
+		VALUES ('a1', 'columns', 'email', $1), ('a1', 'columns', 'billing.email', $1), ('a2', 'columns', 'customer_email', $1)`, termID)
+	require.NoError(t, err)
+
+	groups, err := repo.GetTermLinkGroups(ctx, termID)
+	require.NoError(t, err)
+	require.Len(t, groups, 2)
+	assert.Equal(t, TermLinkManual, groups[0].Source)
+	assert.Equal(t, 1, groups[0].Count)
+	assert.Equal(t, TermLinkField, groups[1].Source)
+	assert.Equal(t, 2, groups[1].Count, "an asset with two fields carrying the term counts once")
+
+	all, total, err := repo.GetAssetsByTermLink(ctx, termID, "", 10, 0)
+	require.NoError(t, err)
+	assert.Equal(t, 2, total, "an asset linked directly and through fields counts once")
+	require.Len(t, all, 2)
+
+	viaFields, total, err := repo.GetAssetsByTermLink(ctx, termID, TermLinkField, 10, 0)
+	require.NoError(t, err)
+	assert.Equal(t, 2, total)
+	assert.Equal(t, "customers", *viaFields[0].Name)
+	assert.Equal(t, "orders", *viaFields[1].Name)
+
+	links, err := repo.GetTermLinks(ctx, termID, []string{"a1", "a2"})
+	require.NoError(t, err)
+	require.Len(t, links, 3)
+	assert.Equal(t, TermLink{AssetID: "a1", Source: TermLinkManual}, links[0])
+	assert.Equal(t, TermLink{AssetID: "a1", Source: TermLinkField, Fields: []FieldTermLink{
+		{Schema: "columns", Path: "billing.email"}, {Schema: "columns", Path: "email"},
+	}}, links[1])
+	assert.Equal(t, TermLink{AssetID: "a2", Source: TermLinkField, Fields: []FieldTermLink{
+		{Schema: "columns", Path: "customer_email"},
+	}}, links[2])
+
+	assert.True(t, ValidTermLinkFilter(TermLinkField))
+	assert.False(t, ValidTermLinkFilter("rule:"))
+}

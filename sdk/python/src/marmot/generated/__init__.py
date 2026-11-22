@@ -78,6 +78,7 @@ __all__ = [
     "AssetTabCounts",
     "AssetTerm",
     "AssetTermLink",
+    "AssetTermLinkField",
     "AssetTermLinkGroup",
     "AssetTypeSummary",
     "AssetWriterInfo",
@@ -441,6 +442,9 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.asset_tab_counts import AssetTabCounts as AssetTabCounts
     from marmot.generated.models.asset_term import AssetTerm as AssetTerm
     from marmot.generated.models.asset_term_link import AssetTermLink as AssetTermLink
+    from marmot.generated.models.asset_term_link_field import (
+        AssetTermLinkField as AssetTermLinkField,
+    )
     from marmot.generated.models.asset_term_link_group import (
         AssetTermLinkGroup as AssetTermLinkGroup,
     )
@@ -1064,6 +1068,7 @@ from marmot.generated.models.asset_summary_response import AssetSummaryResponse 
 from marmot.generated.models.asset_tab_counts import AssetTabCounts as AssetTabCounts
 from marmot.generated.models.asset_term import AssetTerm as AssetTerm
 from marmot.generated.models.asset_term_link import AssetTermLink as AssetTermLink
+from marmot.generated.models.asset_term_link_field import AssetTermLinkField as AssetTermLinkField
 from marmot.generated.models.asset_term_link_group import AssetTermLinkGroup as AssetTermLinkGroup
 from marmot.generated.models.asset_type_summary import AssetTypeSummary as AssetTypeSummary
 from marmot.generated.models.asset_writer_info import AssetWriterInfo as AssetWriterInfo

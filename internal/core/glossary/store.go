@@ -34,12 +34,15 @@ type Repository interface {
 	SuggestAssets(ctx context.Context, termID string, words []string, limit int) ([]SuggestedAsset, error)
 }
 
-// termColumns is what every read of a term selects, in the order scanTerm expects. The author's name and the linked asset count are scalar subqueries rather than joins so the callers' unqualified WHERE clauses stay unambiguous.
+// termColumns is what every read of a term selects, in the order scanTerm expects. The linked asset count includes assets whose schema fields carry the term, each asset once. The author's name and the linked asset count are scalar subqueries rather than joins so the callers' unqualified WHERE clauses stay unambiguous.
 const termColumns = `id, name, definition, user_definition, description, parent_term_id,
 		metadata, tags, created_by,
 		(SELECT u.name FROM users u WHERE u.id = glossary_terms.created_by) AS created_by_name,
 		created_at, updated_at, deleted_at,
-		(SELECT COUNT(*) FROM asset_terms at WHERE at.glossary_term_id = glossary_terms.id) AS linked_asset_count,
+		(SELECT COUNT(*) FROM (
+			SELECT at.asset_id FROM asset_terms at WHERE at.glossary_term_id = glossary_terms.id
+			UNION SELECT ft.asset_id FROM asset_field_terms ft WHERE ft.glossary_term_id = glossary_terms.id
+		) linked) AS linked_asset_count,
 		COALESCE(mrn, '') AS mrn`
 
 func scanTerm(row pgx.Row) (*GlossaryTerm, error) {

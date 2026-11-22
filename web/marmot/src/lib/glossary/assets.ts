@@ -11,25 +11,41 @@ export interface LinkedAsset {
 	description?: string;
 }
 
-/** How a term's linked assets got there: linked manually, or brought in by an asset rule. */
+/** How a term's linked assets got there: linked manually, brought in by an asset rule, or carried by fields of their schema. */
 export interface LinkGroup {
-	source: 'manual' | 'rule';
+	source: 'manual' | 'rule' | 'field';
 	rule_id?: string;
 	rule_name?: string;
 	count: number;
 }
 
-/** The `link` filter that pages through one group. */
-export function groupLink(g: LinkGroup): string {
-	return g.source === 'rule' && g.rule_id ? `rule:${g.rule_id}` : 'manual';
+/** One schema field that carries the term. */
+export interface LinkedField {
+	schema: string;
+	path: string;
 }
 
-/** A page of the term's linked assets, optionally only one group, with every group's count. */
+/** How one asset on the page is linked. An asset linked more than one way has one of these for each. */
+export interface AssetLink {
+	asset_id: string;
+	source: LinkGroup['source'];
+	rule_id?: string;
+	rule_name?: string;
+	fields?: LinkedField[];
+}
+
+/** The `link` filter that pages through one group. */
+export function groupLink(g: LinkGroup): string {
+	if (g.source === 'rule' && g.rule_id) return `rule:${g.rule_id}`;
+	return g.source === 'field' ? 'field' : 'manual';
+}
+
+/** A page of the term's linked assets, optionally only one group, with how each is linked and every group's count. */
 export async function getLinkedAssets(
 	termId: string,
 	limit = 20,
 	link = ''
-): Promise<{ assets: LinkedAsset[]; total: number; groups: LinkGroup[] }> {
+): Promise<{ assets: LinkedAsset[]; total: number; links: AssetLink[]; groups: LinkGroup[] }> {
 	const params = new URLSearchParams({ limit: String(limit) });
 	if (link) params.set('link', link);
 	const res = await fetchApi(
@@ -38,7 +54,12 @@ export async function getLinkedAssets(
 	if (!res.ok) throw new Error('Failed to load linked assets');
 	const data = await res.json();
 	const assets: LinkedAsset[] = data.assets ?? [];
-	return { assets, total: data.total ?? assets.length, groups: data.groups ?? [] };
+	return {
+		assets,
+		total: data.total ?? assets.length,
+		links: data.links ?? [],
+		groups: data.groups ?? []
+	};
 }
 
 /** Assets that mention the term but are not linked to it, best match first. */

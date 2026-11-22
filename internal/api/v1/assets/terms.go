@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -182,11 +181,11 @@ type AssetsByTermResponse struct {
 } // @name AssetsByTermResponse
 
 // @Summary Get assets by glossary term
-// @Description Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group.
+// @Description Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group.
 // @Tags assets
 // @Produce json
 // @Param term_id path string true "Glossary Term ID"
-// @Param link query string false "Only assets linked this way: manual, or rule:<asset rule id>"
+// @Param link query string false "Only assets linked this way: manual, field, or rule:<asset rule id>"
 // @Param limit query int false "Maximum number of assets" default(20)
 // @Param offset query int false "Pagination offset" default(0)
 // @Security ApiKeyAuth
@@ -214,8 +213,8 @@ func (h *Handler) getAssetsByTerm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := r.URL.Query().Get("link")
-	if link != "" && link != asset.TermLinkManual && (!strings.HasPrefix(link, "rule:") || len(link) <= len("rule:")) {
-		common.RespondError(w, http.StatusBadRequest, "link must be manual or rule:<asset rule id>")
+	if !asset.ValidTermLinkFilter(link) {
+		common.RespondError(w, http.StatusBadRequest, "link must be manual, field or rule:<asset rule id>")
 		return
 	}
 

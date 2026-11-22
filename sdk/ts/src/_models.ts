@@ -35,6 +35,7 @@ export type AssetSummaryResponse = S["AssetSummaryResponse"];
 export type AssetTabCounts = S["AssetTabCounts"];
 export type AssetTerm = S["AssetTerm"];
 export type AssetTermLink = S["AssetTermLink"];
+export type AssetTermLinkField = S["AssetTermLinkField"];
 export type AssetTermLinkGroup = S["AssetTermLinkGroup"];
 export type AssetTypeSummary = S["AssetTypeSummary"];
 export type AssetWriterInfo = S["AssetWriterInfo"];

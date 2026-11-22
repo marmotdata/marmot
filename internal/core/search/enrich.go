@@ -135,17 +135,19 @@ func (r *PostgresRepository) enrichAssets(ctx context.Context, results []*Result
 	}
 }
 
-// enrichCounts adds linked asset counts to glossary terms, asset counts to data products and member and asset counts to teams, in one round trip.
+// enrichCounts adds linked asset counts to glossary terms (counting assets whose schema fields carry the term), asset counts to data products and member and asset counts to teams, in one round trip.
 func (r *PostgresRepository) enrichCounts(ctx context.Context, results []*Result, ids map[ResultType][]string) error {
 	terms, products, teams := ids[ResultTypeGlossary], ids[ResultTypeDataProduct], ids[ResultTypeTeam]
 	if len(terms)+len(products)+len(teams) == 0 {
 		return nil
 	}
 	rows, err := r.db.Query(ctx, `
-		SELECT 'glossary', at.glossary_term_id::text, COUNT(*), 0
-		FROM asset_terms at
-		WHERE at.glossary_term_id::text = ANY($1)
-		GROUP BY at.glossary_term_id
+		SELECT 'glossary', linked.term_id::text, COUNT(*), 0
+		FROM (
+			SELECT at.glossary_term_id AS term_id, at.asset_id FROM asset_terms at WHERE at.glossary_term_id::text = ANY($1)
+			UNION SELECT ft.glossary_term_id, ft.asset_id FROM asset_field_terms ft WHERE ft.glossary_term_id::text = ANY($1)
+		) linked
+		GROUP BY linked.term_id
 		UNION ALL
 		SELECT 'data_product', m.data_product_id::text, COUNT(*), 0
 		FROM data_product_memberships m

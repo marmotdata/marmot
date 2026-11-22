@@ -16,6 +16,7 @@ func TestTermFilterOnAssets(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, conditions, 1)
 	assert.Contains(t, conditions[0], "at.asset_id::text = assets.id::text")
+	assert.Contains(t, conditions[0], "ft.asset_id::text = assets.id::text")
 	assert.Contains(t, conditions[0], "lower(gt.name) = lower($1)")
 	assert.Contains(t, conditions[0], "gt.deleted_at IS NULL")
 	assert.Equal(t, []interface{}{"Churn"}, params)

@@ -13,10 +13,10 @@
 	import '@marmotdata/elements/code-sample.js';
 	import type { MenuSelectDetail } from '@marmotdata/elements/classes/menu.js';
 	import type { MmConfirmDialog } from '@marmotdata/elements/classes/confirm-dialog.js';
-	import type { MmDialog } from '@marmotdata/elements/classes/dialog.js';
 	import type {
-		MmEditDescriptionDetail,
-		MmSelectFieldDetail
+		MmFieldChangeDetail,
+		MmTermDetail,
+		MmUnlinkTermDetail
 	} from '@marmotdata/elements/classes/schema-table.js';
 
 	// The Schema tab: the outline (with its own JSON and YAML views) for the selected schema, and adding, editing or removing a schema in place.
@@ -34,13 +34,7 @@
 	let saving = $state(false);
 	let deleteDialog = $state<MmConfirmDialog>();
 
-	// The field open in the outline's panel, which the marker buttons act on.
-	let selectedPath = $state('');
-	let fieldSaving = $state(false);
-	let descriptionDialog = $state<MmDialog>();
-	let descriptionPath = $state('');
-	let descriptionDraft = $state('');
-	// The field whose glossary terms are open in the picker, held apart from the selection so the drawer keeps its field
+	// The field whose glossary terms are open in the picker. The outline's field panel is where everything else about a field is changed.
 	let termsField = $state<{ schema: string; path: string } | null>(null);
 	let termBusy = $state<string | null>(null);
 
@@ -53,9 +47,11 @@
 	);
 
 	let annotations = $derived((asset.field_annotations ?? []).filter((a) => a.schema === activeKey));
-	let columns = $derived(parsed ? applyAnnotations(parsed.columns, annotations) : []);
-	let selectedAnnotation = $derived(annotations.find((a) => a.path === selectedPath));
-	let selectedTerms = $derived(selectedAnnotation?.glossary_terms ?? []);
+	let columns = $derived(
+		parsed
+			? applyAnnotations(parsed.columns, annotations, (id) => resolve('/glossary/[[id]]', { id }))
+			: []
+	);
 	let termsFieldTerms = $derived(
 		termsField ? fieldTerms(termsField.schema, termsField.path) : ([] as FieldTerm[])
 	);
@@ -152,7 +148,6 @@
 		schema = activeKey
 	) {
 		if (!asset?.id || !path) return false;
-		fieldSaving = true;
 		try {
 			const response = await fetchApi(`/assets/field-annotations/${encodeURIComponent(asset.id)}`, {
 				method: 'PUT',
@@ -170,9 +165,17 @@
 				})
 			);
 			return false;
-		} finally {
-			fieldSaving = false;
 		}
+	}
+
+	// The panel waits for the save, so a switch that could not be saved goes back
+	function onFieldChange(e: CustomEvent<MmFieldChangeDetail>) {
+		e.detail.waitUntil(setField(e.detail.path, e.detail.change));
+	}
+
+	function onUnlinkTerm(e: CustomEvent<MmUnlinkTermDetail>) {
+		const term = fieldTerms(activeKey, e.detail.path).find((t) => t.id === e.detail.term.id);
+		if (term) unlinkTerm(activeKey, e.detail.path, term);
 	}
 
 	// Each link and unlink saves the field's whole term list at once and offers Undo, which reads the list as it is then so other changes in between survive
@@ -214,19 +217,6 @@
 			});
 		}
 		return ok;
-	}
-
-	function editDescription(path: string, current: string) {
-		descriptionPath = path;
-		descriptionDraft = current;
-		descriptionDialog?.show();
-	}
-
-	async function saveDescription(e?: Event) {
-		e?.preventDefault();
-		if (await setField(descriptionPath, { description: descriptionDraft.trim() })) {
-			descriptionDialog?.close();
-		}
 	}
 
 	async function confirmDelete() {
@@ -289,10 +279,7 @@
 						label={m.asset_page_schema_picker()}
 						hide-label
 						value={activeKey}
-						onmm-change={(e: CustomEvent<{ value: string }>) => {
-							activeKey = e.detail.value;
-							selectedPath = '';
-						}}
+						onmm-change={(e: CustomEvent<{ value: string }>) => (activeKey = e.detail.value)}
 					>
 						{#each keys as k (k)}
 							<mm-segment value={k}>{k}</mm-segment>
@@ -337,67 +324,6 @@
 				</mm-callout>
 			{/if}
 
-			{#if canManageAssets && columns.length > 0}
-				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
-					{#if selectedPath}
-						<mm-text variant="caption" tone="secondary"
-							>{m.schema_field_actions({ path: selectedPath })}</mm-text
-						>
-						<mm-button
-							variant="ghost"
-							size="sm"
-							icon="shield"
-							pressed={selectedAnnotation?.pii ? 'true' : 'false'}
-							disabled={fieldSaving}
-							onclick={() => setField(selectedPath, { pii: !selectedAnnotation?.pii })}
-							>{m.schema_mark_pii()}</mm-button
-						>
-						<mm-button
-							variant="ghost"
-							size="sm"
-							icon="verified"
-							pressed={selectedAnnotation?.certified ? 'true' : 'false'}
-							disabled={fieldSaving}
-							onclick={() => setField(selectedPath, { certified: !selectedAnnotation?.certified })}
-							>{m.schema_mark_certified()}</mm-button
-						>
-						<mm-button
-							variant="ghost"
-							size="sm"
-							icon="edit"
-							disabled={fieldSaving}
-							onclick={() => editDescription(selectedPath, selectedAnnotation?.description ?? '')}
-							>{m.schema_edit_field_description()}</mm-button
-						>
-						<mm-button
-							variant="ghost"
-							size="sm"
-							icon="menu-book"
-							disabled={fieldSaving}
-							onclick={() => (termsField = { schema: activeKey, path: selectedPath })}
-							>{m.schema_field_terms_button()}</mm-button
-						>
-					{:else}
-						<mm-text variant="caption" tone="secondary">{m.schema_select_field_hint()}</mm-text>
-					{/if}
-				</div>
-			{/if}
-
-			{#if selectedPath && selectedTerms.length > 0}
-				<div class="mm-cluster" style="--mm-gap: var(--space-2)">
-					<mm-text variant="caption" tone="secondary"
-						>{m.schema_field_terms_of({ path: selectedPath })}</mm-text
-					>
-					{#each selectedTerms as t (t.id)}
-						<mm-tag
-							href={resolve('/glossary/[[id]]', { id: t.id })}
-							removable={canManageAssets && !fieldSaving}
-							onmm-remove={() => unlinkTerm(activeKey, selectedPath, t)}>{t.name}</mm-tag
-						>
-					{/each}
-				</div>
-			{/if}
-
 			{#key activeKey}
 				<mm-schema-table
 					label={m.asset_page_schema_label({ name: asset.name })}
@@ -405,13 +331,10 @@
 					source={parsed.source}
 					editable={canManageAssets}
 					empty-text={m.schema_no_fields_for({ name: activeKey })}
-					onmm-select-field={(e: CustomEvent<MmSelectFieldDetail>) =>
-						(selectedPath = e.detail.path)}
-					onmm-edit-description={(e: CustomEvent<MmEditDescriptionDetail>) =>
-						editDescription(
-							e.detail.path,
-							annotations.find((a) => a.path === e.detail.path)?.description ?? ''
-						)}
+					onmm-field-change={onFieldChange}
+					onmm-link-term={(e: CustomEvent<MmTermDetail>) =>
+						(termsField = { schema: activeKey, path: e.detail.path })}
+					onmm-unlink-term={onUnlinkTerm}
 				></mm-schema-table>
 			{/key}
 
@@ -437,24 +360,6 @@
 		{/if}
 	</div>
 {/if}
-
-<mm-dialog bind:this={descriptionDialog} heading={m.schema_edit_field_description()} size="sm">
-	<form class="mm-stack" style="--mm-gap: var(--space-4)" onsubmit={saveDescription}>
-		<mm-textarea
-			label={m.schema_field_description_label({ path: descriptionPath })}
-			help={m.schema_field_description_hint()}
-			rows={4}
-			autosize
-			value={descriptionDraft}
-			onmm-input={(e: CustomEvent<{ value: string }>) => (descriptionDraft = e.detail.value)}
-		></mm-textarea>
-	</form>
-	<mm-button slot="footer" data-close="cancel" disabled={fieldSaving}>{m.common_cancel()}</mm-button
-	>
-	<mm-button slot="footer" variant="primary" loading={fieldSaving} onclick={saveDescription}
-		>{m.common_save()}</mm-button
-	>
-</mm-dialog>
 
 {#if termsField}
 	<FieldTermsDrawer

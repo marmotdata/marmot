@@ -20,6 +20,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
+from marmot.generated.models.asset_term_link_field import AssetTermLinkField
+
 
 class AssetTermLink(BaseModel):
     """
@@ -27,10 +29,16 @@ class AssetTermLink(BaseModel):
     """
 
     asset_id: StrictStr | None = None
+    fields: list[AssetTermLinkField] | None = Field(
+        default=None,
+        description='Fields are the schema fields that carry the term, set when Source is "field".',
+    )
     rule_id: StrictStr | None = None
     rule_name: StrictStr | None = None
-    source: StrictStr | None = Field(default=None, description='Source is "manual" or "rule".')
-    __properties: ClassVar[list[str]] = ["asset_id", "rule_id", "rule_name", "source"]
+    source: StrictStr | None = Field(
+        default=None, description='Source is "manual", "rule" or "field".'
+    )
+    __properties: ClassVar[list[str]] = ["asset_id", "fields", "rule_id", "rule_name", "source"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -64,11 +72,19 @@ class AssetTermLink(BaseModel):
         """
         excluded_fields: set[str] = set([])
 
-        return self.model_dump(
+        _dict = self.model_dump(
             by_alias=True,
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in fields (list)
+        _items = []
+        if self.fields:
+            for _item_fields in self.fields:
+                if _item_fields:
+                    _items.append(_item_fields.to_dict())
+            _dict["fields"] = _items
+        return _dict
 
     @classmethod
     def from_dict(cls, obj: dict[str, Any] | None) -> Self | None:
@@ -82,6 +98,9 @@ class AssetTermLink(BaseModel):
         return cls.model_validate(
             {
                 "asset_id": obj.get("asset_id"),
+                "fields": [AssetTermLinkField.from_dict(_item) for _item in obj["fields"]]
+                if obj.get("fields") is not None
+                else None,
                 "rule_id": obj.get("rule_id"),
                 "rule_name": obj.get("rule_name"),
                 "source": obj.get("source"),

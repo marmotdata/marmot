@@ -72,7 +72,7 @@ type GetAssetsByGlossaryTermTermIDParams struct {
 
 	// Link.
 	//
-	// Only assets linked this way: manual, or rule:<asset rule id>
+	// Only assets linked this way: manual, field, or rule:<asset rule id>
 	Link *string
 
 	// Offset.

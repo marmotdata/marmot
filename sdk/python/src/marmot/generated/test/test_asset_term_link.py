@@ -34,6 +34,11 @@ class TestAssetTermLink(unittest.TestCase):
         if include_optional:
             return AssetTermLink(
                 asset_id = '',
+                fields = [
+                    marmot.generated.models.asset_term_link_field.AssetTermLinkField(
+                        path = '',
+                        schema = '', )
+                    ],
                 rule_id = '',
                 rule_name = '',
                 source = ''

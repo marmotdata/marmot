@@ -97,6 +97,11 @@ class TestAssetsByTermResponse(unittest.TestCase):
                 links = [
                     marmot.generated.models.asset_term_link.AssetTermLink(
                         asset_id = '',
+                        fields = [
+                            marmot.generated.models.asset_term_link_field.AssetTermLinkField(
+                                path = '',
+                                schema = '', )
+                            ],
                         rule_id = '',
                         rule_name = '',
                         source = '', )

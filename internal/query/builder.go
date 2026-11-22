@@ -510,7 +510,7 @@ func parseJSONValue(s string) interface{} {
 	return s
 }
 
-// termCondition matches rows whose asset is linked to a glossary term with the given name, exactly or by wildcard, ignoring case and deleted terms. Rows that are not assets never match because they have no glossary links.
+// termCondition matches rows whose asset, or one of whose schema fields, is linked to a glossary term with the given name, exactly or by wildcard, ignoring case and deleted terms. Rows that are not assets never match because they have no glossary links.
 func (b *Builder) termCondition(filter Filter, paramCount int) (string, []interface{}, int, error) {
 	if b.config.IDColumn == "" {
 		return "", nil, paramCount, fmt.Errorf("@term is not supported here")
@@ -527,7 +527,9 @@ func (b *Builder) termCondition(filter Filter, paramCount int) (string, []interf
 		return "", nil, paramCount, fmt.Errorf("operator %s is not supported for @term", filter.Operator)
 	}
 	condition := fmt.Sprintf(
-		"EXISTS (SELECT 1 FROM asset_terms at JOIN glossary_terms gt ON gt.id = at.glossary_term_id WHERE at.asset_id::text = %s::text AND gt.deleted_at IS NULL AND %s)",
+		"EXISTS (SELECT 1 FROM glossary_terms gt WHERE gt.deleted_at IS NULL AND %[2]s AND ("+
+			"EXISTS (SELECT 1 FROM asset_terms at WHERE at.glossary_term_id = gt.id AND at.asset_id::text = %[1]s::text) OR "+
+			"EXISTS (SELECT 1 FROM asset_field_terms ft WHERE ft.glossary_term_id = gt.id AND ft.asset_id::text = %[1]s::text)))",
 		b.config.IDColumn, match,
 	)
 	return condition, []interface{}{value}, paramCount, nil

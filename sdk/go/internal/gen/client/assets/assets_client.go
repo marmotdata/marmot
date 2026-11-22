@@ -614,7 +614,7 @@ func (a *Client) DeleteZoneBindingsContext(ctx context.Context, params *DeleteZo
 
 // GetAssetsByGlossaryTermTermID gets assets by glossary term.
 //
-// Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group..
+// Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group..
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
@@ -633,7 +633,7 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 
 // GetAssetsByGlossaryTermTermIDContext gets assets by glossary term.
 //
-// Retrieve the assets linked to a glossary term. links says how each asset on the page was linked (manually or by which asset rule) and groups counts all of the term's assets by how they were linked. Pass link=manual or link=rule:<rule id> to page through one group..
+// Retrieve the assets linked to a glossary term. Assets whose schema fields carry the term count as linked. links says how each asset on the page was linked (manually, by which asset rule or through which fields, with one entry per way) and groups counts all of the term's assets by how they were linked. Pass link=manual, link=field or link=rule:<rule id> to page through one group..
 //
 // Do not use the deprecated [GetAssetsByGlossaryTermTermIDParams.Context] with this method: it would be ignored.
 func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
