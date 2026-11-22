@@ -1,6 +1,6 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// The sidebar follows a new reader's journey (see ~/Code/marmot-docs-style/IA.md), not the folder layout, so it is listed by hand and a new page has to be added here to appear. Doc IDs and URLs still come from the file paths.
+// The sidebar follows a new reader's journey, not the folder layout, so it is listed by hand and a new page has to be added here to appear. Doc IDs and URLs still come from the file paths.
 
 const doc = (id: string, label?: string) => (label ? {type: 'doc' as const, id, label} : {type: 'doc' as const, id});
 
@@ -117,6 +117,7 @@ const sidebars: SidebarsConfig = {
           link: {type: 'doc', id: 'data-queries'},
           items: [doc('query-data', 'Query your data'), doc('query-audit', 'Query audit')],
         },
+        doc('knowledge', 'Knowledge'),
         doc('glossary', 'Glossary'),
         doc('data-products', 'Data products'),
         doc('asset-rules', 'Asset rules'),
