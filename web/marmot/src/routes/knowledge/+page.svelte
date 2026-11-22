@@ -133,7 +133,7 @@
 </svelte:head>
 
 <div class="mm-stack" style="--mm-gap: var(--space-6)">
-	<mm-page-header heading={m.knowledge_heading()} description={m.knowledge_home_description()}>
+	<mm-page-header heading={m.knowledge_heading()} compact>
 		<div slot="actions" class="mm-cluster" style="--mm-gap: var(--space-2)">
 			{#if counts?.total}
 				<mm-button variant="secondary" icon="filter-list" href={resolve('/knowledge/browse')}
@@ -178,21 +178,41 @@
 			</mm-section>
 		{/if}
 	{:else}
-		<div class="ask">
-			<mm-search-field
-				label={m.knowledge_ask_label()}
-				hide-label
-				placeholder={m.knowledge_ask_placeholder()}
-				shortcut="/"
-				value={query}
-				onmm-input={(e: CustomEvent<{ value: string }>) => onInput(e.detail.value)}
-				onmm-search={() =>
-					query.trim() && goto(resolve(browsePath({ q: query.trim() }) as '/knowledge/browse'))}
-			></mm-search-field>
-			{#if !query}
-				<mm-text variant="caption" tone="secondary" block>{m.knowledge_ask_hint()}</mm-text>
-			{/if}
-		</div>
+		<!-- The search is the page's front door, so it sits on the faint contour field the design system keeps for welcomes, with the kinds as one row of shortcuts beneath it. -->
+		<section class="hero" aria-label={m.knowledge_ask_label()}>
+			<mm-topography seed={11} fade="edges"></mm-topography>
+			<div class="hero-body">
+				<mm-heading level={2} variant="display-section">{m.knowledge_ask_heading()}</mm-heading>
+				<mm-search-field
+					class="ask"
+					label={m.knowledge_ask_label()}
+					hide-label
+					placeholder={m.knowledge_ask_placeholder()}
+					shortcut="/"
+					value={query}
+					onmm-input={(e: CustomEvent<{ value: string }>) => onInput(e.detail.value)}
+					onmm-search={() =>
+						query.trim() && goto(resolve(browsePath({ q: query.trim() }) as '/knowledge/browse'))}
+				></mm-search-field>
+				{#if !query}
+					<nav class="kinds" aria-label={m.knowledge_shelf_heading()}>
+						{#each $knowledgeKinds as k (k.id)}
+							<a
+								class="kind"
+								href={resolve(browsePath({ kind: k.id }) as '/knowledge/browse')}
+								title={k.description}
+							>
+								<mm-icon name={k.icon} size={16} aria-hidden="true"></mm-icon>
+								<span>{k.label}</span>
+								<span class="kind-count" aria-label={m.knowledge_shelf_count({ kind: k.label })}
+									>{inUse(k.id)}</span
+								>
+							</a>
+						{/each}
+					</nav>
+				{/if}
+			</div>
+		</section>
 
 		{#if query.trim()}
 			<section
@@ -282,27 +302,6 @@
 				<mm-callout tone="danger" heading={m.knowledge_load_failed()}></mm-callout>
 			{/if}
 
-			<mm-section
-				heading={m.knowledge_shelf_heading()}
-				description={m.knowledge_shelf_description()}
-			>
-				<ul class="shelf">
-					{#each $knowledgeKinds as k (k.id)}
-						<li>
-							<a href={resolve(browsePath({ kind: k.id }) as '/knowledge/browse')}>
-								<mm-icon name={k.icon} size={20} aria-hidden="true"></mm-icon>
-								<span class="shelf-text">
-									<span class="shelf-name">{k.label}</span>
-									<mm-text variant="caption" tone="secondary" block>{k.description}</mm-text>
-								</span>
-								<mm-count value={inUse(k.id)} label={m.knowledge_shelf_count({ kind: k.label })}
-								></mm-count>
-							</a>
-						</li>
-					{/each}
-				</ul>
-			</mm-section>
-
 			<div class="mm-split mm-split--even">
 				<mm-panel
 					heading={m.knowledge_recent_heading()}
@@ -381,14 +380,64 @@
 </div>
 
 <style>
-	.ask {
+	.hero {
+		position: relative;
+		isolation: isolate;
+		padding: var(--space-8) var(--space-6);
+		border: 1px solid var(--mm-rule);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+	.hero mm-topography {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+	}
+	.hero-body {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-2);
-		max-width: 48rem;
+		align-items: center;
+		gap: var(--space-4);
+		max-width: 44rem;
+		margin-inline: auto;
+		text-align: center;
 	}
-	.ask mm-search-field {
-		--mm-field-height: 3rem;
+	.ask {
+		width: 100%;
+	}
+	.ask::part(control) {
+		min-block-size: 3.25rem;
+		background: var(--mm-surface);
+	}
+	.ask::part(input) {
+		font: var(--text-body);
+		font-size: 1.0625rem;
+	}
+	.kinds {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-2);
+	}
+	.kind {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-3);
+		border: 1px solid var(--mm-rule);
+		border-radius: 999px;
+		background: var(--mm-surface);
+		color: var(--mm-text);
+		font: var(--text-dense);
+		text-decoration: none;
+	}
+	.kind:hover,
+	.kind:focus-visible {
+		border-color: var(--mm-text-2);
+	}
+	.kind-count {
+		color: var(--mm-text-2);
+		font-variant-numeric: tabular-nums;
 	}
 	.best {
 		display: flex;
@@ -407,41 +456,5 @@
 		margin: 0;
 		font: var(--text-body);
 		color: var(--mm-text);
-	}
-	.shelf {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-		border-block-start: 1px solid var(--mm-rule);
-	}
-	.shelf li {
-		border-block-end: 1px solid var(--mm-rule);
-	}
-	.shelf a {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		padding: var(--space-3) var(--space-2);
-		color: inherit;
-		text-decoration: none;
-	}
-	.shelf a:hover,
-	.shelf a:focus-visible {
-		background: var(--mm-sunken);
-	}
-	.shelf a:hover .shelf-name {
-		text-decoration: underline;
-	}
-	.shelf-text {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		flex: 1;
-		min-width: 0;
-	}
-	.shelf-name {
-		font: var(--text-body-strong);
 	}
 </style>

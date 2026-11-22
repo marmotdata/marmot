@@ -24,9 +24,23 @@
 	const lowlight = createLowlight(common);
 
 	// Documentation pages for an asset or a data product: a page tree beside the selected page, edited in place.
-	let { entityType, entityId }: { entityType: EntityType; entityId: string } = $props();
+	let {
+		entityType,
+		entityId,
+		hideTitle = '',
+		collapseSingle = false
+	}: {
+		entityType: EntityType;
+		entityId: string;
+		/** A page title not to repeat as a heading, such as the knowledge entry's own name when its first page shares it. */
+		hideTitle?: string;
+		/** Drops the page tree while there is only one page, so a single write-up gets the full width. */
+		collapseSingle?: boolean;
+	} = $props();
+
 
 	let pageTree = $state<PageTree | null>(null);
+	let single = $derived(collapseSingle && (pageTree?.total_pages ?? 0) <= 1);
 	let selectedPage = $state<Page | null>(null);
 	let isLoading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -292,8 +306,8 @@
 		{/if}
 	</mm-empty-state>
 {:else}
-	<div class="docs">
-		<div class="mm-stack" style="--mm-gap: var(--space-2); align-items: flex-start">
+	<div class="docs" class:single>
+		<div class="mm-stack tree" style="--mm-gap: var(--space-2); align-items: flex-start">
 			<mm-tree
 				label={m.asset_page_docs_tree_label()}
 				selection="single"
@@ -377,16 +391,28 @@
 						>{m.docs_updated_at({ date: formatDate(selectedPage.updated_at) })}</mm-text
 					>
 					{#if canEdit}
-						<mm-button variant="secondary" size="sm" icon="edit" onclick={startEditing}
-							>{m.asset_page_docs_edit_page()}</mm-button
-						>
+						<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+							{#if single}
+								<mm-button
+									variant="ghost"
+									size="sm"
+									icon="note-add"
+									onclick={() => createPage(null)}>{m.docs_add_page()}</mm-button
+								>
+							{/if}
+							<mm-button variant="secondary" size="sm" icon="edit" onclick={startEditing}
+								>{m.asset_page_docs_edit_page()}</mm-button
+							>
+						</div>
 					{/if}
 				</div>
 				<div class="mm-prose doc-content" use:docImages>
-					<h1>
-						{#if selectedPage.emoji}<span aria-hidden="true">{selectedPage.emoji}</span>
-						{/if}{selectedPage.title}
-					</h1>
+					{#if !hideTitle || selectedPage.title !== hideTitle || selectedPage.emoji}
+						<h1>
+							{#if selectedPage.emoji}<span aria-hidden="true">{selectedPage.emoji}</span>
+							{/if}{selectedPage.title}
+						</h1>
+					{/if}
 					{#if selectedPage.content}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 						{@html renderMarkdown(selectedPage.content)}
@@ -419,6 +445,12 @@
 		.docs {
 			grid-template-columns: minmax(0, 1fr);
 		}
+	}
+	.docs.single {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.docs.single .tree {
+		display: none;
 	}
 	.emoji {
 		position: relative;

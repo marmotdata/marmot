@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '@marmotdata/elements/link-list.js';
+	import '@marmotdata/elements/dialog.js';
 	import type { MmConfirmDialog } from '@marmotdata/elements/confirm-dialog.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -15,10 +16,13 @@
 		kindById,
 		knowledgeRelations,
 		loadKinds,
+		isRequired,
 		relationOf,
 		statusOf,
+		type KnowledgeField,
 		type KnowledgeKind
 	} from '#lib/knowledge/kinds.ts';
+	import { typeLabel } from '#components/query/catalogSearch.ts';
 	import { ruleCoverage, ruleDiscoverHref, ruleLabel } from '#lib/knowledge/rules.ts';
 	import {
 		allEntryLinks,
@@ -43,7 +47,8 @@
 	import DocumentationSystem from '#components/docs/DocumentationSystem.svelte';
 	import EntryDetailsForm from '#components/knowledge/EntryDetailsForm.svelte';
 	import FieldValue from '#components/knowledge/FieldValue.svelte';
-	import StatusPill from '#components/knowledge/StatusPill.svelte';
+	import LinksEditor from '#components/knowledge/LinksEditor.svelte';
+	import RulesEditor from '#components/knowledge/RulesEditor.svelte';
 
 	const canManage = auth.hasPermission('assets', 'manage');
 
@@ -252,12 +257,6 @@
 		const path = discoverPath(asset?.mrn);
 		return path ? `${path}?view=asset` : '';
 	});
-	let filled = $derived(
-		kind && entry ? kind.fields.filter((f) => hasValue(entry!.fields[f.key])) : []
-	);
-	let missing = $derived(
-		kind && entry ? kind.fields.filter((f) => !hasValue(entry!.fields[f.key]) && f.required) : []
-	);
 	let allLinks = $state<KnowledgeLink[] | null>(null);
 	let linksCursor = $state('');
 	let loadingLinks = $state(false);
@@ -279,6 +278,85 @@
 		return groups;
 	});
 	let moreLinks = $derived(entry ? entry.link_count > shownLinks.length : false);
+
+	const SHORT_TYPES = ['text', 'date', 'select', 'url', 'list'];
+
+	interface Fact {
+		key: string;
+		label: string;
+		field?: KnowledgeField;
+		text?: string;
+	}
+
+	// Short facts sit in one row under the header: status, then the kind's short fields that are set (and required ones that are not), then dates. Long text and tables get their own blocks.
+	let facts = $derived.by((): Fact[] => {
+		if (!kind || !entry) return [];
+		const out: Fact[] = [
+			{ key: 'status', label: m.knowledge_status_label(), text: status?.label ?? '' }
+		];
+		for (const f of kind.fields) {
+			if (!SHORT_TYPES.includes(f.type)) continue;
+			if (hasValue(entry.fields[f.key])) out.push({ key: f.key, label: f.label, field: f });
+			else if (isRequired(f, entry.status)) out.push({ key: f.key, label: f.label });
+		}
+		if (entry.effective_from)
+			out.push({
+				key: 'effective',
+				label: m.knowledge_effective_from_label(),
+				text: formatDate(entry.effective_from)
+			});
+		if (entry.review_by)
+			out.push({
+				key: 'review',
+				label: m.knowledge_review_by_label(),
+				text: formatDate(entry.review_by)
+			});
+		return out;
+	});
+	let wide = $derived(
+		kind && entry
+			? kind.fields.filter((f) => !SHORT_TYPES.includes(f.type) && hasValue(entry!.fields[f.key]))
+			: []
+	);
+
+	let linksOpen = $state(false);
+	let openingLinks = $state(false);
+	let savingLinks = $state(false);
+	let linksError = $state('');
+	let linkDraft = $state<EntryDraft | null>(null);
+
+	// Links and rules are edited on their own, without opening every other field, since adding a table to a policy is the most common change.
+	async function openLinks() {
+		if (!kind || !entry || !asset) return;
+		openingLinks = true;
+		try {
+			const d = draftFrom(kind, entry);
+			if (d.links === null) d.links = await allEntryLinks(asset.id).catch(() => null);
+			linkDraft = d;
+			linksError = '';
+			linksOpen = true;
+		} finally {
+			openingLinks = false;
+		}
+	}
+
+	async function saveLinks() {
+		if (!asset || !linkDraft) return;
+		savingLinks = true;
+		linksError = '';
+		try {
+			const input = toInput(linkDraft);
+			entry = await saveEntry(asset.id, input);
+			allLinks = null;
+			linksCursor = '';
+			linksOpen = false;
+			toasts.success(m.knowledge_entry_saved());
+		} catch (err) {
+			linksError = err instanceof Error ? err.message : m.knowledge_entry_save_error();
+		} finally {
+			savingLinks = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -303,7 +381,7 @@
 		<mm-page-header
 			heading={asset.name}
 			icon={kind.icon}
-			caption={kind.label}
+			caption={status ? `${kind.label} · ${status.label}` : kind.label}
 			description={editing ? undefined : asset.user_description}
 		>
 			{#if editing}
@@ -318,14 +396,6 @@
 					></mm-textarea>
 				</div>
 			{/if}
-			<span slot="tags" style="display: contents"
-				><StatusPill
-					{kind}
-					status={entry.status}
-					state={entry.state}
-					reviewDue={entry.review_due}
-				/></span
-			>
 			{#each owners as owner (owner.type + owner.id)}
 				<mm-owner-chip
 					slot="owners"
@@ -462,68 +532,66 @@
 				</div>
 			</div>
 		{:else}
+			{#if facts.length}
+				<mm-description-list layout="inline-grid" columns={4} class="facts">
+					{#each facts as f (f.key)}
+						<mm-description term={f.label}>
+							{#if f.field}
+								<FieldValue field={f.field} value={entry.fields[f.field.key]} />
+							{:else if f.text}
+								{f.text}
+							{:else}
+								<mm-text tone="tertiary">{m.knowledge_not_set()}</mm-text>
+							{/if}
+						</mm-description>
+					{/each}
+				</mm-description-list>
+			{/if}
+
 			<div class="layout">
 				<div class="mm-stack main" style="--mm-gap: var(--space-6)">
-					{#if filled.length || missing.length}
-						<mm-section heading={m.knowledge_section_details({ kind: kind.label })}>
-							<div class="mm-stack" style="--mm-gap: var(--space-5)">
-								{#each filled as f (f.key)}
-									<div class="field">
-										<mm-text variant="label" tone="secondary" block>{f.label}</mm-text>
-										<FieldValue field={f} value={entry.fields[f.key]} />
-									</div>
-								{/each}
-								{#each missing as f (f.key)}
-									<div class="field">
-										<mm-text variant="label" tone="secondary" block>{f.label}</mm-text>
-										<mm-text tone="tertiary">{m.knowledge_not_set()}</mm-text>
-									</div>
-								{/each}
-							</div>
+					{#each wide as f (f.key)}
+						<mm-section heading={f.label}>
+							<FieldValue field={f} value={entry.fields[f.key]} />
 						</mm-section>
-					{/if}
+					{/each}
 					<mm-section heading={m.knowledge_section_writeup()}>
 						{#if asset.mrn}
-							<DocumentationSystem entityType="asset" entityId={asset.mrn} />
+							<DocumentationSystem
+								entityType="asset"
+								entityId={asset.mrn}
+								hideTitle={asset.name}
+								collapseSingle
+							/>
 						{/if}
 					</mm-section>
 				</div>
 
 				<aside class="rail" aria-label={m.knowledge_rail_label()}>
-					<mm-description-list layout="stacked">
-						<mm-description term={m.knowledge_status_label()}
-							>{status?.label ?? m.knowledge_not_set()}</mm-description
-						>
-						<mm-description term={m.knowledge_effective_from_label()}
-							>{entry.effective_from ? formatDate(entry.effective_from) : ''}</mm-description
-						>
-						<mm-description term={m.knowledge_review_by_label()}
-							>{entry.review_by ? formatDate(entry.review_by) : ''}</mm-description
-						>
-						<mm-description term={m.knowledge_last_reviewed_label()}
-							>{entry.last_reviewed_at
-								? m.knowledge_last_reviewed_value({
-										when: formatRelativeTime(entry.last_reviewed_at),
-										who: entry.last_reviewed_by || m.common_unknown()
-									})
-								: ''}</mm-description
-						>
-						{#if entry.updated_at}
-							<mm-description term={m.knowledge_updated_label()}
-								>{m.knowledge_last_reviewed_value({
-									when: formatRelativeTime(entry.updated_at),
-									who: entry.updated_by || m.common_unknown()
-								})}</mm-description
+					<div class="mm-cluster mm-cluster--between">
+						<mm-heading level={2} variant="heading-sm">{m.knowledge_group_links()}</mm-heading>
+						{#if canManage}
+							<mm-button
+								size="sm"
+								variant="ghost"
+								icon="edit"
+								loading={openingLinks}
+								onclick={openLinks}>{m.knowledge_links_manage()}</mm-button
 							>
 						{/if}
-					</mm-description-list>
+					</div>
 
 					{#each linkGroups as g (g.relation)}
 						<div class="mm-stack" style="--mm-gap: var(--space-2)">
 							<mm-text variant="label" tone="secondary" block>{g.label}</mm-text>
 							<ul class="refs">
 								{#each g.links as l (l.target.id)}
-									<li><mm-link href={refHref(l.target)}>{l.target.name}</mm-link></li>
+									<li>
+										<mm-link href={refHref(l.target)}>{l.target.name}</mm-link>
+										{#if l.target.type}<mm-text variant="caption" tone="secondary"
+												>{typeLabel(l.target.type)}</mm-text
+											>{/if}
+									</li>
 								{/each}
 							</ul>
 						</div>
@@ -542,12 +610,8 @@
 							<mm-text variant="label" tone="secondary" block>{m.knowledge_group_rules()}</mm-text>
 							<ul class="refs">
 								{#each entry.rules as r (r.id)}
-									<li class="mm-stack" style="--mm-gap: 0">
-										<span
-											>{relationOf(r.relation, $knowledgeRelations)?.label ?? r.relation} · {ruleLabel(
-												r
-											)}</span
-										>
+									<li>
+										<span>{ruleLabel(r)}</span>
 										<mm-text variant="caption" tone="secondary">
 											<mm-link href={resolve(ruleDiscoverHref(r) as '/')}>{ruleCoverage(r)}</mm-link
 											>
@@ -558,40 +622,101 @@
 						</div>
 					{/if}
 					{#if !entry.link_count && !entry.rules.length}
+						<mm-text tone="secondary" variant="dense">{m.knowledge_links_empty()}</mm-text>
+					{/if}
+
+					{#if entry.supersedes}
 						<div class="mm-stack" style="--mm-gap: var(--space-2)">
-							<mm-text variant="label" tone="secondary" block>{m.knowledge_group_links()}</mm-text>
-							<mm-text tone="tertiary" variant="dense">{m.knowledge_applies_none()}</mm-text>
+							<mm-text variant="label" tone="secondary" block
+								>{m.knowledge_group_replaces()}</mm-text
+							>
+							<mm-link href={resolve('/knowledge/[id]', { id: entry.supersedes.id })}
+								>{entry.supersedes.name}</mm-link
+							>
+						</div>
+					{/if}
+					{#if entry.superseded_by.length}
+						<div class="mm-stack" style="--mm-gap: var(--space-2)">
+							<mm-text variant="label" tone="secondary" block
+								>{m.knowledge_replaced_by_label()}</mm-text
+							>
+							<ul class="refs">
+								{#each entry.superseded_by as r (r.id)}
+									<li>
+										<mm-link href={resolve('/knowledge/[id]', { id: r.id })}>{r.name}</mm-link>
+									</li>
+								{/each}
+							</ul>
 						</div>
 					{/if}
 
-					{#if entry.supersedes || entry.superseded_by.length}
-						<div class="mm-stack" style="--mm-gap: var(--space-2)">
-							{#if entry.supersedes}
-								<mm-text variant="label" tone="secondary" block
-									>{m.knowledge_group_replaces()}</mm-text
-								>
-								<mm-link href={resolve('/knowledge/[id]', { id: entry.supersedes.id })}
-									>{entry.supersedes.name}</mm-link
-								>
-							{/if}
-							{#if entry.superseded_by.length}
-								<mm-text variant="label" tone="secondary" block
-									>{m.knowledge_replaced_by_label()}</mm-text
-								>
-								<ul class="refs">
-									{#each entry.superseded_by as r (r.id)}
-										<li>
-											<mm-link href={resolve('/knowledge/[id]', { id: r.id })}>{r.name}</mm-link>
-										</li>
-									{/each}
-								</ul>
-							{/if}
-						</div>
-					{/if}
+					<div class="meta">
+						{#if entry.last_reviewed_at}
+							<mm-text variant="caption" tone="secondary" block
+								>{m.knowledge_meta_reviewed({
+									when: formatRelativeTime(entry.last_reviewed_at),
+									who: entry.last_reviewed_by || m.common_unknown()
+								})}</mm-text
+							>
+						{/if}
+						{#if entry.updated_at}
+							<mm-text variant="caption" tone="secondary" block
+								>{m.knowledge_meta_changed({
+									when: formatRelativeTime(entry.updated_at),
+									who: entry.updated_by || m.common_unknown()
+								})}</mm-text
+							>
+						{/if}
+					</div>
 				</aside>
 			</div>
 		{/if}
 	</div>
+
+	<mm-dialog
+		heading={m.knowledge_links_manage_heading({ name: asset.name })}
+		description={m.knowledge_section_links_description()}
+		size="lg"
+		open={linksOpen}
+		onmm-close={() => (linksOpen = false)}
+	>
+		{#if linkDraft}
+			<div class="mm-stack" style="--mm-gap: var(--space-6)">
+				{#if linkDraft.links}
+					<LinksEditor
+						value={linkDraft.links}
+						exclude={asset.id}
+						onchange={(v) => linkDraft && (linkDraft = { ...linkDraft, links: v })}
+					/>
+				{:else}
+					<mm-callout tone="info" heading={m.knowledge_links_too_many()}
+						>{m.knowledge_links_too_many_body()}</mm-callout
+					>
+				{/if}
+				<RulesEditor
+					value={linkDraft.rules}
+					onchange={(v) => linkDraft && (linkDraft = { ...linkDraft, rules: v })}
+				/>
+				{#if linksError}
+					<mm-callout tone="danger" heading={m.knowledge_entry_save_error()}
+						>{linksError}</mm-callout
+					>
+				{/if}
+			</div>
+		{/if}
+		<div
+			slot="footer"
+			class="mm-cluster"
+			style="--mm-gap: var(--space-2); justify-content: flex-end"
+		>
+			<mm-button disabled={savingLinks} onclick={() => (linksOpen = false)}
+				>{m.common_cancel()}</mm-button
+			>
+			<mm-button variant="primary" loading={savingLinks} onclick={saveLinks}
+				>{m.knowledge_entry_save()}</mm-button
+			>
+		</div>
+	</mm-dialog>
 
 	<mm-confirm-dialog
 		bind:this={deleteDialog}
@@ -632,10 +757,22 @@
 			border-inline-start: 0;
 		}
 	}
-	.field {
+	.facts {
+		padding-block: var(--space-4);
+		border-block: 1px solid var(--mm-rule);
+	}
+	.refs li {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+	.meta {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
+		padding-block-start: var(--space-4);
+		border-block-start: 1px solid var(--mm-rule);
 	}
 	.refs {
 		list-style: none;
