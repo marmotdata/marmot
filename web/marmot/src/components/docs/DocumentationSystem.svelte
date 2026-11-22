@@ -28,19 +28,30 @@
 		entityType,
 		entityId,
 		hideTitle = '',
-		collapseSingle = false
+		tabs = false
 	}: {
 		entityType: EntityType;
 		entityId: string;
 		/** A page title not to repeat as a heading, such as the knowledge entry's own name when its first page shares it. */
 		hideTitle?: string;
-		/** Drops the page tree while there is only one page, so a single write-up gets the full width. */
-		collapseSingle?: boolean;
+		/** Shows pages as tabs above the text instead of a tree beside it, and no tabs at all for a single page, so a write-up keeps the same full-width layout however many pages it has. */
+		tabs?: boolean;
 	} = $props();
 
-
 	let pageTree = $state<PageTree | null>(null);
-	let single = $derived(collapseSingle && (pageTree?.total_pages ?? 0) <= 1);
+	let single = $derived(tabs);
+	// Pages in tree order, for the tab row.
+	let flatPages = $derived.by(() => {
+		const out: Page[] = [];
+		const walk = (pages: Page[]) => {
+			for (const p of pages) {
+				out.push(p);
+				if (p.children?.length) walk(p.children);
+			}
+		};
+		walk(pageTree?.pages ?? []);
+		return out;
+	});
 	let selectedPage = $state<Page | null>(null);
 	let isLoading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -331,6 +342,20 @@
 		</div>
 
 		<article class="mm-stack" style="--mm-gap: var(--space-4); min-width: 0">
+			{#if single && flatPages.length > 1}
+				<mm-tabs
+					label={m.asset_page_docs_tree_label()}
+					value={selectedPage?.id ?? ''}
+					onmm-tab-change={(e: CustomEvent<{ value: string }>) => {
+						const p = flatPages.find((x) => x.id === e.detail.value);
+						if (p && p.id !== selectedPage?.id) selectPage(p);
+					}}
+				>
+					{#each flatPages as p (p.id)}
+						<mm-tab value={p.id}>{p.title === hideTitle ? m.docs_overview_tab() : p.title}</mm-tab>
+					{/each}
+				</mm-tabs>
+			{/if}
 			{#if !selectedPage}
 				<mm-text variant="dense" tone="secondary">{m.docs_select_page_hint()}</mm-text>
 			{:else if isEditing}
@@ -451,6 +476,10 @@
 	}
 	.docs.single .tree {
 		display: none;
+	}
+	.doc-content > :global(:first-child),
+	.doc-content > :global(h1 + *) {
+		margin-block-start: 0;
 	}
 	.emoji {
 		position: relative;

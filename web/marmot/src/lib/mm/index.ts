@@ -48,6 +48,7 @@ import '@marmotdata/elements/readout.js';
 import '@marmotdata/elements/disclosure.js';
 import '@marmotdata/elements/popover.js';
 import '@marmotdata/elements/topography.js';
+import './providers.ts';
 
 export { setCrumbs, setBleed, chrome, type Crumb } from './chrome';
 export { default as BladeSlot } from './BladeSlot.svelte';

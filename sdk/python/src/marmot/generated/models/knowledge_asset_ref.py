@@ -16,7 +16,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
@@ -29,9 +29,12 @@ class KnowledgeAssetRef(BaseModel):
     id: StrictStr | None = None
     mrn: StrictStr | None = None
     name: StrictStr | None = None
+    provider: StrictStr | None = Field(
+        default=None, description="Provider is the asset's first provider, for its logo."
+    )
     status: StrictStr | None = None
     type: StrictStr | None = None
-    __properties: ClassVar[list[str]] = ["id", "mrn", "name", "status", "type"]
+    __properties: ClassVar[list[str]] = ["id", "mrn", "name", "provider", "status", "type"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -85,6 +88,7 @@ class KnowledgeAssetRef(BaseModel):
                 "id": obj.get("id"),
                 "mrn": obj.get("mrn"),
                 "name": obj.get("name"),
+                "provider": obj.get("provider"),
                 "status": obj.get("status"),
                 "type": obj.get("type"),
             }

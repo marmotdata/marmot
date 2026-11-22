@@ -26,7 +26,6 @@
 	import { ruleCoverage, ruleDiscoverHref, ruleLabel } from '#lib/knowledge/rules.ts';
 	import {
 		allEntryLinks,
-		entryLinks,
 		getEntry,
 		markReviewed,
 		monthsFromToday,
@@ -48,6 +47,7 @@
 	import EntryDetailsForm from '#components/knowledge/EntryDetailsForm.svelte';
 	import FieldValue from '#components/knowledge/FieldValue.svelte';
 	import LinksEditor from '#components/knowledge/LinksEditor.svelte';
+	import AssetRefIcon from '#components/knowledge/AssetRefIcon.svelte';
 	import RulesEditor from '#components/knowledge/RulesEditor.svelte';
 
 	const canManage = auth.hasPermission('assets', 'manage');
@@ -87,8 +87,6 @@
 
 	async function load(assetId: string) {
 		loading = true;
-		allLinks = null;
-		linksCursor = '';
 		failed = '';
 		editing = false;
 		try {
@@ -163,25 +161,6 @@
 		editing = true;
 	}
 
-	async function showAllLinks() {
-		if (!asset) return;
-		loadingLinks = true;
-		try {
-			const page = await entryLinks(asset.id, linksCursor, 100);
-			allLinks = [
-				...(allLinks ?? entry?.links ?? []).filter(
-					(l) => !page.links.some((p) => p.target.id === l.target.id && p.relation === l.relation)
-				),
-				...page.links
-			];
-			linksCursor = page.next ?? '';
-		} catch (err) {
-			toasts.error(err instanceof Error ? err.message : m.knowledge_entry_load_error());
-		} finally {
-			loadingLinks = false;
-		}
-	}
-
 	async function save() {
 		if (!kind || !draft || !asset) return;
 		fieldErrors = draftErrors(kind, draft);
@@ -199,8 +178,6 @@
 				asset.user_description = summary || undefined;
 			}
 			entry = await saveEntry(asset.id, toInput(draft));
-			allLinks = null;
-			linksCursor = '';
 			editing = false;
 			toasts.success(m.knowledge_entry_saved());
 		} catch (err) {
@@ -257,10 +234,9 @@
 		const path = discoverPath(asset?.mrn);
 		return path ? `${path}?view=asset` : '';
 	});
-	let allLinks = $state<KnowledgeLink[] | null>(null);
-	let linksCursor = $state('');
-	let loadingLinks = $state(false);
-	let shownLinks = $derived(allLinks ?? entry?.links ?? []);
+	// The side column shows a handful of links; an entry linked to thousands sends people to its links page instead of growing the column.
+	const RAIL_LINKS = 8;
+	let shownLinks = $derived((entry?.links ?? []).slice(0, RAIL_LINKS));
 	let linkGroups = $derived.by(() => {
 		const groups: { relation: string; label: string; links: KnowledgeLink[] }[] = [];
 		for (const l of shownLinks) {
@@ -280,6 +256,9 @@
 	let moreLinks = $derived(entry ? entry.link_count > shownLinks.length : false);
 
 	const SHORT_TYPES = ['text', 'date', 'select', 'url', 'list'];
+
+	// On the entry's own page the status is the subject, so it gets its colour even when all is well: moss in use, slate not yet, neutral no longer.
+	const stateTone = { current: 'success', pending: 'info', historical: 'neutral' } as const;
 
 	interface Fact {
 		key: string;
@@ -347,8 +326,6 @@
 		try {
 			const input = toInput(linkDraft);
 			entry = await saveEntry(asset.id, input);
-			allLinks = null;
-			linksCursor = '';
 			linksOpen = false;
 			toasts.success(m.knowledge_entry_saved());
 		} catch (err) {
@@ -381,7 +358,7 @@
 		<mm-page-header
 			heading={asset.name}
 			icon={kind.icon}
-			caption={status ? `${kind.label} · ${status.label}` : kind.label}
+			caption={kind.label}
 			description={editing ? undefined : asset.user_description}
 		>
 			{#if editing}
@@ -536,7 +513,9 @@
 				<mm-description-list layout="inline-grid" columns={4} class="facts">
 					{#each facts as f (f.key)}
 						<mm-description term={f.label}>
-							{#if f.field}
+							{#if f.key === 'status' && status}
+								<mm-status-pill status={stateTone[status.state]} dot>{status.label}</mm-status-pill>
+							{:else if f.field}
 								<FieldValue field={f.field} value={entry.fields[f.field.key]} />
 							{:else if f.text}
 								{f.text}
@@ -561,7 +540,7 @@
 								entityType="asset"
 								entityId={asset.mrn}
 								hideTitle={asset.name}
-								collapseSingle
+								tabs
 							/>
 						{/if}
 					</mm-section>
@@ -587,6 +566,7 @@
 							<ul class="refs">
 								{#each g.links as l (l.target.id)}
 									<li>
+										<AssetRefIcon asset={l.target} />
 										<mm-link href={refHref(l.target)}>{l.target.name}</mm-link>
 										{#if l.target.type}<mm-text variant="caption" tone="secondary"
 												>{typeLabel(l.target.type)}</mm-text
@@ -597,13 +577,9 @@
 						</div>
 					{/each}
 					{#if moreLinks}
-						<div>
-							<mm-button size="sm" variant="ghost" loading={loadingLinks} onclick={showAllLinks}
-								>{m.knowledge_links_show_more({
-									count: entry.link_count - shownLinks.length
-								})}</mm-button
-							>
-						</div>
+						<mm-link href={resolve('/knowledge/[id]/links', { id: asset.id })}
+							>{m.knowledge_links_see_all({ count: entry.link_count })}</mm-link
+						>
 					{/if}
 					{#if entry.rules.length}
 						<div class="mm-stack" style="--mm-gap: var(--space-2)">

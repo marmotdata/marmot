@@ -23,6 +23,9 @@ type KnowledgeAssetRef struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// Provider is the asset's first provider, for its logo.
+	Provider string `json:"provider,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 

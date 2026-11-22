@@ -24,6 +24,7 @@
 	import type { Asset } from '#lib/assets/types.ts';
 	import type { DataProduct } from '#lib/dataproducts/types.ts';
 	import AssetBlade from '#components/asset/AssetBlade.svelte';
+	import { kindOfType, knowledgeKinds } from '#lib/knowledge/kinds.ts';
 	import ProductBlade from '#components/product/ProductBlade.svelte';
 	import {
 		RESULT_KINDS,
@@ -505,7 +506,13 @@
 		}
 	]);
 	let typeOptions = $derived<MmFacetOption[]>(
-		facets.asset_types.map((f) => ({ value: f.value, label: typeLabel(f.value), count: f.count }))
+		// Knowledge kinds carry their own icons, so policies and decisions read apart from tables in the Type list.
+		facets.asset_types.map((f) => ({
+			value: f.value,
+			label: typeLabel(f.value),
+			icon: kindOfType(f.value, $knowledgeKinds)?.icon,
+			count: f.count
+		}))
 	);
 	let providerOptions = $derived<MmFacetOption[]>(
 		facets.providers.map((f) => ({
@@ -696,7 +703,15 @@
 										? 'true'
 										: undefined}
 								>
-									{#if r.type === 'asset' && providerOf(r)}
+									{#if r.type === 'asset' && kindOfType(r.metadata?.type, $knowledgeKinds)}
+										<!-- Knowledge entries all come from Marmot, so their kind says more than the provider's logo would -->
+										<mm-icon
+											class="lead"
+											name={kindOfType(r.metadata?.type, $knowledgeKinds)?.icon}
+											size={20}
+											aria-hidden="true"
+										></mm-icon>
+									{:else if r.type === 'asset' && providerOf(r)}
 										<mm-provider-logo
 											class="lead"
 											provider={providerOf(r).toLowerCase()}

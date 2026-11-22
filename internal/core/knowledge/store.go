@@ -20,11 +20,13 @@ var ErrNotFound = errors.New("knowledge entry not found")
 
 // AssetRef names another asset an entry points at.
 type AssetRef struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	MRN    string `json:"mrn"`
-	Status string `json:"status,omitempty"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	MRN  string `json:"mrn"`
+	// Provider is the asset's first provider, for its logo.
+	Provider string `json:"provider,omitempty"`
+	Status   string `json:"status,omitempty"`
 } // @name KnowledgeAssetRef
 
 // Owner is one owner of an entry, for list views that show who to ask.
@@ -231,7 +233,7 @@ func (r *PostgresRepository) AssetTypes(ctx context.Context, ids []string) (map[
 	return out, rows.Err()
 }
 
-const refSQL = `json_build_object('id', x.id, 'name', COALESCE(x.name, ''), 'type', x.type, 'mrn', COALESCE(x.mrn, ''), 'status', COALESCE(xk.status, ''))`
+const refSQL = `json_build_object('id', x.id, 'name', COALESCE(x.name, ''), 'type', x.type, 'mrn', COALESCE(x.mrn, ''), 'provider', COALESCE(x.providers[1], ''), 'status', COALESCE(xk.status, ''))`
 
 // ruleMatchesSQL counts the assets a rule r covers, stopping at MatchLimit.
 var ruleMatchesSQL = fmt.Sprintf(`(SELECT COUNT(*) FROM (SELECT 1 FROM assets m WHERE NOT m.is_stub AND m.id <> r.entry_id AND CASE r.selector_type

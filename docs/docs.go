@@ -16563,6 +16563,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "provider": {
+                    "description": "Provider is the asset's first provider, for its logo.",
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },

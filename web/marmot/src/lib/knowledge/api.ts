@@ -7,6 +7,8 @@ export interface KnowledgeAssetRef {
 	name: string;
 	type: string;
 	mrn: string;
+	/** The asset's first provider, for its logo. */
+	provider?: string;
 	status?: string;
 }
 
@@ -212,10 +214,12 @@ export async function knowledgeAbout(
 export async function entryLinks(
 	assetId: string,
 	cursor = '',
-	limit = 100
+	limit = 100,
+	relation = ''
 ): Promise<KnowledgeLinkPage> {
 	const q = new URLSearchParams({ limit: String(limit) });
 	if (cursor) q.set('cursor', cursor);
+	if (relation) q.set('relation', relation);
 	return json(await fetchApi(`/knowledge/entries/${encodeURIComponent(assetId)}/links?${q}`));
 }
 

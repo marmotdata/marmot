@@ -38,6 +38,7 @@ class TestKnowledgeLink(unittest.TestCase):
                     id = '',
                     mrn = '',
                     name = '',
+                    provider = '',
                     status = '',
                     type = '', )
             )

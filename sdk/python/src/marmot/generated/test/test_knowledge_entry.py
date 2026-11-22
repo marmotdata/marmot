@@ -49,6 +49,7 @@ class TestKnowledgeEntry(unittest.TestCase):
                             id = '',
                             mrn = '',
                             name = '',
+                            provider = '',
                             status = '',
                             type = '', ), )
                     ],
@@ -69,6 +70,7 @@ class TestKnowledgeEntry(unittest.TestCase):
                         id = '',
                         mrn = '',
                         name = '',
+                        provider = '',
                         status = '',
                         type = '', )
                     ],
@@ -76,6 +78,7 @@ class TestKnowledgeEntry(unittest.TestCase):
                     id = '',
                     mrn = '',
                     name = '',
+                    provider = '',
                     status = '',
                     type = '', ),
                 updated_at = '',

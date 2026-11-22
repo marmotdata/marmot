@@ -36,6 +36,7 @@ class TestKnowledgeAssetRef(unittest.TestCase):
                 id = '',
                 mrn = '',
                 name = '',
+                provider = '',
                 status = '',
                 type = ''
             )

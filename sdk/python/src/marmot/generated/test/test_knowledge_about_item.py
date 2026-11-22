@@ -62,6 +62,7 @@ class TestKnowledgeAboutItem(unittest.TestCase):
                     id = '',
                     mrn = '',
                     name = '',
+                    provider = '',
                     status = '',
                     type = '', )
             )
