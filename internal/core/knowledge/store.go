@@ -154,9 +154,11 @@ type TeamCount struct {
 
 // ListFilter narrows a list of entries. Kinds and Statuses are ORed within themselves and ANDed together; ReviewDue keeps entries whose review date has passed, OwnerID those owned by a user or a team they are in, and TeamIDs those owned by any of the teams.
 type ListFilter struct {
-	Kinds     []string
-	Statuses  []string
-	Query     string
+	Kinds    []string
+	Statuses []string
+	Query    string
+	// AnyWord matches entries holding any word of Query rather than every word, ranked by how many they hold, for callers that fall back when nothing matches every word.
+	AnyWord   bool
 	ReviewDue bool
 	OwnerID   string
 	TeamIDs   []string
@@ -454,10 +456,13 @@ var sorts = map[string]string{
 }
 
 // prefixQuery turns what someone typed into a tsquery that matches each word as a prefix, so "expen pol" finds the expenses policy. It returns "" when there are no words.
-func prefixQuery(q string) string {
+func prefixQuery(q string, anyWord bool) string {
 	words := strings.FieldsFunc(strings.ToLower(q), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
 	for i, w := range words {
 		words[i] = w + ":*"
+	}
+	if anyWord {
+		return strings.Join(words, " | ")
 	}
 	return strings.Join(words, " & ")
 }
@@ -479,7 +484,7 @@ func (r *PostgresRepository) List(ctx context.Context, f ListFilter) ([]Summary,
 		args = append(args, f.Statuses)
 		where = append(where, fmt.Sprintf("k.status = ANY($%d)", len(args)))
 	}
-	if q := prefixQuery(f.Query); q != "" {
+	if q := prefixQuery(f.Query, f.AnyWord); q != "" {
 		args = append(args, q, "%"+escapeLike(strings.TrimSpace(f.Query))+"%")
 		queryExpr = fmt.Sprintf("to_tsquery('simple', $%d)", len(args)-1)
 		// Entries never saved have no search text, so their title is matched directly.

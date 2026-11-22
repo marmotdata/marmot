@@ -50,8 +50,8 @@ func TestQueryToolsOnlyOfferedToQueryingPrincipals(t *testing.T) {
 	}
 
 	var svc dataquery.Service = stubQuery{}
-	withQuery := NewServer(nil, nil, nil, nil, nil, nil, nil, svc, &config.Config{}, nil)
-	withoutQuery := NewServer(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	withQuery := NewServer(nil, nil, nil, nil, nil, nil, nil, svc, &config.Config{}, nil, nil, nil)
+	withoutQuery := NewServer(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil, nil, nil)
 	runner := stubPrincipal{permissions: map[string]bool{"assets:query": true}}
 
 	assert.Contains(t, tools(withQuery, runner), "query_data")

@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/dataquery"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/knowledge"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
@@ -35,6 +36,9 @@ type ToolContext struct {
 	principal          auth.Principal
 	config             *config.Config
 	lookups            lookups.Recorder
+	knowledgeService   KnowledgeService
+	docsService        DocsService
+	previewKey         []byte
 }
 
 // recordLookup increments the lookup counter with source=mcp. Safe to call
@@ -129,6 +133,10 @@ func (tc *ToolContext) discoverData(
 }
 
 func (tc *ToolContext) getAssetByID(ctx context.Context, id string) (*mcpsdk.CallToolResult, any, error) {
+	// Models often pass the MRN they were just shown as the id, so take it rather than failing.
+	if strings.HasPrefix(id, "mrn://") {
+		return tc.getAssetByMRN(ctx, id)
+	}
 	asset, err := tc.assetService.Get(ctx, id)
 	if err != nil {
 		return tc.errorWithGuidance(
@@ -163,6 +171,12 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 
 func (tc *ToolContext) renderAssetDetails(ctx context.Context, a *asset.Asset) (*mcpsdk.CallToolResult, any, error) {
 	formatted := FormatAssetCard(a, tc.config.Server.RootURL)
+	// A knowledge entry's substance is in its fields and write-up, which this card leaves out.
+	if kind, ok := knowledge.KindOfType(a.Type); ok && tc.knowledgeService != nil {
+		formatted = fmt.Sprintf("This is a %s knowledge entry. Its card below has only the summary; read the full entry with read_knowledge {\"id\": %q}.\n\n", strings.ToLower(kind.Label), a.ID) + formatted
+	} else if tc.knowledgeService != nil {
+		formatted += fmt.Sprintf("\n\nFor the policies, decisions, runbooks and style guides that apply to this asset, call search_knowledge {\"about\": %q}.", a.ID)
+	}
 
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, a.ID, 5, "both")
 	if err == nil && lineageResp != nil {

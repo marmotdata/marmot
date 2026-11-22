@@ -201,3 +201,18 @@ func cleanDate(label string, s *string) (*string, error) {
 	}
 	return &v, nil
 }
+
+// CheckFields validates an entry's fields for a kind and status without saving, so a caller can show what would be stored, or what is wrong, before writing anything.
+func CheckFields(k Kind, status string, in map[string]any) (map[string]any, error) {
+	return cleanFields(k, status, in)
+}
+
+// DraftStatus is the status a new entry starts in when a person still has to agree it: the kind's first status that is not yet in force.
+func (k Kind) DraftStatus() string {
+	for _, s := range k.Statuses {
+		if s.State == StatePending {
+			return s.Value
+		}
+	}
+	return k.DefaultStatus
+}
