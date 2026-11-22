@@ -8,9 +8,9 @@
 	},
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build && pnpm run -s i18n:compile",
 		"preview": "vite preview",
-		"i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
+		"i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy localStorage preferredLanguage baseLocale --output-structure locale-modules",
 		"i18n:check": "node scripts/check-i18n.mjs",
 		"check": "svelte-kit sync && pnpm run i18n:compile && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && pnpm run i18n:compile && svelte-check --tsconfig ./tsconfig.json --watch",
