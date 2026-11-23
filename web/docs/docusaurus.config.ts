@@ -195,6 +195,9 @@ const config: Config = {
       {
         // Pages removed from the docs point at their nearest replacement. A redirect is only written where the old page no longer exists, so older versions that still have it are left alone.
         createRedirects(existingPath: string) {
+          // Each version's root, such as /docs, /docs/next or /docs/0.13, opens its introduction instead of a 404.
+          const intro = existingPath.match(/^(\/docs(?:\/next|\/\d+\.\d+)?)\/introduction\/?$/);
+          if (intro) return [intro[1]];
           const configure = existingPath.match(/^\/docs(\/next)?\/Configure\/?$/);
           if (configure) return [`${existingPath.replace(/\/$/, "")}/table-preview`];
           // The MCP client pages were folded into tabs on the MCP server page.
