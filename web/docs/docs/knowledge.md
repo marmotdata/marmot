@@ -81,6 +81,32 @@ To see them all, select **See all** under the list. The page that opens lists ev
 
 To look something up without starting from an asset, search from the Knowledge home or select **Browse all**. Search matches titles, summaries, details and write-ups, and finds words as you type them, so "expen pol" finds the expenses policy.
 
+## From the CLI
+
+The [CLI](cli.md#marmot-knowledge) reads and writes entries too, which suits keeping runbooks or decisions in a repository and syncing them:
+
+```bash
+# See a kind's fields and statuses
+marmot knowledge kinds decision
+
+# Write one down, with its write-up from a file
+marmot knowledge create --kind decision --title "Count MRR from paid invoices" \
+  --summary "MRR is counted from paid recurring invoice lines." \
+  --owner "team:Billing" --field decided_at=2026-04-02 --field deciders="Billing,Data platform" \
+  --writeup-file decision.md --documents mrn://asset/table/bigquery/analytics.marts.fct_mrr
+
+# Replace an older decision, which becomes superseded
+marmot knowledge update "Count MRR from paid invoices" --supersedes "Count MRR from subscriptions"
+
+# Confirm it's still true and set the next review
+marmot knowledge reviewed "Count MRR from paid invoices" --next 2027-04-01
+
+# What applies to a table
+marmot knowledge about mrn://asset/table/bigquery/analytics.marts.fct_mrr
+```
+
+Add `-o json` to any of them for output a script can read.
+
 ## How agents use knowledge
 
 An assistant connected to the [MCP server](MCP/index.md) gets these tools for knowledge:

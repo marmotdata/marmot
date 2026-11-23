@@ -263,6 +263,26 @@ marmot glossary <list | get | search | create | update | delete> [flags]
 
 Manage glossary terms. Create terms with `--name` and `--definition`, optionally nesting them under a parent with `--parent-id`.
 
+### marmot knowledge
+
+```
+marmot knowledge <kinds | list | get | create | update | reviewed | about | delete> [flags]
+```
+
+Write down and read [knowledge entries](knowledge.md): policies, decisions, runbooks and the rest. An entry is named by its ID, its MRN or its exact title. `marmot knowledge kinds <kind>` lists a kind's fields and statuses.
+
+```bash
+marmot knowledge create --kind runbook --title "Force Flux to reconcile" \
+  --summary "Make Flux apply your push now." --owner "team:Platform" \
+  --field triggers="HelmRelease not ready,Kustomization stale" \
+  --writeup-file steps.md --applies-to mrn://asset/repository/github/acme-infra
+
+marmot knowledge get "Force Flux to reconcile" --writeup
+marmot knowledge about mrn://asset/table/postgresql/analytics.public.orders
+```
+
+`--field key=value` sets one field; lists are comma separated and tables take JSON. `--fields-file` sets them all from a JSON object. `update` changes only what you pass.
+
 ### marmot runs
 
 ```

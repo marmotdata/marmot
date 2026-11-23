@@ -57,6 +57,7 @@ type Client struct {
 	DataProducts    *DataProductsService
 	Glossary        *GlossaryService
 	Ingestion       *IngestionService
+	Knowledge       *KnowledgeService
 	Lineage         *LineageService
 	Metrics         *MetricsService
 	Owners          *OwnersService
@@ -118,6 +119,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		Assets:          &AssetsService{gen: gen},
 		DataProducts:    &DataProductsService{gen: gen},
 		Glossary:        &GlossaryService{gen: gen},
+		Knowledge:       &KnowledgeService{gen: gen},
 		Ingestion:       &IngestionService{gen: gen},
 		Lineage:         &LineageService{gen: gen},
 		Metrics:         &MetricsService{gen: gen},
