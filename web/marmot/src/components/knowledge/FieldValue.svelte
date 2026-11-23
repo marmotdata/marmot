@@ -12,6 +12,20 @@
 		return v;
 	}
 
+	// A link reads as its site and its last path part, such as github.com/…/03628f03, so it stays on one line; the full address shows on hover.
+	function shortUrl(v: string): string {
+		try {
+			const u = new URL(v);
+			const host = u.hostname.replace(/^www\./, '');
+			const parts = u.pathname.split('/').filter(Boolean);
+			if (parts.length === 0) return host;
+			if (parts.length === 1) return `${host}/${parts[0]}`;
+			return `${host}/…/${parts[parts.length - 1]}`;
+		} catch {
+			return v.replace(/^https?:\/\//, '');
+		}
+	}
+
 	let rows = $derived(
 		Array.isArray(value)
 			? (value as unknown[]).filter((r): r is FieldRow => typeof r === 'object' && r !== null)
@@ -29,7 +43,7 @@
 	{#if !v}
 		<mm-text tone="secondary">—</mm-text>
 	{:else if c.type === 'url'}
-		<mm-link href={v} external>{v.replace(/^https?:\/\//, '')}</mm-link>
+		<mm-link href={v} title={v} external>{shortUrl(v)}</mm-link>
 	{:else if c.type === 'long_text'}
 		<span class="prose">{v}</span>
 	{:else}
@@ -66,7 +80,7 @@
 	</div>
 {:else if typeof value === 'string'}
 	{#if field.type === 'url'}
-		<mm-link href={value} external>{value.replace(/^https?:\/\//, '')}</mm-link>
+		<mm-link href={value} title={value} external>{shortUrl(value)}</mm-link>
 	{:else if field.type === 'long_text'}
 		<span class="prose">{value}</span>
 	{:else}

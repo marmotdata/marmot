@@ -745,6 +745,12 @@
 		padding-block: var(--space-4);
 		border-block: 1px solid var(--mm-rule);
 	}
+	/* TODO(design-system): a content-sized inline layout for mm-description-list. Equal columns left wide gaps between short values and pushed a fifth one onto its own row. */
+	.facts::part(list) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-4) var(--space-8);
+	}
 	.refs li {
 		display: flex;
 		align-items: baseline;
