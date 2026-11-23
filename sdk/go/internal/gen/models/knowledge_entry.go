@@ -4,6 +4,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	stderrors "errors"
 	"strconv"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
 	"github.com/go-openapi/swag/typeutils"
+	"github.com/go-openapi/validate"
 )
 
 // KnowledgeEntry knowledge entry
@@ -52,9 +54,8 @@ type KnowledgeEntry struct {
 	Rules []*KnowledgeRule `json:"rules"`
 
 	// State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.
-	State struct {
-		KnowledgeState
-	} `json:"state,omitempty"`
+	// Enum: ["pending","current","historical"]
+	State string `json:"state,omitempty"`
 
 	// Status is one of the kind's statuses, or empty for an entry nobody has set one on.
 	Status string `json:"status,omitempty"`
@@ -164,9 +165,46 @@ func (m *KnowledgeEntry) validateRules(formats strfmt.Registry) error {
 	return nil
 }
 
+var knowledgeEntryTypeStatePropEnum []any
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["pending","current","historical"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		knowledgeEntryTypeStatePropEnum = append(knowledgeEntryTypeStatePropEnum, v)
+	}
+}
+
+const (
+
+	// KnowledgeEntryStatePending captures enum value "pending"
+	KnowledgeEntryStatePending string = "pending"
+
+	// KnowledgeEntryStateCurrent captures enum value "current"
+	KnowledgeEntryStateCurrent string = "current"
+
+	// KnowledgeEntryStateHistorical captures enum value "historical"
+	KnowledgeEntryStateHistorical string = "historical"
+)
+
+// prop value enum
+func (m *KnowledgeEntry) validateStateEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, knowledgeEntryTypeStatePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *KnowledgeEntry) validateState(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.State) { // not required
 		return nil
+	}
+
+	// value enum
+	if err := m.validateStateEnum("state", "body", m.State); err != nil {
+		return err
 	}
 
 	return nil
@@ -219,10 +257,6 @@ func (m *KnowledgeEntry) ContextValidate(ctx context.Context, formats strfmt.Reg
 	}
 
 	if err := m.contextValidateRules(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateState(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -294,11 +328,6 @@ func (m *KnowledgeEntry) contextValidateRules(ctx context.Context, formats strfm
 		}
 
 	}
-
-	return nil
-}
-
-func (m *KnowledgeEntry) contextValidateState(ctx context.Context, formats strfmt.Registry) error {
 
 	return nil
 }

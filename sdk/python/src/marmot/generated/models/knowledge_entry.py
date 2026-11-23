@@ -16,14 +16,13 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from pydantic_core import to_jsonable_python
 from typing_extensions import Self
 
 from marmot.generated.models.knowledge_asset_ref import KnowledgeAssetRef
 from marmot.generated.models.knowledge_link import KnowledgeLink
 from marmot.generated.models.knowledge_rule import KnowledgeRule
-from marmot.generated.models.knowledge_state import KnowledgeState
 
 
 class KnowledgeEntry(BaseModel):
@@ -47,7 +46,7 @@ class KnowledgeEntry(BaseModel):
     review_by: StrictStr | None = None
     review_due: StrictBool | None = None
     rules: list[KnowledgeRule] | None = None
-    state: KnowledgeState | None = Field(
+    state: StrictStr | None = Field(
         default=None,
         description="State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.",
     )
@@ -81,6 +80,16 @@ class KnowledgeEntry(BaseModel):
         "updated_at",
         "updated_by",
     ]
+
+    @field_validator("state")
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(["pending", "current", "historical"]):
+            raise ValueError("must be one of enum values ('pending', 'current', 'historical')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,

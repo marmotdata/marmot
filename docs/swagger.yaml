@@ -2203,10 +2203,13 @@ definitions:
           $ref: '#/definitions/KnowledgeRule'
         type: array
       state:
-        allOf:
-        - $ref: '#/definitions/knowledge.State'
         description: 'State is what Status means today: pending, current or historical.
           A current entry whose effective date is still ahead is pending.'
+        enum:
+        - pending
+        - current
+        - historical
+        type: string
       status:
         description: Status is one of the kind's statuses, or empty for an entry nobody
           has set one on.

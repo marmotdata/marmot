@@ -16669,10 +16669,11 @@ const docTemplate = `{
                 },
                 "state": {
                     "description": "State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/knowledge.State"
-                        }
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "current",
+                        "historical"
                     ]
                 },
                 "status": {
