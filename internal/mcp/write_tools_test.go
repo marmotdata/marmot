@@ -55,11 +55,11 @@ func TestRequireManage_RefusesNilPrincipal(t *testing.T) {
 }
 
 func TestProposalMakesNoClaimOfChange(t *testing.T) {
-	res := proposal("Set docs", "diff", `{"confirm": true}`)
+	res := proposal("Set docs", "diff", "manage_tags", map[string]any{"confirm": true})
 	assert.False(t, res.IsError)
 	text := res.Content[0].(*mcpsdk.TextContent).Text
 	assert.Contains(t, text, "Nothing has changed yet")
-	assert.Contains(t, text, `"confirm": true`)
+	assert.Contains(t, text, `manage_tags {"confirm":true}`)
 }
 
 func TestWriteHelpers(t *testing.T) {
@@ -109,8 +109,31 @@ func (f *fakeAssetService) RemoveTag(ctx context.Context, id string, tag string)
 type fakeTeamService struct {
 	TeamService
 	owners  []Owner
+	teams   []*Team
 	added   []string
 	removed []string
+}
+
+func (f *fakeTeamService) GetTeam(ctx context.Context, id string) (*Team, error) {
+	for _, t := range f.teams {
+		if t.ID == id {
+			return t, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
+func (f *fakeTeamService) GetTeamByName(ctx context.Context, name string) (*Team, error) {
+	for _, t := range f.teams {
+		if strings.EqualFold(t.Name, name) {
+			return t, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
+func (f *fakeTeamService) FindSimilarTeamNames(ctx context.Context, term string, limit int) ([]string, error) {
+	return nil, nil
 }
 
 func (f *fakeTeamService) ListAssetOwners(ctx context.Context, assetID string) ([]Owner, error) {
@@ -127,8 +150,15 @@ func (f *fakeTeamService) RemoveAssetOwner(ctx context.Context, assetID, ownerTy
 	return nil
 }
 
+// a1 is the test asset's ID; the tools resolve UUIDs directly and search for anything else.
+const a1 = "0b6f3c1e-8d0a-4c55-9a59-2b7c0c7a0001"
+
+const teamID = "0b6f3c1e-8d0a-4c55-9a59-2b7c0c7a0002"
+
+func strPtr(s string) *string { return &s }
+
 func writeTestAsset() *asset.Asset {
-	return &asset.Asset{ID: "a1", Name: strPtr("orders"), Type: "Table", Tags: []string{"pii"}, UserDescription: strPtr("old docs")}
+	return &asset.Asset{ID: a1, Name: strPtr("orders"), Type: "Table", Tags: []string{"pii"}, UserDescription: strPtr("old docs")}
 }
 
 func writeToolContext(fa *fakeAssetService, ft *fakeTeamService) *ToolContext {
@@ -144,17 +174,17 @@ func resultText(t *testing.T, res *mcpsdk.CallToolResult) string {
 }
 
 func TestUpdateDocumentation_ProposeThenApply(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
 	tc := writeToolContext(fa, &fakeTeamService{})
 
-	res, _, err := tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: "a1", Documentation: "new docs"})
+	res, _, err := tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: a1, Documentation: "new docs"})
 	assert.NoError(t, err)
 	text := resultText(t, res)
 	assert.Contains(t, text, "Proposed change")
 	assert.Contains(t, text, "new docs")
 	assert.Nil(t, fa.updated, "a preview must not write")
 
-	res, _, err = tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: "a1", Documentation: "new docs", Confirm: true})
+	res, _, err = tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: a1, Documentation: "new docs", Confirm: true})
 	assert.NoError(t, err)
 	assert.Contains(t, resultText(t, res), "Change applied")
 	if assert.NotNil(t, fa.updated) {
@@ -163,20 +193,20 @@ func TestUpdateDocumentation_ProposeThenApply(t *testing.T) {
 }
 
 func TestUpdateDocumentation_NothingToChange(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
 	tc := writeToolContext(fa, &fakeTeamService{})
 
-	res, _, _ := tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: "a1", Documentation: "old docs"})
-	assert.True(t, res.IsError)
+	res, _, _ := tc.updateDocumentation(context.Background(), nil, UpdateDocumentationInput{ID: a1, Documentation: "old docs"})
+	assert.False(t, res.IsError, "a write that is already in place succeeds")
 	assert.Contains(t, resultText(t, res), "Nothing to change")
 	assert.Nil(t, fa.updated)
 }
 
 func TestManageTags_SkipsAlreadyCorrectTags(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
 	tc := writeToolContext(fa, &fakeTeamService{})
 
-	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: "a1", AddTags: []string{"pii", "gold"}, RemoveTags: []string{"absent"}, Confirm: true})
+	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: a1, AddTags: []string{"pii", "gold"}, RemoveTags: []string{"absent"}, Confirm: true})
 	assert.Contains(t, resultText(t, res), "Change applied")
 	assert.Equal(t, []string{"gold"}, fa.addedTags, "an existing tag must not be re-added")
 	assert.Empty(t, fa.removedTags, "an absent tag must not be removed")
@@ -184,12 +214,12 @@ func TestManageTags_SkipsAlreadyCorrectTags(t *testing.T) {
 
 func TestManageTags_PartialFailureReportsApplied(t *testing.T) {
 	fa := &fakeAssetService{
-		assets:     map[string]*asset.Asset{"a1": writeTestAsset()},
+		assets:     map[string]*asset.Asset{a1: writeTestAsset()},
 		failAddTag: map[string]error{"two": errors.New("boom")},
 	}
 	tc := writeToolContext(fa, &fakeTeamService{})
 
-	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: "a1", AddTags: []string{"one", "two"}, Confirm: true})
+	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: a1, AddTags: []string{"one", "two"}, Confirm: true})
 	assert.True(t, res.IsError)
 	text := resultText(t, res)
 	assert.Contains(t, text, `added "one"`)
@@ -197,40 +227,50 @@ func TestManageTags_PartialFailureReportsApplied(t *testing.T) {
 }
 
 func TestManageTags_EscapesTagsInPreview(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
 	tc := writeToolContext(fa, &fakeTeamService{})
 
-	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: "a1", AddTags: []string{"evil`tag"}})
+	res, _, _ := tc.manageTags(context.Background(), nil, ManageTagsInput{ID: a1, AddTags: []string{"evil`tag"}})
 	assert.Contains(t, resultText(t, res), "evil\\`tag")
 }
 
 func TestManageOwners_NothingToChange(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
-	ft := &fakeTeamService{owners: []Owner{{Type: "team", ID: "t1"}}}
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
+	ft := &fakeTeamService{owners: []Owner{{Type: "team", ID: "t1", Name: "Billing"}}, teams: []*Team{{ID: "t1", Name: "Billing"}}}
 	tc := writeToolContext(fa, ft)
 
-	res, _, _ := tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: "a1", Action: "add", OwnerType: "team", OwnerID: "t1", Confirm: true})
-	assert.True(t, res.IsError)
-	assert.Contains(t, resultText(t, res), "Nothing to change")
+	res, _, _ := tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: a1, Action: "add", OwnerType: "team", Owner: "billing", Confirm: true})
+	assert.False(t, res.IsError, "an owner already in place is a success")
+	assert.Contains(t, resultText(t, res), "Billing already owns")
 	assert.Empty(t, ft.added)
 
-	res, _, _ = tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: "a1", Action: "remove", OwnerType: "user", OwnerID: "u9", Confirm: true})
-	assert.True(t, res.IsError)
+	res, _, _ = tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: a1, Action: "remove", OwnerType: "user", OwnerID: "u9", Confirm: true})
+	assert.True(t, res.IsError, "an unknown user is refused")
 	assert.Empty(t, ft.removed)
 }
 
-func TestManageOwners_ProposeThenApply(t *testing.T) {
-	fa := &fakeAssetService{assets: map[string]*asset.Asset{"a1": writeTestAsset()}}
-	ft := &fakeTeamService{}
+func TestManageOwners_ProposeThenApplyByName(t *testing.T) {
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
+	ft := &fakeTeamService{teams: []*Team{{ID: teamID, Name: "Data `platform"}}}
 	tc := writeToolContext(fa, ft)
 
-	res, _, _ := tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: "a1", Action: "add", OwnerType: "team", OwnerID: "t`1"})
+	res, _, _ := tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: a1, Action: "add", OwnerType: "team", Owner: "data `platform"})
 	text := resultText(t, res)
 	assert.Contains(t, text, "Proposed change")
-	assert.Contains(t, text, "t\\`1", "the owner id must be markdown-escaped in the preview")
+	assert.Contains(t, text, "Data \\`platform", "the preview names the team, escaped")
+	assert.Contains(t, text, teamID, "the apply call carries the resolved ID")
 	assert.Empty(t, ft.added, "a preview must not write")
 
-	res, _, _ = tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: "a1", Action: "add", OwnerType: "team", OwnerID: "t1", Confirm: true})
+	res, _, _ = tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: a1, Action: "add", OwnerType: "team", Owner: teamID, Confirm: true})
 	assert.Contains(t, resultText(t, res), "Change applied")
-	assert.Equal(t, []string{"team:t1"}, ft.added)
+	assert.Equal(t, []string{"team:" + teamID}, ft.added)
+}
+
+func TestManageOwners_RefusesUnknownOwnerBeforePreview(t *testing.T) {
+	fa := &fakeAssetService{assets: map[string]*asset.Asset{a1: writeTestAsset()}}
+	tc := writeToolContext(fa, &fakeTeamService{})
+
+	res, _, _ := tc.manageOwners(context.Background(), nil, ManageOwnersInput{ID: a1, Action: "add", OwnerType: "team", Owner: "nobody"})
+	assert.True(t, res.IsError)
+	assert.Contains(t, resultText(t, res), "not_found")
 }

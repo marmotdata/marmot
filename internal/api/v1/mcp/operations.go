@@ -54,7 +54,8 @@ func (h *Handler) handleMCP(w http.ResponseWriter, r *http.Request) {
 
 	mcpHandler := mcpsdk.NewStreamableHTTPHandler(
 		func(req *http.Request) *mcpsdk.Server {
-			server := h.mcpServer.CreateMCPServer(req.Context(), principal)
+			rootURL, _ := common.PublicRootURL(req, h.config)
+			server := h.mcpServer.CreateMCPServer(req.Context(), principal, rootURL)
 			log.Debug().
 				Str("principal", principal.AuditSubject()).
 				Msg("MCP server instance created")

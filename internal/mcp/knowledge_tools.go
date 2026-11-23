@@ -69,12 +69,14 @@ func (s *Server) registerKnowledgeTools(server *mcpsdk.Server, tc *ToolContext) 
 		Title:       "Search company knowledge",
 		Description: searchKnowledgeDescription,
 		Annotations: readOnly,
+		InputSchema: flatSchema[SearchKnowledgeInput](),
 	}, tc.searchKnowledge)
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name:        "read_knowledge",
 		Title:       "Read a knowledge entry",
 		Description: readKnowledgeDescription,
 		Annotations: readOnly,
+		InputSchema: flatSchema[ReadKnowledgeInput](),
 	}, tc.readKnowledge)
 }
 
@@ -150,7 +152,7 @@ func (tc *ToolContext) searchKnowledge(ctx context.Context, _ *mcpsdk.CallToolRe
 	}
 	b.WriteString(":\n\n")
 	for _, it := range shown {
-		writeSummary(&b, it, "", tc.config.Server.RootURL)
+		writeSummary(&b, it, "", tc.rootURL)
 	}
 	b.WriteString("\nRead one in full with read_knowledge and its id.")
 	return textResult(b.String()), nil, nil
@@ -196,7 +198,7 @@ func (tc *ToolContext) knowledgeAbout(ctx context.Context, args SearchKnowledgeI
 		if shown == 0 {
 			fmt.Fprintf(&b, "Knowledge that applies to %s (%s, %s):\n\n", deref(a.Name), a.Type, deref(a.MRN))
 		}
-		writeSummary(&b, it.Summary, whyApplies(it), tc.config.Server.RootURL)
+		writeSummary(&b, it.Summary, whyApplies(it), tc.rootURL)
 		shown++
 	}
 	if shown == 0 {
@@ -286,7 +288,7 @@ func (tc *ToolContext) readKnowledge(ctx context.Context, _ *mcpsdk.CallToolRequ
 	}
 	b.WriteString(strings.Join(meta, " · ") + "\n")
 	fmt.Fprintf(&b, "id: %s · MRN: %s\n", a.ID, deref(a.MRN))
-	if link := entryURL(tc.config.Server.RootURL, a.ID); link != "" {
+	if link := entryURL(tc.rootURL, a.ID); link != "" {
 		fmt.Fprintf(&b, "url: %s\n", link)
 	}
 	if s := deref(a.UserDescription); s != "" {

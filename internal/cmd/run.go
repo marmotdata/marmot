@@ -15,6 +15,7 @@ import (
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/mcp"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
@@ -104,6 +105,7 @@ func runMarmot(_ *cobra.Command) error {
 	mux := http.NewServeMux()
 	adminAPI.SetVersion(Version)
 	plugin.SetHostVersion(Version)
+	mcp.Version = Version
 	server := v1.New(cfg, db, lookupsRecorder)
 	server.RegisterRoutes(mux)
 	if lookupsFlusher != nil {

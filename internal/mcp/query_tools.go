@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/rs/zerolog/log"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataquery"
@@ -45,7 +46,8 @@ func (tc *ToolContext) listQueryableSources(
 
 	sources, total, err := tc.queryService.ListSources(ctx, dataquery.SourceFilter{Search: args.Search, Limit: sourcesPageSize, Principal: tc.principal})
 	if err != nil {
-		return tc.errorWithGuidance("Could not list queryable sources", err.Error(), nil), nil, nil
+		log.Warn().Err(err).Msg("MCP list_queryable_sources failed")
+		return unavailable("list the queryable sources"), nil, nil
 	}
 	if len(sources) == 0 && args.Search != "" {
 		return textResult(fmt.Sprintf("No queryable source matches %q. Try a shorter search, or call with no search to see them all.", args.Search)), nil, nil
@@ -123,6 +125,12 @@ func (tc *ToolContext) queryData(
 	return textResult(renderQueryResult(result)), nil, nil
 }
 
+// queryBudget and maxCell keep a result table under the size clients warn about; a wide text column can't push one row past maxCell runes.
+const (
+	queryBudget = 24000
+	maxCell     = 500
+)
+
 // renderQueryResult formats rows as a markdown table followed by the
 // catalog's description of every table the query read, so the agent gets
 // meaning alongside the data.
@@ -143,7 +151,11 @@ func renderQueryResult(result *dataquery.QueryResult) string {
 		b.WriteString("| " + strings.Join(header, " | ") + " |\n")
 		b.WriteString("|" + strings.Repeat(" --- |", len(header)) + "\n")
 
-		for _, row := range result.Rows {
+		for n, row := range result.Rows {
+			if b.Len() > queryBudget {
+				fmt.Fprintf(&b, "\n[%d more rows not shown to keep this answer readable. Aggregate in SQL, select fewer columns or lower max_rows.]\n", len(result.Rows)-n)
+				break
+			}
 			cells := make([]string, len(header))
 			for i := range header {
 				if i < len(row) {
@@ -179,7 +191,7 @@ func formatCell(v any) string {
 	if v == nil {
 		return ""
 	}
-	s := fmt.Sprintf("%v", v)
+	s := truncate(fmt.Sprintf("%v", v), maxCell)
 	// Keep each row on one line.
 	s = strings.ReplaceAll(s, "\r", " ")
 	s = strings.ReplaceAll(s, "\n", " ")

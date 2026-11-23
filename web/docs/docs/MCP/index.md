@@ -163,17 +163,17 @@ The server gives an assistant these tools:
 | `search_knowledge` | Finds policies, decisions, runbooks, incidents, guides, references, facts, brand voice, writing styles and design systems by words or kind, or every entry that applies to a repository, service or table |
 | `read_knowledge` | Reads one knowledge entry in full: status, owners, details, what it covers and its write-up |
 | `create_knowledge` | Saves something to knowledge as a draft, after showing a preview the user approves. Only offered to identities with `assets:manage` |
-| `discover_data` | Finds assets by name, type, provider, tags or metadata |
+| `discover_data` | Finds assets by name, type, provider, tags or metadata, or reads one in full: owners, last update, documentation pages, schema, lineage, data products and the knowledge that applies to it |
 | `find_ownership` | Who owns an asset, and everything a person or team owns |
 | `lookup_term` | Glossary definitions and the assets linked to a term |
 | `explore_data_products` | Which data products exist and the assets in each |
 | `explore_teams` | Teams and their members |
 | `trace_lineage` | What feeds an asset and what depends on it |
 | `update_documentation` | Writes a plain-language description on an asset, without touching the one a plugin ingested |
-| `manage_tags`, `manage_owners` | Adds or removes tags and owners on an asset |
+| `manage_tags`, `manage_owners` | Adds or removes tags and owners on an asset. Owners can be given by team name or username |
 | `list_queryable_sources`, `query_data` | Runs a read-only SQL statement against a source whose pipeline is set up to answer queries; see [data queries](../data-queries.md) |
 
-The tools that change the catalog need `assets:manage`. An identity without it can still use every read tool.
+The tools that change the catalog are only listed for identities with `assets:manage`, and each one shows a preview and changes nothing until it's called again with the user's approval. An identity without `assets:manage` still gets every read tool.
 
 The server also sends connected clients short instructions on which tool fits which question. They tell an assistant to check `search_knowledge` before it writes docs, copy, UI or code for your company, and to name the entries it relied on. An assistant that can save may offer once to save something worth keeping, and saves only after the user approves the preview. Entries saved this way start as drafts, and text that looks like a password or key is refused. Most clients pass these instructions to the model without any setup.
 

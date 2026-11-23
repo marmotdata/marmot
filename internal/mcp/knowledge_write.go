@@ -54,6 +54,7 @@ func (s *Server) registerKnowledgeWriteTools(server *mcpsdk.Server, tc *ToolCont
 		Title:       "Save company knowledge (draft)",
 		Description: createKnowledgeDescription,
 		Annotations: &mcpsdk.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: boolPtr(false), IdempotentHint: false, OpenWorldHint: boolPtr(false)},
+		InputSchema: flatSchema[CreateKnowledgeInput](),
 	}, tc.createKnowledge)
 }
 
@@ -224,7 +225,7 @@ func (tc *ToolContext) saveKnowledge(ctx context.Context, args CreateKnowledgeIn
 	}
 
 	msg := fmt.Sprintf("Saved %q as a %s %s (id %s). It isn't live until someone reviews it and sets it to %s in Marmot.", title, statusLabel(plan.kind, plan.status), strings.ToLower(plan.kind.Label), created.ID, statusLabel(plan.kind, plan.kind.DefaultStatus))
-	if link := entryURL(tc.config.Server.RootURL, created.ID); link != "" {
+	if link := entryURL(tc.rootURL, created.ID); link != "" {
 		msg += " Open it at " + link
 	}
 	return textResult(msg), nil, nil

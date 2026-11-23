@@ -31,7 +31,7 @@ func TestQueryDataRefusesWithoutPermission(t *testing.T) {
 
 func TestQueryToolsOnlyOfferedToQueryingPrincipals(t *testing.T) {
 	tools := func(s *Server, p stubPrincipal) []string {
-		server := s.CreateMCPServer(context.Background(), p)
+		server := s.CreateMCPServer(context.Background(), p, "")
 		client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1"}, nil)
 		ct, st := mcpsdk.NewInMemoryTransports()
 		_, err := server.Connect(context.Background(), st, nil)

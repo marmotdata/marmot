@@ -37,7 +37,7 @@ func (stubDocs) CreatePage(context.Context, docs.EntityType, string, docs.Create
 
 func listTools(t *testing.T, s *Server, p stubPrincipal) ([]string, string) {
 	t.Helper()
-	server := s.CreateMCPServer(context.Background(), p)
+	server := s.CreateMCPServer(context.Background(), p, "")
 	client := mcpsdk.NewClient(&mcpsdk.Implementation{Name: "test", Version: "1"}, nil)
 	ct, st := mcpsdk.NewInMemoryTransports()
 	_, err := server.Connect(context.Background(), st, nil)
