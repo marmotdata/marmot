@@ -3,6 +3,8 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/marmotdata/marmot/internal/api/v1/common"
 )
 
 type protectedResourceMetadata struct {
@@ -13,7 +15,11 @@ type protectedResourceMetadata struct {
 }
 
 func (h *Handler) handleProtectedResourceMetadata(w http.ResponseWriter, r *http.Request) {
-	root := h.config.Server.RootURL
+	root, derived := common.PublicRootURL(r, h.config)
+	if derived {
+		// Built from this request's host, so a shared cache must not hand it to a client that reached Marmot another way.
+		w.Header().Set("Cache-Control", "no-store")
+	}
 	meta := protectedResourceMetadata{
 		Resource:               root,
 		AuthorizationServers:   []string{root},

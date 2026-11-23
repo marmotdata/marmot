@@ -26,6 +26,7 @@
 	import TeamMemberPicker from '#components/team/TeamMemberPicker.svelte';
 	import WebhookDrawer from '#components/team/WebhookDrawer.svelte';
 	import EditTeamDrawer from '#components/team/EditTeamDrawer.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	type Tab = 'overview' | 'integrations';
 
@@ -517,12 +518,9 @@
 								<mm-list aria-label={m.teams_owned_assets()} aria-busy={loadingAssets}>
 									{#each assets as asset (asset.id)}
 										<mm-list-item href={assetHref(asset)} secondary={assetCaption(asset)}>
-											<mm-provider-logo
-												slot="start"
-												provider={asset.providers?.[0] ?? asset.type}
-												size="16"
-												decorative
-											></mm-provider-logo>
+											<span slot="start" style="display: contents"
+												><AssetMark {asset} size={16} /></span
+											>
 											{asset.name}
 										</mm-list-item>
 									{/each}

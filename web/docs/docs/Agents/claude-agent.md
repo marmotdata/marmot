@@ -8,7 +8,7 @@ The Claude Agent SDK integration ships in the Python and TypeScript SDKs. It has
 
 import { Tabs, TabPanel } from '@site/src/components/Steps';
 
-1. The **Marmot MCP server** (built into your Marmot instance at `/api/v1/mcp`) gives the agent catalog tools such as `discover_data`, `find_ownership`, `lookup_term` and `trace_lineage`. Point the SDK at it with `mcpServers` and those tools appear alongside the agent's own.
+1. The **Marmot MCP server** (built into your Marmot instance at `/api/v1/mcp`) gives the agent catalog tools such as `search`, `fetch`, `get_lineage` and `search_knowledge`. Point the SDK at it with `mcpServers` and those tools appear alongside the agent's own.
 2. **`MarmotAgentTracker`** plugs into the SDK's hook system. The first time any hook fires it registers the agent as an asset of type `Agent`, captures every tool output for `mrn://` references and writes one batched lineage call when the session ends.
 
 ## Install
@@ -165,11 +165,14 @@ After the first run the agent appears in Marmot as `type=Agent`, `service=Claude
 
 The Marmot MCP server exposes the catalog as tools, namespaced `mcp__marmot__*`:
 
-| Tool             | Purpose                                                       |
-| ---------------- | ------------------------------------------------------------- |
-| `discover_data`  | Find or browse assets by name, type, provider, tags or MRN |
-| `find_ownership` | Resolve who owns an asset, or what a team/user owns           |
-| `lookup_term`    | Search the business glossary for term definitions             |
+| Tool               | Purpose                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `search`           | Find assets, knowledge, glossary terms, data products and teams by words, kind, tag or owner |
+| `fetch`            | Read anything in full by id, MRN, Marmot URL or name: owners, docs, schema, lineage          |
+| `get_lineage`      | What feeds an asset and what depends on it                                                   |
+| `search_knowledge` | The policies, decisions and runbooks that apply to an asset or match a query                 |
+
+See the [MCP server page](../MCP/index.md#tools) for the full list.
 
 Tool responses include MRNs (often inside markdown content blocks). The tracker walks both structured objects and free text for `mrn://` URIs, so lineage is captured automatically.
 
@@ -188,7 +191,7 @@ options = ClaudeAgentOptions(
     hooks=tracker.hooks(),
     setting_sources=[],
     system_prompt=SYSTEM_PROMPT,
-    allowed_tools=["mcp__marmot__discover_data", "mcp__marmot__find_ownership"],
+    allowed_tools=["mcp__marmot__search", "mcp__marmot__fetch"],
 )
 ```
 
@@ -200,7 +203,7 @@ options = ClaudeAgentOptions(
 options: {
   mcpServers: { marmot: { ... } },
   hooks: tracker.hooks(),
-  allowedTools: ["mcp__marmot__discover_data", "mcp__marmot__find_ownership"],
+  allowedTools: ["mcp__marmot__search", "mcp__marmot__fetch"],
 }
 ```
 

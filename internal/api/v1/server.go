@@ -24,6 +24,7 @@ import (
 	queryAPI "github.com/marmotdata/marmot/internal/api/v1/dataquery"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docpages"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
+	knowledgeAPI "github.com/marmotdata/marmot/internal/api/v1/knowledge"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
@@ -54,6 +55,7 @@ import (
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
+	knowledgeService "github.com/marmotdata/marmot/internal/core/knowledge"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	recentService "github.com/marmotdata/marmot/internal/core/recent"
@@ -646,13 +648,15 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider)
 	common.SetOAuthAuthorizeCompleter(authHandler)
 
+	knowledgeSvc := knowledgeService.NewService(knowledgeService.NewPostgresRepository(db))
+
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder).WithDetails(assetdetail.NewStore(db)).WithSignals(assetsignal.New(db)).WithIdentity(db),
 		users.NewHandler(userSvc, authSvc, config).WithTeams(teamSvc),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, querySvc, authSvc, config, lookupsRecorder, knowledgeSvc, docsSvc).WithSignals(assetsignal.New(db)),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
@@ -672,6 +676,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config).With(adminAPI.Extras{DB: db, Settings: settingsStore, OAuth: oauthManager, Teams: teamSvc, Roles: roleSvc}),
 		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
+		knowledgeAPI.NewHandler(knowledgeSvc, userSvc, authSvc, config),
 		recentAPI.NewHandler(recentService.NewStore(db), userSvc, authSvc, config),
 	}
 	if querySvc != nil {

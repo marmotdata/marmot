@@ -10,6 +10,7 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.api.docs_api import DocsApi
     from marmot.generated.api.glossary_api import GlossaryApi
     from marmot.generated.api.ingestion_api import IngestionApi
+    from marmot.generated.api.knowledge_api import KnowledgeApi
     from marmot.generated.api.lineage_api import LineageApi
     from marmot.generated.api.mcp_api import McpApi
     from marmot.generated.api.metrics_api import MetricsApi
@@ -43,6 +44,7 @@ from marmot.generated.api.auth_api import AuthApi
 from marmot.generated.api.docs_api import DocsApi
 from marmot.generated.api.glossary_api import GlossaryApi
 from marmot.generated.api.ingestion_api import IngestionApi
+from marmot.generated.api.knowledge_api import KnowledgeApi
 from marmot.generated.api.lineage_api import LineageApi
 from marmot.generated.api.mcp_api import McpApi
 from marmot.generated.api.metrics_api import MetricsApi

@@ -8,6 +8,8 @@
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import { assetHref, providerKey } from './assetFormat';
+	import AboutPanel from '#components/knowledge/AboutPanel.svelte';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	// The asset page's blade: what decides whether the asset can be used, then what it means and where it flows; owners, tags and freshness live in the page header so they are not repeated here.
 	let {
@@ -121,6 +123,8 @@
 
 	<AssetGlossaryTerms {asset} />
 
+	<AboutPanel assetId={asset.id} />
+
 	<mm-blade-section
 		heading={isAgent ? m.asset_page_what_it_reads() : m.asset_page_where_it_flows()}
 		flush={nearest.length > 0}
@@ -130,8 +134,9 @@
 			<mm-list dense aria-label={m.asset_page_nearest_lineage()}>
 				{#each nearest as { n, dir } (n.id)}
 					<mm-list-item href={href(n)} secondary={nodeSecondary(n, dir)}>
-						<mm-provider-logo slot="start" provider={providerKey(n.asset)} size="20" decorative
-						></mm-provider-logo>
+						<span slot="start" style="display: contents"
+							><AssetMark asset={{ type: n.asset?.type, provider: providerKey(n.asset) }} /></span
+						>
 						{n.asset?.name ?? n.id}
 					</mm-list-item>
 				{/each}

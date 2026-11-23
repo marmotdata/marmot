@@ -24,6 +24,7 @@
 	import PluginAdvisoryBanner from '#lib/components/PluginAdvisoryBanner.svelte';
 	import { advisoryBanner } from '#lib/plugins/advisoryBanner.svelte.ts';
 	import ToastContainer from '#components/ui/ToastContainer.svelte';
+	import { kindOfType, knowledgeKinds, loadKinds } from '#lib/knowledge/kinds.ts';
 	import type {
 		MmCommandPalette,
 		PaletteCommand,
@@ -137,6 +138,7 @@
 		| 'home'
 		| 'discover'
 		| 'glossary'
+		| 'knowledge'
 		| 'products'
 		| 'query'
 		| 'insights'
@@ -148,16 +150,30 @@
 		| 'notifications'
 		| 'none';
 
+	// The kinds tell a knowledge entry's catalog page apart from any other asset's, so the sidebar can keep Knowledge selected there.
+	$effect(() => {
+		if ($auth) loadKinds().catch(() => {});
+	});
+
 	const current = $derived.by((): NavId => {
 		if (path === '/') return 'home';
 		const top = path.split('/')[1];
 		switch (top) {
 			case 'discover':
+				// Entries also have a catalog view under Discover; it still belongs to Knowledge.
+				return kindOfType(
+					decodeURIComponent(path.split('/')[2] ?? '').replace(/-/g, ' '),
+					$knowledgeKinds
+				)
+					? 'knowledge'
+					: 'discover';
 			case 'search':
 			case 'assets':
 				return 'discover';
 			case 'glossary':
 				return 'glossary';
+			case 'knowledge':
+				return 'knowledge';
 			case 'products':
 				return 'products';
 			case 'query':
@@ -194,6 +210,7 @@
 		home: m.nav_home,
 		discover: m.nav_discover,
 		glossary: m.nav_glossary,
+		knowledge: m.nav_knowledge,
 		products: m.nav_data_products,
 		query: m.nav_query,
 		insights: m.nav_insights,
@@ -248,6 +265,13 @@
 				icon: 'menu-book',
 				href: '/glossary',
 				keywords: ['terms', 'definitions']
+			},
+			{
+				id: 'knowledge',
+				label: m.nav_knowledge(),
+				icon: 'article',
+				href: '/knowledge',
+				keywords: ['policy', 'decision', 'runbook', 'brand', 'style', 'design']
 			},
 			{ id: 'products', label: m.nav_data_products(), icon: 'package-2', href: '/products' }
 		];
@@ -441,6 +465,9 @@
 						icon="menu-book"
 						current={current === 'glossary'}>{m.nav_glossary()}</mm-nav-item
 					>
+					<mm-nav-item href={resolve('/knowledge')} icon="article" current={current === 'knowledge'}
+						>{m.nav_knowledge()}</mm-nav-item
+					>
 					<mm-nav-item href={resolve('/products')} icon="package-2" current={current === 'products'}
 						>{m.nav_data_products()}</mm-nav-item
 					>
@@ -489,7 +516,8 @@
 				onmm-open-search={() => palette?.show()}
 				onmm-open-notifications={() => goto(resolve('/notifications'))}
 			>
-				{#if crumbs.length}
+				<!-- A single crumb only repeats the page title under it, so the top bar shows a trail once there is somewhere to go back to; a page without such a title asks for its lone crumb. -->
+				{#if crumbs.length > 1 || (crumbs.length === 1 && $chrome.path === path && $chrome.showLoneCrumb)}
 					<mm-breadcrumbs slot="start">
 						<!-- Keyed by label so a crumb whose name arrives later is a new child, which makes mm-breadcrumbs re-fit instead of keeping the "…" it collapsed to for the placeholder -->
 						{#each crumbs as crumb, i (`${i}:${crumb.label}`)}

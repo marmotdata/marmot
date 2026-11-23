@@ -84,3 +84,45 @@ func TestHandleASMetadata(t *testing.T) {
 		t.Fatalf("expected scopes_supported=[openid], got %v", meta.ScopesSupported)
 	}
 }
+
+func TestHandleASMetadataDerivesRootWithoutConfig(t *testing.T) {
+	h := &Handler{config: &config.Config{}}
+
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/.well-known/oauth-authorization-server", nil)
+	req.Header.Set("X-Forwarded-Host", "localhost:5173")
+	rec := httptest.NewRecorder()
+	h.handleASMetadata(rec, req)
+
+	var meta asMetadata
+	if err := json.NewDecoder(rec.Body).Decode(&meta); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if meta.Issuer != "http://localhost:5173" || meta.AuthorizationEndpoint != "http://localhost:5173/oauth/authorize" {
+		t.Fatalf("expected endpoints on the forwarded host, got issuer %q, authorize %q", meta.Issuer, meta.AuthorizationEndpoint)
+	}
+	if rec.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("derived metadata must not be cached, got Cache-Control %q", rec.Header().Get("Cache-Control"))
+	}
+}
+
+func TestHandleASMetadataConfiguredRootIgnoresForwardedHost(t *testing.T) {
+	cfg := &config.Config{}
+	cfg.Server.RootURL = "https://marmot.example.com"
+	h := &Handler{config: cfg}
+
+	req := httptest.NewRequest(http.MethodGet, "/.well-known/oauth-authorization-server", nil)
+	req.Header.Set("X-Forwarded-Host", "attacker.example")
+	rec := httptest.NewRecorder()
+	h.handleASMetadata(rec, req)
+
+	var meta asMetadata
+	if err := json.NewDecoder(rec.Body).Decode(&meta); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if meta.Issuer != "https://marmot.example.com" {
+		t.Fatalf("configured root URL must win, got %q", meta.Issuer)
+	}
+	if rec.Header().Get("Cache-Control") != "" {
+		t.Fatalf("configured metadata keeps its caching, got Cache-Control %q", rec.Header().Get("Cache-Control"))
+	}
+}

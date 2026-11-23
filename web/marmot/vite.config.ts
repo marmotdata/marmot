@@ -68,9 +68,11 @@ export default defineConfig(({ command }) => ({
 				target: 'http://localhost:8080',
 				changeOrigin: true
 			},
+			// xfwd passes the address the browser used, so Marmot's OAuth discovery points clients back at this dev server when no root URL is configured.
 			'/.well-known': {
 				target: 'http://localhost:8080',
-				changeOrigin: true
+				changeOrigin: true,
+				xfwd: true
 			},
 			'/oauth': {
 				target: 'http://localhost:8080',

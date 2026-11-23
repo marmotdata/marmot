@@ -36,14 +36,22 @@ func NewHandler(
 	authService auth.Service,
 	config *config.Config,
 	lookupsRecorder lookups.Recorder,
+	knowledgeService mcp.KnowledgeService,
+	docsService mcp.DocsService,
 ) *Handler {
 	teamAdapter := &teamServiceAdapter{teamService: teamService}
 	return &Handler{
-		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, queryService, config, lookupsRecorder),
+		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, queryService, config, lookupsRecorder, knowledgeService, docsService),
 		userService: userService,
 		authService: authService,
 		config:      config,
 	}
+}
+
+// WithSignals passes the staleness check through to the MCP tools.
+func (h *Handler) WithSignals(signals mcp.StaleChecker) *Handler {
+	h.mcpServer.WithSignals(signals)
+	return h
 }
 
 func (h *Handler) Routes() []common.Route {

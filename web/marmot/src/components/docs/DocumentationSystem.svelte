@@ -24,9 +24,34 @@
 	const lowlight = createLowlight(common);
 
 	// Documentation pages for an asset or a data product: a page tree beside the selected page, edited in place.
-	let { entityType, entityId }: { entityType: EntityType; entityId: string } = $props();
+	let {
+		entityType,
+		entityId,
+		hideTitle = '',
+		tabs = false
+	}: {
+		entityType: EntityType;
+		entityId: string;
+		/** A page title not to repeat as a heading, such as the knowledge entry's own name when its first page shares it. */
+		hideTitle?: string;
+		/** Shows pages as tabs above the text instead of a tree beside it, and no tabs at all for a single page, so a write-up keeps the same full-width layout however many pages it has. */
+		tabs?: boolean;
+	} = $props();
 
 	let pageTree = $state<PageTree | null>(null);
+	let single = $derived(tabs);
+	// Pages in tree order, for the tab row.
+	let flatPages = $derived.by(() => {
+		const out: Page[] = [];
+		const walk = (pages: Page[]) => {
+			for (const p of pages) {
+				out.push(p);
+				if (p.children?.length) walk(p.children);
+			}
+		};
+		walk(pageTree?.pages ?? []);
+		return out;
+	});
 	let selectedPage = $state<Page | null>(null);
 	let isLoading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -292,8 +317,8 @@
 		{/if}
 	</mm-empty-state>
 {:else}
-	<div class="docs">
-		<div class="mm-stack" style="--mm-gap: var(--space-2); align-items: flex-start">
+	<div class="docs" class:single>
+		<div class="mm-stack tree" style="--mm-gap: var(--space-2); align-items: flex-start">
 			<mm-tree
 				label={m.asset_page_docs_tree_label()}
 				selection="single"
@@ -317,6 +342,20 @@
 		</div>
 
 		<article class="mm-stack" style="--mm-gap: var(--space-4); min-width: 0">
+			{#if single && flatPages.length > 1}
+				<mm-tabs
+					label={m.asset_page_docs_tree_label()}
+					value={selectedPage?.id ?? ''}
+					onmm-tab-change={(e: CustomEvent<{ value: string }>) => {
+						const p = flatPages.find((x) => x.id === e.detail.value);
+						if (p && p.id !== selectedPage?.id) selectPage(p);
+					}}
+				>
+					{#each flatPages as p (p.id)}
+						<mm-tab value={p.id}>{p.title === hideTitle ? m.docs_overview_tab() : p.title}</mm-tab>
+					{/each}
+				</mm-tabs>
+			{/if}
 			{#if !selectedPage}
 				<mm-text variant="dense" tone="secondary">{m.docs_select_page_hint()}</mm-text>
 			{:else if isEditing}
@@ -377,16 +416,28 @@
 						>{m.docs_updated_at({ date: formatDate(selectedPage.updated_at) })}</mm-text
 					>
 					{#if canEdit}
-						<mm-button variant="secondary" size="sm" icon="edit" onclick={startEditing}
-							>{m.asset_page_docs_edit_page()}</mm-button
-						>
+						<div class="mm-cluster" style="--mm-gap: var(--space-2)">
+							{#if single}
+								<mm-button
+									variant="ghost"
+									size="sm"
+									icon="note-add"
+									onclick={() => createPage(null)}>{m.docs_add_page()}</mm-button
+								>
+							{/if}
+							<mm-button variant="secondary" size="sm" icon="edit" onclick={startEditing}
+								>{m.asset_page_docs_edit_page()}</mm-button
+							>
+						</div>
 					{/if}
 				</div>
 				<div class="mm-prose doc-content" use:docImages>
-					<h1>
-						{#if selectedPage.emoji}<span aria-hidden="true">{selectedPage.emoji}</span>
-						{/if}{selectedPage.title}
-					</h1>
+					{#if !hideTitle || selectedPage.title !== hideTitle || selectedPage.emoji}
+						<h1>
+							{#if selectedPage.emoji}<span aria-hidden="true">{selectedPage.emoji}</span>
+							{/if}{selectedPage.title}
+						</h1>
+					{/if}
 					{#if selectedPage.content}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 						{@html renderMarkdown(selectedPage.content)}
@@ -419,6 +470,26 @@
 		.docs {
 			grid-template-columns: minmax(0, 1fr);
 		}
+	}
+	.docs.single {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.docs.single .tree {
+		display: none;
+	}
+	/* The app's reset strips list markers, and without them a list in a write-up reads as loose sentences. */
+	.doc-content :global(ul) {
+		list-style: disc;
+	}
+	.doc-content :global(ol) {
+		list-style: decimal;
+	}
+	.doc-content :global(li::marker) {
+		color: var(--mm-text-2);
+	}
+	.doc-content > :global(:first-child),
+	.doc-content > :global(h1 + *) {
+		margin-block-start: 0;
 	}
 	.emoji {
 		position: relative;

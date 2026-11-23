@@ -21,8 +21,13 @@ func (t *Tokeniser) Tokenise(query string) ([]string, error) {
 	inQuotes := false
 	quoteChar := rune(0)
 
-	for _, char := range query {
+	runes := []rune(query)
+	singleQuoted := false
+
+	for i, char := range runes {
 		switch {
+		case char == '\'' && !inQuotes && isInWordApostrophe(runes, i):
+			currentToken.WriteRune(char)
 		case char == '(' || char == ')':
 			// If we have a current token, add it
 			if currentToken.Len() > 0 && !inQuotes {
@@ -37,6 +42,9 @@ func (t *Tokeniser) Tokenise(query string) ([]string, error) {
 			}
 		case char == '"' || char == '\'':
 			currentToken.WriteRune(char)
+			if char == '\'' {
+				singleQuoted = true
+			}
 			if !inQuotes {
 				inQuotes = true
 				quoteChar = char
@@ -78,7 +86,7 @@ func (t *Tokeniser) Tokenise(query string) ([]string, error) {
 	}
 
 	// Check for mixed quotes
-	if strings.Count(query, "'") > 0 && strings.Count(query, "\"") > 0 {
+	if singleQuoted && strings.Contains(query, "\"") {
 		return nil, fmt.Errorf("mixed quote types in query")
 	}
 
@@ -93,4 +101,13 @@ func cleanTokens(tokens []string) []string {
 		}
 	}
 	return cleaned
+}
+
+// isInWordApostrophe reports whether the apostrophe at runes[i] sits between two letters or digits, as in "don't", so it belongs to the word and does not open a quoted phrase.
+func isInWordApostrophe(runes []rune, i int) bool {
+	if i == 0 || i+1 >= len(runes) {
+		return false
+	}
+	isWord := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
+	return isWord(runes[i-1]) && isWord(runes[i+1])
 }

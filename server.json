@@ -21,7 +21,7 @@
       "headers": [
         {
           "name": "X-API-Key",
-          "description": "Marmot API key (generate from Settings > API Keys)",
+          "description": "Marmot API key (create one under Account → API keys)",
           "isRequired": true,
           "isSecret": true
         }

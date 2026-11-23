@@ -151,6 +151,30 @@ if __import__("typing").TYPE_CHECKING:
     from marmot.generated.models.invite_response import InviteResponse
     from marmot.generated.models.job import Job
     from marmot.generated.models.job_run import JobRun
+    from marmot.generated.models.knowledge_about_item import KnowledgeAboutItem
+    from marmot.generated.models.knowledge_about_page import KnowledgeAboutPage
+    from marmot.generated.models.knowledge_asset_ref import KnowledgeAssetRef
+    from marmot.generated.models.knowledge_counts import KnowledgeCounts
+    from marmot.generated.models.knowledge_entries_response import KnowledgeEntriesResponse
+    from marmot.generated.models.knowledge_entry import KnowledgeEntry
+    from marmot.generated.models.knowledge_field import KnowledgeField
+    from marmot.generated.models.knowledge_field_type import KnowledgeFieldType
+    from marmot.generated.models.knowledge_kind import KnowledgeKind
+    from marmot.generated.models.knowledge_kinds_response import KnowledgeKindsResponse
+    from marmot.generated.models.knowledge_link import KnowledgeLink
+    from marmot.generated.models.knowledge_link_input import KnowledgeLinkInput
+    from marmot.generated.models.knowledge_link_page import KnowledgeLinkPage
+    from marmot.generated.models.knowledge_option import KnowledgeOption
+    from marmot.generated.models.knowledge_owner import KnowledgeOwner
+    from marmot.generated.models.knowledge_relation import KnowledgeRelation
+    from marmot.generated.models.knowledge_reviewed_request import KnowledgeReviewedRequest
+    from marmot.generated.models.knowledge_rule import KnowledgeRule
+    from marmot.generated.models.knowledge_rule_input import KnowledgeRuleInput
+    from marmot.generated.models.knowledge_save_input import KnowledgeSaveInput
+    from marmot.generated.models.knowledge_state import KnowledgeState
+    from marmot.generated.models.knowledge_status import KnowledgeStatus
+    from marmot.generated.models.knowledge_summary import KnowledgeSummary
+    from marmot.generated.models.knowledge_team_count import KnowledgeTeamCount
     from marmot.generated.models.lineage_edge import LineageEdge
     from marmot.generated.models.lineage_node import LineageNode
     from marmot.generated.models.lineage_response import LineageResponse
@@ -463,6 +487,30 @@ from marmot.generated.models.invite_request import InviteRequest
 from marmot.generated.models.invite_response import InviteResponse
 from marmot.generated.models.job import Job
 from marmot.generated.models.job_run import JobRun
+from marmot.generated.models.knowledge_about_item import KnowledgeAboutItem
+from marmot.generated.models.knowledge_about_page import KnowledgeAboutPage
+from marmot.generated.models.knowledge_asset_ref import KnowledgeAssetRef
+from marmot.generated.models.knowledge_counts import KnowledgeCounts
+from marmot.generated.models.knowledge_entries_response import KnowledgeEntriesResponse
+from marmot.generated.models.knowledge_entry import KnowledgeEntry
+from marmot.generated.models.knowledge_field import KnowledgeField
+from marmot.generated.models.knowledge_field_type import KnowledgeFieldType
+from marmot.generated.models.knowledge_kind import KnowledgeKind
+from marmot.generated.models.knowledge_kinds_response import KnowledgeKindsResponse
+from marmot.generated.models.knowledge_link import KnowledgeLink
+from marmot.generated.models.knowledge_link_input import KnowledgeLinkInput
+from marmot.generated.models.knowledge_link_page import KnowledgeLinkPage
+from marmot.generated.models.knowledge_option import KnowledgeOption
+from marmot.generated.models.knowledge_owner import KnowledgeOwner
+from marmot.generated.models.knowledge_relation import KnowledgeRelation
+from marmot.generated.models.knowledge_reviewed_request import KnowledgeReviewedRequest
+from marmot.generated.models.knowledge_rule import KnowledgeRule
+from marmot.generated.models.knowledge_rule_input import KnowledgeRuleInput
+from marmot.generated.models.knowledge_save_input import KnowledgeSaveInput
+from marmot.generated.models.knowledge_state import KnowledgeState
+from marmot.generated.models.knowledge_status import KnowledgeStatus
+from marmot.generated.models.knowledge_summary import KnowledgeSummary
+from marmot.generated.models.knowledge_team_count import KnowledgeTeamCount
 from marmot.generated.models.lineage_edge import LineageEdge
 from marmot.generated.models.lineage_node import LineageNode
 from marmot.generated.models.lineage_response import LineageResponse

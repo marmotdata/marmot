@@ -2,38 +2,40 @@ package mcp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/rs/zerolog/log"
 )
 
-// The write tools follow a two-phase propose-then-apply shape. Called with confirm false, a tool resolves the asset and returns the exact before and after of the change without touching anything; called with confirm true it performs the write. This keeps a human, or the Slack approval button that re-invokes with confirm true, in the loop for every mutation without needing any pending-change storage. Permission is enforced here at the tool layer rather than in the prompt, so a description carrying injected instructions can never exceed the caller's real grants.
+// The write tools follow a two-phase propose-then-apply shape. Called with confirm false, a tool resolves the asset and returns the exact before and after of the change without touching anything; called with confirm true it performs the write. This keeps a human, or the Slack approval button that re-invokes with confirm true, in the loop for every mutation without needing any pending-change storage. Permission is enforced here at the tool layer as well as by listing, so a description carrying injected instructions can never exceed the caller's real grants.
 
 type UpdateDocumentationInput struct {
-	ID            string `json:"id,omitempty"`
-	MRN           string `json:"mrn,omitempty"`
-	Documentation string `json:"documentation"`
-	Confirm       bool   `json:"confirm,omitempty"`
+	ID            string `json:"id,omitempty" jsonschema:"The asset's MRN, ID or exact name"`
+	MRN           string `json:"mrn,omitempty" jsonschema:"Same as id, kept for older callers"`
+	Documentation string `json:"documentation" jsonschema:"The full text to set as the asset's summary, in Markdown. An empty string clears it"`
+	Confirm       bool   `json:"confirm,omitempty" jsonschema:"Leave out to preview. Send true only after the user approved the preview"`
 }
 
 type ManageTagsInput struct {
-	ID         string   `json:"id,omitempty"`
-	MRN        string   `json:"mrn,omitempty"`
-	AddTags    []string `json:"add_tags,omitempty"`
-	RemoveTags []string `json:"remove_tags,omitempty"`
-	Confirm    bool     `json:"confirm,omitempty"`
+	ID         string   `json:"id,omitempty" jsonschema:"The asset's MRN, ID or exact name"`
+	MRN        string   `json:"mrn,omitempty" jsonschema:"Same as id, kept for older callers"`
+	AddTags    []string `json:"add_tags,omitempty" jsonschema:"Tags to add"`
+	RemoveTags []string `json:"remove_tags,omitempty" jsonschema:"Tags to remove"`
+	Confirm    bool     `json:"confirm,omitempty" jsonschema:"Leave out to preview. Send true only after the user approved the preview"`
 }
 
 type ManageOwnersInput struct {
-	ID        string `json:"id,omitempty"`
-	MRN       string `json:"mrn,omitempty"`
-	Action    string `json:"action"`
-	OwnerType string `json:"owner_type"`
-	OwnerID   string `json:"owner_id"`
-	Confirm   bool   `json:"confirm,omitempty"`
+	ID        string `json:"id,omitempty" jsonschema:"The asset's MRN, ID or exact name"`
+	MRN       string `json:"mrn,omitempty" jsonschema:"Same as id, kept for older callers"`
+	Action    string `json:"action" jsonschema:"add or remove"`
+	OwnerType string `json:"owner_type" jsonschema:"user or team"`
+	Owner     string `json:"owner,omitempty" jsonschema:"The team's name or the user's username, or their ID"`
+	OwnerID   string `json:"owner_id,omitempty" jsonschema:"Same as owner, kept for older callers"`
+	Confirm   bool   `json:"confirm,omitempty" jsonschema:"Leave out to preview. Send true only after the user approved the preview"`
 }
 
 // requireManage returns a refusal result when the caller lacks the given manage permission, or nil when the write may proceed. Admins bypass the fine-grained check the same way they do on the REST endpoints.
@@ -41,42 +43,31 @@ func (tc *ToolContext) requireManage(resource string) *mcpsdk.CallToolResult {
 	if tc.principal != nil && (tc.principal.IsAdmin() || tc.principal.HasPermission(resource, "manage")) {
 		return nil
 	}
-	return tc.errorWithGuidance(
-		"Permission denied",
-		fmt.Sprintf("Changing the catalog needs the %s:manage permission, which the current identity does not hold. Continue as a read-only assistant and tell the user they do not have permission to make this change.", resource),
-		nil,
-	)
+	return toolError(codePermission, fmt.Sprintf("Changing the catalog needs the %s:manage permission, which this identity doesn't hold. Tell the user; don't look for another way to make the change.", resource))
 }
 
-// resolveWritableAsset loads the asset a write tool targets by id or mrn, returning a refusal result the caller should hand straight back when neither is usable.
-func (tc *ToolContext) resolveWritableAsset(ctx context.Context, id, mrn string) (*asset.Asset, *mcpsdk.CallToolResult) {
-	var (
-		a   *asset.Asset
-		err error
-	)
-	switch {
-	case id != "":
-		a, err = tc.assetService.Get(ctx, id)
-	case mrn != "":
-		a, err = tc.assetService.GetByMRN(ctx, mrn)
-	default:
-		return nil, tc.errorWithGuidance(
-			"Missing asset",
-			"Provide the id or mrn of the asset to change.",
-			map[string]string{"Find the asset": `Use discover_data with {"query": "asset name"}`},
-		)
+// resolveWritableAsset loads the asset a write tool targets, returning a result to hand straight back when it can't.
+func (tc *ToolContext) resolveWritableAsset(ctx context.Context, tool, id, mrnRef string) (*asset.Asset, *mcpsdk.CallToolResult) {
+	ref := strings.TrimSpace(id)
+	if ref == "" {
+		ref = strings.TrimSpace(mrnRef)
 	}
-	if errors.Is(err, asset.ErrAssetNotFound) || errors.Is(err, asset.ErrNotFound) {
-		return nil, tc.errorWithGuidance(
-			"Asset not found",
-			"The id or mrn may be wrong.",
-			map[string]string{"Find the asset": `Use discover_data with {"query": "asset name"}`},
-		)
+	if ref == "" {
+		return nil, toolError(codeInvalidArgument, "Give id: the asset's MRN, ID or exact name.")
 	}
+	a, candidates, err := tc.findAsset(ctx, ref)
 	if err != nil {
-		return nil, tc.errorWithGuidance("Asset lookup failed", fmt.Sprintf("Error: %v", err), nil)
+		log.Warn().Err(err).Str("tool", tool).Msg("MCP write lookup failed")
+		return nil, unavailable("look that asset up")
+	}
+	if a == nil {
+		return nil, assetNotFound(tool, "id", ref, candidates)
 	}
 	return a, nil
+}
+
+func escapeMarkdown(s string) string {
+	return strings.NewReplacer("[", "\\[", "]", "\\]", "(", "\\(", ")", "\\)", "_", "\\_", "*", "\\*", "`", "\\`").Replace(s)
 }
 
 func escapeMarkdownAll(values []string) []string {
@@ -90,17 +81,19 @@ func escapeMarkdownAll(values []string) []string {
 // partialFailureDetail reports a mid-sequence failure together with the writes that already landed, so a half-applied change is never mistaken for an untouched one.
 func partialFailureDetail(cause string, done []string) string {
 	if len(done) == 0 {
-		return fmt.Sprintf("Error %s. No changes were applied.", cause)
+		return fmt.Sprintf("Failed %s. No changes were applied.", cause)
 	}
-	return fmt.Sprintf("Error %s. Applied before the failure: %s. The asset is partially updated.", cause, strings.Join(done, ", "))
+	return fmt.Sprintf("Failed %s. Applied before the failure: %s. The asset is partially updated.", cause, strings.Join(done, ", "))
 }
 
 // proposal renders the confirm-false preview: what would change, and the exact call that applies it.
-func proposal(title, diff, applyCall string) *mcpsdk.CallToolResult {
-	text := fmt.Sprintf("# Proposed change\n\n%s\n\n%s\n\n---\nThis is a preview. Nothing has changed yet. To apply, call this tool again with the same arguments plus `\"confirm\": true`:\n\n%s", title, diff, applyCall)
-	return &mcpsdk.CallToolResult{
-		Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: text}},
+func proposal(title, diff, tool string, applyArgs map[string]any) *mcpsdk.CallToolResult {
+	text := fmt.Sprintf("# Proposed change\n\n%s", title)
+	if diff != "" {
+		text += "\n\n" + diff
 	}
+	text += fmt.Sprintf("\n\nThis is a preview. Nothing has changed yet. Show it to the user, and only if they approve, apply it with:\n%s %s", tool, compactJSON(applyArgs))
+	return textResult(text)
 }
 
 // applied renders the confirm-true success result.
@@ -109,9 +102,12 @@ func applied(title, detail string) *mcpsdk.CallToolResult {
 	if detail != "" {
 		text += "\n\n" + detail
 	}
-	return &mcpsdk.CallToolResult{
-		Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: text}},
-	}
+	return textResult(text)
+}
+
+// unchanged answers a write that would change nothing; it succeeds, since the asset is already as asked.
+func unchanged(detail string) *mcpsdk.CallToolResult {
+	return textResult("Nothing to change: " + detail)
 }
 
 func orNone(s string) string {
@@ -121,50 +117,43 @@ func orNone(s string) string {
 	return s
 }
 
-func (tc *ToolContext) updateDocumentation(ctx context.Context, req *mcpsdk.CallToolRequest, args UpdateDocumentationInput) (*mcpsdk.CallToolResult, any, error) {
+func (tc *ToolContext) updateDocumentation(ctx context.Context, _ *mcpsdk.CallToolRequest, args UpdateDocumentationInput) (*mcpsdk.CallToolResult, any, error) {
 	if denied := tc.requireManage("assets"); denied != nil {
 		return denied, nil, nil
 	}
-	a, bad := tc.resolveWritableAsset(ctx, args.ID, args.MRN)
+	a, bad := tc.resolveWritableAsset(ctx, "update_documentation", args.ID, args.MRN)
 	if bad != nil {
 		return bad, nil, nil
 	}
-
-	current := ""
-	if a.UserDescription != nil {
-		current = *a.UserDescription
-	}
+	current := deref(a.UserDescription)
 	proposed := strings.TrimSpace(args.Documentation)
 	if proposed == current {
-		return tc.errorWithGuidance("Nothing to change", "The documentation already matches the requested value.", nil), nil, nil
+		return unchanged("the documentation already says exactly that."), nil, nil
 	}
-
 	verb := "Set"
 	if proposed == "" {
 		verb = "Clear"
 	}
-	title := fmt.Sprintf("%s the human-authored documentation on **%s** (%s)", verb, escapeMarkdown(*a.Name), a.Type)
+	title := fmt.Sprintf("%s the summary people wrote on **%s** (%s)", verb, escapeMarkdown(deref(a.Name)), a.Type)
 	diff := fmt.Sprintf("**Current:**\n%s\n\n**Proposed:**\n%s", orNone(current), orNone(proposed))
-
 	if !args.Confirm {
-		return proposal(title, diff, formatJSON(map[string]any{"id": a.ID, "documentation": proposed, "confirm": true})), nil, nil
+		return proposal(title, diff, "update_documentation", map[string]any{"id": idFor(a), "documentation": proposed, "confirm": true}), nil, nil
 	}
-
 	if _, err := tc.assetService.Update(ctx, a.ID, asset.UpdateInput{UserDescription: &proposed}); err != nil {
-		return tc.errorWithGuidance("Update failed", fmt.Sprintf("Error: %v", err), nil), nil, nil
+		log.Warn().Err(err).Msg("MCP update_documentation failed")
+		return unavailable("save the documentation"), nil, nil
 	}
 	return applied(title, diff), nil, nil
 }
 
-func (tc *ToolContext) manageTags(ctx context.Context, req *mcpsdk.CallToolRequest, args ManageTagsInput) (*mcpsdk.CallToolResult, any, error) {
+func (tc *ToolContext) manageTags(ctx context.Context, _ *mcpsdk.CallToolRequest, args ManageTagsInput) (*mcpsdk.CallToolResult, any, error) {
 	if denied := tc.requireManage("assets"); denied != nil {
 		return denied, nil, nil
 	}
-	a, bad := tc.resolveWritableAsset(ctx, args.ID, args.MRN)
+	a, bad := tc.resolveWritableAsset(ctx, "manage_tags", args.ID, args.MRN)
 	if bad != nil {
 		return bad, nil, nil
 	}
-
 	existing := map[string]bool{}
 	for _, t := range a.Tags {
 		existing[t] = true
@@ -181,10 +170,9 @@ func (tc *ToolContext) manageTags(ctx context.Context, req *mcpsdk.CallToolReque
 		}
 	}
 	if len(toAdd) == 0 && len(toRemove) == 0 {
-		return tc.errorWithGuidance("Nothing to change", "The requested tags are already in the desired state on this asset.", nil), nil, nil
+		return unchanged("the asset's tags are already as asked."), nil, nil
 	}
-
-	title := fmt.Sprintf("Update tags on **%s** (%s)", escapeMarkdown(*a.Name), a.Type)
+	title := fmt.Sprintf("Update tags on **%s** (%s)", escapeMarkdown(deref(a.Name)), a.Type)
 	var diffParts []string
 	if len(toAdd) > 0 {
 		diffParts = append(diffParts, "**Add:** "+strings.Join(escapeMarkdownAll(toAdd), ", "))
@@ -193,60 +181,97 @@ func (tc *ToolContext) manageTags(ctx context.Context, req *mcpsdk.CallToolReque
 		diffParts = append(diffParts, "**Remove:** "+strings.Join(escapeMarkdownAll(toRemove), ", "))
 	}
 	diff := strings.Join(diffParts, "\n\n")
-
 	if !args.Confirm {
-		call := map[string]any{"id": a.ID, "confirm": true}
+		call := map[string]any{"id": idFor(a), "confirm": true}
 		if len(toAdd) > 0 {
 			call["add_tags"] = toAdd
 		}
 		if len(toRemove) > 0 {
 			call["remove_tags"] = toRemove
 		}
-		return proposal(title, diff, formatJSON(call)), nil, nil
+		return proposal(title, diff, "manage_tags", call), nil, nil
 	}
-
 	var done []string
 	for _, t := range toAdd {
 		if _, err := tc.assetService.AddTag(ctx, a.ID, t); err != nil {
-			return tc.errorWithGuidance("Tag update failed", partialFailureDetail(fmt.Sprintf("adding %q: %v", t, err), done), nil), nil, nil
+			log.Warn().Err(err).Msg("MCP manage_tags add failed")
+			return toolError(codeUnavailable, partialFailureDetail(fmt.Sprintf("adding %q", t), done)), nil, nil
 		}
 		done = append(done, fmt.Sprintf("added %q", t))
 	}
 	for _, t := range toRemove {
 		if _, err := tc.assetService.RemoveTag(ctx, a.ID, t); err != nil {
-			return tc.errorWithGuidance("Tag update failed", partialFailureDetail(fmt.Sprintf("removing %q: %v", t, err), done), nil), nil, nil
+			log.Warn().Err(err).Msg("MCP manage_tags remove failed")
+			return toolError(codeUnavailable, partialFailureDetail(fmt.Sprintf("removing %q", t), done)), nil, nil
 		}
 		done = append(done, fmt.Sprintf("removed %q", t))
 	}
 	return applied(title, diff), nil, nil
 }
 
-func (tc *ToolContext) manageOwners(ctx context.Context, req *mcpsdk.CallToolRequest, args ManageOwnersInput) (*mcpsdk.CallToolResult, any, error) {
+// resolveOwner finds the team or user an owner change names, by ID or by name, so a preview shows who it is and an unknown owner is refused before anything is proposed.
+func (tc *ToolContext) resolveOwner(ctx context.Context, ownerType, ref string) (id, name string, found bool) {
+	_, isID := uuid.Parse(ref)
+	if ownerType == "team" {
+		if isID == nil {
+			if t, err := tc.teamService.GetTeam(ctx, ref); err == nil && t != nil {
+				return t.ID, t.Name, true
+			}
+		}
+		if t, err := tc.teamService.GetTeamByName(ctx, ref); err == nil && t != nil {
+			return t.ID, t.Name, true
+		}
+		return "", "", false
+	}
+	if tc.userService == nil {
+		return "", "", false
+	}
+	if isID == nil {
+		if u, err := tc.userService.Get(ctx, ref); err == nil && u != nil {
+			return u.ID, u.Name, true
+		}
+	}
+	if u, err := tc.userService.GetUserByUsername(ctx, ref); err == nil && u != nil {
+		return u.ID, u.Name, true
+	}
+	return "", "", false
+}
+
+func (tc *ToolContext) manageOwners(ctx context.Context, _ *mcpsdk.CallToolRequest, args ManageOwnersInput) (*mcpsdk.CallToolResult, any, error) {
 	if denied := tc.requireManage("assets"); denied != nil {
 		return denied, nil, nil
 	}
 	action := strings.ToLower(strings.TrimSpace(args.Action))
 	if action != "add" && action != "remove" {
-		return tc.errorWithGuidance("Invalid action", `action must be "add" or "remove".`, nil), nil, nil
+		return toolError(codeInvalidArgument, `action must be "add" or "remove".`), nil, nil
 	}
 	ownerType := strings.ToLower(strings.TrimSpace(args.OwnerType))
 	if ownerType != "user" && ownerType != "team" {
-		return tc.errorWithGuidance("Invalid owner_type", `owner_type must be "user" or "team".`, nil), nil, nil
+		return toolError(codeInvalidArgument, `owner_type must be "user" or "team".`), nil, nil
 	}
-	ownerID := strings.TrimSpace(args.OwnerID)
-	if ownerID == "" {
-		return tc.errorWithGuidance(
-			"Missing owner_id",
-			"Provide the id of the user or team to assign.",
-			map[string]string{
-				"Find a team's id": `Use explore_teams with {"team_name": "data-engineering"}`,
-				"Find a user's id": `Use find_ownership or explore_teams to resolve a username to an id`,
-			},
-		), nil, nil
+	ref := strings.TrimSpace(args.Owner)
+	if ref == "" {
+		ref = strings.TrimSpace(args.OwnerID)
 	}
-	a, bad := tc.resolveWritableAsset(ctx, args.ID, args.MRN)
+	if ref == "" {
+		return toolError(codeInvalidArgument, "Give owner: the team's name or the user's username.", step{"list teams", "explore_teams", nil}), nil, nil
+	}
+	a, bad := tc.resolveWritableAsset(ctx, "manage_owners", args.ID, args.MRN)
 	if bad != nil {
 		return bad, nil, nil
+	}
+	ownerID, ownerName, ok := tc.resolveOwner(ctx, ownerType, ref)
+	if !ok {
+		next := []step{{"list teams", "explore_teams", nil}}
+		if ownerType == "team" {
+			if suggestions, _ := tc.teamService.FindSimilarTeamNames(ctx, ref, 5); len(suggestions) > 0 {
+				next = nil
+				for _, s := range suggestions {
+					next = append(next, step{"team " + s, "manage_owners", map[string]any{"id": idFor(a), "action": action, "owner_type": ownerType, "owner": s}})
+				}
+			}
+		}
+		return toolError(codeNotFound, fmt.Sprintf("No %s %q.", ownerType, ref), next...), nil, nil
 	}
 
 	// A failed owner listing falls through to the write itself, which surfaces any real error.
@@ -259,20 +284,18 @@ func (tc *ToolContext) manageOwners(ctx context.Context, req *mcpsdk.CallToolReq
 			}
 		}
 		if action == "add" && assigned {
-			return tc.errorWithGuidance("Nothing to change", "That owner is already assigned to this asset.", nil), nil, nil
+			return unchanged(fmt.Sprintf("%s already owns this asset.", ownerName)), nil, nil
 		}
 		if action == "remove" && !assigned {
-			return tc.errorWithGuidance("Nothing to change", "That owner is not assigned to this asset.", nil), nil, nil
+			return unchanged(fmt.Sprintf("%s doesn't own this asset.", ownerName)), nil, nil
 		}
 	}
 
-	title := fmt.Sprintf("%s %s owner **%s** %s **%s** (%s)",
-		capitalise(action), ownerType, escapeMarkdown(ownerID), preposition(action), escapeMarkdown(*a.Name), a.Type)
-
+	title := fmt.Sprintf("%s %s **%s** as an owner %s **%s** (%s)",
+		capitalise(action), ownerType, escapeMarkdown(ownerName), preposition(action), escapeMarkdown(deref(a.Name)), a.Type)
 	if !args.Confirm {
-		return proposal(title, "", formatJSON(map[string]any{"id": a.ID, "action": action, "owner_type": ownerType, "owner_id": ownerID, "confirm": true})), nil, nil
+		return proposal(title, "", "manage_owners", map[string]any{"id": idFor(a), "action": action, "owner_type": ownerType, "owner": ownerID, "confirm": true}), nil, nil
 	}
-
 	var err error
 	if action == "add" {
 		err = tc.teamService.AddAssetOwner(ctx, a.ID, ownerType, ownerID)
@@ -280,7 +303,8 @@ func (tc *ToolContext) manageOwners(ctx context.Context, req *mcpsdk.CallToolReq
 		err = tc.teamService.RemoveAssetOwner(ctx, a.ID, ownerType, ownerID)
 	}
 	if err != nil {
-		return tc.errorWithGuidance("Owner change failed", fmt.Sprintf("Error: %v", err), nil), nil, nil
+		log.Warn().Err(err).Msg("MCP manage_owners failed")
+		return unavailable("change the owners"), nil, nil
 	}
 	return applied(title, ""), nil, nil
 }

@@ -11,6 +11,7 @@
 		unlinkAsset,
 		type LinkedAsset
 	} from '#lib/glossary/assets.ts';
+	import AssetMark from '#components/asset/AssetMark.svelte';
 
 	let {
 		termId,
@@ -169,12 +170,7 @@
 				>
 					{#each linked as a, i (a.id)}
 						<mm-list-item secondary={secondary(a)}>
-							<mm-provider-logo
-								slot="start"
-								provider={a.providers?.[0] ?? a.type}
-								size={20}
-								decorative
-							></mm-provider-logo>
+							<span slot="start" style="display: contents"><AssetMark asset={a} /></span>
 							{a.name}
 							<mm-button
 								slot="end"
@@ -226,12 +222,7 @@
 					>
 						{#each offered as a, i (a.id)}
 							<mm-list-item secondary={secondary(a)}>
-								<mm-provider-logo
-									slot="start"
-									provider={a.providers?.[0] ?? a.type}
-									size={20}
-									decorative
-								></mm-provider-logo>
+								<span slot="start" style="display: contents"><AssetMark asset={a} /></span>
 								{a.name}
 								<mm-button
 									slot="end"

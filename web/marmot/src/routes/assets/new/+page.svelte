@@ -12,6 +12,7 @@
 	import { userProfile } from '#lib/stores/user.ts';
 	import { toasts, parseApiError, isLimitExceeded } from '#lib/stores/toast.ts';
 	import { providerNames, typeNames } from '#lib/assetNames.ts';
+	import { typeIcon } from '@marmotdata/icons';
 	import { setCrumbs } from '#lib/mm/index.ts';
 	import { m } from '#lib/paraglide/messages.js';
 
@@ -30,19 +31,8 @@
 
 	const canAddPlugins = auth.hasPermission('ingestion', 'manage');
 
-	// A few common types carry an icon in the list; the rest read by name.
-	const typeIcons: Record<string, string> = {
-		table: 'table',
-		view: 'table-view',
-		topic: 'stream',
-		dashboard: 'dashboard',
-		api: 'api',
-		model: 'model-training',
-		database: 'database',
-		dag: 'account-tree'
-	};
 	const typeOptions = Object.entries(typeNames)
-		.map(([key, label]) => ({ key, label, icon: typeIcons[key] ?? '' }))
+		.map(([key, label]) => ({ key, label, icon: typeIcon(key) }))
 		.sort((a, b) => a.label.localeCompare(b.label));
 	// Several provider keys share a display name (glue and aws_glue), and the picker is keyed by name, so keep the first of each
 	const providerOptions = Object.entries(providerNames)
