@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,7 +78,7 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 	results, total, availableFilters, err := h.assetService.Search(r.Context(), searchFilter, calculateCounts)
 	if err != nil {
 		switch {
-		case errors.Is(err, asset.ErrInvalidInput):
+		case errors.Is(err, asset.ErrInvalidInput), errors.Is(err, asset.ErrInvalidQuery):
 			common.RespondError(w, http.StatusBadRequest, "Invalid search query")
 		default:
 			log.Error().Err(err).Str("query", searchQuery).Msg("Search failed")
@@ -213,21 +214,7 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 // @ID getAssetsLookupTypeServiceName
 // @Router /api/v1/assets/lookup/{type}/{service}/{name} [get]
 func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
-	pathPart := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/lookup/")
-	if pathPart == "" {
-		common.RespondError(w, http.StatusBadRequest, "Asset type is required")
-		return
-	}
-
-	parts := strings.SplitN(pathPart, "/", 3)
-
-	if len(parts) != 3 {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path format. Expected /assets/lookup/{type}/{service}/{name}")
-		return
-	}
-
-	// The service segment carries the zone, provider@zone, exactly as it appears in the MRN and so in the asset's URL; a URL from before kinded MRNs has no zone and resolves the same way.
-	mrnStr, err := asset.CanonicalMRN("mrn://asset/" + parts[0] + "/" + parts[1] + "/" + parts[2])
+	mrnStr, err := lookupMRN(r.PathValue("type"), r.PathValue("service"), r.PathValue("name"))
 	if err != nil {
 		common.RespondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -254,4 +241,10 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
+}
+
+// lookupMRN builds the MRN a lookup names with the constructor MRN creation uses, so a raw name such as marmotdata/marmot and its slugged form marmotdata-marmot reach the same asset. The service segment carries the zone, provider@zone, exactly as it appears in the MRN and so in the asset's URL; a URL from before kinded MRNs has no zone and resolves the same way.
+func lookupMRN(assetType, service, name string) (string, error) {
+	provider, zone, _ := strings.Cut(service, "@")
+	return asset.CanonicalMRN(mrn.Asset(assetType, provider, name).WithZone(zone).String())
 }

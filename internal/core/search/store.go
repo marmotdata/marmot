@@ -406,7 +406,7 @@ func fullTextQuery(q string) (fn, arg string) {
 	}
 	terms := make([]string, len(words))
 	for i, w := range words {
-		terms[i] = "'" + strings.ReplaceAll(w, `\`, `\\`) + "'"
+		terms[i] = "'" + strings.ReplaceAll(strings.ReplaceAll(w, `\`, `\\`), "'", "''") + "'"
 	}
 	terms[len(terms)-1] += ":*"
 	return "to_tsquery", strings.Join(terms, " & ")
