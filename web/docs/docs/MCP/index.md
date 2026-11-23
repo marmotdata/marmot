@@ -160,7 +160,7 @@ The server gives an assistant these tools:
 
 | Tool | What it answers |
 | --- | --- |
-| `search_knowledge` | Finds policies, decisions, runbooks, brand voice, writing styles and design systems by words or kind, or every entry that applies to a repository, service or table |
+| `search_knowledge` | Finds policies, decisions, runbooks, incidents, guides, references, facts, brand voice, writing styles and design systems by words or kind, or every entry that applies to a repository, service or table |
 | `read_knowledge` | Reads one knowledge entry in full: status, owners, details, what it covers and its write-up |
 | `create_knowledge` | Saves something to knowledge as a draft, after showing a preview the user approves. Only offered to identities with `assets:manage` |
 | `discover_data` | Finds assets by name, type, provider, tags or metadata |

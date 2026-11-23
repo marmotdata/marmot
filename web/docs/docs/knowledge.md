@@ -1,11 +1,11 @@
 ---
 title: Knowledge
-description: Write down your company's policies, decisions, runbooks, brand voice, writing styles and design systems in Marmot, link them to the assets they govern and let people and agents find the ones that apply.
+description: Write down your company's policies, decisions, runbooks, incidents, guides, facts, brand voice, writing styles and design systems in Marmot, link them to the assets they govern and let people and agents find the ones that apply.
 ---
 
 # Knowledge
 
-Knowledge entries hold what your company has written down about how it works: policies, decisions, runbooks, brand voice, writing styles and design systems. Each entry links to the tables, services, repositories or dashboards it applies to, so anyone looking at an asset sees the rules that govern it. Agents read the same entries through the [MCP server](MCP/index.md) before they write code, docs or copy for you.
+Knowledge entries hold what your company has written down about how it works: policies, decisions, runbooks, incident write-ups, guides, references to documents kept elsewhere, facts, brand voice, writing styles and design systems. Each entry links to the tables, services, repositories or dashboards it applies to, so anyone looking at an asset sees the rules that govern it. Agents read the same entries through the [MCP server](MCP/index.md) before they write code, docs or copy for you.
 
 An entry is an asset in the catalog like any other. It has owners and tags, shows up in search and has a write-up in Markdown. What makes it knowledge is its kind, its status and what it's linked to.
 
@@ -18,11 +18,17 @@ Each kind asks for a few details of its own and starts the write-up with an outl
 | Policy | A rule people are expected to follow | Who it applies to, who approved it and when, who to ask for an exception |
 | Decision | What was decided, when and by whom, and what it replaced | Decision date (required once accepted or rejected), who decided |
 | Runbook | The steps for a task people do again and again | The alerts or symptoms that call for it, who to escalate to |
+| Incident | What went wrong, why and what changed after | When it started (required once published) and was resolved, severity, a link to the incident record, follow-ups with owners |
+| Guide | How something works or how to get something done | Who it's written for |
+| Reference | A document that lives somewhere else, such as a wiki page or vendor docs | The link (required), where it lives, who can open it |
+| Fact | One short thing that's true about the company | The question it answers, when it was last known true, where it came from |
 | Brand voice | How the company sounds | 3 or 4 traits, each with what it isn't, and real samples to imitate |
 | Writing style | Rules writing can be checked against | Which English, a published guide to fall back on, terms to prefer or avoid |
 | Design system | Where the design system lives and which version is current | Links to Storybook, Figma, tokens, packages or its own MCP server, platforms, themes |
 
-A design system entry points to its sources rather than copying them. Storybook, Figma and your token files stay the source of truth, and agents are sent there.
+A design system entry points to its sources rather than copying them. Storybook, Figma and your token files stay the source of truth, and agents are sent there. A reference works the same way for any single document.
+
+An incident entry is the record you keep afterwards. The live response stays in your incident tool.
 
 Rejected decisions stay findable, so nobody proposes the same thing again.
 
@@ -43,7 +49,7 @@ To change the details later, select **Edit details** on the entry.
 
 Every entry has a status that tells people and agents whether to rely on it:
 
-- **In use**: the current answer. A policy or runbook is **Active**; a decision is **Accepted**.
+- **In use**: the current answer. Most entries are **Active**, a decision is **Accepted** and an incident write-up is **Published**.
 - **Not in use yet**: shown, but not treated as the current answer. Drafts, entries **In review** and proposed decisions are here.
 - **No longer in use**: kept for the record, listed after current entries. Superseded, retired, rejected and deprecated entries are here.
 

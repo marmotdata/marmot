@@ -58,8 +58,8 @@ func TestWriteWriteupUnknownSection(t *testing.T) {
 }
 
 func TestNormaliseKinds(t *testing.T) {
-	got, bad := normaliseKinds([]string{"Writing Style", "policies", "design_system", "runbooks", "memo"})
-	want := []string{"writing-style", "policy", "design-system", "runbook"}
+	got, bad := normaliseKinds([]string{"Writing Style", "policies", "design_system", "runbooks", "Incidents", "facts", "memo"})
+	want := []string{"writing-style", "policy", "design-system", "runbook", "incident", "fact"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Fatalf("kinds = %v, want %v", got, want)
 	}

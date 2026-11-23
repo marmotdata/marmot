@@ -24,7 +24,7 @@ import (
 
 // Saving knowledge is the one write an assistant may suggest on its own, so it is built so a person always decides: the first call only previews, the save needs the handle that preview returned for exactly the same content, and what is saved starts as a draft that someone sets live in Marmot. Secrets are refused outright, because an entry is readable by the whole company.
 
-const createKnowledgeDescription = `Save something to Marmot's company knowledge as a draft entry: a runbook, decision, policy, writing style, brand voice or design system that people in the company should be able to find and follow.
+const createKnowledgeDescription = `Save something to Marmot's company knowledge as a draft entry: a runbook, decision, policy, incident write-up, guide, reference to an outside document, fact, writing style, brand voice or design system that people in the company should be able to find and follow.
 
 Use it only when the user asks to save something, or says yes after you offer. Offering is fine when the conversation produced something reusable, such as the steps that fixed an incident or a decision with its reasons, at most once per task and in one short line. Never save secrets, credentials, personal data about individuals or one-off details.
 
@@ -32,7 +32,7 @@ Call it first without preview_id: nothing is saved, and it returns a preview and
 
 // CreateKnowledgeInput is the input of create_knowledge.
 type CreateKnowledgeInput struct {
-	Kind      string         `json:"kind" jsonschema:"One of: runbook, decision, policy, writing-style, brand-voice, design-system"`
+	Kind      string         `json:"kind" jsonschema:"One of: runbook, decision, policy, incident, guide, reference, fact, writing-style, brand-voice, design-system"`
 	Title     string         `json:"title" jsonschema:"A short title people would search for, such as 'Restart a stuck Flux sync'"`
 	Summary   string         `json:"summary" jsonschema:"One sentence saying what the entry is for"`
 	Writeup   string         `json:"writeup" jsonschema:"The body in Markdown: steps, context, rules or examples"`

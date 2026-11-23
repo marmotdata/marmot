@@ -33,7 +33,7 @@ type DocsService interface {
 // writeupBudget keeps one read under about 5,000 tokens, well below the size clients warn about, and longer write-ups continue by offset or section.
 const writeupBudget = 18000
 
-const searchKnowledgeDescription = `Search Marmot's company knowledge: the policies, decisions, runbooks, brand voice, writing styles and design systems this organisation has written down, and which of them apply to a given repository, service, table or other asset.
+const searchKnowledgeDescription = `Search Marmot's company knowledge: the policies, decisions, runbooks, incidents, guides, references to outside documents, facts, brand voice, writing styles and design systems this organisation has written down, and which of them apply to a given repository, service, table or other asset.
 
 Use it before writing docs, copy, UI or code for this company, or when asked how the company does something, what was decided or what rules apply. Give query for words, kinds to narrow by kind, and about to get every entry that applies to one asset, including entries linked to what contains it and entries matched by rules. Superseded and retired entries are left out unless include_old is true.
 
@@ -46,7 +46,7 @@ Use it after search_knowledge, passing the id it returned. An MRN or exact title
 // SearchKnowledgeInput is the input of search_knowledge.
 type SearchKnowledgeInput struct {
 	Query      string   `json:"query,omitempty" jsonschema:"Words to match in titles, summaries, fields and write-ups, such as 'docs style' or 'refund'"`
-	Kinds      []string `json:"kinds,omitempty" jsonschema:"Only these kinds: policy, decision, runbook, brand-voice, writing-style, design-system"`
+	Kinds      []string `json:"kinds,omitempty" jsonschema:"Only these kinds: policy, decision, runbook, incident, guide, reference, fact, brand-voice, writing-style, design-system"`
 	About      string   `json:"about,omitempty" jsonschema:"An asset's MRN, ID or exact name, such as a repository, service or table. Returns the entries that apply to it"`
 	IncludeOld bool     `json:"include_old,omitempty" jsonschema:"Also return superseded, retired and rejected entries. Default false"`
 	Limit      int      `json:"limit,omitempty" jsonschema:"Most entries to return, 1 to 50. Default 10"`
