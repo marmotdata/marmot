@@ -168,7 +168,7 @@ func (tc *ToolContext) knowledgeAbout(ctx context.Context, args SearchKnowledgeI
 		if len(candidates) > 0 {
 			msg += " Did you mean one of these? Send its MRN as about:\n" + formatCandidates(candidates)
 		} else {
-			msg += " Use discover_data to find the asset, then send its MRN as about."
+			msg += " Use search to find the asset, then send its id as about."
 		}
 		return textResult(msg), nil, nil
 	}
@@ -270,7 +270,7 @@ func (tc *ToolContext) readKnowledge(ctx context.Context, _ *mcpsdk.CallToolRequ
 	}
 	kind, isEntry := knowledge.KindOfType(a.Type)
 	if !isEntry {
-		return textResult(fmt.Sprintf("%q is a %s, not a knowledge entry. Use discover_data for catalog assets, or search_knowledge {\"about\": %q} for the knowledge that applies to it.", deref(a.Name), a.Type, deref(a.MRN))), nil, nil
+		return textResult(fmt.Sprintf("%q is a %s, not a knowledge entry. Read it with fetch, or search_knowledge {\"about\": %q} for the knowledge that applies to it.", deref(a.Name), a.Type, deref(a.MRN))), nil, nil
 	}
 	e, err := tc.knowledgeService.Get(ctx, a.ID)
 	if err != nil {

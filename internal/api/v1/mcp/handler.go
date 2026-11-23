@@ -48,6 +48,12 @@ func NewHandler(
 	}
 }
 
+// WithSignals passes the staleness check through to the MCP tools.
+func (h *Handler) WithSignals(signals mcp.StaleChecker) *Handler {
+	h.mcpServer.WithSignals(signals)
+	return h
+}
+
 func (h *Handler) Routes() []common.Route {
 	return []common.Route{
 		{

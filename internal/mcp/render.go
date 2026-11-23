@@ -56,8 +56,8 @@ func compactJSON(v any) string {
 	return strings.TrimSpace(b.String())
 }
 
-// writeNext appends the next steps in the order given, dropping repeats.
-func writeNext(b *strings.Builder, steps ...step) {
+// nextLines renders next steps as "reason: tool {args}", in the order given and without repeats. Structured results carry the same lines, since some clients, Claude Code among them, show the model only the structured result.
+func nextLines(steps ...step) []string {
 	seen := map[string]bool{}
 	var lines []string
 	for _, s := range steps {
@@ -69,13 +69,19 @@ func writeNext(b *strings.Builder, steps ...step) {
 			continue
 		}
 		seen[c] = true
-		lines = append(lines, fmt.Sprintf("- %s: %s", s.why, c))
+		lines = append(lines, fmt.Sprintf("%s: %s", s.why, c))
 	}
+	return lines
+}
+
+// writeNext appends the next steps in the order given, dropping repeats.
+func writeNext(b *strings.Builder, steps ...step) {
+	lines := nextLines(steps...)
 	if len(lines) == 0 {
 		return
 	}
-	b.WriteString("\n\nNext:\n")
-	b.WriteString(strings.Join(lines, "\n"))
+	b.WriteString("\n\nNext:\n- ")
+	b.WriteString(strings.Join(lines, "\n- "))
 }
 
 // Error codes tell an agent whether to retry, fix its arguments or stop.

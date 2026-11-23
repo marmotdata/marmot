@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"os"
 	"path/filepath"
@@ -128,7 +129,7 @@ func (f *readAssets) Search(_ context.Context, filter asset.SearchFilter, _ bool
 }
 
 func (f *readAssets) Summary(context.Context) (*asset.AssetSummary, error) {
-	return &asset.AssetSummary{Types: map[string]asset.AssetTypeSummary{"Table": {}, "Topic": {}}, Providers: map[string]int{"PostgreSQL": 1, "Kafka": 1}}, nil
+	return &asset.AssetSummary{Types: map[string]asset.AssetTypeSummary{"Table": {}, "Topic": {}}, Providers: map[string]int{"PostgreSQL": 1, "Kafka": 1}, Tags: map[string]int{"pii": 3}}, nil
 }
 
 func (f *readAssets) GetTerms(context.Context, string) ([]asset.AssetTerm, error) {
@@ -208,7 +209,7 @@ func TestAssetCardLeadsWithIdentityOwnersAndFreshness(t *testing.T) {
 	assert.Contains(t, out, "- month: DATE, First day of the month")
 	assert.Less(t, strings.Index(out, "1 hop: analytics.marts.mrr_by_plan"), strings.Index(out, "2 hops: MRR overview"), "lineage is nearest first")
 	assert.Contains(t, out, "console.public.invoices (Table) mrn://asset/table/postgresql/console.public.invoices [last run failed]")
-	assert.Contains(t, out, `trace_lineage {"depth":5,"direction":"downstream","id":"mrn://asset/table/bigquery/analytics.marts.fct_mrr"}`)
+	assert.Contains(t, out, `get_lineage {"depth":5,"direction":"downstream","id":"mrn://asset/table/bigquery/analytics.marts.fct_mrr"}`)
 	assert.Equal(t, out, must(t)(tc.discoverData(context.Background(), nil, DiscoverDataInput{ID: a1})), "the same asset reads the same every time")
 }
 
@@ -299,4 +300,12 @@ func TestAssetURLForKnowledgeAndZones(t *testing.T) {
 	assert.Equal(t, "https://m.example/discover/table/postgresql@prod-eu/analytics.public.orders", assetURL("https://m.example/", &asset.Asset{MRN: &m, Type: "Table"}))
 	assert.Equal(t, "https://m.example/knowledge/abc", assetURL("https://m.example", &asset.Asset{ID: "abc", Type: "Policy"}))
 	assert.Equal(t, "", assetURL("", &asset.Asset{ID: "abc", Type: "Table"}))
+}
+
+func (f readTeams) GetTeamByName(context.Context, string) (*Team, error) {
+	return nil, errors.New("no team")
+}
+
+func (f *readAssets) GetAssetsByTerm(context.Context, string, int, int) ([]*asset.Asset, int, error) {
+	return nil, 0, nil
 }

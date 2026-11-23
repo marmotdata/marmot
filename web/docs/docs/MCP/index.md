@@ -160,20 +160,20 @@ The server gives an assistant these tools:
 
 | Tool | What it answers |
 | --- | --- |
+| `search` | Searches assets, knowledge entries, glossary terms, data products and teams by words, kind, type, provider, tag or owner. Each result shows its owners, when it changed and whether it's stale, unowned or deprecated |
+| `fetch` | Reads anything by the id `search` returned, an MRN, a Marmot URL or an exact name, up to 10 at once. An asset comes with its owners, documentation pages, schema, lineage, data products and the knowledge that applies to it |
+| `get_lineage` | What feeds an asset and what depends on it, nearest first, with the edges between them |
 | `search_knowledge` | Finds policies, decisions, runbooks, incidents, guides, references, facts, brand voice, writing styles and design systems by words or kind, or every entry that applies to a repository, service or table |
 | `read_knowledge` | Reads one knowledge entry in full: status, owners, details, what it covers and its write-up |
-| `create_knowledge` | Saves something to knowledge as a draft, after showing a preview the user approves. Only offered to identities with `assets:manage` |
-| `discover_data` | Finds assets by name, type, provider, tags or metadata, or reads one in full: owners, last update, documentation pages, schema, lineage, data products and the knowledge that applies to it |
-| `find_ownership` | Who owns an asset, and everything a person or team owns |
-| `lookup_term` | Glossary definitions and the assets linked to a term |
-| `explore_data_products` | Which data products exist and the assets in each |
-| `explore_teams` | Teams and their members |
-| `trace_lineage` | What feeds an asset and what depends on it |
-| `update_documentation` | Writes a plain-language description on an asset, without touching the one a plugin ingested |
-| `manage_tags`, `manage_owners` | Adds or removes tags and owners on an asset. Owners can be given by team name or username |
+| `create_knowledge` | Saves something to knowledge as a draft, after showing a preview the user approves |
+| `update_entity` | Changes an asset's summary, tags, owners or glossary terms, or a term's definition, after showing a preview the user approves. Owners and terms are given by name |
 | `list_queryable_sources`, `query_data` | Runs a read-only SQL statement against a source whose pipeline is set up to answer queries; see [data queries](../data-queries.md) |
 
-The tools that change the catalog are only listed for identities with `assets:manage`, and each one shows a preview and changes nothing until it's called again with the user's approval. An identity without `assets:manage` still gets every read tool.
+`search` and `fetch` also return structured results in the shape ChatGPT's company knowledge expects, so the same server works there.
+
+Older tools stay available for integrations built on them: `discover_data`, `find_ownership`, `lookup_term`, `explore_data_products`, `explore_teams`, `trace_lineage`, and for writers `update_documentation`, `manage_tags` and `manage_owners`. Their descriptions point assistants to the newer tools, and they'll be removed in a later release.
+
+The tools that change the catalog are only listed for identities with `assets:manage`. Each one shows a preview and changes nothing until it's called again with the preview's `preview_id`, which works only for the same change, by the same identity, within 30 minutes and while the entity is unchanged. An identity without `assets:manage` still gets every read tool.
 
 The server also sends connected clients short instructions on which tool fits which question. They tell an assistant to check `search_knowledge` before it writes docs, copy, UI or code for your company, and to name the entries it relied on. An assistant that can save may offer once to save something worth keeping, and saves only after the user approves the preview. Entries saved this way start as drafts, and text that looks like a password or key is refused. Most clients pass these instructions to the model without any setup.
 

@@ -42,6 +42,7 @@ type ToolContext struct {
 	knowledgeService   KnowledgeService
 	docsService        DocsService
 	previewKey         []byte
+	signals            StaleChecker
 	// rootURL is the address people open Marmot at, from config or else from the request, so links work without a configured root URL.
 	rootURL string
 }
@@ -571,7 +572,10 @@ func (tc *ToolContext) assetCard(ctx context.Context, a *asset.Asset) string {
 			names[i] = t.TermName
 		}
 		sort.Strings(names)
-		b.WriteString("\nGlossary terms: " + strings.Join(names, ", ") + " (definitions with lookup_term)")
+		b.WriteString("\nGlossary terms: " + strings.Join(names, ", ") + " (fetch a term by its name for the definition)")
+	}
+	if tc.stale(ctx, a.ID) {
+		b.WriteString("\nCaution: stale. The pipeline that refreshes it has missed more than two runs, so its data and details may be out of date.")
 	}
 	if a.IsStub {
 		b.WriteString("\nCaution: this is a placeholder created from lineage. No plugin has catalogued it, so its details may be missing.")
@@ -624,11 +628,11 @@ func (tc *ToolContext) assetCard(ctx context.Context, a *asset.Asset) string {
 
 	out := b.String()
 	if len([]rune(out)) > cardBudget {
-		out = truncate(out, cardBudget) + "\n\n[This card was cut to fit. Ask for lineage with trace_lineage and owners with find_ownership.]"
+		out = truncate(out, cardBudget) + "\n\n[This card was cut to fit. Ask for lineage with get_lineage.]"
 	}
 	var next []step
 	if lineageShown {
-		next = append(next, step{"full downstream impact", "trace_lineage", map[string]any{"id": idFor(a), "direction": "downstream", "depth": 5}})
+		next = append(next, step{"full downstream impact", "get_lineage", map[string]any{"id": idFor(a), "direction": "downstream", "depth": 5}})
 	}
 	if tc.knowledgeService != nil && !isEntry {
 		next = append(next, step{"all knowledge that applies here", "search_knowledge", map[string]any{"about": idFor(a)}})

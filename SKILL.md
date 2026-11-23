@@ -58,28 +58,25 @@ Marmot has a built-in MCP (Model Context Protocol) server. If the user has confi
 
 Reading the catalog:
 
-- **search_knowledge**: the company's written knowledge: policies, decisions, runbooks, incident write-ups, guides, references, facts and style guides. Give `about` an asset to get every entry that applies to it.
+- **search**: one search across assets, knowledge entries, glossary terms, data products and teams. Narrow with `kinds`, `types`, `providers`, `tags` or `owner` (a team name, username or `me`). Send `limit: 0` for counts and the returned `next_cursor` as `cursor` for the next page.
+- **fetch**: read anything in full by the id search returned, an MRN (such as `mrn://asset/table/postgresql/analytics.public.orders`), a Marmot URL or an exact name; up to 10 `ids` at once. Assets come with owners, freshness, documentation pages, schema, lineage, data products and the knowledge that applies.
+- **get_lineage**: what feeds an asset and what depends on it, nearest first.
+- **search_knowledge**: the company's written knowledge, or with `about`, every entry that applies to an asset.
 - **read_knowledge**: one knowledge entry in full, with its fields and write-up.
-- **discover_data**: find assets by words, type, provider, tags or metadata. Pass an asset's MRN (such as `mrn://asset/table/postgresql/analytics.public.orders`) as `id` to read it in full: owners, last update, documentation pages, schema, lineage, data products and the knowledge that applies. Send `limit: 0` for counts only.
-- **find_ownership**: who owns an asset, and everything a team or person owns.
-- **lookup_term**: the business glossary: definitions, owners and linked assets.
-- **explore_data_products**: curated sets of assets and what they contain.
-- **explore_teams**: teams and their members.
-- **trace_lineage**: what feeds an asset (upstream) and what depends on it (downstream), nearest first.
 
 Changing the catalog (only listed for callers with `assets:manage`):
 
+- **update_entity**: an asset's summary, tags, owners or linked terms, or a term's definition. Owners and terms by name.
 - **create_knowledge**: save a knowledge entry as a draft.
-- **update_documentation**: write or clear the summary people see on an asset.
-- **manage_tags**: add or remove tags on an asset.
-- **manage_owners**: add or remove a team or user, by name, as an owner of an asset.
+
+Older tools (`discover_data`, `find_ownership`, `lookup_term`, `explore_data_products`, `explore_teams`, `trace_lineage`, `update_documentation`, `manage_tags`, `manage_owners`) still work for existing integrations; prefer the ones above.
 
 Querying data (only listed for callers with `assets:query`):
 
 - **list_queryable_sources**: the sources that answer queries, searchable by name.
 - **query_data**: run one read-only SQL statement against a source. The answer carries the rows plus what the catalog knows about every table read, and the id the query was recorded under.
 
-Every tool that changes something returns a preview first and changes nothing. Show the preview to the user and call again with `confirm: true` (or the `preview_id` for `create_knowledge`) only once they agree to that specific change.
+Every tool that changes something returns a preview first and changes nothing. Show the preview to the user and call again with the returned `preview_id` only once they agree to that specific change.
 
 MCP configuration lives in `~/.claude.json` (user-level) or `.mcp.json` (project-level):
 

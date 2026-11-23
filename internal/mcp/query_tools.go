@@ -59,12 +59,12 @@ func (tc *ToolContext) listQueryableSources(
 	var b strings.Builder
 	b.WriteString("# Queryable sources\n\n")
 	for _, s := range sources {
-		fmt.Fprintf(&b, "- **%s** (%s)\n", s.Name, s.PluginID)
+		fmt.Fprintf(&b, "- **%s** (%s, %d catalogued tables)\n", s.Name, s.PluginID, s.TableCount)
 	}
 	if total > len(sources) {
 		fmt.Fprintf(&b, "\nShowing %d of %d sources. Pass \"search\" with part of a name or plugin to narrow the list.\n", len(sources), total)
 	}
-	b.WriteString("\nRun a query with query_data, passing one of these names as \"source\". Use discover_data first to find the tables you need and how they are described.")
+	b.WriteString("\nRun a query with query_data, passing one of these names as \"source\". Use search first to find the tables you need and how they are described.")
 	return textResult(b.String()), nil, nil
 }
 
