@@ -61,7 +61,7 @@ type Entry struct {
 	// Status is one of the kind's statuses, or empty for an entry nobody has set one on.
 	Status string `json:"status"`
 	// State is what Status means today: pending, current or historical. A current entry whose effective date is still ahead is pending.
-	State  State          `json:"state,omitempty"`
+	State  State          `json:"state,omitempty" swaggertype:"string" enums:"pending,current,historical"`
 	Fields map[string]any `json:"fields"`
 	// EffectiveFrom and ReviewBy are dates written as YYYY-MM-DD.
 	EffectiveFrom  *string    `json:"effective_from,omitempty"`
@@ -562,7 +562,7 @@ func decodeCursor(s string) (*cursor, error) {
 	if len(parts) != 3 {
 		return nil, invalid("the cursor is not one this server issued")
 	}
-	rank, err := strconv.Atoi(parts[0])
+	rank, err := strconv.ParseInt(parts[0], 10, 16)
 	if err != nil {
 		return nil, invalid("the cursor is not one this server issued")
 	}
