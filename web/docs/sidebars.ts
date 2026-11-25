@@ -34,6 +34,16 @@ const sidebars: SidebarsConfig = {
         doc('Cloud/pipelines'),
         {
           type: 'category',
+          label: 'Tasks',
+          link: {type: 'doc', id: 'Cloud/tasks'},
+          items: [
+            doc('Cloud/create-a-task', 'Create a task'),
+            doc('Cloud/approve-changes', 'Approve changes'),
+            doc('Cloud/alert-sources', 'Start tasks from alerts'),
+          ],
+        },
+        {
+          type: 'category',
           label: 'Connect your cloud',
           items: [doc('Cloud/Guides/google', 'Google Cloud'), doc('Cloud/Guides/aws', 'AWS'), doc('Cloud/Guides/azure', 'Azure')],
         },
@@ -95,7 +105,16 @@ const sidebars: SidebarsConfig = {
           ],
         },
         doc('Populating/API', 'API'),
-        doc('Configure/serving-plugins', 'Serve queries from your network'),
+        {
+          type: 'category',
+          label: 'Runners',
+          link: {type: 'doc', id: 'Configure/serving-plugins'},
+          items: [
+            doc('Populating/serve-queries', 'Serve queries from your network'),
+            doc('Populating/kubernetes-actions', 'Act on a Kubernetes cluster'),
+            doc('Configure/serving-reference', 'Runner reference'),
+          ],
+        },
         doc('Plugins/index', 'Plugins'),
         {
           type: 'category',

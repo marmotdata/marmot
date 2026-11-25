@@ -243,7 +243,7 @@ serveService:
   type: LoadBalancer
 ```
 
-The chart opens port 8443, creates a separate `<release>-serve` Service for it and tells each replica the address its peers forward queries to. Expose the Service with a TCP load balancer or TLS passthrough, never one that terminates TLS. See [serve queries from your network](../Configure/serving-plugins.md).
+The chart opens port 8443, creates a separate `<release>-serve` Service for it and tells each replica the address its peers forward queries to. Expose the Service with a TCP load balancer or TLS passthrough, never one that terminates TLS. See [Serve queries from your network](../Populating/serve-queries.md#networking).
 
 ## Chart values
 

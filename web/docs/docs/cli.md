@@ -367,7 +367,7 @@ View catalog metrics and usage statistics. `top-assets` and `top-queries` requir
 marmot admin <reindex | reindex-status | serve-keys | rotate-serve-keys>
 ```
 
-Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress. `serve-keys` lists the key generations that secure [serving plugins](Configure/serving-plugins.md) and `rotate-serve-keys` rotates them: gracefully by default, or with `--immediate` after a suspected compromise. Pass `--ca-key-uri` and `--signing-key-uri` to rotate to keys held in a KMS.
+Administrative operations. `reindex` triggers a full search reindex and `reindex-status` checks its progress. `serve-keys` lists the key generations that secure [runners](Configure/serving-plugins.md) and `rotate-serve-keys` rotates them: gracefully by default, or with `--immediate` after a suspected compromise. Pass `--ca-key-uri`, `--signing-key-uri` and `--approval-key-uri` to rotate to keys held in a KMS. `serve-keys` also shows each generation's approval key fingerprint, for a runner's `approvals.key_fingerprint`.
 
 ### marmot service-accounts
 
@@ -425,7 +425,13 @@ Run plugins on this machine and push what they find to Marmot, rather than havin
 | `--config`, `-c` | Path to the ingestion config file. Required. |
 | `--quiet`, `-q` | Hide info logs and show errors only. On by default. |
 | `--destroy`, `-d` | Delete every asset this pipeline created. Prompts for confirmation. |
-| `--serve` | After ingesting, stay running and answer Marmot's queries for the run marked `queryable: true`. See [serving queries from your network](Configure/serving-plugins.md). |
+| `--serve` | After ingesting, stay running and answer Marmot's queries for the run marked `queryable: true`. See [Serve queries from your network](Populating/serve-queries.md). |
+| `--ca-fingerprint` | With `--serve`, a CA fingerprint (`sha256:<hex>`) the first enrolment must include. Repeatable. See the [runner reference](Configure/serving-reference.md#runner-flags). |
+| `--policy` | With `--serve`, a YAML file limiting what this process serves. See the [policy file](Configure/serving-reference.md#policy-file). |
+| `--audit-log` | With `--serve`, append a hash-chained JSON line per query served or refused. See [audit and receipts](Configure/serving-plugins.md#audit-and-receipts). |
+| `--allow-actions` | With `--serve`, also serve the plugin actions and run the triggers the policy names. Needs `--audit-log`. See [Let tasks act on a Kubernetes cluster](Populating/kubernetes-actions.md). |
+
+`marmot ingest verify-audit-log <path>` checks an audit log written with `--audit-log` and names the first line that does not follow from the one before it.
 
 ### marmot generate-encryption-key
 

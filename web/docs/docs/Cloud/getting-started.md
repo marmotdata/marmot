@@ -63,7 +63,7 @@ In your instance, open **Plugins** and pick your system under **Add a source**:
 3. Leave **Run on a schedule** off for now and select **Create pipeline**.
 4. On the pipeline's page, select **Run now**.
 
-Your instance connects to public addresses only. For a database on a private network, run the plugin inside that network with [`marmot plugin`](../Configure/serving-plugins.md). For BigQuery, Glue or Blob Storage, [connect your cloud](Guides/google.md) instead, so the pipeline needs no password.
+Your instance connects to public addresses only. For a database on a private network, run the plugin inside that network with a [runner](../Populating/serve-queries.md). For BigQuery, Glue or Blob Storage, [connect your cloud](Guides/google.md) instead, so the pipeline needs no password.
 
 </Step>
 <Step title="Find it in Discover">

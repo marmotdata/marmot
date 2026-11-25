@@ -25,7 +25,7 @@ A source answers queries when its plugin supports querying and its pipeline has 
 
 Turning querying on for a pipeline needs `access:manage`. Under the same section, **Refresh the catalog when queried** updates a table's details when a query reads it, at most hourly.
 
-A source Marmot can't reach, such as a database on a private network, can still answer queries: run its plugin inside that network and it [serves queries](Configure/serving-plugins.md) over a connection it opens to Marmot.
+A source Marmot can't reach, such as a database on a private network, can still answer queries: run its plugin inside that network and it [serves queries](Populating/serve-queries.md) over a connection it opens to Marmot.
 
 ## Permissions
 
@@ -61,4 +61,4 @@ A result cut off at the limit is marked as truncated. Set `query.enabled: false`
 
 - [Query your data](query-data.md): run, save and export a query.
 - [Query audit](query-audit.md): see who queried what.
-- [Serve queries from your network](Configure/serving-plugins.md): answer queries from a source Marmot can't reach.
+- [Serve queries from your network](Populating/serve-queries.md): answer queries from a source Marmot can't reach.
