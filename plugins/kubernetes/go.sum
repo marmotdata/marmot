@@ -131,8 +131,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
-github.com/marmotdata/plugin-sdk v0.0.0-20261125133013-65ba044c1abd h1:g1x479lYXZiW4H075Z7a/LaoEIKf0otJlws2ntJmJZw=
-github.com/marmotdata/plugin-sdk v0.0.0-20261125133013-65ba044c1abd/go.mod h1:81zMHzCJLjsqDkKWsQMXgJx7fCYtsHfmLZ6N8MhABZ4=
+github.com/marmotdata/plugin-sdk v0.0.0-20261125204133-a2a3a44741a0 h1:pc1tSNHF4JY80DiAhWrA888zj68oLgI4iSdE7hdCo3o=
+github.com/marmotdata/plugin-sdk v0.0.0-20261125204133-a2a3a44741a0/go.mod h1:81zMHzCJLjsqDkKWsQMXgJx7fCYtsHfmLZ6N8MhABZ4=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=
