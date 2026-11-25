@@ -571,11 +571,11 @@ func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error
 
 	query := `
 		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, queryable, managed_by, served_by_type, served_by_id)
-		VALUES ($1, $2, $3, '', true, true, 'serve', $4, $5)
+		VALUES ($1, $2, $3, '', true, $6, 'serve', $4, $5)
 		ON CONFLICT (name) DO UPDATE SET
 			plugin_id = EXCLUDED.plugin_id,
 			config = EXCLUDED.config,
-			queryable = true,
+			queryable = EXCLUDED.queryable,
 			served_by_type = EXCLUDED.served_by_type,
 			served_by_id = EXCLUDED.served_by_id,
 			updated_at = NOW()
@@ -589,6 +589,7 @@ func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error
 		configJSON,
 		*schedule.ServedByType,
 		*schedule.ServedByID,
+		schedule.Queryable,
 	).Scan(&schedule.ID, &schedule.ManagedBy, &schedule.CreatedAt, &schedule.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("%w: %s", ErrSourceOwned, schedule.Name)
@@ -596,7 +597,6 @@ func claimServedSource(ctx context.Context, tx pgx.Tx, schedule *Schedule) error
 	if err != nil {
 		return fmt.Errorf("claiming served source: %w", err)
 	}
-	schedule.Queryable = true
 	return linkServedSourceAssets(ctx, tx, schedule)
 }
 

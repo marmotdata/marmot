@@ -35,6 +35,8 @@ type EnrolSource struct {
 	Config   map[string]any `json:"config,omitempty"`
 	// Tools is the process's report of the source's tools and triggers, when it serves any. Informative only: see ServedTools.
 	Tools *ServedTools `json:"tools,omitempty"`
+	// NoQueries is the process's report that the source's plugin answers no queries, so the source is not listed as one to query. A process that predates it reports nothing, and its sources stay queryable.
+	NoQueries bool `json:"no_queries,omitempty"`
 }
 
 // EnrolInput is a serving process's request for a certificate.
@@ -112,6 +114,7 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 			Name:         src.Name,
 			PluginID:     src.PluginID,
 			Config:       maskForDisplay(src.PluginID, src.Config),
+			Queryable:    !src.NoQueries,
 			ServedByType: &principalType,
 			ServedByID:   &principalID,
 		})

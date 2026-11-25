@@ -23,6 +23,7 @@ func servedBy(principalType string, id string) *Schedule {
 		Name:         "served-" + uuid.NewString()[:8],
 		PluginID:     "postgresql",
 		Config:       map[string]interface{}{"host": "db", "password": "********"},
+		Queryable:    true,
 		ServedByType: &principalType,
 		ServedByID:   &id,
 	}
@@ -48,6 +49,15 @@ func TestClaimServedSources(t *testing.T) {
 		for _, d := range due {
 			assert.NotEqual(t, s.Name, d.Name, "the server must never run a served source's plugin")
 		}
+	})
+
+	t.Run("a source served only for its tools is not queryable", func(t *testing.T) {
+		s := servedBy("service_account", owner)
+		s.PluginID, s.Queryable = "github", false
+		require.NoError(t, repo.ClaimServedSources(ctx, []*Schedule{s}))
+		got, err := repo.GetScheduleByName(ctx, s.Name)
+		require.NoError(t, err)
+		assert.False(t, got.Queryable)
 	})
 
 	t.Run("owner can claim again", func(t *testing.T) {
