@@ -1873,7 +1873,7 @@
 	"nav_query": "Query",
 	"nav_query_audit": "Query audit",
 	"nav_runs": "Plugins",
-	"nav_search_everything": "Search the catalog",
+	"nav_search_everything": "Search everything",
 	"nav_settings": "Settings",
 	"notif_access_expiry_api_key_expired_message": "Your API key \"{key}\" has expired, so anything using it can no longer sign in.",
 	"notif_access_expiry_api_key_expired_title": "API key expired",
