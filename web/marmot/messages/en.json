@@ -2898,7 +2898,7 @@
 	"runs_no_runs_filtered_hint": "No runs match this status",
 	"runs_operator_managed_title": "Managed by Kubernetes operator",
 	"runs_operator_managed_short": "Operator-managed",
-	"runs_serving_connected": "Serving",
+	"runs_serving_connected": "Connected",
 	"runs_serving_disconnected": "Not connected",
 	"runs_serving_title": "A plugin running outside Marmot answers this source's queries over a long-running connection",
 	"runs_period_30d": "Last 30 days",
