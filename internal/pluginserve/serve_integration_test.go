@@ -714,3 +714,37 @@ func TestEnrolRefusesUnknownCredential(t *testing.T) {
 	_, err := h.enroller(h.startHub()).Enrol(h.ctx, servePrincipal(), auth.Credential{}, enrolInput(t, nil, newSourceName()))
 	assert.ErrorIs(t, err, ErrForbidden)
 }
+func TestEnrolListsOnlySourcesThatAnswerQueriesAsQueryable(t *testing.T) {
+	h := newHarness(t)
+	enroller := h.enroller(h.startHub())
+	if _, err := plugin.GetRegistry().Get("servetest-actions"); err != nil {
+		require.NoError(t, plugin.GetRegistry().Register(pluginsdk.Meta{ID: "servetest-actions", SupportsTools: true}, nil))
+	}
+	actions := &ServedTools{Policy: PolicySummary{ToolsAllowed: true}}
+
+	for name, tc := range map[string]struct {
+		source    EnrolSource
+		queryable bool
+	}{
+		"a plugin that answers queries":                     {EnrolSource{PluginID: "servetest"}, true},
+		"a plugin with actions and no queries":              {EnrolSource{PluginID: "servetest-actions", Tools: actions}, false},
+		"an unknown plugin served for its actions":          {EnrolSource{PluginID: "elsewhere", Tools: actions}, false},
+		"an unknown plugin served without actions":          {EnrolSource{PluginID: "elsewhere"}, true},
+		"a plugin that answers queries and reports actions": {EnrolSource{PluginID: "servetest", Tools: actions}, true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			in := enrolInput(t, nil, newSourceName())
+			tc.source.Name = in.Sources[0].Name
+			in.Sources[0] = tc.source
+			_, err := enroller.Enrol(h.ctx, servePrincipal(), sessionCredential, in)
+			require.NoError(t, err)
+
+			got, err := h.schedules.GetScheduleByName(h.ctx, tc.source.Name)
+			require.NoError(t, err)
+			assert.Equal(t, tc.queryable, got.Queryable)
+			listed, _, err := h.schedules.ListQueryableSchedules(h.ctx, tc.source.Name, 10, 0)
+			require.NoError(t, err)
+			assert.Equal(t, tc.queryable, len(listed) == 1)
+		})
+	}
+}

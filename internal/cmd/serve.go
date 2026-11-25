@@ -201,7 +201,6 @@ func servedSources(pipeline string, queryable map[string]plugin.RawPluginConfig)
 			PluginID:      pluginID,
 			Config:        config,
 			DisplayConfig: plugin.MaskSensitiveFieldsFromSpec(config, entry.Meta.ConfigSpec),
-			NoQueries:     !entry.Meta.SupportsQuery,
 		})
 	}
 	return sources, nil

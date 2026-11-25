@@ -17586,6 +17586,10 @@
                         "$ref": "#/definitions/pluginsdk.ConfigField"
                     }
                 },
+                "connection_test_timeout_seconds": {
+                    "description": "ConnectionTestTimeoutSeconds is how long a connection test may run this plugin's discovery before it is stopped, for a plugin whose discovery is slow even on a small source, such as one that must make its API requests one at a time. Zero leaves the host's default, and the host caps it.",
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },

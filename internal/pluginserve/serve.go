@@ -43,8 +43,6 @@ type LocalSource struct {
 	Config   map[string]any
 	// DisplayConfig is the masked config sent to Marmot for reference.
 	DisplayConfig map[string]any
-	// NoQueries is set when the source's plugin cannot answer queries and is served only for its tools, so Marmot does not offer it as a source to query.
-	NoQueries bool
 }
 
 // Querier runs queries on local plugin processes. Implemented by plugin.InstanceManager.
@@ -357,7 +355,7 @@ func connect(ctx context.Context, opts ServeOptions, process *processState, pinn
 
 	in := EnrolInput{CSR: string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrDER}))}
 	for _, s := range opts.Sources {
-		in.Sources = append(in.Sources, EnrolSource{Name: s.Name, PluginID: s.PluginID, Config: s.DisplayConfig, Tools: servedToolsFor(ctx, opts, s), NoQueries: s.NoQueries})
+		in.Sources = append(in.Sources, EnrolSource{Name: s.Name, PluginID: s.PluginID, Config: s.DisplayConfig, Tools: servedToolsFor(ctx, opts, s)})
 	}
 	res, err := opts.Enrol(ctx, in)
 	if err != nil {

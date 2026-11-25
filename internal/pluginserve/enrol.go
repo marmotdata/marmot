@@ -35,8 +35,6 @@ type EnrolSource struct {
 	Config   map[string]any `json:"config,omitempty"`
 	// Tools is the process's report of the source's tools and triggers, when it serves any. Informative only: see ServedTools.
 	Tools *ServedTools `json:"tools,omitempty"`
-	// NoQueries is the process's report that the source's plugin answers no queries, so the source is not listed as one to query. A process that predates it reports nothing, and its sources stay queryable.
-	NoQueries bool `json:"no_queries,omitempty"`
 }
 
 // EnrolInput is a serving process's request for a certificate.
@@ -114,7 +112,7 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 			Name:         src.Name,
 			PluginID:     src.PluginID,
 			Config:       maskForDisplay(src.PluginID, src.Config),
-			Queryable:    !src.NoQueries,
+			Queryable:    answersQueries(src),
 			ServedByType: &principalType,
 			ServedByID:   &principalID,
 		})
@@ -196,6 +194,14 @@ func validateSources(sources []EnrolSource) error {
 		}
 	}
 	return nil
+}
+
+// answersQueries reports whether a served source answers data queries, so a source served only for its tools, such as Kubernetes, is never offered to people or tasks as one they can query. This server's own copy of the plugin says when it has one. A plugin it does not have is judged by what the serving process reported: it serves a plugin without queries only for its tools, so a source that reports none answers queries.
+func answersQueries(src EnrolSource) bool {
+	if entry, err := plugin.GetRegistry().Get(src.PluginID); err == nil {
+		return entry.Meta.SupportsQuery
+	}
+	return src.Tools == nil
 }
 
 // maskForDisplay masks a served source's config with the plugin's spec, or drops it when this server does not have the plugin, so Marmot never stores a credential a serving process sent by mistake.
