@@ -429,7 +429,7 @@ Run plugins on this machine and push what they find to Marmot, rather than havin
 | `--ca-fingerprint` | With `--serve`, a CA fingerprint (`sha256:<hex>`) the first enrolment must include. Repeatable. See the [runner reference](Configure/serving-reference.md#runner-flags). |
 | `--policy` | With `--serve`, a YAML file limiting what this process serves. See the [policy file](Configure/serving-reference.md#policy-file). |
 | `--audit-log` | With `--serve`, append a hash-chained JSON line per query served or refused. See [audit and receipts](Configure/serving-plugins.md#audit-and-receipts). |
-| `--allow-actions` | With `--serve`, also serve the plugin actions and run the triggers the policy names. Needs `--audit-log`. See [Let tasks act on a Kubernetes cluster](Populating/kubernetes-actions.md). |
+| `--allow-tools` | With `--serve`, also serve the plugin tools and run the triggers the policy names. Needs `--audit-log`. See [Let tasks act on a Kubernetes cluster](Populating/kubernetes-tools.md). |
 
 `marmot ingest verify-audit-log <path>` checks an audit log written with `--audit-log` and names the first line that does not follow from the one before it.
 

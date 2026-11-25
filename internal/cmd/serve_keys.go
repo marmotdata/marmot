@@ -44,7 +44,7 @@ By default the rotation is graceful: the new keys are published now, used after 
 
 Use --immediate when a key may be compromised. Marmot switches at once and stops trusting the old keys, and every serving plugin must be restarted to trust the new ones.
 
-When the keys are held in a KMS, name the new KMS keys with --ca-key-uri, --signing-key-uri and --approval-key-uri. The approval key signs only approvals of actions and must be a key of its own.`,
+When the keys are held in a KMS, name the new KMS keys with --ca-key-uri, --signing-key-uri and --approval-key-uri. The approval key signs only approvals of tools and must be a key of its own.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		body := map[string]any{
 			"immediate":        rotateImmediate,
@@ -97,7 +97,7 @@ func printGenerations(gens []pluginserve.GenerationStatus) error {
 		if g.ApprovalKeyFingerprint != "" {
 			fmt.Printf("    approval key %s\n", g.ApprovalKeyFingerprint)
 		} else {
-			fmt.Println("    no approval key: actions cannot be approved until a rotation names one")
+			fmt.Println("    no approval key: tools cannot be approved until a rotation names one")
 		}
 	}
 	return nil

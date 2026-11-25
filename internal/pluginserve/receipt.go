@@ -35,9 +35,9 @@ func (s receiptSigner) sign(r *pb.Receipt) (*pb.SignedReceipt, error) {
 	return s.signUnder(receiptDomain, r)
 }
 
-// signAction signs an action's receipt under its own domain.
-func (s receiptSigner) signAction(r *pb.ActionReceipt) (*pb.SignedReceipt, error) {
-	return s.signUnder(actionReceiptDomain, r)
+// signTool signs a tool's receipt under its own domain.
+func (s receiptSigner) signTool(r *pb.ToolReceipt) (*pb.SignedReceipt, error) {
+	return s.signUnder(toolReceiptDomain, r)
 }
 
 func (s receiptSigner) signUnder(domain []byte, r gproto.Message) (*pb.SignedReceipt, error) {
@@ -166,18 +166,18 @@ func fillReceipt(out *dataquery.RunnerReceipt, r *pb.Receipt) {
 	}
 }
 
-// ActionReceipt is a serving plugin's signed account of one action it planned or executed, as Marmot checked it. Status is dataquery's: verified, invalid with the reason in Problem, or missing. It carries the signed bytes, signature and certificate so it can be verified again later against the instance's CA.
-type ActionReceipt struct {
+// ToolReceipt is a serving plugin's signed account of one tool it planned or executed, as Marmot checked it. Status is dataquery's: verified, invalid with the reason in Problem, or missing. It carries the signed bytes, signature and certificate so it can be verified again later against the instance's CA.
+type ToolReceipt struct {
 	Status    string `json:"status"`
 	Problem   string `json:"problem,omitempty"`
 	Enrolment string `json:"enrolment,omitempty"`
-	// Operation is action_plan or action_execute.
+	// Operation is tool_plan or tool_execute.
 	Operation      string     `json:"operation,omitempty"`
 	ID             string     `json:"id,omitempty"`
 	Origin         string     `json:"origin,omitempty"`
 	Source         string     `json:"source,omitempty"`
 	Actor          string     `json:"actor,omitempty"`
-	Action         string     `json:"action,omitempty"`
+	Tool           string     `json:"tool,omitempty"`
 	ParamsSHA256   string     `json:"params_sha256,omitempty"`
 	Precondition   string     `json:"precondition,omitempty"`
 	ManifestDigest string     `json:"manifest_digest,omitempty"`
@@ -188,7 +188,7 @@ type ActionReceipt struct {
 	OutputSHA256   string     `json:"output_sha256,omitempty"`
 	DurationMS     int64      `json:"duration_ms"`
 	FinishedAt     *time.Time `json:"finished_at,omitempty"`
-	// ApprovalDigest is the hex ApprovalDigest the serving process verified the approval over, Approvers who approved, as the approval named them, and ApprovalTrust how it trusted them ("marmot": Marmot-signed); all empty for an action that needed and carried no approval.
+	// ApprovalDigest is the hex ApprovalDigest the serving process verified the approval over, Approvers who approved, as the approval named them, and ApprovalTrust how it trusted them ("marmot": Marmot-signed); all empty for a tool that needed and carried no approval.
 	ApprovalDigest string            `json:"approval_digest,omitempty"`
 	Approvers      []ReceiptApprover `json:"approvers,omitempty"`
 	ApprovalTrust  string            `json:"approval_trust,omitempty"`
@@ -205,29 +205,29 @@ type ReceiptApprover struct {
 }
 
 // Verified reports whether the receipt checked out.
-func (r *ActionReceipt) Verified() bool {
+func (r *ToolReceipt) Verified() bool {
 	return r != nil && r.Status == dataquery.ReceiptVerified
 }
 
-// verifyActionReceipt checks the receipt on an action's response against what this replica asked for, as verifyReceipt does for a query, and also that it covers the very output and failure the response carries.
-func (h *Hub) verifyActionReceipt(ctx context.Context, resp *pb.ActionResponse, exp receiptExpectation) *ActionReceipt {
+// verifyToolReceipt checks the receipt on a tool's response against what this replica asked for, as verifyReceipt does for a query, and also that it covers the very output and failure the response carries.
+func (h *Hub) verifyToolReceipt(ctx context.Context, resp *pb.ToolResponse, exp receiptExpectation) *ToolReceipt {
 	signed := resp.Receipt
 	if signed == nil {
-		return &ActionReceipt{Status: dataquery.ReceiptMissing, Problem: "the serving plugin sent no receipt"}
+		return &ToolReceipt{Status: dataquery.ReceiptMissing, Problem: "the serving plugin sent no receipt"}
 	}
-	out := &ActionReceipt{Status: dataquery.ReceiptInvalid, Signed: signed.Receipt, Signature: signed.Signature, Certificate: signed.Certificate}
-	var r pb.ActionReceipt
+	out := &ToolReceipt{Status: dataquery.ReceiptInvalid, Signed: signed.Receipt, Signature: signed.Signature, Certificate: signed.Certificate}
+	var r pb.ToolReceipt
 	parseErr := gproto.Unmarshal(signed.Receipt, &r)
 	if parseErr == nil {
-		fillActionReceipt(out, &r)
+		fillToolReceipt(out, &r)
 	}
-	enrolment, err := h.checkReceiptSigner(ctx, signed, actionReceiptDomain, exp)
+	enrolment, err := h.checkReceiptSigner(ctx, signed, toolReceiptDomain, exp)
 	out.Enrolment = enrolment
 	if err == nil && parseErr != nil {
 		err = errors.New("it does not parse")
 	}
 	if err == nil {
-		err = checkActionReceipt(&r, resp, exp.fq)
+		err = checkToolReceipt(&r, resp, exp.fq)
 	}
 	if err != nil {
 		out.Problem = err.Error()
@@ -237,7 +237,7 @@ func (h *Hub) verifyActionReceipt(ctx context.Context, resp *pb.ActionResponse, 
 	return out
 }
 
-func checkActionReceipt(r *pb.ActionReceipt, resp *pb.ActionResponse, fq *pb.ForwardedQuery) error {
+func checkToolReceipt(r *pb.ToolReceipt, resp *pb.ToolResponse, fq *pb.ForwardedQuery) error {
 	params := sha256.Sum256(fq.ParamsJson)
 	output := sha256.Sum256(resp.OutputJson)
 	switch {
@@ -246,9 +246,9 @@ func checkActionReceipt(r *pb.ActionReceipt, resp *pb.ActionResponse, fq *pb.For
 	case r.Operation != fq.Operation:
 		return errors.New("it is for another operation")
 	case subtle.ConstantTimeCompare(r.Nonce, fq.Nonce) != 1:
-		return errors.New("it is for another action: the nonce differs")
-	case r.Id != fq.QueryId, r.Source != fq.Source, r.Actor != fq.Actor, r.Origin != fq.Origin, r.Action != fq.Action:
-		return errors.New("its id, source, actor, origin or action differ from the request's")
+		return errors.New("it is for another tool: the nonce differs")
+	case r.Id != fq.QueryId, r.Source != fq.Source, r.Actor != fq.Actor, r.Origin != fq.Origin, r.Tool != fq.Tool:
+		return errors.New("its id, source, actor, origin or tool differ from the request's")
 	case !bytes.Equal(r.ParamsSha256, params[:]):
 		return errors.New("it names other parameters")
 	case r.Precondition != fq.Precondition:
@@ -264,7 +264,7 @@ func checkActionReceipt(r *pb.ActionReceipt, resp *pb.ActionResponse, fq *pb.For
 }
 
 // checkReceiptApproval checks the receipt names the approval this replica sent, by the digest it computes itself, or none when it sent none.
-func checkReceiptApproval(r *pb.ActionReceipt, fq *pb.ForwardedQuery) error {
+func checkReceiptApproval(r *pb.ToolReceipt, fq *pb.ForwardedQuery) error {
 	if len(fq.Approval) == 0 {
 		if len(r.ApprovalDigest) > 0 || len(r.Approvers) > 0 || r.ApprovalTrust != "" {
 			return errors.New("it names an approval the request did not carry")
@@ -280,8 +280,8 @@ func checkReceiptApproval(r *pb.ActionReceipt, fq *pb.ForwardedQuery) error {
 		return errors.New("the request's approval does not parse")
 	}
 	want, err := ApprovalDigest(ApprovalSubject{
-		Source: fq.Source, Action: fq.Action, Params: fq.ParamsJson, Precondition: fq.Precondition,
-		ManifestDigest: fq.ManifestDigest, Origin: fq.Origin, Actor: fq.Actor, ActionID: fq.QueryId,
+		Source: fq.Source, Tool: fq.Tool, Params: fq.ParamsJson, Precondition: fq.Precondition,
+		ManifestDigest: fq.ManifestDigest, Origin: fq.Origin, Actor: fq.Actor, ToolID: fq.QueryId,
 		ExpiresAt: time.Unix(a.ExpiresAtUnix, 0),
 	})
 	if err != nil || subtle.ConstantTimeCompare(want, r.ApprovalDigest) != 1 {
@@ -302,13 +302,13 @@ func checkReceiptApproval(r *pb.ActionReceipt, fq *pb.ForwardedQuery) error {
 	return nil
 }
 
-func fillActionReceipt(out *ActionReceipt, r *pb.ActionReceipt) {
+func fillToolReceipt(out *ToolReceipt, r *pb.ToolReceipt) {
 	out.Operation = operationName(r.Operation)
 	out.ID = r.Id
 	out.Origin = r.Origin
 	out.Source = r.Source
 	out.Actor = r.Actor
-	out.Action = r.Action
+	out.Tool = r.Tool
 	out.ParamsSHA256 = hex.EncodeToString(r.ParamsSha256)
 	out.Precondition = r.Precondition
 	out.ManifestDigest = r.ManifestDigest

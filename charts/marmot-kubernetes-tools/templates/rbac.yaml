@@ -7,9 +7,9 @@ Deployment or StatefulSet itself rather than through its scale subresource,
 so the same write carries the origin and actor annotations and the
 admission policy sees the whole object; scale is therefore not granted.
 */ -}}
-{{- $fullname := include "marmot-actions.fullname" . -}}
-{{- $a := .Values.actions -}}
-{{- if include "marmot-actions.namespaced" . }}
+{{- $fullname := include "marmot-tools.fullname" . -}}
+{{- $a := .Values.tools -}}
+{{- if include "marmot-tools.namespaced" . }}
 {{- range $ns := .Values.namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -18,7 +18,7 @@ metadata:
   name: {{ $fullname }}
   namespace: {{ $ns }}
   labels:
-    {{- include "marmot-actions.labels" $ | nindent 4 }}
+    {{- include "marmot-tools.labels" $ | nindent 4 }}
 rules:
   {{- if or $a.scale $a.rolloutRestart }}
   - apiGroups: ["apps"]
@@ -58,7 +58,7 @@ rules:
     resources: ["events"]
     verbs: ["get", "list", "watch"]
   # workload_status reads the workload it describes, and recent_events the
-  # object whose events it reads when actions.selector is set.
+  # object whose events it reads when tools.selector is set.
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "daemonsets"]
     verbs: ["get", "list"]
@@ -68,7 +68,7 @@ rules:
   {{- end }}
   {{- if $.Values.triggers.enabled }}
   # Triggers watch these through informers, which list and then watch.
-  {{- include "marmot-actions.triggerRules" $ | nindent 2 }}
+  {{- include "marmot-tools.triggerRules" $ | nindent 2 }}
   {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -77,14 +77,14 @@ metadata:
   name: {{ $fullname }}
   namespace: {{ $ns }}
   labels:
-    {{- include "marmot-actions.labels" $ | nindent 4 }}
+    {{- include "marmot-tools.labels" $ | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ $fullname }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "marmot-actions.serviceAccountName" $ }}
+    name: {{ include "marmot-tools.serviceAccountName" $ }}
     namespace: {{ $.Release.Namespace }}
 {{- end }}
 {{- end }}
@@ -97,7 +97,7 @@ kind: ClusterRole
 metadata:
   name: {{ $fullname }}-nodes
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
@@ -108,14 +108,14 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $fullname }}-nodes
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ $fullname }}-nodes
 subjects:
   - kind: ServiceAccount
-    name: {{ include "marmot-actions.serviceAccountName" . }}
+    name: {{ include "marmot-tools.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}
 {{- if .Values.triggers.clusterWide }}
@@ -127,9 +127,9 @@ kind: ClusterRole
 metadata:
   name: {{ $fullname }}-triggers
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 rules:
-  {{- include "marmot-actions.triggerRules" . | nindent 2 }}
+  {{- include "marmot-tools.triggerRules" . | nindent 2 }}
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
@@ -139,13 +139,13 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ $fullname }}-triggers
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ $fullname }}-triggers
 subjects:
   - kind: ServiceAccount
-    name: {{ include "marmot-actions.serviceAccountName" . }}
+    name: {{ include "marmot-tools.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

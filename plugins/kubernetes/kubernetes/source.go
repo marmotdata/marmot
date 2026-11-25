@@ -504,10 +504,10 @@ type Config struct {
 	Token         string `json:"token,omitempty" description:"Bearer token, typically a service account token" sensitive:"true"`
 	CACertificate string `json:"ca_certificate,omitempty" group:"Authentication" label:"CA Certificate" description:"PEM-encoded CA certificate of the API server"`
 
-	// Actions lives here rather than in DiscoveryConfig so the cloud
-	// plugins, which embed that, gain no action settings until they
-	// implement actions themselves.
-	Actions ActionsConfig `json:"actions,omitempty" group:"Actions" description:"Limits on the changes actions may make. Actions run only in a runner that allows them"`
+	// Tools lives here rather than in DiscoveryConfig so the cloud
+	// plugins, which embed that, gain no tool settings until they
+	// implement tools themselves.
+	Tools ToolsConfig `json:"tools,omitempty" group:"Tools" description:"Limits on the changes tools may make. Tools run only in a runner that allows them"`
 }
 
 // Example configuration for the plugin
@@ -574,7 +574,7 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	if err := config.DiscoveryConfig.Validate(); err != nil {
 		return nil, err
 	}
-	if err := config.Actions.Validate(); err != nil {
+	if err := config.Tools.Validate(); err != nil {
 		return nil, err
 	}
 

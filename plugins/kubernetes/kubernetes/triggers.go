@@ -84,14 +84,14 @@ func warningConditionNames() []string {
 }
 
 var (
-	namespacesTriggerParam = pluginsdk.ActionParam{
-		Name: "namespaces", Description: "Namespaces to watch, each within actions.namespaces. Empty watches every namespace actions may see, which across the cluster needs the chart's triggers.clusterWide",
+	namespacesTriggerParam = pluginsdk.ToolParam{
+		Name: "namespaces", Description: "Namespaces to watch, each within tools.namespaces. Empty watches every namespace tools may see, which across the cluster needs the chart's triggers.clusterWide",
 		Type: pluginsdk.ParamStringList, MaxItems: 64, MaxLength: 63, Pattern: dns1123Label,
 	}
-	selectorTriggerParam = pluginsdk.ActionParam{
-		Name: "selector", Description: "Label selector the target must match, on top of actions.selector", Type: pluginsdk.ParamString, MaxLength: 512,
+	selectorTriggerParam = pluginsdk.ToolParam{
+		Name: "selector", Description: "Label selector the target must match, on top of tools.selector", Type: pluginsdk.ParamString, MaxLength: 512,
 	}
-	forMinutesTriggerParam = pluginsdk.ActionParam{
+	forMinutesTriggerParam = pluginsdk.ToolParam{
 		Name: "for_minutes", Description: "How long a condition must hold, without a break, before it fires. Defaults to 10",
 		Type: pluginsdk.ParamInt, Min: 1, Max: maxForMinutes,
 	}
@@ -107,7 +107,7 @@ func TriggerSpecs() []pluginsdk.TriggerSpec {
 			Description: "Fires once per workload and condition when a workload or its pods have been unhealthy for for_minutes: crash looping, failing to pull images, misconfigured, OOM killed, not ready, unschedulable, short of replicas, a stuck rollout or a failed job. A pod's condition is reported against the workload that owns it. It clears when the condition does and can fire again.",
 			Targets:     []pluginsdk.TargetKind{kindPod, kindDeployment, kindStatefulSet, kindDaemonSet, kindJob, kindCronJob},
 			Conditions:  workloadConditions,
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				{Name: "kinds", Description: "Kinds of target to report. Defaults to every kind", Type: pluginsdk.ParamEnumList, MaxItems: 6,
 					Enum: []string{"deployment", "statefulset", "daemonset", "job", "cronjob", "pod"}},
 				namespacesTriggerParam, selectorTriggerParam,
@@ -122,7 +122,7 @@ func TriggerSpecs() []pluginsdk.TriggerSpec {
 			Description: "Fires once per node and condition when a node has been not ready, under memory, disk or PID pressure, without its network, or cordoned, for for_minutes. Needs the chart's triggers.clusterWide, since nodes belong to no namespace.",
 			Targets:     []pluginsdk.TargetKind{kindNode},
 			Conditions:  nodeConditions,
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				selectorTriggerParam,
 				{Name: "conditions", Description: "Conditions to report. Defaults to every condition", Type: pluginsdk.ParamEnumList, MaxItems: len(nodeConditions), Enum: nodeConditions},
 				forMinutesTriggerParam,
@@ -135,7 +135,7 @@ func TriggerSpecs() []pluginsdk.TriggerSpec {
 			Description: "Fires when an object has gathered at least min_count Warning events of one reason within window_minutes. Events are best effort and can be dropped or merged, so prefer workload_unhealthy and node_unhealthy, which read state; this is for what state does not show, such as failed mounts. The event message travels only as untrusted detail.",
 			Targets:     []pluginsdk.TargetKind{kindPod, kindDeployment, kindStatefulSet, kindDaemonSet, kindReplicaSet, kindJob, kindCronJob, kindNode, kindPVC, kindAutoscaler},
 			Conditions:  warningConditionNames(),
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				{Name: "reasons", Description: "Event reasons to count. Defaults to every one listed", Type: pluginsdk.ParamEnumList, MaxItems: len(warningReasons), Enum: warningReasonNames()},
 				namespacesTriggerParam,
 				{Name: "window_minutes", Description: "How far back events count. Defaults to 10", Type: pluginsdk.ParamInt, Min: 1, Max: 60},
@@ -148,7 +148,7 @@ func TriggerSpecs() []pluginsdk.TriggerSpec {
 			Title:       "Custom condition",
 			Description: "Fires once per object when a CEL expression the runner's operator wrote has been true of it for for_minutes. The expression sees the object as `object` and must return a bool; it is compiled when the watch starts, and one that does not compile or return a bool stops the watch from starting. An evaluation error counts as false.",
 			Targets:     []pluginsdk.TargetKind{kindPod, kindDeployment, kindStatefulSet, kindDaemonSet, kindJob, kindCronJob, kindNode, kindPVC, kindAutoscaler},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				{Name: "kind", Description: "Kind of object to watch", Type: pluginsdk.ParamEnum, Required: true, Enum: customKinds},
 				namespacesTriggerParam, selectorTriggerParam,
 				{Name: "when", Description: "CEL expression over object returning bool, such as object.status.?availableReplicas.orValue(0) < object.spec.replicas", Type: pluginsdk.ParamString, Required: true, MaxLength: maxCELLength},
@@ -181,7 +181,7 @@ func (s *Source) Watch(ctx context.Context, rawConfig pluginsdk.RawConfig, trigg
 			return fmt.Errorf("creating Kubernetes client: %w", err)
 		}
 	}
-	w, err := NewTriggerWatch(client, config.Actions, trigger, params, emit)
+	w, err := NewTriggerWatch(client, config.Tools, trigger, params, emit)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (s *Source) Watch(ctx context.Context, rawConfig pluginsdk.RawConfig, trigg
 }
 
 // newWatchClient builds a client for triggers, refusing impersonation for
-// the same reason actions do: the chart's RBAC is written for the runner's
+// the same reason tools do: the chart's RBAC is written for the runner's
 // own service account.
 func newWatchClient(config *Config) (k8s.Interface, error) {
 	restConfig, err := buildRestConfig(config)
@@ -226,21 +226,21 @@ func listParam(params map[string]any, name string, all []string) []string {
 }
 
 func intParam(params map[string]any, name string, def int64) int64 {
-	n, ok := pluginsdk.ActionRequest{Params: params}.IntParam(name)
+	n, ok := pluginsdk.ToolRequest{Params: params}.IntParam(name)
 	if !ok {
 		return def
 	}
 	return n
 }
 
-// scopeNamespaces resolves a trigger's namespaces against actions.namespaces:
+// scopeNamespaces resolves a trigger's namespaces against tools.namespaces:
 // each named one must be in scope, and none named means every namespace in
 // scope, which is the whole cluster bar the system namespaces when
-// actions.namespaces is empty. A nil result means cluster wide.
-func scopeNamespaces(config ActionsConfig, named []string) ([]string, error) {
+// tools.namespaces is empty. A nil result means cluster wide.
+func scopeNamespaces(config ToolsConfig, named []string) ([]string, error) {
 	for _, ns := range named {
 		if !config.inScope(ns) {
-			return nil, status.Errorf(codes.PermissionDenied, "namespace %q is outside the actions scope: allow it in actions.namespaces", ns)
+			return nil, status.Errorf(codes.PermissionDenied, "namespace %q is outside the tools scope: allow it in tools.namespaces", ns)
 		}
 	}
 	if len(named) > 0 {

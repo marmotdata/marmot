@@ -643,7 +643,7 @@ func (h *Hub) forwardTo(ctx context.Context, fq *pb.ForwardedQuery, owner Owner)
 	return peer, signed, nil
 }
 
-// signFor turns a query or action into a Query signed for, and bound to, one session's connection.
+// signFor turns a query or tool into a Query signed for, and bound to, one session's connection.
 func (h *Hub) signFor(s *session, fq *pb.ForwardedQuery) (*pb.SignedQuery, error) {
 	return h.keyring.signQuery(&pb.Query{
 		Operation:     fq.Operation,
@@ -655,8 +655,8 @@ func (h *Hub) signFor(s *session, fq *pb.ForwardedQuery) (*pb.SignedQuery, error
 		Origin:        fq.Origin,
 		Nonce:         fq.Nonce,
 		ReceiptWanted: fq.Operation == pb.Operation_OPERATION_EXECUTE,
-		// An action's fields are copied as they came, so the serving process acts on what the replica that took the action asked for and its receipt hashes the same parameter bytes.
-		Action:         fq.Action,
+		// A tool's fields are copied as they came, so the serving process acts on what the replica that took the tool asked for and its receipt hashes the same parameter bytes.
+		Tool:           fq.Tool,
 		ParamsJson:     fq.ParamsJson,
 		Precondition:   fq.Precondition,
 		ManifestDigest: fq.ManifestDigest,

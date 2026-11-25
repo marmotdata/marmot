@@ -240,11 +240,11 @@ func TestLocalQueryHasNoReceipt(t *testing.T) {
 	assert.Nil(t, f.repo.only(t).RunnerReceipt)
 }
 
-// The data query service reaches plugins only through QueryRunner, for in-server plugins, and ServedRunner, for served ones. Neither may grow a way to act: actions run only in a serving process, and only through pluginserve's ActionRunner, which the query service does not hold.
+// The data query service reaches plugins only through QueryRunner, for in-server plugins, and ServedRunner, for served ones. Neither may grow a way to act: tools run only in a serving process, and only through pluginserve's ToolRunner, which the query service does not hold.
 func TestQueryRunnersCannotAct(t *testing.T) {
 	for _, typ := range []reflect.Type{reflect.TypeFor[QueryRunner](), reflect.TypeFor[ServedRunner]()} {
 		for i := range typ.NumMethod() {
-			assert.NotContains(t, typ.Method(i).Name, "Action", "%s must not reach plugin actions", typ.Name())
+			assert.NotContains(t, typ.Method(i).Name, "Tool", "%s must not reach plugin tools", typ.Name())
 		}
 	}
 }

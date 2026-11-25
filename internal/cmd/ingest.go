@@ -419,7 +419,7 @@ func runIngestion(ctx context.Context) error {
 	var marmotURL *url.URL
 	var settings *serveSettings
 	if !serve && serveOnlyFlagsSet() {
-		return fmt.Errorf("--ca-fingerprint, --policy, --audit-log and --allow-actions only apply with --serve")
+		return fmt.Errorf("--ca-fingerprint, --policy, --audit-log and --allow-tools only apply with --serve")
 	}
 	if serve {
 		if marmotURL, err = enrolmentURL(getHost()); err != nil {

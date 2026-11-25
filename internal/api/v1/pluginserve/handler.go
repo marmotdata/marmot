@@ -15,7 +15,7 @@ import (
 	"github.com/marmotdata/marmot/pkg/config"
 )
 
-// maxEnrolBody bounds an enrolment request: a CSR and up to a hundred masked source configs, with the action and trigger manifests of those that serve any.
+// maxEnrolBody bounds an enrolment request: a CSR and up to a hundred masked source configs, with the tool and trigger manifests of those that serve any.
 const maxEnrolBody = 4 << 20
 
 type Handler struct {

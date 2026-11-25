@@ -21,9 +21,9 @@ import (
 )
 
 // planned plans call and returns it ready to execute, with the plan's precondition and a fresh id.
-func (a *actionServer) planned(t *testing.T, hub *Hub, call ActionCall) ActionCall {
+func (a *toolServer) planned(t *testing.T, hub *Hub, call ToolCall) ToolCall {
 	t.Helper()
-	plan, _, err := hub.PlanAction(context.Background(), call)
+	plan, _, err := hub.PlanTool(context.Background(), call)
 	require.NoError(t, err)
 	call.ID = uuid.NewString()
 	call.Request.Precondition = plan.Precondition
@@ -33,17 +33,17 @@ func (a *actionServer) planned(t *testing.T, hub *Hub, call ActionCall) ActionCa
 func TestServeApprovalsEndToEnd(t *testing.T) {
 	h := newHarness(t)
 	hub := h.startHub()
-	a := h.serveActions(hub, true, scalePolicy)
+	a := h.serveTools(hub, true, scalePolicy)
 	scale := map[string]any{"namespace": "payments", "replicas": 3}
 
-	refused := func(t *testing.T, call ActionCall, contains string) {
+	refused := func(t *testing.T, call ToolCall, contains string) {
 		t.Helper()
-		_, executesBefore := a.actor.calls()
-		_, receipt, err := hub.ExecuteAction(h.ctx, call)
+		_, executesBefore := a.runner.calls()
+		_, receipt, err := hub.ExecuteTool(h.ctx, call)
 		assert.Equal(t, codes.PermissionDenied, status.Code(err), err)
 		assert.ErrorContains(t, err, contains)
 		assert.Nil(t, receipt)
-		_, executes := a.actor.calls()
+		_, executes := a.runner.calls()
 		assert.Equal(t, executesBefore, executes, "a refused write never reaches the plugin")
 		last := readAuditLog(t, a.auditPath)
 		assert.Equal(t, AuditRefused, last[len(last)-1].Event)
@@ -59,7 +59,7 @@ func TestServeApprovalsEndToEnd(t *testing.T) {
 		other := call
 		other.Request.Params = map[string]any{"namespace": "payments", "replicas": 9}
 		call.Approval = approve(t, hub, other, 5*time.Minute, alice)
-		refused(t, call, "not signed by Marmot's approval key for this action")
+		refused(t, call, "not signed by Marmot's approval key for this tool")
 	})
 
 	t.Run("an approval signed with another key is refused", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestServeApprovalsEndToEnd(t *testing.T) {
 	t.Run("a valid approval runs once and its replay is refused", func(t *testing.T) {
 		call := a.planned(t, hub, a.call("scale", scale))
 		call.Approval = approve(t, hub, call, 5*time.Minute, alice)
-		_, receipt, err := hub.ExecuteAction(h.ctx, call)
+		_, receipt, err := hub.ExecuteTool(h.ctx, call)
 		require.NoError(t, err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		require.Len(t, receipt.Approvers, 1)
@@ -90,7 +90,7 @@ func TestServeApprovalsEndToEnd(t *testing.T) {
 		named := []string{"alice (" + alice.id + ")"}
 		entries := readAuditLog(t, a.auditPath)
 		intent, outcome := entries[len(entries)-2], entries[len(entries)-1]
-		assert.Equal(t, AuditActionIntent, intent.Event)
+		assert.Equal(t, AuditToolIntent, intent.Event)
 		assert.Equal(t, receipt.ApprovalDigest, intent.ApprovalDigest)
 		assert.Equal(t, named, intent.Approvers)
 		require.NotNil(t, intent.ApprovalExpiresAt)
@@ -101,7 +101,7 @@ func TestServeApprovalsEndToEnd(t *testing.T) {
 
 	t.Run("a read needs no approval and no precondition, and is never planned", func(t *testing.T) {
 		read := a.call("read_status", map[string]any{"namespace": "payments"})
-		result, receipt, err := hub.ExecuteAction(h.ctx, read)
+		result, receipt, err := hub.ExecuteTool(h.ctx, read)
 		require.NoError(t, err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		assert.True(t, result.Untrusted)
@@ -109,15 +109,15 @@ func TestServeApprovalsEndToEnd(t *testing.T) {
 		require.NoError(t, json.Unmarshal(result.Output, &out))
 		assert.Equal(t, true, out["untrusted"])
 		entries := readAuditLog(t, a.auditPath)
-		assert.Equal(t, AuditActionRead, entries[len(entries)-1].Event)
-		assert.NotEqual(t, AuditActionIntent, entries[len(entries)-2].Event, "a read writes no intent")
+		assert.Equal(t, AuditToolRead, entries[len(entries)-1].Event)
+		assert.NotEqual(t, AuditToolIntent, entries[len(entries)-2].Event, "a read writes no intent")
 
-		_, _, err = hub.PlanAction(h.ctx, read)
+		_, _, err = hub.PlanTool(h.ctx, read)
 		assert.Equal(t, codes.PermissionDenied, status.Code(err))
 		assert.ErrorContains(t, err, "nothing to plan")
 
 		read.Approval = approve(t, hub, read, 5*time.Minute, alice)
-		_, _, err = hub.ExecuteAction(h.ctx, read)
+		_, _, err = hub.ExecuteTool(h.ctx, read)
 		assert.ErrorContains(t, err, "a read takes no approval")
 	})
 }
@@ -127,42 +127,41 @@ func TestServeApprovalsPolicyRules(t *testing.T) {
 	hub := h.startHub()
 	scale := map[string]any{"namespace": "payments", "replicas": 3}
 
-
 	t.Run("approvals: 0 lets a risk 1, reversible write run without one", func(t *testing.T) {
-		a := h.serveActions(hub, true, "sources:\n  SOURCE:\n    actions:\n      scale: {approvals: 0}\n")
-		_, receipt, err := hub.ExecuteAction(h.ctx, a.planned(t, hub, a.call("scale", scale)))
+		a := h.serveTools(hub, true, "sources:\n  SOURCE:\n    tools:\n      scale: {approvals: 0}\n")
+		_, receipt, err := hub.ExecuteTool(h.ctx, a.planned(t, hub, a.call("scale", scale)))
 		require.NoError(t, err)
 		assert.Empty(t, receipt.Approvers)
 	})
 
 	t.Run("two approvals need two people", func(t *testing.T) {
-		a := h.serveActions(hub, true, approvalsYAML()+"sources:\n  SOURCE:\n    actions:\n      scale: {approvals: 2}\n")
+		a := h.serveTools(hub, true, approvalsYAML()+"sources:\n  SOURCE:\n    tools:\n      scale: {approvals: 2}\n")
 		call := a.planned(t, hub, a.call("scale", scale))
 		call.Approval = approve(t, hub, call, 5*time.Minute, alice)
-		_, _, err := hub.ExecuteAction(h.ctx, call)
+		_, _, err := hub.ExecuteTool(h.ctx, call)
 		assert.ErrorContains(t, err, "needs 2 distinct approvers")
 		call.Approval = approve(t, hub, call, 5*time.Minute, alice, bob)
-		_, receipt, err := hub.ExecuteAction(h.ctx, call)
+		_, receipt, err := hub.ExecuteTool(h.ctx, call)
 		require.NoError(t, err)
 		assert.Len(t, receipt.Approvers, 2)
 	})
 
 	t.Run("narrowed approvers count only those named", func(t *testing.T) {
-		a := h.serveActions(hub, true, approvalsYAML()+"sources:\n  SOURCE:\n    actions:\n      scale: {approvers: [bob]}\n")
+		a := h.serveTools(hub, true, approvalsYAML()+"sources:\n  SOURCE:\n    tools:\n      scale: {approvers: [bob]}\n")
 		call := a.planned(t, hub, a.call("scale", scale))
 		call.Approval = approve(t, hub, call, 5*time.Minute, alice)
-		_, _, err := hub.ExecuteAction(h.ctx, call)
+		_, _, err := hub.ExecuteTool(h.ctx, call)
 		assert.ErrorContains(t, err, "the approval has 0")
 		call.Approval = approve(t, hub, call, 5*time.Minute, bob)
-		_, _, err = hub.ExecuteAction(h.ctx, call)
+		_, _, err = hub.ExecuteTool(h.ctx, call)
 		require.NoError(t, err)
 	})
 
 	t.Run("an approval beyond max_age is refused", func(t *testing.T) {
-		a := h.serveActions(hub, true, scalePolicy)
+		a := h.serveTools(hub, true, scalePolicy)
 		call := a.planned(t, hub, a.call("scale", scale))
 		call.Approval = approve(t, hub, call, 50*time.Minute, alice)
-		_, _, err := hub.ExecuteAction(h.ctx, call)
+		_, _, err := hub.ExecuteTool(h.ctx, call)
 		assert.ErrorContains(t, err, "max_age")
 	})
 }
@@ -175,13 +174,13 @@ func TestServeApprovalReplayAfterRestartIsRefused(t *testing.T) {
 	auditPath := filepath.Join(t.TempDir(), "audit.log")
 	policy := loadApprovalsPolicy(t, strings.ReplaceAll(scalePolicy, "SOURCE", source))
 
-	start := func(actor *fakeActor) (stop func()) {
+	start := func(runner *fakePluginTools) (stop func()) {
 		audit, err := OpenAuditLog(auditPath)
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(h.ctx)
 		done := make(chan struct{})
 		opts := h.serveOptions(h.enroller(hub), principal, sessionCredential, source, &fakeQuerier{})
-		opts.AllowActions, opts.Actor, opts.Policy, opts.AuditLog = true, actor, policy, audit
+		opts.AllowTools, opts.PluginTools, opts.Policy, opts.AuditLog = true, runner, policy, audit
 		go func() { defer close(done); _ = Serve(ctx, opts) }()
 		owner := Owner{Type: string(principal.Type()), ID: principal.ID()}
 		require.Eventually(t, func() bool { return hub.localSession(source, owner) != nil }, 5*time.Second, 20*time.Millisecond)
@@ -193,19 +192,19 @@ func TestServeApprovalReplayAfterRestartIsRefused(t *testing.T) {
 		}
 	}
 
-	first := newFakeActor()
+	first := newFakePluginTools()
 	stop := start(first)
-	a := &actionServer{source: source}
+	a := &toolServer{source: source}
 	call := a.call("scale", map[string]any{"namespace": "payments", "replicas": 3})
 	call.ID, call.Request.Precondition = uuid.NewString(), "0"
 	call.Approval = approve(t, hub, call, 5*time.Minute, alice)
-	_, _, err := hub.ExecuteAction(h.ctx, call)
+	_, _, err := hub.ExecuteTool(h.ctx, call)
 	require.NoError(t, err)
 	stop()
 
-	second := newFakeActor()
+	second := newFakePluginTools()
 	defer start(second)()
-	_, _, err = hub.ExecuteAction(h.ctx, call)
+	_, _, err = hub.ExecuteTool(h.ctx, call)
 	assert.Equal(t, codes.PermissionDenied, status.Code(err))
 	assert.ErrorContains(t, err, "already been used")
 	_, executes := second.calls()
@@ -218,14 +217,14 @@ func testTriggerSpec() pluginsdk.TriggerSpec {
 		Name: "unhealthy", Version: 1, Title: "Unhealthy", Description: "Workloads that are unhealthy",
 		Targets:    []pluginsdk.TargetKind{"test/deployment"},
 		Conditions: []string{"crash_looping"},
-		Params: []pluginsdk.ActionParam{
+		Params: []pluginsdk.ToolParam{
 			{Name: "namespaces", Description: "Namespaces", Type: pluginsdk.ParamStringList, MaxLength: 63, MaxItems: 8},
 			{Name: "for_minutes", Description: "Minutes", Type: pluginsdk.ParamInt, Min: 1, Max: 240},
 		},
 	}
 }
 
-// fakeWatcher stands in for plugin.ActionHost's trigger side: it runs the gate where the host does and hands the test a channel to emit on.
+// fakeWatcher stands in for plugin.ToolHost's trigger side: it runs the gate where the host does and hands the test a channel to emit on.
 type fakeWatcher struct {
 	mu      sync.Mutex
 	params  []map[string]any
@@ -283,7 +282,7 @@ const triggerPolicy = `
 sources:
   SOURCE:
     query: false
-    actions:
+    tools:
       read_status: {}
     triggers:
       unhealthy:
@@ -299,14 +298,14 @@ func TestServeTriggersEndToEnd(t *testing.T) {
 	defer unsubscribe()
 
 	watcher := newFakeWatcher()
-	a := &actionServer{source: newSourceName(), principal: servePrincipal(), actor: newFakeActor()}
+	a := &toolServer{source: newSourceName(), principal: servePrincipal(), runner: newFakePluginTools()}
 	a.auditPath = filepath.Join(t.TempDir(), "audit.log")
 	audit, err := OpenAuditLog(a.auditPath)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = audit.Close() })
 	policy := loadApprovalsPolicy(t, strings.ReplaceAll(triggerPolicy, "SOURCE", a.source))
 	h.serveWith(h.enroller(hub), hub, a.principal, sessionCredential, a.source, &fakeQuerier{}, func(o *ServeOptions) {
-		o.AllowActions, o.Actor, o.Watcher, o.Policy, o.AuditLog = true, a.actor, watcher, policy, audit
+		o.AllowTools, o.PluginTools, o.Watcher, o.Policy, o.AuditLog = true, a.runner, watcher, policy, audit
 	})
 	<-watcher.started
 	watcher.mu.Lock()
@@ -388,14 +387,14 @@ func TestServeTriggersEndToEnd(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("the enrolment reports the manifest and a policy summary without keys", func(t *testing.T) {
-		served, connected, err := hub.ServedActions(h.ctx, a.source)
+		served, connected, err := hub.ServedTools(h.ctx, a.source)
 		require.NoError(t, err)
 		assert.True(t, connected)
 		assert.Equal(t, testManifestDigest, served.ManifestDigest)
 		assert.Equal(t, pluginsdk.TriggersDigest([]pluginsdk.TriggerSpec{testTriggerSpec()}), served.TriggersDigest)
-		assert.True(t, served.Policy.ActionsAllowed)
-		require.Len(t, served.Policy.Actions, 1)
-		assert.True(t, served.Policy.Actions[0].Read)
+		assert.True(t, served.Policy.ToolsAllowed)
+		require.Len(t, served.Policy.Tools, 1)
+		assert.True(t, served.Policy.Tools[0].Read)
 		require.Len(t, served.Policy.Triggers, 1)
 		assert.Equal(t, "2m0s", served.Policy.Triggers[0].Cooldown)
 		data, _ := json.Marshal(served)
@@ -406,7 +405,7 @@ func TestServeTriggersEndToEnd(t *testing.T) {
 		for name, q := range map[string]*pb.Query{
 			"parameters":  {ParamsJson: []byte(`{"namespaces":["kube-system"]}`)},
 			"a source":    {Source: a.source},
-			"an action":   {Action: "unhealthy"},
+			"a tool":      {Tool: "unhealthy"},
 			"a statement": {Statement: "object.metadata.name != ''"},
 		} {
 			t.Run(name, func(t *testing.T) {
@@ -499,11 +498,11 @@ func TestServeRefusesWritesWithoutApprovalTrust(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = audit.Close() }()
 	opts := ServeOptions{
-		AllowActions: true, AuditLog: audit, Actor: newFakeActor(),
-		Policy:  loadApprovalsPolicy(t, "sources:\n  s:\n    actions:\n      scale: {}\n"),
+		AllowTools: true, AuditLog: audit, PluginTools: newFakePluginTools(),
+		Policy:  loadApprovalsPolicy(t, "sources:\n  s:\n    tools:\n      scale: {}\n"),
 		Sources: []LocalSource{{Name: "s", PluginID: "fake"}},
 	}
-	assert.ErrorContains(t, checkActionSetup(context.Background(), opts), "approvals: {trust: marmot}")
-	opts.Policy = loadApprovalsPolicy(t, approvalsYAML()+"sources:\n  s:\n    actions:\n      scale: {}\n")
-	assert.NoError(t, checkActionSetup(context.Background(), opts))
+	assert.ErrorContains(t, checkToolSetup(context.Background(), opts), "approvals: {trust: marmot}")
+	opts.Policy = loadApprovalsPolicy(t, approvalsYAML()+"sources:\n  s:\n    tools:\n      scale: {}\n")
+	assert.NoError(t, checkToolSetup(context.Background(), opts))
 }

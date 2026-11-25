@@ -67,19 +67,19 @@ type ServeOptions struct {
 	Policy *Policy
 	// AuditLog, when set, receives a hash-chained line for every query served or refused.
 	AuditLog *AuditLog
-	// AllowActions switches on serving actions, which are refused outright without it. It is only the first of the runner's gates: each action must also be named by Policy, and Serve refuses to start with it unless AuditLog is set, since no action runs without its intent written down first.
-	AllowActions bool
-	// Actor runs actions on local plugin processes. Only needed with AllowActions; implemented by plugin.ActionHost.
-	Actor Actor
-	// Watcher runs the triggers the policy names on local plugin processes. Triggers run only with AllowActions, like actions; implemented by plugin.ActionHost.
+	// AllowTools switches on serving tools, which are refused outright without it. It is only the first of the runner's gates: each tool must also be named by Policy, and Serve refuses to start with it unless AuditLog is set, since no tool runs without its intent written down first.
+	AllowTools bool
+	// PluginTools runs tools on local plugin processes. Only needed with AllowTools; implemented by plugin.ToolHost.
+	PluginTools PluginTools
+	// Watcher runs the triggers the policy names on local plugin processes. Triggers run only with AllowTools, like tools; implemented by plugin.ToolHost.
 	Watcher TriggerWatcher
 }
 
-// Actor runs actions on local plugin processes. Implemented by plugin.ActionHost. gate is run against the manifest of the process that will act, after it is started and before the plugin is called; when gate fails the plugin is not called and its error is returned as it was.
-type Actor interface {
-	ActionManifest(ctx context.Context, pluginID string) ([]pluginsdk.ActionSpec, error)
-	PlanAction(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.ActionRequest, gate func([]pluginsdk.ActionSpec) error) (*pluginsdk.ActionPlan, error)
-	ExecuteAction(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.ActionRequest, gate func([]pluginsdk.ActionSpec) error) (*pluginsdk.ActionResult, error)
+// PluginTools runs tools on local plugin processes. Implemented by plugin.ToolHost. gate is run against the manifest of the process that will act, after it is started and before the plugin is called; when gate fails the plugin is not called and its error is returned as it was.
+type PluginTools interface {
+	ToolManifest(ctx context.Context, pluginID string) ([]pluginsdk.ToolSpec, error)
+	PlanTool(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.ToolRequest, gate func([]pluginsdk.ToolSpec) error) (*pluginsdk.ToolPlan, error)
+	ExecuteTool(ctx context.Context, pluginID string, config map[string]any, req pluginsdk.ToolRequest, gate func([]pluginsdk.ToolSpec) error) (*pluginsdk.ToolResult, error)
 }
 
 // ErrCAFingerprintMismatch is returned when the first enrolment's CAs include none the operator named. Serve gives up rather than retrying, because only the operator can tell whether the fingerprint or the Marmot it reached is wrong.
@@ -261,7 +261,7 @@ func Serve(ctx context.Context, opts ServeOptions) error {
 	if opts.Policy != nil {
 		log.Info().Str("policy", opts.Policy.Name()).Msg("Applying a local policy; sources it does not name are refused")
 	}
-	if opts.AllowActions {
+	if opts.AllowTools {
 		// Said at start and on every receipt, so nobody takes a Marmot-signed approval for a person's own signature.
 		log.Info().Str("approvals", opts.Policy.approvals().Describe()).Msg("Approvals of writes: " + opts.Policy.approvals().Describe())
 	}
@@ -355,7 +355,7 @@ func connect(ctx context.Context, opts ServeOptions, process *processState, pinn
 
 	in := EnrolInput{CSR: string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrDER}))}
 	for _, s := range opts.Sources {
-		in.Sources = append(in.Sources, EnrolSource{Name: s.Name, PluginID: s.PluginID, Config: s.DisplayConfig, Actions: servedActionsFor(ctx, opts, s)})
+		in.Sources = append(in.Sources, EnrolSource{Name: s.Name, PluginID: s.PluginID, Config: s.DisplayConfig, Tools: servedToolsFor(ctx, opts, s)})
 	}
 	res, err := opts.Enrol(ctx, in)
 	if err != nil {
@@ -416,8 +416,8 @@ func connect(ctx context.Context, opts ServeOptions, process *processState, pinn
 		policy:       opts.Policy,
 		audit:        opts.AuditLog,
 		signer:       receiptSigner{key: key, leaf: certBlock.Bytes},
-		actor:        opts.Actor,
-		actions:      opts.AllowActions,
+		runner:       opts.PluginTools,
+		tools:        opts.AllowTools,
 		spent:        process.spent,
 		triggers:     process.triggers,
 	})
@@ -441,9 +441,9 @@ type pluginService struct {
 	policy   *Policy
 	audit    *AuditLog
 	signer   receiptSigner
-	actor    Actor
-	// actions is --allow-actions.
-	actions bool
+	runner   PluginTools
+	// tools is --allow-tools.
+	tools bool
 	// approvalKeys are the approval keys pinned from this connection's enrolment.
 	approvalKeys []*ecdsa.PublicKey
 	// spent is the process's record of approvals already used, shared by every connection, since a connection lasts only until the next renewal.
@@ -475,7 +475,7 @@ func (p *pluginService) accept(signed *pb.SignedQuery, op pb.Operation) (*pb.Que
 	return q, src, decision, nil
 }
 
-// record appends to the audit log, when there is one, filling in what the query says. A failed write is logged rather than failing the query: the query has already run or been refused by then. An action's intent is the exception, written with recordIntent, which fails the action instead.
+// record appends to the audit log, when there is one, filling in what the query says. A failed write is logged rather than failing the query: the query has already run or been refused by then. A tool's intent is the exception, written with recordIntent, which fails the tool instead.
 func (p *pluginService) record(e AuditEntry, q *pb.Query) {
 	if p.audit == nil {
 		return
@@ -485,7 +485,7 @@ func (p *pluginService) record(e AuditEntry, q *pb.Query) {
 	}
 }
 
-// auditEntryFor fills in what the query or action says.
+// auditEntryFor fills in what the query or tool says.
 func auditEntryFor(e AuditEntry, q *pb.Query) AuditEntry {
 	// A query refused before the policy was reached, for a bad signature or a source not served here, was not decided by it.
 	if e.Policy == "" {
@@ -493,8 +493,8 @@ func auditEntryFor(e AuditEntry, q *pb.Query) AuditEntry {
 	}
 	if q != nil {
 		e.QueryID, e.Origin, e.Source, e.Actor, e.Nonce = q.QueryId, q.Origin, q.Source, q.Actor, hex.EncodeToString(q.Nonce)
-		if isAction(q.Operation) {
-			e.Action, e.ParamsSHA256, e.Precondition = q.Action, sha256Hex(q.ParamsJson), q.Precondition
+		if isTool(q.Operation) {
+			e.Tool, e.ParamsSHA256, e.Precondition = q.Tool, sha256Hex(q.ParamsJson), q.Precondition
 			// The digest the process computed is kept when the entry has one; otherwise it is the one Marmot asked against.
 			if e.ManifestDigest == "" {
 				e.ManifestDigest = q.ManifestDigest
@@ -518,10 +518,10 @@ func operationName(op pb.Operation) string {
 		return AuditPlan
 	case pb.Operation_OPERATION_EXECUTE:
 		return AuditExecute
-	case pb.Operation_OPERATION_ACTION_PLAN:
-		return AuditActionPlan
-	case pb.Operation_OPERATION_ACTION_EXECUTE:
-		return AuditActionExecute
+	case pb.Operation_OPERATION_TOOL_PLAN:
+		return AuditToolPlan
+	case pb.Operation_OPERATION_TOOL_EXECUTE:
+		return AuditToolExecute
 	}
 	return ""
 }

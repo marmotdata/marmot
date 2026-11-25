@@ -56,18 +56,18 @@ func TestEnrolmentURLRequiresHTTPS(t *testing.T) {
 	}
 }
 
-// A plugin with actions and no queries, such as Kubernetes, is served only by a process that may run actions. Found by running a real runner against kind.
-func TestServedSourcesTakesActionPluginsOnlyWithAllowActions(t *testing.T) {
-	require.NoError(t, plugin.GetRegistry().Register(pluginsdk.Meta{ID: "servetest-actions-only", SupportsActions: true}, acceptingSource{}))
-	runs := map[string]plugin.RawPluginConfig{"servetest-actions-only": {}}
+// A plugin with tools and no queries, such as Kubernetes, is served only by a process that may run tools. Found by running a real runner against kind.
+func TestServedSourcesTakesToolPluginsOnlyWithAllowTools(t *testing.T) {
+	require.NoError(t, plugin.GetRegistry().Register(pluginsdk.Meta{ID: "servetest-tools-only", SupportsTools: true}, acceptingSource{}))
+	runs := map[string]plugin.RawPluginConfig{"servetest-tools-only": {}}
 
-	serveAllowActions = false
+	serveAllowTools = false
 	_, err := servedSources("pipeline", runs)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "--allow-actions")
+	assert.Contains(t, err.Error(), "--allow-tools")
 
-	serveAllowActions = true
-	t.Cleanup(func() { serveAllowActions = false })
+	serveAllowTools = true
+	t.Cleanup(func() { serveAllowTools = false })
 	sources, err := servedSources("pipeline", runs)
 	require.NoError(t, err)
 	require.Len(t, sources, 1)

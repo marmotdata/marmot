@@ -166,13 +166,13 @@ func TestConfigValidation(t *testing.T) {
 		"bad repository":           {"owner": "acme", "repositories": []string{"../x"}},
 		"bad topic":                {"owner": "acme", "topics": []string{"Data Sets"}},
 		"bad filter":               {"owner": "acme", "filter": map[string]any{"include": []string{"("}}},
-		"write outside repos":      {"owner": "acme", "repositories": []string{"a"}, "actions": map[string]any{"repos": []string{"b"}}},
-		"bad action repo":          {"owner": "acme", "actions": map[string]any{"repos": []string{".."}}},
-		"prefix without slash":     {"owner": "acme", "actions": map[string]any{"branch_prefix": "marmot"}},
-		"prefix with traversal":    {"owner": "acme", "actions": map[string]any{"branch_prefix": "../"}},
-		"too many files":           {"owner": "acme", "actions": map[string]any{"max_files": 4}},
-		"file size above ceiling":  {"owner": "acme", "actions": map[string]any{"max_file_bytes": 2 << 20}},
-		"negative file size limit": {"owner": "acme", "actions": map[string]any{"max_file_bytes": -1}},
+		"write outside repos":      {"owner": "acme", "repositories": []string{"a"}, "tools": map[string]any{"repos": []string{"b"}}},
+		"bad tool repo":            {"owner": "acme", "tools": map[string]any{"repos": []string{".."}}},
+		"prefix without slash":     {"owner": "acme", "tools": map[string]any{"branch_prefix": "marmot"}},
+		"prefix with traversal":    {"owner": "acme", "tools": map[string]any{"branch_prefix": "../"}},
+		"too many files":           {"owner": "acme", "tools": map[string]any{"max_files": 4}},
+		"file size above ceiling":  {"owner": "acme", "tools": map[string]any{"max_file_bytes": 2 << 20}},
+		"negative file size limit": {"owner": "acme", "tools": map[string]any{"max_file_bytes": -1}},
 	}
 	for name, raw := range cases {
 		t.Run(name, func(t *testing.T) {

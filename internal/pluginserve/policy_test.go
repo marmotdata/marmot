@@ -28,12 +28,12 @@ func TestLoadPolicyRefusesUnknownKeys(t *testing.T) {
 		"not a mapping of rules":  "sources:\n  - warehouse\n",
 		"empty origin pattern":    "sources:\n  warehouse:\n    origins: [\"\"]\n",
 		"malformed manifest pin":  "sources:\n  warehouse:\n    manifest: sha256:abc\n",
-		"unknown action key":      "sources:\n  warehouse:\n    actions:\n      scale:\n        actor: [\"x\"]\n",
-		"unknown param rule":      "sources:\n  warehouse:\n    actions:\n      scale:\n        params:\n          replicas: {maximum: 3}\n",
-		"param rule with nothing": "sources:\n  warehouse:\n    actions:\n      scale:\n        params:\n          replicas: {}\n",
-		"param min above max":     "sources:\n  warehouse:\n    actions:\n      scale:\n        params:\n          replicas: {min: 5, max: 1}\n",
-		"param range and values":  "sources:\n  warehouse:\n    actions:\n      scale:\n        params:\n          replicas: {min: 1, values: [2]}\n",
-		"param value not scalar":  "sources:\n  warehouse:\n    actions:\n      scale:\n        params:\n          namespace: {values: [[a]]}\n",
+		"unknown tool key":        "sources:\n  warehouse:\n    tools:\n      scale:\n        actor: [\"x\"]\n",
+		"unknown param rule":      "sources:\n  warehouse:\n    tools:\n      scale:\n        params:\n          replicas: {maximum: 3}\n",
+		"param rule with nothing": "sources:\n  warehouse:\n    tools:\n      scale:\n        params:\n          replicas: {}\n",
+		"param min above max":     "sources:\n  warehouse:\n    tools:\n      scale:\n        params:\n          replicas: {min: 5, max: 1}\n",
+		"param range and values":  "sources:\n  warehouse:\n    tools:\n      scale:\n        params:\n          replicas: {min: 1, values: [2]}\n",
+		"param value not scalar":  "sources:\n  warehouse:\n    tools:\n      scale:\n        params:\n          namespace: {values: [[a]]}\n",
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, err := LoadPolicy(writePolicy(t, body))
@@ -120,19 +120,19 @@ func TestGlobMatch(t *testing.T) {
 }
 
 func TestPolicyCheckManifest(t *testing.T) {
-	specs := testActionManifest()
+	specs := testToolManifest()
 	for name, tc := range map[string]struct {
 		rules string
 		err   string
 	}{
 		"fits":                    {rules: "scale:\n        params:\n          namespace: {values: [payments]}\n          replicas: {min: 1, max: 10}\n"},
-		"unknown action":          {rules: "delete_everything: {}\n", err: "not in the plugin's manifest"},
+		"unknown tool":            {rules: "delete_everything: {}\n", err: "not in the plugin's manifest"},
 		"unknown parameter":       {rules: "scale:\n        params:\n          replica: {max: 3}\n", err: "has no parameter"},
 		"range on a string":       {rules: "scale:\n        params:\n          namespace: {max: 3}\n", err: "apply to int parameters"},
 		"string value for an int": {rules: "scale:\n        params:\n          replicas: {values: [three]}\n", err: "does not suit"},
 	} {
 		t.Run(name, func(t *testing.T) {
-			p, err := LoadPolicy(writePolicy(t, "sources:\n  prod:\n    actions:\n      "+tc.rules))
+			p, err := LoadPolicy(writePolicy(t, "sources:\n  prod:\n    tools:\n      "+tc.rules))
 			require.NoError(t, err)
 			err = p.CheckManifest("prod", specs)
 			if tc.err == "" {
@@ -144,19 +144,19 @@ func TestPolicyCheckManifest(t *testing.T) {
 	}
 }
 
-func TestActionPolicyNeedsTheFlagAndAPolicy(t *testing.T) {
-	p, err := LoadPolicy(writePolicy(t, "sources:\n  prod:\n    actions:\n      scale: {}\n"))
+func TestToolPolicyNeedsTheFlagAndAPolicy(t *testing.T) {
+	p, err := LoadPolicy(writePolicy(t, "sources:\n  prod:\n    tools:\n      scale: {}\n"))
 	require.NoError(t, err)
 
-	_, _, err = p.actionPolicy(false, "prod", "scale")
-	assert.ErrorIs(t, err, errActionsOff, "a policy naming the action is not enough without --allow-actions")
-	_, _, err = (*Policy)(nil).actionPolicy(true, "prod", "scale")
-	assert.ErrorIs(t, err, errActionsWithoutPolicy, "--allow-actions is not enough without a policy")
-	_, _, err = p.actionPolicy(true, "prod", "rollout_restart")
+	_, _, err = p.toolPolicy(false, "prod", "scale")
+	assert.ErrorIs(t, err, errToolsOff, "a policy naming the tool is not enough without --allow-tools")
+	_, _, err = (*Policy)(nil).toolPolicy(true, "prod", "scale")
+	assert.ErrorIs(t, err, errToolsWithoutPolicy, "--allow-tools is not enough without a policy")
+	_, _, err = p.toolPolicy(true, "prod", "rollout_restart")
 	assert.ErrorContains(t, err, "is not allowed")
-	_, _, err = p.actionPolicy(true, "staging", "scale")
+	_, _, err = p.toolPolicy(true, "staging", "scale")
 	assert.ErrorContains(t, err, "is not in the policy")
-	_, _, err = p.actionPolicy(true, "prod", "scale")
+	_, _, err = p.toolPolicy(true, "prod", "scale")
 	assert.NoError(t, err)
 }
 

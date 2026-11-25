@@ -111,7 +111,7 @@ const sidebars: SidebarsConfig = {
           link: {type: 'doc', id: 'Configure/serving-plugins'},
           items: [
             doc('Populating/serve-queries', 'Serve queries from your network'),
-            doc('Populating/kubernetes-actions', 'Act on a Kubernetes cluster'),
+            doc('Populating/kubernetes-tools', 'Act on a Kubernetes cluster'),
             doc('Configure/serving-reference', 'Runner reference'),
           ],
         },

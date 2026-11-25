@@ -1,6 +1,6 @@
 apiVersion: v2
-name: marmot-kubernetes-actions
-description: Grants a Marmot runner exactly the access the Kubernetes plugin's actions need, and an admission policy that holds it to those changes.
+name: marmot-kubernetes-tools
+description: Grants a Marmot runner exactly the access the Kubernetes plugin's tools need, and an admission policy that holds it to those changes.
 type: application
 version: 0.1.0
 kubeVersion: ">=1.30.0-0"

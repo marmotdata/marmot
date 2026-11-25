@@ -41,7 +41,7 @@ func approversOf(people []testApprover) []Approver {
 }
 
 // approve has Marmot approve call as it will be sent, on behalf of people, expiring in ttl, signed by hub's approval key as the tasks service does.
-func approve(t *testing.T, hub *Hub, call ActionCall, ttl time.Duration, people ...testApprover) *Approval {
+func approve(t *testing.T, hub *Hub, call ToolCall, ttl time.Duration, people ...testApprover) *Approval {
 	t.Helper()
 	a := &Approval{ExpiresAt: time.Now().Add(ttl), Approvers: approversOf(people)}
 	require.NoError(t, hub.SignApproval(call, a))
@@ -82,8 +82,8 @@ func loadApprovalsPolicy(t *testing.T, body string) *Policy {
 
 func testSubject() ApprovalSubject {
 	return ApprovalSubject{
-		Source: "prod", Action: "scale", Params: []byte(`{"replicas":3,"namespace":"payments"}`), Precondition: "41",
-		ManifestDigest: "sha256:" + strings.Repeat("a", 64), Origin: "task_run:7", Actor: "task:7", ActionID: "id-1",
+		Source: "prod", Tool: "scale", Params: []byte(`{"replicas":3,"namespace":"payments"}`), Precondition: "41",
+		ManifestDigest: "sha256:" + strings.Repeat("a", 64), Origin: "task_run:7", Actor: "task:7", ToolID: "id-1",
 	}
 }
 
@@ -101,16 +101,16 @@ func TestApprovalDigestIsCanonicalAndCoversEveryField(t *testing.T) {
 
 	for name, mutate := range map[string]func(*ApprovalSubject){
 		"source":       func(s *ApprovalSubject) { s.Source = "staging" },
-		"action":       func(s *ApprovalSubject) { s.Action = "rollout_restart" },
+		"tool":         func(s *ApprovalSubject) { s.Tool = "rollout_restart" },
 		"params":       func(s *ApprovalSubject) { s.Params = []byte(`{"replicas":4,"namespace":"payments"}`) },
 		"precondition": func(s *ApprovalSubject) { s.Precondition = "42" },
 		"manifest":     func(s *ApprovalSubject) { s.ManifestDigest = "sha256:" + strings.Repeat("b", 64) },
 		"origin":       func(s *ApprovalSubject) { s.Origin = "task_run:8" },
 		"actor":        func(s *ApprovalSubject) { s.Actor = "user:mallory" },
-		"action id":    func(s *ApprovalSubject) { s.ActionID = "id-2" },
+		"tool id":      func(s *ApprovalSubject) { s.ToolID = "id-2" },
 		"expiry":       func(s *ApprovalSubject) { s.ExpiresAt = s.ExpiresAt.Add(time.Second) },
 		// Length prefixes keep bytes from moving between fields unnoticed.
-		"a boundary": func(s *ApprovalSubject) { s.Source, s.Action = "prods", "cale" },
+		"a boundary": func(s *ApprovalSubject) { s.Source, s.Tool = "prods", "cale" },
 	} {
 		changed := s
 		mutate(&changed)
@@ -187,7 +187,7 @@ func TestVerifyApproval(t *testing.T) {
 		"the wrong key":  {data: signWith(t, other, subject, expires, approversOf([]testApprover{alice})), contains: "not signed by Marmot's approval key"},
 		// The query signing key, or any other, is not the approval key even if Marmot holds it.
 		"no approval key pinned": {data: signed(alice), keys: []*ecdsa.PublicKey{}, contains: "no approval key is pinned"},
-		"another action":         {data: signed(alice), subject: &another, contains: "not signed by Marmot's approval key for this action"},
+		"another tool":           {data: signed(alice), subject: &another, contains: "not signed by Marmot's approval key for this tool"},
 		"an approver swapped":    {data: tampered, contains: "not signed by Marmot's approval key"},
 		"too few distinct approvers": {
 			data: signed(alice), need: approvalNeed{required: 2}, contains: "needs 2 distinct approvers the policy admits and the approval has 1",
@@ -196,7 +196,7 @@ func TestVerifyApproval(t *testing.T) {
 			data: signWith(t, marmot, subject, expires, []Approver{{UserID: alice.id, Name: "alice", ApprovedAt: now}, {UserID: alice.id, Name: "alice again", ApprovedAt: now}}),
 			need: approvalNeed{required: 2}, contains: "named twice",
 		},
-		"not among the action's approvers": {data: signed(alice), need: approvalNeed{required: 1, approvers: []string{"bob"}}, contains: "the approval has 0"},
+		"not among the tool's approvers": {data: signed(alice), need: approvalNeed{required: 1, approvers: []string{"bob"}}, contains: "the approval has 0"},
 		"approved after it expired": {
 			data: signWith(t, marmot, subject, expires, []Approver{{UserID: alice.id, Name: "alice", ApprovedAt: expires.Add(time.Minute)}}), contains: "after the approval expired",
 		},
@@ -262,9 +262,9 @@ func TestApprovalsPolicyLoading(t *testing.T) {
 		"max_age above an hour":       {"approvals:\n  trust: marmot\n  max_age: 2h\n", "max_age"},
 		"a bad key fingerprint":       {"approvals:\n  trust: marmot\n  key_fingerprint: abc\n", "key_fingerprint"},
 		"an unknown key":              {approvalsYAML() + "  extra: 1\n", "extra"},
-		"approvals above two":         {approvalsYAML() + "sources:\n  s:\n    actions:\n      scale: {approvals: 3}\n", "0, 1 or 2"},
-		"more approvals than people":  {approvalsYAML() + "sources:\n  s:\n    actions:\n      scale: {approvals: 2, approvers: [alice]}\n", "only 1 may approve"},
-		"approvers without a section": {"sources:\n  s:\n    actions:\n      scale: {approvers: [alice]}\n", "no approvals section"},
+		"approvals above two":         {approvalsYAML() + "sources:\n  s:\n    tools:\n      scale: {approvals: 3}\n", "0, 1 or 2"},
+		"more approvals than people":  {approvalsYAML() + "sources:\n  s:\n    tools:\n      scale: {approvals: 2, approvers: [alice]}\n", "only 1 may approve"},
+		"approvers without a section": {"sources:\n  s:\n    tools:\n      scale: {approvers: [alice]}\n", "no approvals section"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, err := LoadPolicy(writePolicy(t, tc.body))
@@ -281,15 +281,15 @@ func TestApprovalsPolicyLoading(t *testing.T) {
 }
 
 func TestApprovalsAgainstTheManifest(t *testing.T) {
-	specs := append(testActionManifest(), testReadSpec())
+	specs := append(testToolManifest(), testReadSpec())
 	check := func(body string) error {
 		p := loadApprovalsPolicy(t, approvalsYAML()+body)
 		return p.CheckManifest("s", specs)
 	}
-	assert.NoError(t, check("sources:\n  s:\n    actions:\n      scale: {approvals: 0}\n"), "scale is risk 1 and reversible here")
-	assert.ErrorContains(t, check("sources:\n  s:\n    actions:\n      rollout_restart: {approvals: 0}\n"), "only allowed for a risk 1, reversible action")
-	assert.ErrorContains(t, check("sources:\n  s:\n    actions:\n      read_status: {approvals: 1}\n"), "reads take no approvals")
-	assert.NoError(t, check("sources:\n  s:\n    actions:\n      read_status: {}\n"))
+	assert.NoError(t, check("sources:\n  s:\n    tools:\n      scale: {approvals: 0}\n"), "scale is risk 1 and reversible here")
+	assert.ErrorContains(t, check("sources:\n  s:\n    tools:\n      rollout_restart: {approvals: 0}\n"), "only allowed for a risk 1, reversible tool")
+	assert.ErrorContains(t, check("sources:\n  s:\n    tools:\n      read_status: {approvals: 1}\n"), "reads take no approvals")
+	assert.NoError(t, check("sources:\n  s:\n    tools:\n      read_status: {}\n"))
 }
 
 // A spent approval stays spent across a restart: the intent line carries its digest and the process reads it back.
@@ -299,7 +299,7 @@ func TestSpentApprovalsSurviveARestart(t *testing.T) {
 	require.NoError(t, err)
 	digest := []byte("0123456789abcdef0123456789abcdef")
 	expires := time.Now().Add(10 * time.Minute)
-	require.NoError(t, log1.Append(withApproval(AuditEntry{Event: AuditActionIntent, Time: time.Now().UTC()}, &verifiedApproval{digest: digest, expiresAt: expires, approvers: []*pb.Approver{{UserId: alice.id, Name: "alice"}}})))
+	require.NoError(t, log1.Append(withApproval(AuditEntry{Event: AuditToolIntent, Time: time.Now().UTC()}, &verifiedApproval{digest: digest, expiresAt: expires, approvers: []*pb.Approver{{UserId: alice.id, Name: "alice"}}})))
 	// Lines enough to push the intent back across a read chunk.
 	for range 2000 {
 		require.NoError(t, log1.Append(AuditEntry{Event: AuditPlan, Time: time.Now().UTC(), Reason: strings.Repeat("x", 40)}))

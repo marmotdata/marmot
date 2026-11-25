@@ -15,7 +15,7 @@ The plugin needs a token. Prefer a [fine-grained personal access token](https://
 | `open_pull_request` | Contents: write, Pull requests: write |
 | `close_pull_request`, `reopen_pull_request` | Pull requests: write |
 | `comment_on_pull_request`, `delete_comment` | Pull requests: write |
-| Any of the above with `actions.allow_ci_changes` | Workflows: write as well |
+| Any of the above with `tools.allow_ci_changes` | Workflows: write as well |
 
 A classic token's `repo` scope grants all of this and much more besides, including every repository its user can reach, so avoid it.
 
@@ -41,11 +41,11 @@ tags:
   - "${language}"
 ```
 
-## Actions
+## Tools
 
-Besides discovery, the plugin can propose changes, which a runner allowed to take actions runs on your behalf. It works through pull requests: it never merges, never pushes to a branch it did not just create, never deletes a branch other than its own and never touches repository settings. Every write is previewed first, and runs only if what it acts on is still exactly as previewed.
+Besides discovery, the plugin can propose changes, which a runner allowed to take tools runs on your behalf. It works through pull requests: it never merges, never pushes to a branch it did not just create, never deletes a branch other than its own and never touches repository settings. Every write is previewed first, and runs only if what it acts on is still exactly as previewed.
 
-| Action | Changes | Undone by |
+| Tool | Changes | Undone by |
 | --- | --- | --- |
 | `open_pull_request` | Creates a branch from `base`, commits up to three edits in one commit and opens a pull request. Refused if `base` has moved since the plan | `close_pull_request` |
 | `close_pull_request` | Closes an open pull request from one of the plugin's branches. The branch is kept | `reopen_pull_request` |
@@ -53,16 +53,16 @@ Besides discovery, the plugin can propose changes, which a runner allowed to tak
 | `comment_on_pull_request` | Adds a comment to an open pull request. Refused if the pull request has new commits since the plan | `delete_comment` |
 | `delete_comment` | Deletes a comment the plugin posted | `comment_on_pull_request`, as a new comment |
 
-Each edit replaces text that occurs exactly once in an existing file with new text, and the plan shows the change as a unified diff. Action parameters cannot hold a line break, so an edit stays within one line: bumping a version, changing a setting or fixing a typo. The plugin cannot create, delete or rename files, and refuses binary files, symbolic links and submodules.
+Each edit replaces text that occurs exactly once in an existing file with new text, and the plan shows the change as a unified diff. Tool parameters cannot hold a line break, so an edit stays within one line: bumping a version, changing a setting or fixing a typo. The plugin cannot create, delete or rename files, and refuses binary files, symbolic links and submodules.
 
-A pull request is the plugin's own when its branch starts with `actions.branch_prefix` in the same repository; a fork's branch never counts. Commits carry `Marmot-Origin` and `Marmot-Actor` trailers, and pull requests and comments end with a line naming who asked and from where. A comment also carries a hidden marker, and `delete_comment` refuses any comment without it or written by another account.
+A pull request is the plugin's own when its branch starts with `tools.branch_prefix` in the same repository; a fork's branch never counts. Commits carry `Marmot-Origin` and `Marmot-Actor` trailers, and pull requests and comments end with a line naming who asked and from where. A comment also carries a hidden marker, and `delete_comment` refuses any comment without it or written by another account.
 
-Changes to `.github/workflows` and `.github/actions` are refused. A pull request from a branch in the repository runs its own version of the workflows, with the repository's secrets, before anyone reviews it, so letting an action change them would let it change what CI does with those secrets. Set `actions.allow_ci_changes` only if you accept that. Workflows on `pull_request` still run against every branch the plugin creates, and run whatever scripts the branch holds, so keep deployment secrets in [environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) that require review.
+Changes to `.github/workflows` and `.github/actions` are refused. A pull request from a branch in the repository runs its own version of the workflows, with the repository's secrets, before anyone reviews it, so letting a tool change them would let it change what CI does with those secrets. Set `tools.allow_ci_changes` only if you accept that. Workflows on `pull_request` still run against every branch the plugin creates, and run whatever scripts the branch holds, so keep deployment secrets in [environments](https://docs.github.com/en/tools/deployment/targeting-different-environments/using-environments-for-deployment) that require review.
 
-Writes need the repository in `actions.repos`; without it they are refused before the repository is read:
+Writes need the repository in `tools.repos`; without it they are refused before the repository is read:
 
 ```yaml
-actions:
+tools:
   repos:
     - "pipelines"
   branch_prefix: "marmot/"
@@ -75,7 +75,7 @@ actions:
 
 ### Reads
 
-Three actions only read, so a task can look before it proposes a change. They need no plan and no approval, but the runner's policy must still name each one. They reach only the repositories discovery would catalogue and need no entry in `actions.repos`.
+Three tools only read, so a task can look before it proposes a change. They need no plan and no approval, but the runner's policy must still name each one. They reach only the repositories discovery would catalogue and need no entry in `tools.repos`.
 
 | Read | Returns |
 | --- | --- |
@@ -87,7 +87,7 @@ File contents and pull request titles are written by whoever can push or open a 
 
 ### Runner policy
 
-The runner's policy names each read and action it serves, and anything it leaves out is refused. An undo runs the inverse action, so name that too if undo should work:
+The runner's policy names each read and tool it serves, and anything it leaves out is refused. An undo runs the inverse tool, so name that too if undo should work:
 
 ```yaml
 approvals:
@@ -97,7 +97,7 @@ sources:
   github-acme:
     query: false
     origins: ["task_run:*"]
-    actions:
+    tools:
       read_file: {}
       list_files: {}
       list_pull_requests: {}

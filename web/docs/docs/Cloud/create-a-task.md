@@ -10,7 +10,7 @@ Create a task from a ready-made starter or from scratch, choosing when it runs, 
 ## Before you start
 
 - You hold `task.editor` across the whole catalog.
-- For a task that acts on a cluster, a runner serves it. See [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-actions.md).
+- For a task that acts on a cluster, a runner serves it. See [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-tools.md).
 - Optional: a runbook in **Knowledge** for the task to follow, such as "Payments crash loop".
 
 ## Start from a starter
@@ -60,14 +60,14 @@ Under **What should it do?**, write the job as you'd brief a colleague: what to 
 
 ## Choose what it may do
 
-**What may it do?** lists what each connected runner offers, with what each action needs. Leave everything unticked and the task only reads, as the person it runs as.
+**What may it do?** lists what each connected runner offers, with what each tool needs. Leave everything unticked and the task only reads, as the person it runs as.
 
 1. Tick **Read a workload's status**, **Read a pod's logs** and **Read recent events**.
 2. Tick **Restart a workload**. It shows **Changes things** and **Needs 1 approval**.
 3. Optional: open the row to require more approvals than the runner asks for, or to narrow its parameters.
 4. Select **Continue**.
 
-Actions under **Not allowed by the runner** are ones the runner's policy doesn't name. Ask whoever runs the runner to add them.
+Tools under **Not allowed by the runner** are ones the runner's policy doesn't name. Ask whoever runs the runner to add them.
 
 ## Check and create it
 
@@ -77,7 +77,7 @@ Actions under **Not allowed by the runner** are ones the runner's policy doesn't
 
 ## Check that it worked
 
-Open the task from **Your tasks**. Its page shows when it runs and, under **Actions**, what it may change and what it only looks at. After a run, **Latest result** shows the answer, and **Run history** lists each run. Open a run to see every step the agent took.
+Open the task from **Your tasks**. Its page shows when it runs and, under **Tools**, what it may change and what it only looks at. After a run, **Latest result** shows the answer, and **Run history** lists each run. Open a run to see every step the agent took.
 
 When the task proposes a change, it appears under **Waiting for you** on the Tasks page for everyone who can approve it.
 
@@ -86,11 +86,11 @@ When the task proposes a change, it appears under **Waiting for you** on the Tas
 | What you see | What to do |
 | --- | --- |
 | **Where from** shows the runner's source as **Not connected** | The runner isn't connected. Check that it's running and can reach Marmot. |
-| **What may it do?** says no source is served from a runner | Set up a runner. See [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-actions.md). |
+| **What may it do?** says no source is served from a runner | Set up a runner. See [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-tools.md). |
 | A run fails with **Step limit reached** | The job needs more steps than allowed. Make the job narrower, or name the tables or runbook it should use. |
 | A run ends **Not completed** | The agent couldn't answer the job as written. Open the run to see why, then select **Edit question**. |
 | **Plan limit reached** | Your plan's runs per day or tokens per month are used up. Runs start again the next day, or the next month for tokens. |
-| The task's actions are paused | The same target kept coming back after a change. Find out why, then select **Resume actions** on the task's page. |
+| The task's tools are paused | The same target kept coming back after a change. Find out why, then select **Resume tools** on the task's page. |
 
 ## Next steps
 

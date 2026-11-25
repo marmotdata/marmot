@@ -25,10 +25,10 @@ import (
 )
 
 const (
-	// fieldManager owns every field an action writes, so server-side
+	// fieldManager owns every field a tool writes, so server-side
 	// apply and managedFields show which changes came from Marmot.
 	fieldManager = "marmot"
-	// The two stamps every action leaves on the object it changes.
+	// The two stamps every tool leaves on the object it changes.
 	annotationOrigin = "marmot.io/origin"
 	annotationActor  = "marmot.io/actor"
 
@@ -38,28 +38,28 @@ const (
 
 var (
 	// ErrStale is returned when the object changed after it was planned.
-	ErrStale = errors.New("the object changed since the action was planned; plan it again")
+	ErrStale = errors.New("the object changed since the tool was planned; plan it again")
 	// ErrGitOpsManaged is returned for an object Flux or Argo CD manages.
 	ErrGitOpsManaged = errors.New("managed by GitOps")
-	// ErrOutOfScope is returned for an object the runner's actions config
+	// ErrOutOfScope is returned for an object the runner's tools config
 	// does not allow.
-	ErrOutOfScope = errors.New("outside the actions scope")
+	ErrOutOfScope = errors.New("outside the tools scope")
 	// ErrLastNode refuses a cordon that would leave no node new pods can land on.
 	ErrLastNode = errors.New("the last schedulable node")
 )
 
-// ActionEngine plans and executes the plugin's actions against one cluster.
-// It is exported so the cloud plugins (eks, gke) can offer the same actions
+// ToolEngine plans and executes the plugin's tools against one cluster.
+// It is exported so the cloud plugins (eks, gke) can offer the same tools
 // with their own authentication, as they reuse Discoverer.
-type ActionEngine struct {
+type ToolEngine struct {
 	client   k8s.Interface
-	config   ActionsConfig
+	config   ToolsConfig
 	selector labels.Selector
 	now      func() time.Time
 }
 
-// NewActionEngine returns an engine bound by config.
-func NewActionEngine(client k8s.Interface, config ActionsConfig) (*ActionEngine, error) {
+// NewToolEngine returns an engine bound by config.
+func NewToolEngine(client k8s.Interface, config ToolsConfig) (*ToolEngine, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func NewActionEngine(client k8s.Interface, config ActionsConfig) (*ActionEngine,
 	if err != nil {
 		return nil, err
 	}
-	return &ActionEngine{client: client, config: config, selector: selector, now: time.Now}, nil
+	return &ToolEngine{client: client, config: config, selector: selector, now: time.Now}, nil
 }
 
 // object is what every target kind's typed client returns.
@@ -76,8 +76,8 @@ type object interface {
 	runtime.Object
 }
 
-// target is one object an action changes, with the only two calls an
-// action ever makes on it.
+// target is one object a tool changes, with the only two calls an
+// tool ever makes on it.
 type target struct {
 	kind  pluginsdk.TargetKind
 	label string
@@ -110,22 +110,22 @@ func newTarget[T object](kind pluginsdk.TargetKind, label, name string, c getPat
 }
 
 // resolve maps a request onto its target, refusing a namespace outside the
-// actions scope before anything is read from it.
-func (e *ActionEngine) resolve(req pluginsdk.ActionRequest) (*target, error) {
+// tools scope before anything is read from it.
+func (e *ToolEngine) resolve(req pluginsdk.ToolRequest) (*target, error) {
 	ns, name := req.StringParam("namespace"), req.StringParam("name")
 
 	kind := req.StringParam("kind")
-	switch req.Action {
-	case actionRolloutUndo:
+	switch req.Tool {
+	case toolRolloutUndo:
 		kind = "deployment"
-	case actionCordon, actionUncordon:
+	case toolCordon, toolUncordon:
 		kind = "node"
-	case actionSuspendCronJob, actionResumeCronJob:
+	case toolSuspendCronJob, toolResumeCronJob:
 		kind = "cronjob"
 	}
 
 	if kind != "node" && !e.config.inScope(ns) {
-		return nil, fmt.Errorf("namespace %q is %w: allow it in actions.namespaces", ns, ErrOutOfScope)
+		return nil, fmt.Errorf("namespace %q is %w: allow it in tools.namespaces", ns, ErrOutOfScope)
 	}
 
 	label := kind + "/" + ns + "/" + name
@@ -141,19 +141,19 @@ func (e *ActionEngine) resolve(req pluginsdk.ActionRequest) (*target, error) {
 	case "node":
 		return newTarget(kindNode, "node/"+name, name, e.client.CoreV1().Nodes()), nil
 	}
-	return nil, fmt.Errorf("action %s does not apply to kind %q", req.Action, kind)
+	return nil, fmt.Errorf("tool %s does not apply to kind %q", req.Tool, kind)
 }
 
-// admit refuses an object the runner's config does not let actions touch.
-func (e *ActionEngine) admit(t *target, obj object) error {
+// admit refuses an object the runner's config does not let tools touch.
+func (e *ToolEngine) admit(t *target, obj object) error {
 	if !e.selector.Matches(labels.Set(obj.GetLabels())) {
-		return fmt.Errorf("%s does not match actions.selector %q: %w", t.label, e.config.Selector, ErrOutOfScope)
+		return fmt.Errorf("%s does not match tools.selector %q: %w", t.label, e.config.Selector, ErrOutOfScope)
 	}
 	if e.config.AllowGitOpsManaged {
 		return nil
 	}
 	if manager, key, ok := gitOpsManager(obj); ok {
-		return fmt.Errorf("%s is %w by %s (%s): make the change in Git, or the next reconcile may revert it. Set actions.allow_gitops_managed to act on it anyway",
+		return fmt.Errorf("%s is %w by %s (%s): make the change in Git, or the next reconcile may revert it. Set tools.allow_gitops_managed to act on it anyway",
 			t.label, ErrGitOpsManaged, manager, key)
 	}
 	return nil
@@ -200,21 +200,21 @@ type change struct {
 	summary  string
 	warnings []string
 	// undo is the inverse request, filled from the state before the change.
-	undo *pluginsdk.ActionRequest
+	undo *pluginsdk.ToolRequest
 }
 
 // patchOp is one JSON patch operation. Value is never omitted, since false
-// and 0 are values an action writes.
+// and 0 are values a tool writes.
 type patchOp struct {
 	Op    string `json:"op"`
 	Path  string `json:"path"`
 	Value any    `json:"value"`
 }
 
-// Plan previews the action with a server-side dry run, so admission
+// Plan previews the tool with a server-side dry run, so admission
 // webhooks and defaulting have their say exactly as they would for real,
 // and nothing is persisted for any input.
-func (e *ActionEngine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionPlan, error) {
+func (e *ToolEngine) Plan(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolPlan, error) {
 	t, obj, ch, err := e.prepare(ctx, req)
 	if err != nil {
 		return nil, err
@@ -222,14 +222,14 @@ func (e *ActionEngine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*
 
 	after, err := t.patch(ctx, e.patchFor(obj, obj.GetResourceVersion(), ch, req), true)
 	if err != nil {
-		return nil, fmt.Errorf("dry run of %s on %s: %w", req.Action, t.label, err)
+		return nil, fmt.Errorf("dry run of %s on %s: %w", req.Tool, t.label, err)
 	}
 	before, afterJSON, diff, err := diffObjects(obj, after)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pluginsdk.ActionPlan{
+	return &pluginsdk.ToolPlan{
 		Target:       t.label,
 		TargetKind:   t.kind,
 		Summary:      ch.summary,
@@ -241,17 +241,17 @@ func (e *ActionEngine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*
 	}, nil
 }
 
-// Execute applies the action only if the object is still at the
+// Execute applies the tool only if the object is still at the
 // resourceVersion its plan saw. The check is made twice: once here for a
 // clear error, and again inside the patch as a JSON patch test, which the
 // API server applies atomically, so a change landing in between is refused
 // too.
-func (e *ActionEngine) Execute(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, error) {
-	if isRead(req.Action) {
+func (e *ToolEngine) Execute(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, error) {
+	if isRead(req.Tool) {
 		return e.read(ctx, req)
 	}
 	if req.Precondition == "" {
-		return nil, fmt.Errorf("executing %s needs the precondition from its plan", req.Action)
+		return nil, fmt.Errorf("executing %s needs the precondition from its plan", req.Tool)
 	}
 	t, obj, ch, err := e.prepare(ctx, req)
 	if err != nil {
@@ -263,7 +263,7 @@ func (e *ActionEngine) Execute(ctx context.Context, req pluginsdk.ActionRequest)
 
 	after, err := t.patch(ctx, e.patchFor(obj, req.Precondition, ch, req), false)
 	if err != nil {
-		return nil, fmt.Errorf("%s on %s was refused, and if the object changed since the plan, plan it again: %w", req.Action, t.label, err)
+		return nil, fmt.Errorf("%s on %s was refused, and if the object changed since the plan, plan it again: %w", req.Tool, t.label, err)
 	}
 	before, afterJSON, _, err := diffObjects(obj, after)
 	if err != nil {
@@ -271,7 +271,7 @@ func (e *ActionEngine) Execute(ctx context.Context, req pluginsdk.ActionRequest)
 		before, afterJSON = nil, nil
 	}
 
-	return &pluginsdk.ActionResult{
+	return &pluginsdk.ToolResult{
 		Target:     t.label,
 		TargetKind: t.kind,
 		Summary:    ch.summary,
@@ -282,10 +282,10 @@ func (e *ActionEngine) Execute(ctx context.Context, req pluginsdk.ActionRequest)
 	}, nil
 }
 
-func (e *ActionEngine) prepare(ctx context.Context, req pluginsdk.ActionRequest) (*target, object, *change, error) {
+func (e *ToolEngine) prepare(ctx context.Context, req pluginsdk.ToolRequest) (*target, object, *change, error) {
 	// Serve has already checked the request, but the engine is exported for
 	// the cloud plugins, so it does not rely on being called through Serve.
-	if _, err := pluginsdk.CheckActionRequest(ActionSpecs(), req, false); err != nil {
+	if _, err := pluginsdk.CheckToolRequest(ToolSpecs(), req, false); err != nil {
 		return nil, nil, nil, err
 	}
 	t, err := e.resolve(req)
@@ -301,19 +301,19 @@ func (e *ActionEngine) prepare(ctx context.Context, req pluginsdk.ActionRequest)
 	}
 
 	var ch *change
-	switch req.Action {
-	case actionScale:
+	switch req.Tool {
+	case toolScale:
 		ch, err = e.scale(ctx, t, obj, req)
-	case actionRolloutRestart:
+	case toolRolloutRestart:
 		ch, err = e.restart(t, obj)
-	case actionRolloutUndo:
+	case toolRolloutUndo:
 		ch, err = e.rollbackDeployment(ctx, t, obj.(*appsv1.Deployment), req)
-	case actionCordon, actionUncordon:
-		ch, err = e.cordon(ctx, t, obj.(*corev1.Node), req.Action == actionCordon)
-	case actionSuspendCronJob, actionResumeCronJob:
-		ch, err = suspendCronJob(t, obj.(*batchv1.CronJob), req.Action == actionSuspendCronJob)
+	case toolCordon, toolUncordon:
+		ch, err = e.cordon(ctx, t, obj.(*corev1.Node), req.Tool == toolCordon)
+	case toolSuspendCronJob, toolResumeCronJob:
+		ch, err = suspendCronJob(t, obj.(*batchv1.CronJob), req.Tool == toolSuspendCronJob)
 	default:
-		err = fmt.Errorf("unknown action %q", req.Action)
+		err = fmt.Errorf("unknown tool %q", req.Tool)
 	}
 	if err != nil {
 		return nil, nil, nil, err
@@ -326,7 +326,7 @@ func (e *ActionEngine) prepare(ctx context.Context, req pluginsdk.ActionRequest)
 
 // patchFor wraps a verb's operations in the resourceVersion test and the
 // origin and actor stamps.
-func (e *ActionEngine) patchFor(obj object, resourceVersion string, ch *change, req pluginsdk.ActionRequest) []byte {
+func (e *ToolEngine) patchFor(obj object, resourceVersion string, ch *change, req pluginsdk.ToolRequest) []byte {
 	ops := []patchOp{{Op: "test", Path: "/metadata/resourceVersion", Value: resourceVersion}}
 	ops = append(ops, ch.ops...)
 	ops = append(ops, annotationOps("/metadata/annotations", obj.GetAnnotations(), map[string]string{
@@ -364,10 +364,10 @@ func escapePointer(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, "~", "~0"), "/", "~1")
 }
 
-func (e *ActionEngine) scale(ctx context.Context, t *target, obj object, req pluginsdk.ActionRequest) (*change, error) {
+func (e *ToolEngine) scale(ctx context.Context, t *target, obj object, req pluginsdk.ToolRequest) (*change, error) {
 	replicas, _ := req.IntParam("replicas")
 	if limit := e.config.maxReplicas(); replicas > limit {
-		return nil, fmt.Errorf("%d replicas is above this runner's actions.max_replicas of %d", replicas, limit)
+		return nil, fmt.Errorf("%d replicas is above this runner's tools.max_replicas of %d", replicas, limit)
 	}
 
 	var current *int32
@@ -392,7 +392,7 @@ func (e *ActionEngine) scale(ctx context.Context, t *target, obj object, req plu
 	ch := &change{
 		ops:     []patchOp{{Op: "add", Path: "/spec/replicas", Value: replicas}},
 		summary: fmt.Sprintf("Scale %s from %d to %d replicas", t.label, previous, replicas),
-		undo: &pluginsdk.ActionRequest{Action: actionScale, Params: map[string]any{
+		undo: &pluginsdk.ToolRequest{Tool: toolScale, Params: map[string]any{
 			"kind": req.StringParam("kind"), "namespace": obj.GetNamespace(), "name": obj.GetName(), "replicas": previous,
 		}},
 	}
@@ -406,7 +406,7 @@ func (e *ActionEngine) scale(ctx context.Context, t *target, obj object, req plu
 // autoscalerWarnings flags a HorizontalPodAutoscaler that would undo a
 // scale. It is advice only: a runner without access to autoscalers is told
 // it could not check rather than refused.
-func (e *ActionEngine) autoscalerWarnings(ctx context.Context, namespace, kind, name string) []string {
+func (e *ToolEngine) autoscalerWarnings(ctx context.Context, namespace, kind, name string) []string {
 	list, err := e.client.AutoscalingV2().HorizontalPodAutoscalers(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return []string{fmt.Sprintf("could not check for a HorizontalPodAutoscaler: %v", err)}
@@ -421,7 +421,7 @@ func (e *ActionEngine) autoscalerWarnings(ctx context.Context, namespace, kind, 
 	return warnings
 }
 
-func (e *ActionEngine) restart(t *target, obj object) (*change, error) {
+func (e *ToolEngine) restart(t *target, obj object) (*change, error) {
 	var template corev1.PodTemplateSpec
 	var warnings []string
 	switch o := obj.(type) {
@@ -457,7 +457,7 @@ func (e *ActionEngine) restart(t *target, obj object) (*change, error) {
 // rollbackDeployment does what kubectl rollout undo does: find the
 // ReplicaSet of the wanted revision among those the Deployment controls and
 // copy its pod template back. ReplicaSets are read, never written.
-func (e *ActionEngine) rollbackDeployment(ctx context.Context, t *target, dep *appsv1.Deployment, req pluginsdk.ActionRequest) (*change, error) {
+func (e *ToolEngine) rollbackDeployment(ctx context.Context, t *target, dep *appsv1.Deployment, req pluginsdk.ToolRequest) (*change, error) {
 	if dep.Spec.Paused {
 		return nil, fmt.Errorf("%s is paused; resume it before rolling back", t.label)
 	}
@@ -518,13 +518,13 @@ func (e *ActionEngine) rollbackDeployment(ctx context.Context, t *target, dep *a
 		// The controller renumbers the restored ReplicaSet as the newest
 		// revision and leaves the one replaced here at current, so rolling
 		// back to current is the exact inverse.
-		undo: &pluginsdk.ActionRequest{Action: actionRolloutUndo, Params: map[string]any{
+		undo: &pluginsdk.ToolRequest{Tool: toolRolloutUndo, Params: map[string]any{
 			"namespace": dep.Namespace, "name": dep.Name, "to_revision": current,
 		}},
 	}, nil
 }
 
-func (e *ActionEngine) cordon(ctx context.Context, t *target, node *corev1.Node, cordon bool) (*change, error) {
+func (e *ToolEngine) cordon(ctx context.Context, t *target, node *corev1.Node, cordon bool) (*change, error) {
 	if node.Spec.Unschedulable == cordon {
 		state := "schedulable"
 		if cordon {
@@ -536,14 +536,14 @@ func (e *ActionEngine) cordon(ctx context.Context, t *target, node *corev1.Node,
 	ch := &change{
 		ops:     []patchOp{{Op: "add", Path: "/spec/unschedulable", Value: cordon}},
 		summary: fmt.Sprintf("Uncordon %s so pods can be scheduled on it again", t.label),
-		undo:    &pluginsdk.ActionRequest{Action: actionCordon, Params: map[string]any{"name": node.Name}},
+		undo:    &pluginsdk.ToolRequest{Tool: toolCordon, Params: map[string]any{"name": node.Name}},
 	}
 	if !cordon {
 		return ch, nil
 	}
 
 	ch.summary = fmt.Sprintf("Cordon %s so no new pods are scheduled on it; running pods stay", t.label)
-	ch.undo = &pluginsdk.ActionRequest{Action: actionUncordon, Params: map[string]any{"name": node.Name}}
+	ch.undo = &pluginsdk.ToolRequest{Tool: toolUncordon, Params: map[string]any{"name": node.Name}}
 	if _, ok := node.Labels["node-role.kubernetes.io/control-plane"]; ok {
 		ch.warnings = append(ch.warnings, fmt.Sprintf("%s is a control plane node", t.label))
 	}
@@ -560,7 +560,7 @@ func (e *ActionEngine) cordon(ctx context.Context, t *target, node *corev1.Node,
 		}
 	}
 	// Cordoning the last node leaves nowhere for anything to be scheduled,
-	// which no single bounded action should be able to do.
+	// which no single bounded tool should be able to do.
 	if schedulable == 0 {
 		return nil, fmt.Errorf("%s is %w", t.label, ErrLastNode)
 	}
@@ -583,18 +583,18 @@ func suspendCronJob(t *target, cj *batchv1.CronJob, suspend bool) (*change, erro
 		return &change{
 			ops:     []patchOp{{Op: "add", Path: "/spec/suspend", Value: true}},
 			summary: fmt.Sprintf("Suspend %s so it starts no new runs", t.label),
-			undo:    &pluginsdk.ActionRequest{Action: actionResumeCronJob, Params: params},
+			undo:    &pluginsdk.ToolRequest{Tool: toolResumeCronJob, Params: params},
 		}, nil
 	}
 	return &change{
 		ops:      []patchOp{{Op: "add", Path: "/spec/suspend", Value: false}},
 		summary:  fmt.Sprintf("Resume %s", t.label),
 		warnings: []string{"a run missed while suspended may start straight away, within startingDeadlineSeconds"},
-		undo:     &pluginsdk.ActionRequest{Action: actionSuspendCronJob, Params: params},
+		undo:     &pluginsdk.ToolRequest{Tool: toolSuspendCronJob, Params: params},
 	}, nil
 }
 
-// ignoredPaths change on every write and say nothing about the action.
+// ignoredPaths change on every write and say nothing about the tool.
 var ignoredPaths = [][]string{
 	{"metadata", "resourceVersion"},
 	{"metadata", "generation"},

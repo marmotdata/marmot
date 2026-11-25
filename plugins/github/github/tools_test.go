@@ -15,34 +15,34 @@ import (
 
 const settings = "retries: 3\ntimeout: 30\nschedule: \"@daily\"\nowner: data\n"
 
-func actionFixture(t *testing.T) *fakeGitHub {
+func toolFixture(t *testing.T) *fakeGitHub {
 	f := newFake(t)
 	f.addRepo("pipelines", map[string]any{"private": true, "visibility": "private"}, map[string]string{
-		"config/settings.yaml":       settings,
-		"README.md":                  "# Pipelines\n",
-		"run.sh":                     "#!/bin/sh\nexec python -m pipelines --env=prod\n",
-		".github/workflows/ci.yml":   "on: pull_request\n",
-		".github/actions/x/action.y": "runs: {}\n",
-		"logo.png":                   "\x89PNG\x00",
-		"twice.txt":                  "a=1\na=1\n",
+		"config/settings.yaml":     settings,
+		"README.md":                "# Pipelines\n",
+		"run.sh":                   "#!/bin/sh\nexec python -m pipelines --env=prod\n",
+		".github/workflows/ci.yml": "on: pull_request\n",
+		".github/actions/x/tool.y": "runs: {}\n",
+		"logo.png":                 "\x89PNG\x00",
+		"twice.txt":                "a=1\na=1\n",
 	})
 	f.repos["pipelines"].meta["topics"] = []string{"data"}
 	f.addRepo("website", nil, map[string]string{"index.html": "hi"})
 	return f
 }
 
-func writeEngine(t *testing.T, f *fakeGitHub, actions map[string]any) *engine {
+func writeEngine(t *testing.T, f *fakeGitHub, tools map[string]any) *engine {
 	t.Helper()
-	if actions == nil {
-		actions = map[string]any{}
+	if tools == nil {
+		tools = map[string]any{}
 	}
-	if _, ok := actions["repos"]; !ok {
-		actions["repos"] = []string{"pipelines"}
+	if _, ok := tools["repos"]; !ok {
+		tools["repos"] = []string{"pipelines"}
 	}
-	return testEngine(t, f, map[string]any{"actions": actions})
+	return testEngine(t, f, map[string]any{"tools": tools})
 }
 
-func openRequest(edits ...string) pluginsdk.ActionRequest {
+func openRequest(edits ...string) pluginsdk.ToolRequest {
 	params := map[string]any{"repo": "pipelines", "title": "Retry five times"}
 	for i := 0; i+2 < len(edits); i += 3 {
 		n := i/3 + 1
@@ -50,12 +50,12 @@ func openRequest(edits ...string) pluginsdk.ActionRequest {
 		params[fmt.Sprintf("old_%d", n)] = edits[i+1]
 		params[fmt.Sprintf("new_%d", n)] = edits[i+2]
 	}
-	return request(actionOpenPullRequest, params)
+	return request(toolOpenPullRequest, params)
 }
 
 // planAndExecute plans, checks the plan wrote nothing, then executes with
 // the plan's precondition.
-func planAndExecute(t *testing.T, f *fakeGitHub, e *engine, req pluginsdk.ActionRequest) (*pluginsdk.ActionPlan, *pluginsdk.ActionResult) {
+func planAndExecute(t *testing.T, f *fakeGitHub, e *engine, req pluginsdk.ToolRequest) (*pluginsdk.ToolPlan, *pluginsdk.ToolResult) {
 	t.Helper()
 	writes := f.writes()
 	plan, err := e.Plan(context.Background(), req)
@@ -69,13 +69,13 @@ func planAndExecute(t *testing.T, f *fakeGitHub, e *engine, req pluginsdk.Action
 	return plan, result
 }
 
-func TestActionManifestIsValid(t *testing.T) {
-	require.NoError(t, pluginsdk.ValidateManifest(ActionSpecs()))
-	assert.Equal(t, pluginsdk.ManifestDigest(ActionSpecs()), pluginsdk.ManifestDigest(ActionSpecs()))
+func TestToolManifestIsValid(t *testing.T) {
+	require.NoError(t, pluginsdk.ValidateManifest(ToolSpecs()))
+	assert.Equal(t, pluginsdk.ManifestDigest(ToolSpecs()), pluginsdk.ManifestDigest(ToolSpecs()))
 }
 
 func TestOpenPullRequest(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	base := f.repos["pipelines"].branches["main"]
 	req := openRequest(
@@ -116,12 +116,12 @@ func TestOpenPullRequest(t *testing.T) {
 	assert.Contains(t, pr.body, "Opened by Marmot for `user:alice` (`task_run:42`)")
 
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionClosePullRequest, result.Undo.Action)
+	assert.Equal(t, toolClosePullRequest, result.Undo.Tool)
 	assert.Equal(t, int64(1), result.Undo.Params["number"])
 	assert.Contains(t, string(result.After), `"number":1`)
 
 	for _, ua := range f.userAgents {
-		assert.Equal(t, "marmot-plugin-github/actions (origin task_run:42)", ua)
+		assert.Equal(t, "marmot-plugin-github/tools (origin task_run:42)", ua)
 	}
 
 	// Executing again finds its own branch rather than opening a second
@@ -133,7 +133,7 @@ func TestOpenPullRequest(t *testing.T) {
 }
 
 func TestOpenPullRequestKeepsTheFileMode(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	f.commit("pipelines", "main", map[string]string{"bin/run": "#!/bin/sh\necho old\n"}, map[string]string{"bin/run": "100755"})
 	e := writeEngine(t, f, nil)
 	plan, _ := planAndExecute(t, f, e, openRequest("bin/run", "echo old", "echo new"))
@@ -142,7 +142,7 @@ func TestOpenPullRequestKeepsTheFileMode(t *testing.T) {
 }
 
 func TestOpenPullRequestRefusesAMovedBase(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	req := openRequest("config/settings.yaml", "retries: 3", "retries: 5")
 	plan, err := e.Plan(context.Background(), req)
@@ -164,11 +164,11 @@ func TestOpenPullRequestRefusesAMovedBase(t *testing.T) {
 }
 
 func TestOpenPullRequestRefusesCIChanges(t *testing.T) {
-	f := actionFixture(t)
-	for _, path := range []string{".github/workflows/ci.yml", ".GitHub/Workflows/ci.yml", ".github/actions/x/action.y"} {
+	f := toolFixture(t)
+	for _, path := range []string{".github/workflows/ci.yml", ".GitHub/Workflows/ci.yml", ".github/actions/x/tool.y"} {
 		_, err := writeEngine(t, f, nil).Plan(context.Background(), openRequest(path, "on: pull_request", "on: push"))
 		require.ErrorIs(t, err, ErrCIPath, path)
-		assert.Contains(t, err.Error(), "actions.allow_ci_changes")
+		assert.Contains(t, err.Error(), "tools.allow_ci_changes")
 		assert.Equal(t, codes.PermissionDenied, status.Code(wireError(err)))
 	}
 
@@ -177,7 +177,7 @@ func TestOpenPullRequestRefusesCIChanges(t *testing.T) {
 }
 
 func TestOpenPullRequestValidatesPaths(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	for _, path := range []string{"../etc/passwd", "config/../../x", "/etc/passwd", ".git/config", "config//settings.yaml", "config/./settings.yaml", "config/"} {
 		_, err := e.Plan(context.Background(), openRequest(path, "a", "b"))
@@ -191,10 +191,10 @@ func TestOpenPullRequestValidatesPaths(t *testing.T) {
 }
 
 func TestOpenPullRequestCaps(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	f.commit("pipelines", "main", map[string]string{"link": "config/settings.yaml"}, map[string]string{"link": "120000"})
-	plan := func(actions map[string]any, req pluginsdk.ActionRequest) error {
-		_, err := writeEngine(t, f, actions).Plan(context.Background(), req)
+	plan := func(tools map[string]any, req pluginsdk.ToolRequest) error {
+		_, err := writeEngine(t, f, tools).Plan(context.Background(), req)
 		return err
 	}
 
@@ -225,18 +225,18 @@ func TestOpenPullRequestCaps(t *testing.T) {
 }
 
 func TestWritesStayInScope(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	req := openRequest("index.html", "hi", "hello")
 	req.Params["repo"] = "website"
 
 	_, err := writeEngine(t, f, nil).Plan(context.Background(), req)
 	require.ErrorIs(t, err, ErrOutOfScope)
-	assert.False(t, f.requested("GET /repos/acme/website"), "a repository outside actions.repos is not even read")
+	assert.False(t, f.requested("GET /repos/acme/website"), "a repository outside tools.repos is not even read")
 
 	_, err = testEngine(t, f, nil).Plan(context.Background(), openRequest("config/settings.yaml", "retries: 3", "retries: 5"))
-	require.ErrorIs(t, err, ErrOutOfScope, "no actions.repos allows no writes")
+	require.ErrorIs(t, err, ErrOutOfScope, "no tools.repos allows no writes")
 
-	_, err = writeEngine(t, f, map[string]any{"repos": []string{"pipelines"}}).Plan(context.Background(), func() pluginsdk.ActionRequest {
+	_, err = writeEngine(t, f, map[string]any{"repos": []string{"pipelines"}}).Plan(context.Background(), func() pluginsdk.ToolRequest {
 		r := openRequest("config/settings.yaml", "retries: 3", "retries: 5")
 		r.Params["base"] = "nope"
 		return r
@@ -246,7 +246,7 @@ func TestWritesStayInScope(t *testing.T) {
 }
 
 func TestOpenPullRequestRemovesItsBranchWhenThePullRequestFails(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	f.failPulls = true
 	e := writeEngine(t, f, nil)
 	req := openRequest("config/settings.yaml", "retries: 3", "retries: 5")
@@ -259,8 +259,8 @@ func TestOpenPullRequestRemovesItsBranchWhenThePullRequestFails(t *testing.T) {
 }
 
 // stamped is an undo as whoever undoes it sends it.
-func stamped(undo *pluginsdk.ActionRequest) pluginsdk.ActionRequest {
-	return request(undo.Action, undo.Params)
+func stamped(undo *pluginsdk.ToolRequest) pluginsdk.ToolRequest {
+	return request(undo.Tool, undo.Params)
 }
 
 func keys(m map[string]string) []string {
@@ -279,30 +279,30 @@ func openOne(t *testing.T, f *fakeGitHub, e *engine) int64 {
 }
 
 func TestCloseAndReopenPullRequest(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	number := openOne(t, f, e)
 
-	plan, result := planAndExecute(t, f, e, request(actionClosePullRequest, map[string]any{"repo": "pipelines", "number": number}))
+	plan, result := planAndExecute(t, f, e, request(toolClosePullRequest, map[string]any{"repo": "pipelines", "number": number}))
 	assert.Equal(t, "- state: open\n+ state: closed\n", plan.Diff)
 	assert.Equal(t, "closed", f.repos["pipelines"].pulls[1].state)
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionReopenPullRequest, result.Undo.Action)
+	assert.Equal(t, toolReopenPullRequest, result.Undo.Tool)
 	assert.Len(t, f.repos["pipelines"].branches, 2, "the branch is kept so the close can be undone")
 
-	_, err := e.Plan(context.Background(), request(actionClosePullRequest, map[string]any{"repo": "pipelines", "number": number}))
+	_, err := e.Plan(context.Background(), request(toolClosePullRequest, map[string]any{"repo": "pipelines", "number": number}))
 	require.ErrorContains(t, err, "already closed")
 
 	_, result = planAndExecute(t, f, e, stamped(result.Undo))
 	assert.Equal(t, "open", f.repos["pipelines"].pulls[1].state)
-	assert.Equal(t, actionClosePullRequest, result.Undo.Action)
+	assert.Equal(t, toolClosePullRequest, result.Undo.Tool)
 }
 
 func TestClosePullRequestRefusesAChangedPullRequest(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	number := openOne(t, f, e)
-	req := request(actionClosePullRequest, map[string]any{"repo": "pipelines", "number": number})
+	req := request(toolClosePullRequest, map[string]any{"repo": "pipelines", "number": number})
 	plan, err := e.Plan(context.Background(), req)
 	require.NoError(t, err)
 
@@ -314,7 +314,7 @@ func TestClosePullRequestRefusesAChangedPullRequest(t *testing.T) {
 }
 
 func TestClosePullRequestOnlyTouchesItsOwn(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	r := f.repos["pipelines"]
 	f.commit("pipelines", "feature", map[string]string{"x": "1"}, nil)
 	f.commit("pipelines", "marmot/done", map[string]string{"x": "2"}, nil)
@@ -325,29 +325,29 @@ func TestClosePullRequestOnlyTouchesItsOwn(t *testing.T) {
 	e := writeEngine(t, f, nil)
 
 	for n, want := range map[int64]error{1: ErrNotOurs, 2: ErrNotOurs} {
-		_, err := e.Plan(context.Background(), request(actionClosePullRequest, map[string]any{"repo": "pipelines", "number": n}))
+		_, err := e.Plan(context.Background(), request(toolClosePullRequest, map[string]any{"repo": "pipelines", "number": n}))
 		require.ErrorIs(t, err, want, n)
 		assert.Equal(t, codes.PermissionDenied, status.Code(wireError(err)))
 	}
-	_, err := e.Plan(context.Background(), request(actionReopenPullRequest, map[string]any{"repo": "pipelines", "number": int64(3)}))
+	_, err := e.Plan(context.Background(), request(toolReopenPullRequest, map[string]any{"repo": "pipelines", "number": int64(3)}))
 	require.ErrorContains(t, err, "merged")
-	_, err = e.Plan(context.Background(), request(actionReopenPullRequest, map[string]any{"repo": "pipelines", "number": int64(4)}))
+	_, err = e.Plan(context.Background(), request(toolReopenPullRequest, map[string]any{"repo": "pipelines", "number": int64(4)}))
 	require.ErrorContains(t, err, "has been deleted")
-	_, err = e.Plan(context.Background(), request(actionClosePullRequest, map[string]any{"repo": "pipelines", "number": int64(99)}))
+	_, err = e.Plan(context.Background(), request(toolClosePullRequest, map[string]any{"repo": "pipelines", "number": int64(99)}))
 	assert.Equal(t, codes.NotFound, status.Code(wireError(err)))
 	assert.Zero(t, f.writes())
 }
 
 func TestCommentAndDeleteComment(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	number := openOne(t, f, e)
 
-	plan, result := planAndExecute(t, f, e, request(actionComment, map[string]any{"repo": "pipelines", "number": number, "body": "CI passed; ready for review."}))
+	plan, result := planAndExecute(t, f, e, request(toolComment, map[string]any{"repo": "pipelines", "number": number, "body": "CI passed; ready for review."}))
 	assert.Equal(t, f.repos["pipelines"].pulls[1].headSHA, plan.Precondition)
 	assert.Contains(t, plan.Warnings[0], "notified")
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionDeleteComment, result.Undo.Action)
+	assert.Equal(t, toolDeleteComment, result.Undo.Tool)
 	id := result.Undo.Params["comment_id"].(int64)
 	c := f.comments[id]
 	assert.True(t, strings.HasPrefix(c.body, "CI passed; ready for review.\n\n---\n_Posted by Marmot for `user:alice` (`task_run:42`)._"))
@@ -356,13 +356,13 @@ func TestCommentAndDeleteComment(t *testing.T) {
 	_, result = planAndExecute(t, f, e, stamped(result.Undo))
 	assert.Empty(t, f.comments)
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionComment, result.Undo.Action)
+	assert.Equal(t, toolComment, result.Undo.Tool)
 	assert.Equal(t, "CI passed; ready for review.", result.Undo.Params["body"], "undo posts the same text again")
-	require.NoError(t, pluginsdk.ValidateParams(ActionSpecs()[3], result.Undo.Params))
+	require.NoError(t, pluginsdk.ValidateParams(ToolSpecs()[3], result.Undo.Params))
 }
 
 func TestDeleteCommentOnlyDeletesItsOwn(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	number := openOne(t, f, e)
 	now := f.tick()
@@ -370,24 +370,24 @@ func TestDeleteCommentOnlyDeletesItsOwn(t *testing.T) {
 	f.comments[2] = &fakeComment{id: 2, repo: "pipelines", issue: int(number), body: "sneaky\n" + commentMarker, user: "bob", created: now, updated: now}
 
 	for _, id := range []int64{1, 2} {
-		_, err := e.Plan(context.Background(), request(actionDeleteComment, map[string]any{"repo": "pipelines", "comment_id": id}))
+		_, err := e.Plan(context.Background(), request(toolDeleteComment, map[string]any{"repo": "pipelines", "comment_id": id}))
 		require.ErrorIs(t, err, ErrNotOurs, id)
 	}
 
 	// With an installation token there is no /user; the app's bot is the
 	// author instead.
 	f.login = ""
-	_, result := planAndExecute(t, f, e, request(actionComment, map[string]any{"repo": "pipelines", "number": number, "body": "from the app"}))
-	_, err := e.Plan(context.Background(), request(actionDeleteComment, map[string]any{"repo": "pipelines", "comment_id": int64(2)}))
+	_, result := planAndExecute(t, f, e, request(toolComment, map[string]any{"repo": "pipelines", "number": number, "body": "from the app"}))
+	_, err := e.Plan(context.Background(), request(toolDeleteComment, map[string]any{"repo": "pipelines", "comment_id": int64(2)}))
 	require.ErrorIs(t, err, ErrNotOurs, "a person's comment with the marker pasted in")
 	planAndExecute(t, f, e, stamped(result.Undo))
 }
 
 func TestCommentRefusesAMovedHead(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	e := writeEngine(t, f, nil)
 	number := openOne(t, f, e)
-	req := request(actionComment, map[string]any{"repo": "pipelines", "number": number, "body": "looks fine"})
+	req := request(toolComment, map[string]any{"repo": "pipelines", "number": number, "body": "looks fine"})
 	plan, err := e.Plan(context.Background(), req)
 	require.NoError(t, err)
 
@@ -399,18 +399,18 @@ func TestCommentRefusesAMovedHead(t *testing.T) {
 }
 
 func TestThroughSource(t *testing.T) {
-	f := actionFixture(t)
+	f := toolFixture(t)
 	s := &Source{}
-	raw := f.config(map[string]any{"actions": map[string]any{"repos": []string{"pipelines"}}})
+	raw := f.config(map[string]any{"tools": map[string]any{"repos": []string{"pipelines"}}})
 	req := openRequest("config/settings.yaml", "retries: 3", "retries: 5")
-	plan, err := s.PlanAction(context.Background(), raw, req)
+	plan, err := s.PlanTool(context.Background(), raw, req)
 	require.NoError(t, err)
 	req.Precondition = plan.Precondition
-	result, err := s.ExecuteAction(context.Background(), raw, req)
+	result, err := s.ExecuteTool(context.Background(), raw, req)
 	require.NoError(t, err)
 	assert.NotNil(t, result.Undo)
 
-	_, err = s.PlanAction(context.Background(), raw, openRequest(".github/workflows/ci.yml", "on: pull_request", "on: push"))
+	_, err = s.PlanTool(context.Background(), raw, openRequest(".github/workflows/ci.yml", "on: pull_request", "on: push"))
 	assert.Equal(t, codes.PermissionDenied, status.Code(err))
 }
 

@@ -22,16 +22,16 @@ import (
 )
 
 // The read verbs let a task see the cluster before it proposes a change.
-// They are actions of risk 0 so the runner gates them exactly like writes
-// (named in its policy, scoped by actions.namespaces and actions.selector,
+// They are tools of risk 0 so the runner gates them exactly like writes
+// (named in its policy, scoped by tools.namespaces and tools.selector,
 // audited) but they never need a plan, a precondition or an approval.
 // GitOps-managed objects are readable: reading one cannot fight Git.
 
-// Read action names.
+// Read tool names.
 const (
-	actionWorkloadStatus = "workload_status"
-	actionPodLogs        = "pod_logs"
-	actionRecentEvents   = "recent_events"
+	toolWorkloadStatus = "workload_status"
+	toolPodLogs        = "pod_logs"
+	toolRecentEvents   = "recent_events"
 )
 
 const (
@@ -60,15 +60,15 @@ const (
 	maxConditionMessage = 256
 )
 
-func readSpecs() []pluginsdk.ActionSpec {
-	return []pluginsdk.ActionSpec{
+func readSpecs() []pluginsdk.ToolSpec {
+	return []pluginsdk.ToolSpec{
 		{
-			Name:        actionWorkloadStatus,
+			Name:        toolWorkloadStatus,
 			Version:     1,
 			Title:       "Read a workload's status",
 			Description: "Returns a Deployment, StatefulSet or DaemonSet's replica counts and conditions, and up to 20 of its pods with their phase, readiness, restarts, waiting reasons and last termination.",
 			Targets:     []pluginsdk.TargetKind{kindDeployment, kindStatefulSet, kindDaemonSet},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				{Name: "kind", Description: "Kind of workload", Type: pluginsdk.ParamEnum, Required: true, Enum: []string{"deployment", "statefulset", "daemonset"}},
 				namespaceParam, nameParam,
 			},
@@ -76,12 +76,12 @@ func readSpecs() []pluginsdk.ActionSpec {
 			Risk:          pluginsdk.RiskRead,
 		},
 		{
-			Name:        actionPodLogs,
+			Name:        toolPodLogs,
 			Version:     1,
 			Title:       "Read a pod's logs",
 			Description: "Returns the last lines a container logged, with credentials redacted and each line capped at 2 KiB. Log text is written by the workload, so it is marked untrusted.",
 			Targets:     []pluginsdk.TargetKind{kindPod},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				namespaceParam,
 				{Name: "pod", Description: "Name of the pod", Type: pluginsdk.ParamString, Required: true, MaxLength: 253, Pattern: dns1123Subdomain},
 				{Name: "container", Description: "Container to read. Defaults to the pod's first container", Type: pluginsdk.ParamString, MaxLength: 63, Pattern: dns1123Label},
@@ -92,12 +92,12 @@ func readSpecs() []pluginsdk.ActionSpec {
 			Risk:          pluginsdk.RiskRead,
 		},
 		{
-			Name:        actionRecentEvents,
+			Name:        toolRecentEvents,
 			Version:     1,
 			Title:       "Read recent events",
 			Description: "Returns a namespace's most recent events, optionally for one object, newest first, with messages capped at 512 characters. Event messages are free text, so they are marked untrusted.",
 			Targets:     []pluginsdk.TargetKind{kindNamespace},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				namespaceParam,
 				{Name: "involved_kind", Description: "Kind of the object the events are about", Type: pluginsdk.ParamEnum, Enum: []string{"pod", "deployment", "statefulset", "daemonset", "job", "cronjob"}},
 				{Name: "involved_name", Description: "Name of the object the events are about; needs involved_kind", Type: pluginsdk.ParamString, MaxLength: 253, Pattern: dns1123Subdomain},
@@ -109,19 +109,19 @@ func readSpecs() []pluginsdk.ActionSpec {
 	}
 }
 
-func isRead(action string) bool {
-	return action == actionWorkloadStatus || action == actionPodLogs || action == actionRecentEvents
+func isRead(tool string) bool {
+	return tool == toolWorkloadStatus || tool == toolPodLogs || tool == toolRecentEvents
 }
 
 // read runs a read verb. The request is checked against the manifest here
 // as well as in Serve, since the engine is exported for the cloud plugins.
-func (e *ActionEngine) read(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, error) {
-	if _, err := pluginsdk.CheckActionRequest(ActionSpecs(), req, true); err != nil {
+func (e *ToolEngine) read(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, error) {
+	if _, err := pluginsdk.CheckToolRequest(ToolSpecs(), req, true); err != nil {
 		return nil, err
 	}
 	ns := req.StringParam("namespace")
 	if !e.config.inScope(ns) {
-		return nil, fmt.Errorf("namespace %q is %w: allow it in actions.namespaces", ns, ErrOutOfScope)
+		return nil, fmt.Errorf("namespace %q is %w: allow it in tools.namespaces", ns, ErrOutOfScope)
 	}
 	var (
 		target  string
@@ -130,22 +130,22 @@ func (e *ActionEngine) read(ctx context.Context, req pluginsdk.ActionRequest) (*
 		out     any
 		err     error
 	)
-	switch req.Action {
-	case actionWorkloadStatus:
+	switch req.Tool {
+	case toolWorkloadStatus:
 		var s *workloadStatus
 		s, err = e.workloadStatus(ctx, req)
 		if s != nil {
 			target, kind, out = s.Kind+"/"+ns+"/"+s.Name, pluginsdk.TargetKind("kubernetes/"+s.Kind), s
 			summary = fmt.Sprintf("%s: %d of %d replicas ready", target, s.Replicas.Ready, s.Replicas.Desired)
 		}
-	case actionPodLogs:
+	case toolPodLogs:
 		var l *podLogs
 		l, err = e.podLogs(ctx, req)
 		if l != nil {
 			target, kind, out = "pod/"+ns+"/"+l.Pod, kindPod, l
 			summary = fmt.Sprintf("%d lines from %s container %s", len(l.Lines), target, l.Container)
 		}
-	case actionRecentEvents:
+	case toolRecentEvents:
 		var ev *recentEvents
 		ev, err = e.recentEvents(ctx, req)
 		if ev != nil {
@@ -153,7 +153,7 @@ func (e *ActionEngine) read(ctx context.Context, req pluginsdk.ActionRequest) (*
 			summary = fmt.Sprintf("%d recent events in %s", len(ev.Events), ns)
 		}
 	default:
-		err = fmt.Errorf("unknown read %q", req.Action)
+		err = fmt.Errorf("unknown read %q", req.Tool)
 	}
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (e *ActionEngine) read(ctx context.Context, req pluginsdk.ActionRequest) (*
 	}
 	// Every read carries text the cluster's users can write: condition and
 	// waiting messages, log lines, event messages.
-	return &pluginsdk.ActionResult{Target: target, TargetKind: kind, Summary: summary, Output: data, Untrusted: true}, nil
+	return &pluginsdk.ToolResult{Target: target, TargetKind: kind, Summary: summary, Output: data, Untrusted: true}, nil
 }
 
 type replicaCounts struct {
@@ -226,7 +226,7 @@ type workloadStatus struct {
 	Untrusted     bool                `json:"untrusted"`
 }
 
-func (e *ActionEngine) workloadStatus(ctx context.Context, req pluginsdk.ActionRequest) (*workloadStatus, error) {
+func (e *ToolEngine) workloadStatus(ctx context.Context, req pluginsdk.ToolRequest) (*workloadStatus, error) {
 	ns, name, kind := req.StringParam("namespace"), req.StringParam("name"), req.StringParam("kind")
 	out := &workloadStatus{Kind: kind, Namespace: ns, Name: name, Untrusted: true}
 	var obj metav1.Object
@@ -267,7 +267,7 @@ func (e *ActionEngine) workloadStatus(ctx context.Context, req pluginsdk.ActionR
 		return nil, fmt.Errorf("workload_status does not read kind %q", kind)
 	}
 	if !e.selector.Matches(labels.Set(obj.GetLabels())) {
-		return nil, fmt.Errorf("%s/%s/%s does not match actions.selector %q: %w", kind, ns, name, e.config.Selector, ErrOutOfScope)
+		return nil, fmt.Errorf("%s/%s/%s does not match tools.selector %q: %w", kind, ns, name, e.config.Selector, ErrOutOfScope)
 	}
 
 	sel, err := metav1.LabelSelectorAsSelector(selector)
@@ -414,14 +414,14 @@ type podLogs struct {
 	Untrusted bool `json:"untrusted"`
 }
 
-func (e *ActionEngine) podLogs(ctx context.Context, req pluginsdk.ActionRequest) (*podLogs, error) {
+func (e *ToolEngine) podLogs(ctx context.Context, req pluginsdk.ToolRequest) (*podLogs, error) {
 	ns, name := req.StringParam("namespace"), req.StringParam("pod")
 	pod, err := e.client.CoreV1().Pods(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("reading pod/%s/%s: %w", ns, name, err)
 	}
 	if !e.selector.Matches(labels.Set(pod.Labels)) {
-		return nil, fmt.Errorf("pod/%s/%s does not match actions.selector %q: %w", ns, name, e.config.Selector, ErrOutOfScope)
+		return nil, fmt.Errorf("pod/%s/%s does not match tools.selector %q: %w", ns, name, e.config.Selector, ErrOutOfScope)
 	}
 	container := req.StringParam("container")
 	if container == "" {
@@ -622,7 +622,7 @@ var involvedKinds = map[string]string{
 	"pod": "Pod", "deployment": "Deployment", "statefulset": "StatefulSet", "daemonset": "DaemonSet", "job": "Job", "cronjob": "CronJob",
 }
 
-func (e *ActionEngine) recentEvents(ctx context.Context, req pluginsdk.ActionRequest) (*recentEvents, error) {
+func (e *ToolEngine) recentEvents(ctx context.Context, req pluginsdk.ToolRequest) (*recentEvents, error) {
 	ns := req.StringParam("namespace")
 	kindParam, name := req.StringParam("involved_kind"), req.StringParam("involved_name")
 	if (kindParam == "") != (name == "") {
@@ -643,11 +643,11 @@ func (e *ActionEngine) recentEvents(ctx context.Context, req pluginsdk.ActionReq
 				return nil, err
 			}
 			if !e.selector.Matches(labels.Set(objLabels)) {
-				return nil, fmt.Errorf("%s/%s/%s does not match actions.selector %q: %w", kindParam, ns, name, e.config.Selector, ErrOutOfScope)
+				return nil, fmt.Errorf("%s/%s/%s does not match tools.selector %q: %w", kindParam, ns, name, e.config.Selector, ErrOutOfScope)
 			}
 		}
 	} else if !e.selector.Empty() {
-		return nil, fmt.Errorf("with actions.selector set, recent_events reads one object's events: give involved_kind and involved_name: %w", ErrOutOfScope)
+		return nil, fmt.Errorf("with tools.selector set, recent_events reads one object's events: give involved_kind and involved_name: %w", ErrOutOfScope)
 	}
 
 	list, err := e.client.CoreV1().Events(ns).List(ctx, opts)
@@ -702,7 +702,7 @@ func eventLastSeen(ev *corev1.Event) time.Time {
 	return ev.CreationTimestamp.Time
 }
 
-func (e *ActionEngine) involvedLabels(ctx context.Context, ns, kind, name string) (map[string]string, error) {
+func (e *ToolEngine) involvedLabels(ctx context.Context, ns, kind, name string) (map[string]string, error) {
 	var obj metav1.Object
 	var err error
 	switch kind {

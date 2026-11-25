@@ -7,14 +7,14 @@ serviceAccount:
   name: ""
   annotations: {}
 
-# Namespaces actions may change. Each gets its own Role and RoleBinding, so
+# Namespaces tools may change. Each gets its own Role and RoleBinding, so
 # nothing is granted cluster wide except nodes, and only when cordon is on.
-# Keep this in step with the plugin's actions.namespaces.
+# Keep this in step with the plugin's tools.namespaces.
 namespaces: []
 
 # Which verbs to grant. Each switch adds only the resources and verbs that
 # verb needs.
-actions:
+tools:
   # scale: patch Deployments and StatefulSets, read HorizontalPodAutoscalers.
   scale: true
   # rollout_restart: patch Deployments, StatefulSets and DaemonSets.
@@ -43,11 +43,11 @@ triggers:
   clusterWide: false
 
 # Highest replica count the admission policy admits from the runner. Keep it
-# at or above the plugin's actions.max_replicas, which refuses first.
+# at or above the plugin's tools.max_replicas, which refuses first.
 maxReplicas: 20
 
 # Labels every changed object must carry, nodes included. Empty admits any.
-# Keep it in step with the plugin's actions.selector.
+# Keep it in step with the plugin's tools.selector.
 selector: {}
 
 admissionPolicy:

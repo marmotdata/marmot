@@ -27,7 +27,7 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin"
 )
 
-const kindContext = "kind-marmot-actions"
+const kindContext = "kind-marmot-tools"
 
 func kubectl(t *testing.T, args ...string) string {
 	t.Helper()
@@ -42,7 +42,7 @@ sources:
     query: false
     manifest: DIGEST
     origins: ["task_run:*"]
-    actions:
+    tools:
       scale:
         params:
           namespace: {values: [payments]}
@@ -75,7 +75,7 @@ sources:
         cooldown: 1h
 `
 
-func TestKindActionsEndToEnd(t *testing.T) {
+func TestKindToolsEndToEnd(t *testing.T) {
 	binary, dir := os.Getenv("MARMOT_KIND_PLUGIN"), os.Getenv("MARMOT_KIND_DIR")
 	if binary == "" || dir == "" {
 		t.Skip("MARMOT_KIND_PLUGIN and MARMOT_KIND_DIR not set")
@@ -87,10 +87,10 @@ func TestKindActionsEndToEnd(t *testing.T) {
 	server := kubectl(t, "config", "view", "--raw", "-o", "jsonpath={.clusters[?(@.name==\""+kindContext+"\")].cluster.server}")
 
 	plugin.LoadBinary(binary)
-	host := plugin.NewActionHost(plugin.NewInstanceManager(time.Minute))
+	host := plugin.NewToolHost(plugin.NewInstanceManager(time.Minute))
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Minute)
 	defer cancel()
-	specs, err := host.ActionManifest(ctx, "kubernetes")
+	specs, err := host.ToolManifest(ctx, "kubernetes")
 	require.NoError(t, err)
 	digest := pluginsdk.ManifestDigest(specs)
 
@@ -110,44 +110,44 @@ func TestKindActionsEndToEnd(t *testing.T) {
 	h.serveWith(h.enroller(hub), hub, principal, sessionCredential, source, &fakeQuerier{}, func(o *ServeOptions) {
 		cfg := map[string]any{
 			"host": server, "token": string(token), "ca_certificate": string(ca),
-			"actions": map[string]any{"namespaces": []string{"payments", "checkout"}, "max_replicas": 10},
+			"tools": map[string]any{"namespaces": []string{"payments", "checkout"}, "max_replicas": 10},
 		}
 		o.Sources[0].PluginID, o.Sources[0].Config, o.Sources[0].DisplayConfig = "kubernetes", cfg, map[string]any{"host": server}
-		o.Actor, o.Watcher, o.Policy, o.AuditLog, o.AllowActions = host, host, policy, audit, true
+		o.PluginTools, o.Watcher, o.Policy, o.AuditLog, o.AllowTools = host, host, policy, audit, true
 	})
 
-	call := func(action string, params map[string]any) ActionCall {
-		return ActionCall{Source: source, ID: uuid.NewString(), ManifestDigest: digest,
-			Request: pluginsdk.ActionRequest{Action: action, Params: params, Identity: "user:alice", Origin: "task_run:e2e"}}
+	call := func(tool string, params map[string]any) ToolCall {
+		return ToolCall{Source: source, ID: uuid.NewString(), ManifestDigest: digest,
+			Request: pluginsdk.ToolRequest{Tool: tool, Params: params, Identity: "user:alice", Origin: "task_run:e2e"}}
 	}
 	replicas := func(ns, name string) string {
 		return kubectl(t, "-n", ns, "get", "deploy", name, "-o", "jsonpath={.spec.replicas}")
 	}
-	// planned plans an action and returns it ready to execute, as a person reviewing the plan would see it
-	planned := func(t *testing.T, c ActionCall) ActionCall {
+	// planned plans a tool and returns it ready to execute, as a person reviewing the plan would see it
+	planned := func(t *testing.T, c ToolCall) ToolCall {
 		t.Helper()
-		plan, receipt, err := hub.PlanAction(ctx, c)
+		plan, receipt, err := hub.PlanTool(ctx, c)
 		require.NoError(t, err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		require.NotEmpty(t, plan.Precondition)
-		t.Logf("plan %s: %s\n%s", c.Request.Action, plan.Summary, plan.Diff)
+		t.Logf("plan %s: %s\n%s", c.Request.Tool, plan.Summary, plan.Diff)
 		c.ID, c.Request.Precondition = uuid.NewString(), plan.Precondition
 		return c
 	}
-	// run plans then executes an action with a Marmot-signed approval naming alice
-	run := func(t *testing.T, c ActionCall) *pluginsdk.ActionResult {
+	// run plans then executes a tool with a Marmot-signed approval naming alice
+	run := func(t *testing.T, c ToolCall) *pluginsdk.ToolResult {
 		t.Helper()
 		c = planned(t, c)
 		c.Approval = approve(t, hub, c, 5*time.Minute, alice)
-		result, receipt, err := hub.ExecuteAction(ctx, c)
+		result, receipt, err := hub.ExecuteTool(ctx, c)
 		require.NoError(t, err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		require.Len(t, receipt.Approvers, 1)
 		return result
 	}
-	read := func(t *testing.T, action string, params map[string]any) map[string]any {
+	read := func(t *testing.T, tool string, params map[string]any) map[string]any {
 		t.Helper()
-		result, receipt, err := hub.ExecuteAction(ctx, call(action, params))
+		result, receipt, err := hub.ExecuteTool(ctx, call(tool, params))
 		require.NoError(t, err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		assert.True(t, result.Untrusted)
@@ -210,31 +210,31 @@ func TestKindActionsEndToEnd(t *testing.T) {
 		evs := read(t, "recent_events", map[string]any{"namespace": "payments", "limit": 10})
 		assert.NotNil(t, evs["events"])
 
-		_, _, err := hub.ExecuteAction(ctx, call("pod_logs", map[string]any{"namespace": "payments", "pod": pod["name"], "tail_lines": 200}))
+		_, _, err := hub.ExecuteTool(ctx, call("pod_logs", map[string]any{"namespace": "payments", "pod": pod["name"], "tail_lines": 200}))
 		assert.Equal(t, codes.PermissionDenied, status.Code(err), "the policy caps tail_lines at 50")
 	})
 
 	t.Run("a write needs a Marmot-signed approval, once", func(t *testing.T) {
 		c := planned(t, call("scale", map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": 2}))
-		_, _, err := hub.ExecuteAction(ctx, c)
+		_, _, err := hub.ExecuteTool(ctx, c)
 		assert.Equal(t, codes.PermissionDenied, status.Code(err))
 		assert.Contains(t, err.Error(), "carries none")
 		assert.Equal(t, "1", replicas("payments", "api"))
 
 		c.Approval = approve(t, hub, c, 5*time.Minute, alice)
-		_, receipt, err := hub.ExecuteAction(ctx, c)
+		_, receipt, err := hub.ExecuteTool(ctx, c)
 		require.NoError(t, err)
 		assert.Equal(t, "alice", receipt.Approvers[0].Name)
 		assert.Equal(t, "2", replicas("payments", "api"))
 
-		_, _, err = hub.ExecuteAction(ctx, c)
+		_, _, err = hub.ExecuteTool(ctx, c)
 		assert.Equal(t, codes.PermissionDenied, status.Code(err))
 		assert.Contains(t, err.Error(), "already been used")
 		run(t, call("scale", map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": 1}))
 	})
-	refused := func(t *testing.T, c ActionCall, code codes.Code, contains string) {
+	refused := func(t *testing.T, c ToolCall, code codes.Code, contains string) {
 		t.Helper()
-		_, _, err := hub.PlanAction(ctx, c)
+		_, _, err := hub.PlanTool(ctx, c)
 		require.Error(t, err)
 		assert.Equal(t, code, status.Code(err), err.Error())
 		assert.Contains(t, strings.ToLower(err.Error()), strings.ToLower(contains))
@@ -247,19 +247,19 @@ func TestKindActionsEndToEnd(t *testing.T) {
 		assert.Equal(t, "task_run:e2e", kubectl(t, "-n", "payments", "get", "deploy", "api", "-o", `jsonpath={.metadata.annotations.marmot\.io/origin}`))
 		assert.Equal(t, "user:alice", kubectl(t, "-n", "payments", "get", "deploy", "api", "-o", `jsonpath={.metadata.annotations.marmot\.io/actor}`))
 		require.NotNil(t, result.Undo, "scale declares an inverse")
-		undo := call(result.Undo.Action, result.Undo.Params)
+		undo := call(result.Undo.Tool, result.Undo.Params)
 		run(t, undo)
 		assert.Equal(t, "1", replicas("payments", "api"))
 	})
 
 	t.Run("a target that changed after its plan is refused", func(t *testing.T) {
 		c := call("scale", map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": 2})
-		plan, _, err := hub.PlanAction(ctx, c)
+		plan, _, err := hub.PlanTool(ctx, c)
 		require.NoError(t, err)
 		kubectl(t, "-n", "payments", "annotate", "deploy", "api", "someone-else=touched", "--overwrite")
 		c.ID, c.Request.Precondition = uuid.NewString(), plan.Precondition
 		c.Approval = approve(t, hub, c, 5*time.Minute, alice)
-		_, receipt, err := hub.ExecuteAction(ctx, c)
+		_, receipt, err := hub.ExecuteTool(ctx, c)
 		assert.Equal(t, codes.FailedPrecondition, status.Code(err), err)
 		require.True(t, receipt.Verified(), receipt.Problem)
 		assert.Equal(t, "1", replicas("payments", "api"))
@@ -278,22 +278,22 @@ func TestKindActionsEndToEnd(t *testing.T) {
 		result := run(t, call("suspend_cronjob", map[string]any{"namespace": "payments", "name": "nightly"}))
 		assert.Equal(t, "true", kubectl(t, "-n", "payments", "get", "cronjob", "nightly", "-o", "jsonpath={.spec.suspend}"))
 		require.NotNil(t, result.Undo)
-		run(t, call(result.Undo.Action, result.Undo.Params))
+		run(t, call(result.Undo.Tool, result.Undo.Params))
 		assert.Equal(t, "false", kubectl(t, "-n", "payments", "get", "cronjob", "nightly", "-o", "jsonpath={.spec.suspend}"))
 	})
 
 	t.Run("cordon, and never the last schedulable node", func(t *testing.T) {
-		result := run(t, call("cordon", map[string]any{"name": "marmot-actions-worker2"}))
-		assert.Equal(t, "true", kubectl(t, "get", "node", "marmot-actions-worker2", "-o", "jsonpath={.spec.unschedulable}"))
-		_, _, err := hub.PlanAction(ctx, call("cordon", map[string]any{"name": "marmot-actions-worker"}))
+		result := run(t, call("cordon", map[string]any{"name": "marmot-tools-worker2"}))
+		assert.Equal(t, "true", kubectl(t, "get", "node", "marmot-tools-worker2", "-o", "jsonpath={.spec.unschedulable}"))
+		_, _, err := hub.PlanTool(ctx, call("cordon", map[string]any{"name": "marmot-tools-worker"}))
 		require.Error(t, err, "worker is now the last schedulable node")
 		t.Logf("last node refusal: %v", err)
-		run(t, call(result.Undo.Action, result.Undo.Params))
-		assert.Empty(t, kubectl(t, "get", "node", "marmot-actions-worker2", "-o", "jsonpath={.spec.unschedulable}"))
+		run(t, call(result.Undo.Tool, result.Undo.Params))
+		assert.Empty(t, kubectl(t, "get", "node", "marmot-tools-worker2", "-o", "jsonpath={.spec.unschedulable}"))
 	})
 
 	t.Run("refusals", func(t *testing.T) {
-		scale := func(ns, name string, n int) ActionCall {
+		scale := func(ns, name string, n int) ToolCall {
 			return call("scale", map[string]any{"kind": "deployment", "namespace": ns, "name": name, "replicas": n})
 		}
 		// The runner's policy, before the plugin is asked anything
@@ -306,11 +306,11 @@ func TestKindActionsEndToEnd(t *testing.T) {
 		stale := scale("payments", "api", 2)
 		stale.ManifestDigest = "sha256:" + strings.Repeat("0", 64)
 		refused(t, stale, codes.PermissionDenied, "manifest")
-		// The plugin's own scope: Flux owns ledger, and internal is not an actions namespace
-		_, _, err := hub.PlanAction(ctx, call("rollout_restart", map[string]any{"kind": "deployment", "namespace": "payments", "name": "ledger"}))
+		// The plugin's own scope: Flux owns ledger, and internal is not a tools namespace
+		_, _, err := hub.PlanTool(ctx, call("rollout_restart", map[string]any{"kind": "deployment", "namespace": "payments", "name": "ledger"}))
 		require.Error(t, err)
 		assert.Contains(t, strings.ToLower(err.Error()), "git")
-		_, _, err = hub.PlanAction(ctx, call("rollout_restart", map[string]any{"kind": "deployment", "namespace": "internal", "name": "admin"}))
+		_, _, err = hub.PlanTool(ctx, call("rollout_restart", map[string]any{"kind": "deployment", "namespace": "internal", "name": "admin"}))
 		require.Error(t, err)
 		t.Logf("internal namespace refusal: %v", err)
 		assert.Equal(t, "1", replicas("payments", "ledger"))

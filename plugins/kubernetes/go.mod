@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/google/cel-go v0.30.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20261125204133-a2a3a44741a0
+	github.com/marmotdata/plugin-sdk v0.0.0-20261125212213-28dda09c4298
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	k8s.io/api v0.37.2

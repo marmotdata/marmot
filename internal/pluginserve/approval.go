@@ -20,57 +20,57 @@ import (
 	pb "github.com/marmotdata/marmot/internal/pluginserve/proto"
 )
 
-// Approvals say which people agreed to a write. Today they are Marmot-signed: Marmot collects the approvals, enforcing who may approve and the two-person rule, and signs the result with an approval key of its own, which the serving process pins from enrolment like the query signing keys. The process recomputes what was approved from the request it is about to run and re-checks the count of distinct approvers, so a stolen query signing key cannot approve anything, and any approval can be spent only once, before it expires, on the very action and state it names. A Marmot taken over with its approval key can approve on people's behalf; trust through the company's own identity provider is planned to close that.
+// Approvals say which people agreed to a write. Today they are Marmot-signed: Marmot collects the approvals, enforcing who may approve and the two-person rule, and signs the result with an approval key of its own, which the serving process pins from enrolment like the query signing keys. The process recomputes what was approved from the request it is about to run and re-checks the count of distinct approvers, so a stolen query signing key cannot approve anything, and any approval can be spent only once, before it expires, on the very tool and state it names. A Marmot taken over with its approval key can approve on people's behalf; trust through the company's own identity provider is planned to close that.
 
 // ApprovalDigestVersion versions ApprovalDigest's encoding. A change to the encoding is a new version, so an approval made under one can never verify under another.
 const ApprovalDigestVersion = 1
 
 // approvalDomain starts every approval digest, so it can never equal a hash of anything else.
-var approvalDomain = []byte("marmot action approval\x00")
+var approvalDomain = []byte("marmot tool approval\x00")
 
-// ApprovalSubject is everything an approval covers: the exact action a person is shown and agrees to. Marmot signs the digest of it; the serving process computes it again from the request it received, and only that one is ever checked.
+// ApprovalSubject is everything an approval covers: the exact tool a person is shown and agrees to. Marmot signs the digest of it; the serving process computes it again from the request it received, and only that one is ever checked.
 type ApprovalSubject struct {
 	Source string
-	Action string
-	// Params is the action's parameters as a JSON object, or empty for none. It is canonicalised before hashing, so any encoding of the same scalars gives the same digest.
+	Tool   string
+	// Params is the tool's parameters as a JSON object, or empty for none. It is canonicalised before hashing, so any encoding of the same scalars gives the same digest.
 	Params []byte
 	// Precondition is the token from the plan the person reviewed.
 	Precondition   string
 	ManifestDigest string
 	Origin         string
-	// Actor is the audit subject the action will run as, so an approval for a task's action cannot be spent under another name.
+	// Actor is the audit subject the tool will run as, so an approval for a task's tool cannot be spent under another name.
 	Actor string
-	// ActionID is the action's id in Marmot's log.
-	ActionID  string
+	// ToolID is the tool's id in Marmot's log.
+	ToolID    string
 	ExpiresAt time.Time
 }
 
-// ApprovalSubjectFor is the subject of an ActionCall, encoding its parameters exactly as the hub does when it sends them.
-func ApprovalSubjectFor(call ActionCall, expiresAt time.Time) (ApprovalSubject, error) {
+// ApprovalSubjectFor is the subject of a ToolCall, encoding its parameters exactly as the hub does when it sends them.
+func ApprovalSubjectFor(call ToolCall, expiresAt time.Time) (ApprovalSubject, error) {
 	var params []byte
 	if len(call.Request.Params) > 0 {
 		data, err := json.Marshal(call.Request.Params)
 		if err != nil {
-			return ApprovalSubject{}, fmt.Errorf("encoding the action's parameters: %w", err)
+			return ApprovalSubject{}, fmt.Errorf("encoding the tool's parameters: %w", err)
 		}
 		params = data
 	}
 	return ApprovalSubject{
 		Source:         call.Source,
-		Action:         call.Request.Action,
+		Tool:           call.Request.Tool,
 		Params:         params,
 		Precondition:   call.Request.Precondition,
 		ManifestDigest: call.ManifestDigest,
 		Origin:         call.Request.Origin,
 		Actor:          call.Request.Identity,
-		ActionID:       call.ID,
+		ToolID:         call.ID,
 		ExpiresAt:      expiresAt,
 	}, nil
 }
 
 // ApprovalDigest returns the 32 bytes an approval is about, which Marmot's approval signature covers.
 //
-// Version 1 is SHA-256 over "marmot action approval\x00", then the version as a big-endian uint32, then source, action, canonical params, precondition, manifest digest, origin, actor and action id, each as a big-endian uint32 length followed by its bytes, then expires_at as big-endian int64 unix seconds. Canonical params are the JSON object with keys sorted, whole numbers in decimal, and strings and booleans as encoding/json writes them; nothing else is a valid parameter, so anything else fails. Length prefixes make the encoding unambiguous: no two subjects share a digest by moving bytes between fields.
+// Version 1 is SHA-256 over "marmot tool approval\x00", then the version as a big-endian uint32, then source, tool, canonical params, precondition, manifest digest, origin, actor and tool id, each as a big-endian uint32 length followed by its bytes, then expires_at as big-endian int64 unix seconds. Canonical params are the JSON object with keys sorted, whole numbers in decimal, and strings and booleans as encoding/json writes them; nothing else is a valid parameter, so anything else fails. Length prefixes make the encoding unambiguous: no two subjects share a digest by moving bytes between fields.
 func ApprovalDigest(s ApprovalSubject) ([]byte, error) {
 	params, err := canonicalParams(s.Params)
 	if err != nil {
@@ -83,8 +83,8 @@ func ApprovalDigest(s ApprovalSubject) ([]byte, error) {
 	h.Write(approvalDomain)
 	_ = binary.Write(h, binary.BigEndian, uint32(ApprovalDigestVersion))
 	for _, field := range [][]byte{
-		[]byte(s.Source), []byte(s.Action), params, []byte(s.Precondition),
-		[]byte(s.ManifestDigest), []byte(s.Origin), []byte(s.Actor), []byte(s.ActionID),
+		[]byte(s.Source), []byte(s.Tool), params, []byte(s.Precondition),
+		[]byte(s.ManifestDigest), []byte(s.Origin), []byte(s.Actor), []byte(s.ToolID),
 	} {
 		_ = binary.Write(h, binary.BigEndian, uint32(len(field))) //nolint:gosec // G115: every field is bounded far below 4 GiB by maxApprovalBytes and the query limits
 		h.Write(field)
@@ -93,7 +93,7 @@ func ApprovalDigest(s ApprovalSubject) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-// canonicalParams re-encodes an action's parameters so the hub's encoding and the serving process's agree whatever decoder sat between them. Parameters are scalars only, so a nested value, null or a fraction is refused rather than given some canonical form.
+// canonicalParams re-encodes a tool's parameters so the hub's encoding and the serving process's agree whatever decoder sat between them. Parameters are scalars only, so a nested value, null or a fraction is refused rather than given some canonical form.
 func canonicalParams(data []byte) ([]byte, error) {
 	if len(bytes.TrimSpace(data)) == 0 {
 		return []byte("{}"), nil
@@ -102,10 +102,10 @@ func canonicalParams(data []byte) ([]byte, error) {
 	dec.UseNumber()
 	var raw map[string]any
 	if err := dec.Decode(&raw); err != nil {
-		return nil, errors.New("the action's parameters are not a JSON object")
+		return nil, errors.New("the tool's parameters are not a JSON object")
 	}
 	if dec.More() {
-		return nil, errors.New("the action's parameters are followed by more JSON")
+		return nil, errors.New("the tool's parameters are followed by more JSON")
 	}
 	out := make(map[string]any, len(raw))
 	for k, v := range raw {
@@ -126,11 +126,11 @@ func canonicalParams(data []byte) ([]byte, error) {
 	return json.Marshal(out)
 }
 
-// ApprovalTrustMarmot is the one approval trust mode today: Marmot signs, with its approval key, which people approved. The serving process trusts that signature, not the people directly, so a Marmot taken over can approve on anyone's behalf; what it cannot do is spend an approval on any other action, twice, late, or with fewer people than the policy asks for. Trust through the company's own identity provider (oidc) is planned.
+// ApprovalTrustMarmot is the one approval trust mode today: Marmot signs, with its approval key, which people approved. The serving process trusts that signature, not the people directly, so a Marmot taken over can approve on anyone's behalf; what it cannot do is spend an approval on any other tool, twice, late, or with fewer people than the policy asks for. Trust through the company's own identity provider (oidc) is planned.
 const ApprovalTrustMarmot = "marmot"
 
 // approvalSignatureDomain starts every approval signature, so the approval key's signature over anything else can never be an approval. The approval key is also its own key, never the query signing key, so nothing signed as a query can be one either.
-var approvalSignatureDomain = []byte("marmot action approval signature v1\x00")
+var approvalSignatureDomain = []byte("marmot tool approval signature v1\x00")
 
 const (
 	// maxApprovalAge is the most a policy may set max_age to.
@@ -146,7 +146,7 @@ const (
 	maxApprovalSig       = 128
 )
 
-// Approval is Marmot's statement that people approved one action, as the hub sends it: when it expires, who approved and Marmot's signature over both and the action's digest. Build it with Hub.SignApproval.
+// Approval is Marmot's statement that people approved one tool, as the hub sends it: when it expires, who approved and Marmot's signature over both and the tool's digest. Build it with Hub.SignApproval.
 type Approval struct {
 	ExpiresAt time.Time  `json:"expires_at"`
 	Approvers []Approver `json:"approvers"`
@@ -160,7 +160,7 @@ type Approver struct {
 	ApprovedAt time.Time `json:"approved_at"`
 }
 
-// ApprovalSignedMessage is what the approval key signs: the domain, the action's ApprovalDigest (which covers its expiry), then the number of approvers as a big-endian uint32 and each approver as its user id and name, each a big-endian uint32 length and its bytes, and when it approved as big-endian int64 unix seconds.
+// ApprovalSignedMessage is what the approval key signs: the domain, the tool's ApprovalDigest (which covers its expiry), then the number of approvers as a big-endian uint32 and each approver as its user id and name, each a big-endian uint32 length and its bytes, and when it approved as big-endian int64 unix seconds.
 func ApprovalSignedMessage(digest []byte, approvers []Approver) []byte {
 	var b bytes.Buffer
 	b.Write(approvalSignatureDomain)
@@ -207,7 +207,7 @@ func printable(s string) bool {
 }
 
 // SignApproval signs approval for call as it will be sent, with the active approval key. It refuses an approval the serving process would refuse for its shape, so a bad one fails here rather than at the runner.
-func (h *Hub) SignApproval(call ActionCall, approval *Approval) error {
+func (h *Hub) SignApproval(call ToolCall, approval *Approval) error {
 	if approval == nil {
 		return errors.New("no approval to sign")
 	}
@@ -300,7 +300,7 @@ func (ap *ApprovalsPolicy) Describe() string {
 	return "Marmot-signed"
 }
 
-// approvalNeed is how many distinct people an action needs and which of them count.
+// approvalNeed is how many distinct people a tool needs and which of them count.
 type approvalNeed struct {
 	required int
 	// approvers narrows who counts, by user id or name; empty means anyone Marmot names.
@@ -334,10 +334,10 @@ func ApprovalKeyFingerprint(pub *ecdsa.PublicKey) string {
 	return CAFingerprint(der)
 }
 
-// verifyApproval checks an approval against the approval keys this process pinned and a digest computed from the request itself: the signature, the expiry and the policy's max_age, and enough distinct approvers that the action's own narrowing admits.
+// verifyApproval checks an approval against the approval keys this process pinned and a digest computed from the request itself: the signature, the expiry and the policy's max_age, and enough distinct approvers that the tool's own narrowing admits.
 func (ap *ApprovalsPolicy) verifyApproval(data []byte, subject ApprovalSubject, need approvalNeed, keys []*ecdsa.PublicKey, now time.Time) (*verifiedApproval, error) {
 	if len(data) == 0 {
-		return nil, errors.New("the action needs an approval and carries none")
+		return nil, errors.New("the tool needs an approval and carries none")
 	}
 	if ap == nil {
 		return nil, errors.New("no approvers configured: the policy has no approvals section")
@@ -386,7 +386,7 @@ func (ap *ApprovalsPolicy) verifyApproval(data []byte, subject ApprovalSubject, 
 	if len(msg.Signature) == 0 || len(msg.Signature) > maxApprovalSig ||
 		!signedByAny(trusted, nil, ApprovalSignedMessage(digest, approvers), msg.Signature) {
 		// A signature over another digest is an approval of something else, or not Marmot's approval key at all.
-		return nil, errors.New("it is not signed by Marmot's approval key for this action")
+		return nil, errors.New("it is not signed by Marmot's approval key for this tool")
 	}
 	counted := 0
 	for _, a := range approvers {
@@ -398,7 +398,7 @@ func (ap *ApprovalsPolicy) verifyApproval(data []byte, subject ApprovalSubject, 
 		}
 	}
 	if counted < need.required {
-		return nil, fmt.Errorf("the action needs %d distinct approvers the policy admits and the approval has %d", need.required, counted)
+		return nil, fmt.Errorf("the tool needs %d distinct approvers the policy admits and the approval has %d", need.required, counted)
 	}
 	out := &verifiedApproval{digest: digest, expiresAt: expires}
 	for _, a := range msg.Approvers {

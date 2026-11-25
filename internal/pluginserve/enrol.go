@@ -33,8 +33,8 @@ type EnrolSource struct {
 	Name     string         `json:"name"`
 	PluginID string         `json:"plugin_id"`
 	Config   map[string]any `json:"config,omitempty"`
-	// Actions is the process's report of the source's actions and triggers, when it serves any. Informative only: see ServedActions.
-	Actions *ServedActions `json:"actions,omitempty"`
+	// Tools is the process's report of the source's tools and triggers, when it serves any. Informative only: see ServedTools.
+	Tools *ServedTools `json:"tools,omitempty"`
 }
 
 // EnrolInput is a serving process's request for a certificate.
@@ -50,7 +50,7 @@ type EnrolResult struct {
 	Certificate string   `json:"certificate"`
 	CABundle    string   `json:"ca_bundle"`
 	SigningKeys []string `json:"signing_keys"`
-	// ApprovalKeys are the keys Marmot signs approvals of actions with, pinned like SigningKeys and never used for anything else.
+	// ApprovalKeys are the keys Marmot signs approvals of tools with, pinned like SigningKeys and never used for anything else.
 	ApprovalKeys []string  `json:"approval_keys,omitempty"`
 	ExpiresAt    time.Time `json:"expires_at"`
 	// Address is the host:port to dial; when empty the serving process uses its Marmot host name with Port.
@@ -94,13 +94,13 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 		return nil, err
 	}
 
-	served := map[string]*ServedActions{}
+	served := map[string]*ServedTools{}
 	for _, src := range in.Sources {
-		if err := checkServedActions(src.Name, src.Actions); err != nil {
+		if err := checkServedTools(src.Name, src.Tools); err != nil {
 			return nil, err
 		}
-		if src.Actions != nil {
-			served[src.Name] = src.Actions
+		if src.Tools != nil {
+			served[src.Name] = src.Tools
 		}
 	}
 
@@ -132,7 +132,7 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 		PublicKeySHA256: publicKeySHA256(csr.RawSubjectPublicKeyInfo),
 		Credential:      credential,
 		ExpiresAt:       e.now().Add(e.lifetime),
-		ServedActions:   served,
+		ServedTools:     served,
 	}
 	if err := e.store.createEnrolment(ctx, enrolment); err != nil {
 		return nil, err

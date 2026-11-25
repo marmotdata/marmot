@@ -55,7 +55,7 @@ func (r *recorder) take() []pluginsdk.TriggerEvent {
 }
 
 // startWatch builds a watch on c and starts its informers, without the evaluation loop, so a test drives the clock.
-func startWatch(t *testing.T, c *fake.Clientset, config ActionsConfig, trigger string, params map[string]any) (*TriggerWatch, *recorder) {
+func startWatch(t *testing.T, c *fake.Clientset, config ToolsConfig, trigger string, params map[string]any) (*TriggerWatch, *recorder) {
 	t.Helper()
 	r := &recorder{t: t}
 	w, err := NewTriggerWatch(c, config, trigger, params, r.emit(trigger))
@@ -92,7 +92,7 @@ func crashyCluster(t *testing.T) *fake.Clientset {
 
 func TestWorkloadUnhealthyCrashLooping(t *testing.T) {
 	c := crashyCluster(t)
-	w, r := startWatch(t, c, ActionsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy,
+	w, r := startWatch(t, c, ToolsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy,
 		map[string]any{"conditions": []any{"crash_looping"}, "for_minutes": 1})
 	t0 := testNow
 
@@ -143,7 +143,7 @@ func TestWorkloadUnhealthyConditions(t *testing.T) {
 		{Type: appsv1.DeploymentProgressing, Status: corev1.ConditionFalse, Reason: "ProgressDeadlineExceeded"},
 	}}
 	c := fake.NewClientset(deployment("payments", "puller", 1), ownedReplicaSet("payments", "puller", "abc12"), pull, pending, stuck)
-	w, r := startWatch(t, c, ActionsConfig{}, triggerWorkloadUnhealthy, map[string]any{"namespaces": []any{"payments"}, "for_minutes": 1})
+	w, r := startWatch(t, c, ToolsConfig{}, triggerWorkloadUnhealthy, map[string]any{"namespaces": []any{"payments"}, "for_minutes": 1})
 	require.NoError(t, w.evaluate(testNow))
 	events := eventually(t, w, r, testNow.Add(2*time.Minute), 5)
 	got := map[string]bool{}
@@ -162,14 +162,14 @@ func TestWorkloadUnhealthyConditions(t *testing.T) {
 
 func TestTriggerScope(t *testing.T) {
 	c := crashyCluster(t)
-	_, err := NewTriggerWatch(c, ActionsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy, map[string]any{"namespaces": []any{"internal"}}, nil)
-	assert.Equal(t, codes.PermissionDenied, status.Code(err), "a namespace outside actions.namespaces")
+	_, err := NewTriggerWatch(c, ToolsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy, map[string]any{"namespaces": []any{"internal"}}, nil)
+	assert.Equal(t, codes.PermissionDenied, status.Code(err), "a namespace outside tools.namespaces")
 
-	_, err = NewTriggerWatch(c, ActionsConfig{}, triggerWorkloadUnhealthy, map[string]any{"for_minutes": 0}, nil)
+	_, err = NewTriggerWatch(c, ToolsConfig{}, triggerWorkloadUnhealthy, map[string]any{"for_minutes": 0}, nil)
 	assert.Equal(t, codes.InvalidArgument, status.Code(err))
 
 	// A selector the workload does not carry keeps it unreported.
-	w, r := startWatch(t, c, ActionsConfig{Selector: "marmot.io/actions=enabled"}, triggerWorkloadUnhealthy, map[string]any{"for_minutes": 1})
+	w, r := startWatch(t, c, ToolsConfig{Selector: "marmot.io/tools=enabled"}, triggerWorkloadUnhealthy, map[string]any{"for_minutes": 1})
 	require.NoError(t, w.evaluate(testNow))
 	require.NoError(t, w.evaluate(testNow.Add(2*time.Minute)))
 	assert.Empty(t, r.take())
@@ -179,7 +179,7 @@ func TestTriggerScope(t *testing.T) {
 	denied.PrependReactor("list", "replicasets", func(clienttesting.Action) (bool, runtime.Object, error) {
 		return true, nil, apierrors.NewForbidden(schema.GroupResource{Group: "apps", Resource: "replicasets"}, "", errors.New("denied"))
 	})
-	dw, err := NewTriggerWatch(denied, ActionsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy, nil, nil)
+	dw, err := NewTriggerWatch(denied, ToolsConfig{Namespaces: []string{"payments"}}, triggerWorkloadUnhealthy, nil, nil)
 	require.NoError(t, err)
 	err = dw.checkAccess(context.Background())
 	assert.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -195,7 +195,7 @@ func TestNodeUnhealthy(t *testing.T) {
 		Status: corev1.NodeStatus{Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady, Status: corev1.ConditionTrue}}}}
 	healthy := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "n3"}, Status: corev1.NodeStatus{Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady, Status: corev1.ConditionTrue}}}}
 	c := fake.NewClientset(notReady, cordoned, healthy)
-	w, r := startWatch(t, c, ActionsConfig{}, triggerNodeUnhealthy, map[string]any{"for_minutes": 5})
+	w, r := startWatch(t, c, ToolsConfig{}, triggerNodeUnhealthy, map[string]any{"for_minutes": 5})
 	require.NoError(t, w.evaluate(testNow))
 	events := eventually(t, w, r, testNow.Add(5*time.Minute), 3)
 	got := map[string]bool{}
@@ -222,7 +222,7 @@ func TestWarningEvents(t *testing.T) {
 		ev("d", "db-2", "FailedMount", 9, time.Hour), // outside the window
 		ev("e", "db-3", "Pulled", 9, time.Minute),    // not a listed reason
 	)
-	w, r := startWatch(t, c, ActionsConfig{Namespaces: []string{"payments"}}, triggerWarningEvents, map[string]any{"window_minutes": 10, "min_count": 3})
+	w, r := startWatch(t, c, ToolsConfig{Namespaces: []string{"payments"}}, triggerWarningEvents, map[string]any{"window_minutes": 10, "min_count": 3})
 	events := eventually(t, w, r, testNow, 1)
 	require.Len(t, events, 1)
 	assert.Equal(t, "db-0", events[0].Target.Name)
@@ -245,7 +245,7 @@ func TestCustomCondition(t *testing.T) {
 		"kind": "deployment", "name": "below_desired", "for_minutes": 1,
 		"when": "object.status.?availableReplicas.orValue(0) < object.spec.replicas",
 	}
-	w, r := startWatch(t, c, ActionsConfig{Namespaces: []string{"payments"}}, triggerCustomCondition, params)
+	w, r := startWatch(t, c, ToolsConfig{Namespaces: []string{"payments"}}, triggerCustomCondition, params)
 	require.NoError(t, w.evaluate(testNow))
 	events := eventually(t, w, r, testNow.Add(2*time.Minute), 1)
 	require.Len(t, events, 1)
@@ -260,7 +260,7 @@ func TestCustomCondition(t *testing.T) {
 		"an unknown name": "missing.field == 1",
 	} {
 		p := map[string]any{"kind": "deployment", "name": "x", "when": expr}
-		_, err := NewTriggerWatch(c, ActionsConfig{}, triggerCustomCondition, p, nil)
+		_, err := NewTriggerWatch(c, ToolsConfig{}, triggerCustomCondition, p, nil)
 		assert.Equal(t, codes.InvalidArgument, status.Code(err), name)
 	}
 }
@@ -269,7 +269,7 @@ func TestCustomConditionOnPods(t *testing.T) {
 	c := crashyCluster(t)
 	params := map[string]any{"kind": "pod", "name": "restarting", "for_minutes": 1,
 		"when": "object.status.containerStatuses.exists(s, s.restartCount > 3)"}
-	w, r := startWatch(t, c, ActionsConfig{Namespaces: []string{"payments"}}, triggerCustomCondition, params)
+	w, r := startWatch(t, c, ToolsConfig{Namespaces: []string{"payments"}}, triggerCustomCondition, params)
 	require.NoError(t, w.evaluate(testNow))
 	events := eventually(t, w, r, testNow.Add(2*time.Minute), 1)
 	require.Len(t, events, 1, "the healthy pod has no restarts")

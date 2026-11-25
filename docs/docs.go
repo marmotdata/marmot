@@ -17572,15 +17572,6 @@ const docTemplate = `{
         "PluginInfo": {
             "type": "object",
             "properties": {
-                "actions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pluginsdk.ActionSpec"
-                    }
-                },
-                "actions_digest": {
-                    "type": "string"
-                },
                 "asset_schemas": {
                     "type": "array",
                     "items": {
@@ -17646,17 +17637,26 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "supports_actions": {
-                    "type": "boolean"
-                },
                 "supports_data_preview": {
                     "type": "boolean"
                 },
                 "supports_query": {
                     "type": "boolean"
                 },
+                "supports_tools": {
+                    "type": "boolean"
+                },
                 "supports_triggers": {
                     "type": "boolean"
+                },
+                "tools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ToolSpec"
+                    }
+                },
+                "tools_digest": {
+                    "type": "string"
                 },
                 "triggers": {
                     "type": "array",
@@ -21136,87 +21136,6 @@ const docTemplate = `{
                 "StateHistorical"
             ]
         },
-        "pluginsdk.ActionParam": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "enum": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "max": {
-                    "type": "integer"
-                },
-                "max_items": {
-                    "description": "MaxItems bounds a list parameter and is set only on one.",
-                    "type": "integer"
-                },
-                "max_length": {
-                    "type": "integer"
-                },
-                "min": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pattern": {
-                    "type": "string"
-                },
-                "required": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "$ref": "#/definitions/pluginsdk.ParamType"
-                }
-            }
-        },
-        "pluginsdk.ActionSpec": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "inverse": {
-                    "description": "Inverse names the action that undoes this one, and is set exactly\nwhen Reversibility is ReversibilityReversible.",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "Name is the action's identifier, snake_case, such as \"scale\".",
-                    "type": "string"
-                },
-                "params": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pluginsdk.ActionParam"
-                    }
-                },
-                "reversibility": {
-                    "$ref": "#/definitions/pluginsdk.Reversibility"
-                },
-                "risk": {
-                    "$ref": "#/definitions/pluginsdk.RiskTier"
-                },
-                "targets": {
-                    "description": "Targets lists every kind of object the action can change.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "version": {
-                    "description": "Version is bumped whenever the action's meaning changes, so a policy\nwritten against one version does not silently cover the next.",
-                    "type": "integer"
-                }
-            }
-        },
         "pluginsdk.AssetField": {
             "type": "object",
             "properties": {
@@ -21411,6 +21330,87 @@ const docTemplate = `{
                 }
             }
         },
+        "pluginsdk.ToolParam": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enum": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "max": {
+                    "type": "integer"
+                },
+                "max_items": {
+                    "description": "MaxItems bounds a list parameter and is set only on one.",
+                    "type": "integer"
+                },
+                "max_length": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "$ref": "#/definitions/pluginsdk.ParamType"
+                }
+            }
+        },
+        "pluginsdk.ToolSpec": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "inverse": {
+                    "description": "Inverse names the tool that undoes this one, and is set exactly\nwhen Reversibility is ReversibilityReversible.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name is the tool's identifier, snake_case, such as \"scale\".",
+                    "type": "string"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ToolParam"
+                    }
+                },
+                "reversibility": {
+                    "$ref": "#/definitions/pluginsdk.Reversibility"
+                },
+                "risk": {
+                    "$ref": "#/definitions/pluginsdk.RiskTier"
+                },
+                "targets": {
+                    "description": "Targets lists every kind of object the tool can change.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is bumped whenever the tool's meaning changes, so a policy\nwritten against one version does not silently cover the next.",
+                    "type": "integer"
+                }
+            }
+        },
         "pluginsdk.TriggerSpec": {
             "type": "object",
             "properties": {
@@ -21429,10 +21429,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "params": {
-                    "description": "Params take the same types and bounds as action parameters, and\nalso lists and longer strings, since they come from the host's own\nconfiguration.",
+                    "description": "Params take the same types and bounds as tool parameters, and\nalso lists and longer strings, since they come from the host's own\nconfiguration.",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pluginsdk.ActionParam"
+                        "$ref": "#/definitions/pluginsdk.ToolParam"
                     }
                 },
                 "targets": {
@@ -21471,29 +21471,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pluginserve.ActionSummary": {
-            "type": "object",
-            "properties": {
-                "approvals": {
-                    "description": "Approvals is how many distinct people must approve an execute.",
-                    "type": "integer"
-                },
-                "approvers": {
-                    "description": "Approvers narrows who may approve, by Marmot user id or name; empty means anyone Marmot names.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "read": {
-                    "description": "Read is set for an action that only reads, which never needs approval.",
-                    "type": "boolean"
-                }
-            }
-        },
         "pluginserve.EnrolInput": {
             "type": "object",
             "properties": {
@@ -21516,7 +21493,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "approval_keys": {
-                    "description": "ApprovalKeys are the keys Marmot signs approvals of actions with, pinned like SigningKeys and never used for anything else.",
+                    "description": "ApprovalKeys are the keys Marmot signs approvals of tools with, pinned like SigningKeys and never used for anything else.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -21551,14 +21528,6 @@ const docTemplate = `{
         "pluginserve.EnrolSource": {
             "type": "object",
             "properties": {
-                "actions": {
-                    "description": "Actions is the process's report of the source's actions and triggers, when it serves any. Informative only: see ServedActions.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/pluginserve.ServedActions"
-                        }
-                    ]
-                },
                 "config": {
                     "type": "object",
                     "additionalProperties": {}
@@ -21568,22 +21537,20 @@ const docTemplate = `{
                 },
                 "plugin_id": {
                     "type": "string"
+                },
+                "tools": {
+                    "description": "Tools is the process's report of the source's tools and triggers, when it serves any. Informative only: see ServedTools.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pluginserve.ServedTools"
+                        }
+                    ]
                 }
             }
         },
         "pluginserve.PolicySummary": {
             "type": "object",
             "properties": {
-                "actions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pluginserve.ActionSummary"
-                    }
-                },
-                "actions_allowed": {
-                    "description": "ActionsAllowed is --allow-actions: without it nothing below runs.",
-                    "type": "boolean"
-                },
                 "approval_max_age": {
                     "description": "ApprovalMaxAge is the longest an approval may run before it expires.",
                     "type": "string"
@@ -21596,6 +21563,16 @@ const docTemplate = `{
                     "description": "PinnedManifest is the manifest digest the policy pins, when it pins one.",
                     "type": "string"
                 },
+                "tools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginserve.ToolSummary"
+                    }
+                },
+                "tools_allowed": {
+                    "description": "ToolsAllowed is --allow-tools: without it nothing below runs.",
+                    "type": "boolean"
+                },
                 "triggers": {
                     "type": "array",
                     "items": {
@@ -21604,13 +21581,13 @@ const docTemplate = `{
                 }
             }
         },
-        "pluginserve.ServedActions": {
+        "pluginserve.ServedTools": {
             "type": "object",
             "properties": {
                 "manifest": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pluginsdk.ActionSpec"
+                        "$ref": "#/definitions/pluginsdk.ToolSpec"
                     }
                 },
                 "manifest_digest": {
@@ -21627,6 +21604,29 @@ const docTemplate = `{
                 },
                 "triggers_digest": {
                     "type": "string"
+                }
+            }
+        },
+        "pluginserve.ToolSummary": {
+            "type": "object",
+            "properties": {
+                "approvals": {
+                    "description": "Approvals is how many distinct people must approve an execute.",
+                    "type": "integer"
+                },
+                "approvers": {
+                    "description": "Approvers narrows who may approve, by Marmot user id or name; empty means anyone Marmot names.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "read": {
+                    "description": "Read is set for a tool that only reads, which never needs approval.",
+                    "type": "boolean"
                 }
             }
         },

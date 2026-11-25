@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// ServedActions is what a serving process reports at enrolment about one source's actions and triggers: the manifests its plugin process gave it, their digests as it computed them, and a summary of what its own policy allows. It is informative only. Marmot uses it to offer actions and show what they need, but the serving process enforces its own copy of the policy on every request, so a summary that is stale, wrong or forged can make Marmot ask for something that is refused, never make the process run it.
-type ServedActions struct {
-	Manifest       []pluginsdk.ActionSpec  `json:"manifest,omitempty"`
+// ServedTools is what a serving process reports at enrolment about one source's tools and triggers: the manifests its plugin process gave it, their digests as it computed them, and a summary of what its own policy allows. It is informative only. Marmot uses it to offer tools and show what they need, but the serving process enforces its own copy of the policy on every request, so a summary that is stale, wrong or forged can make Marmot ask for something that is refused, never make the process run it.
+type ServedTools struct {
+	Manifest       []pluginsdk.ToolSpec    `json:"manifest,omitempty"`
 	ManifestDigest string                  `json:"manifest_digest,omitempty"`
 	Triggers       []pluginsdk.TriggerSpec `json:"triggers,omitempty"`
 	TriggersDigest string                  `json:"triggers_digest,omitempty"`
@@ -24,11 +24,11 @@ type ServedActions struct {
 
 // PolicySummary is what the serving process's policy allows for one source, without the approvers' keys.
 type PolicySummary struct {
-	// ActionsAllowed is --allow-actions: without it nothing below runs.
-	ActionsAllowed bool `json:"actions_allowed"`
+	// ToolsAllowed is --allow-tools: without it nothing below runs.
+	ToolsAllowed bool `json:"tools_allowed"`
 	// PinnedManifest is the manifest digest the policy pins, when it pins one.
 	PinnedManifest string           `json:"pinned_manifest,omitempty"`
-	Actions        []ActionSummary  `json:"actions,omitempty"`
+	Tools          []ToolSummary    `json:"tools,omitempty"`
 	Triggers       []TriggerSummary `json:"triggers,omitempty"`
 	// ApprovalTrust is how the process trusts approvals: "marmot" for Marmot-signed. Empty when the policy has no approvals section, in which case every write that needs approval is refused.
 	ApprovalTrust string `json:"approval_trust,omitempty"`
@@ -36,10 +36,10 @@ type PolicySummary struct {
 	ApprovalMaxAge string `json:"approval_max_age,omitempty"`
 }
 
-// ActionSummary is one action the policy names on the source.
-type ActionSummary struct {
+// ToolSummary is one tool the policy names on the source.
+type ToolSummary struct {
 	Name string `json:"name"`
-	// Read is set for an action that only reads, which never needs approval.
+	// Read is set for a tool that only reads, which never needs approval.
 	Read bool `json:"read,omitempty"`
 	// Approvals is how many distinct people must approve an execute.
 	Approvals int `json:"approvals"`
@@ -54,12 +54,12 @@ type TriggerSummary struct {
 	Cooldown string         `json:"cooldown"`
 }
 
-// maxServedActionsBytes bounds what one source's report may take in the enrolment and the database.
-const maxServedActionsBytes = 256 << 10
+// maxServedToolsBytes bounds what one source's report may take in the enrolment and the database.
+const maxServedToolsBytes = 256 << 10
 
 // summarise builds the policy summary for source.
-func (p *Policy) summarise(source string, allowActions bool, specs []pluginsdk.ActionSpec) PolicySummary {
-	out := PolicySummary{ActionsAllowed: allowActions}
+func (p *Policy) summarise(source string, allowTools bool, specs []pluginsdk.ToolSpec) PolicySummary {
+	out := PolicySummary{ToolsAllowed: allowTools}
 	if p == nil {
 		return out
 	}
@@ -69,14 +69,14 @@ func (p *Policy) summarise(source string, allowActions bool, specs []pluginsdk.A
 	}
 	sp := p.Sources[source]
 	out.PinnedManifest = sp.Manifest
-	for name, ap := range sp.Actions {
-		s := ActionSummary{Name: name, Read: isReadAction(specs, name), Approvers: ap.Approvers}
+	for name, ap := range sp.Tools {
+		s := ToolSummary{Name: name, Read: isReadTool(specs, name), Approvers: ap.Approvers}
 		if !s.Read {
 			s.Approvals = ap.need().required
 		}
-		out.Actions = append(out.Actions, s)
+		out.Tools = append(out.Tools, s)
 	}
-	slices.SortFunc(out.Actions, func(a, b ActionSummary) int { return compareStrings(a.Name, b.Name) })
+	slices.SortFunc(out.Tools, func(a, b ToolSummary) int { return compareStrings(a.Name, b.Name) })
 	for name, tp := range sp.Triggers {
 		out.Triggers = append(out.Triggers, TriggerSummary{Name: name, Params: tp.Params, Cooldown: tp.Cooldown.String()})
 	}
@@ -94,19 +94,19 @@ func compareStrings(a, b string) int {
 	return 0
 }
 
-// servedActions is what this process reports for src at enrolment, or nil when it serves no actions or triggers for it. A plugin that cannot be asked for its manifest is reported without one rather than failing the enrolment, since queries do not depend on it.
-func servedActionsFor(ctx context.Context, opts ServeOptions, src LocalSource) *ServedActions {
-	if !opts.AllowActions || opts.Actor == nil {
+// servedTools is what this process reports for src at enrolment, or nil when it serves no tools or triggers for it. A plugin that cannot be asked for its manifest is reported without one rather than failing the enrolment, since queries do not depend on it.
+func servedToolsFor(ctx context.Context, opts ServeOptions, src LocalSource) *ServedTools {
+	if !opts.AllowTools || opts.PluginTools == nil {
 		return nil
 	}
 	sp := opts.Policy.sourcePolicy(src.Name)
-	if len(sp.Actions) == 0 && len(sp.Triggers) == 0 {
+	if len(sp.Tools) == 0 && len(sp.Triggers) == 0 {
 		return nil
 	}
-	out := &ServedActions{}
-	specs, err := opts.Actor.ActionManifest(ctx, src.PluginID)
+	out := &ServedTools{}
+	specs, err := opts.PluginTools.ToolManifest(ctx, src.PluginID)
 	if err != nil {
-		log.Warn().Err(err).Str("source", src.Name).Msg("Could not read the plugin's action manifest to report it")
+		log.Warn().Err(err).Str("source", src.Name).Msg("Could not read the plugin's tool manifest to report it")
 	} else {
 		out.Manifest, out.ManifestDigest = specs, pluginsdk.ManifestDigest(specs)
 	}
@@ -118,7 +118,7 @@ func servedActionsFor(ctx context.Context, opts ServeOptions, src LocalSource) *
 			out.Triggers, out.TriggersDigest = triggers, pluginsdk.TriggersDigest(triggers)
 		}
 	}
-	out.Policy = opts.Policy.summarise(src.Name, opts.AllowActions, specs)
+	out.Policy = opts.Policy.summarise(src.Name, opts.AllowTools, specs)
 	return out
 }
 
@@ -129,21 +129,21 @@ func (p *Policy) sourcePolicy(source string) SourcePolicy {
 	return p.Sources[source]
 }
 
-// checkServedActions vets a report at enrolment. Marmot stores it to show people, so it must at least be what a plugin could have said: manifests the SDK accepts, digests that match them, and a bounded size. Anything else refuses the enrolment, so a serving process that sends nonsense is told at once.
-func checkServedActions(name string, sa *ServedActions) error {
+// checkServedTools vets a report at enrolment. Marmot stores it to show people, so it must at least be what a plugin could have said: manifests the SDK accepts, digests that match them, and a bounded size. Anything else refuses the enrolment, so a serving process that sends nonsense is told at once.
+func checkServedTools(name string, sa *ServedTools) error {
 	if sa == nil {
 		return nil
 	}
 	data, err := json.Marshal(sa)
-	if err != nil || len(data) > maxServedActionsBytes {
-		return fmt.Errorf("%w: source %q: its actions report is too large", ErrInvalidEnrolment, name)
+	if err != nil || len(data) > maxServedToolsBytes {
+		return fmt.Errorf("%w: source %q: its tools report is too large", ErrInvalidEnrolment, name)
 	}
 	if len(sa.Manifest) > 0 || sa.ManifestDigest != "" {
 		if err := pluginsdk.ValidateManifest(sa.Manifest); err != nil {
-			return fmt.Errorf("%w: source %q: action manifest: %v", ErrInvalidEnrolment, name, err)
+			return fmt.Errorf("%w: source %q: tool manifest: %v", ErrInvalidEnrolment, name, err)
 		}
 		if pluginsdk.ManifestDigest(sa.Manifest) != sa.ManifestDigest {
-			return fmt.Errorf("%w: source %q: the action manifest does not match its digest", ErrInvalidEnrolment, name)
+			return fmt.Errorf("%w: source %q: the tool manifest does not match its digest", ErrInvalidEnrolment, name)
 		}
 	}
 	if len(sa.Triggers) > 0 || sa.TriggersDigest != "" {
@@ -157,25 +157,25 @@ func checkServedActions(name string, sa *ServedActions) error {
 	return nil
 }
 
-// ServedActions returns what the serving process for source last reported about its actions and triggers, and whether it is connected now to any replica. It reads the newest enrolment of the source's owner, preferring one with a live session. The report is informative only: see ServedActions. It returns ErrNotConnected when no enrolment of the source's owner has reported one.
-func (h *Hub) ServedActions(ctx context.Context, source string) (*ServedActions, bool, error) {
+// ServedTools returns what the serving process for source last reported about its tools and triggers, and whether it is connected now to any replica. It reads the newest enrolment of the source's owner, preferring one with a live session. The report is informative only: see ServedTools. It returns ErrNotConnected when no enrolment of the source's owner has reported one.
+func (h *Hub) ServedTools(ctx context.Context, source string) (*ServedTools, bool, error) {
 	owner, err := h.owners(ctx, source)
 	if err != nil {
 		return nil, false, err
 	}
-	return h.store.servedActions(ctx, source, owner, sessionFreshness)
+	return h.store.servedTools(ctx, source, owner, sessionFreshness)
 }
 
-func (s *Store) servedActions(ctx context.Context, source string, owner Owner, freshness time.Duration) (*ServedActions, bool, error) {
+func (s *Store) servedTools(ctx context.Context, source string, owner Owner, freshness time.Duration) (*ServedTools, bool, error) {
 	var data []byte
 	var connected bool
 	err := s.db.QueryRow(ctx,
-		`SELECT e.served_actions -> $1,
+		`SELECT e.served_tools -> $1,
 		        EXISTS (SELECT 1 FROM plugin_serve_sessions s
 		                 WHERE s.enrolment_id = e.id AND s.heartbeat_at > NOW() - $4::interval) AND e.expires_at > NOW() AS connected
 		   FROM plugin_serve_enrolments e
 		  WHERE $1 = ANY(e.sources) AND e.principal_type = $2 AND e.principal_id = $3
-		    AND e.served_actions ? $1
+		    AND e.served_tools ? $1
 		  ORDER BY connected DESC, e.created_at DESC
 		  LIMIT 1`,
 		source, owner.Type, owner.ID, freshness.String()).Scan(&data, &connected)
@@ -183,11 +183,11 @@ func (s *Store) servedActions(ctx context.Context, source string, owner Owner, f
 		return nil, false, ErrNotConnected
 	}
 	if err != nil {
-		return nil, false, fmt.Errorf("reading served actions for %s: %w", source, err)
+		return nil, false, fmt.Errorf("reading served tools for %s: %w", source, err)
 	}
-	var out ServedActions
+	var out ServedTools
 	if err := json.Unmarshal(data, &out); err != nil {
-		return nil, false, fmt.Errorf("decoding served actions for %s: %w", source, err)
+		return nil, false, fmt.Errorf("decoding served tools for %s: %w", source, err)
 	}
 	return &out, connected, nil
 }

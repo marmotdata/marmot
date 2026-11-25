@@ -79,16 +79,16 @@ func newCluster(t *testing.T, objects ...runtime.Object) *fake.Clientset {
 	return c
 }
 
-func engine(t *testing.T, c *fake.Clientset, config ActionsConfig) *ActionEngine {
+func engine(t *testing.T, c *fake.Clientset, config ToolsConfig) *ToolEngine {
 	t.Helper()
-	e, err := NewActionEngine(c, config)
+	e, err := NewToolEngine(c, config)
 	require.NoError(t, err)
 	e.now = func() time.Time { return time.Date(2026, 11, 25, 9, 0, 0, 0, time.UTC) }
 	return e
 }
 
-func request(action string, params map[string]any) pluginsdk.ActionRequest {
-	return pluginsdk.ActionRequest{Action: action, Params: params, Identity: "user:alice", Origin: "task_run:42"}
+func request(tool string, params map[string]any) pluginsdk.ToolRequest {
+	return pluginsdk.ToolRequest{Tool: tool, Params: params, Identity: "user:alice", Origin: "task_run:42"}
 }
 
 func deployment(ns, name string, replicas int32) *appsv1.Deployment {
@@ -107,7 +107,7 @@ func deployment(ns, name string, replicas int32) *appsv1.Deployment {
 
 // planAndExecute plans, checks the plan wrote nothing, then executes with
 // the plan's precondition.
-func planAndExecute(t *testing.T, c *fake.Clientset, e *ActionEngine, req pluginsdk.ActionRequest) (*pluginsdk.ActionPlan, *pluginsdk.ActionResult) {
+func planAndExecute(t *testing.T, c *fake.Clientset, e *ToolEngine, req pluginsdk.ToolRequest) (*pluginsdk.ToolPlan, *pluginsdk.ToolResult) {
 	t.Helper()
 	ctx := context.Background()
 	writes := countWrites(c)
@@ -132,14 +132,14 @@ func countWrites(c *fake.Clientset) int {
 	return n
 }
 
-func TestActionManifestIsValid(t *testing.T) {
-	require.NoError(t, pluginsdk.ValidateManifest(ActionSpecs()))
+func TestToolManifestIsValid(t *testing.T) {
+	require.NoError(t, pluginsdk.ValidateManifest(ToolSpecs()))
 }
 
 func TestScale(t *testing.T) {
 	c := newCluster(t, deployment("payments", "api", 3))
-	e := engine(t, c, ActionsConfig{})
-	req := request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
+	e := engine(t, c, ToolsConfig{})
+	req := request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
 
 	plan, result := planAndExecute(t, c, e, req)
 	assert.Equal(t, "deployment/payments/api", plan.Target)
@@ -155,7 +155,7 @@ func TestScale(t *testing.T) {
 	assert.Equal(t, "user:alice", dep.Annotations[annotationActor])
 
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionScale, result.Undo.Action)
+	assert.Equal(t, toolScale, result.Undo.Tool)
 	assert.Equal(t, int64(3), result.Undo.Params["replicas"])
 
 	for _, a := range c.Actions() {
@@ -172,28 +172,28 @@ func TestScaleWarnings(t *testing.T) {
 		Spec:       autoscalingv2.HorizontalPodAutoscalerSpec{ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{Kind: "Deployment", Name: "api"}},
 	}
 	c := newCluster(t, deployment("payments", "api", 3), hpa)
-	plan, err := engine(t, c, ActionsConfig{}).Plan(context.Background(),
-		request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(0)}))
+	plan, err := engine(t, c, ToolsConfig{}).Plan(context.Background(),
+		request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(0)}))
 	require.NoError(t, err)
 	assert.Len(t, plan.Warnings, 2, "zero replicas and the autoscaler")
 }
 
 func TestScaleRespectsMaxReplicas(t *testing.T) {
 	c := newCluster(t, deployment("payments", "api", 3))
-	req := request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(21)})
+	req := request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(21)})
 
-	_, err := engine(t, c, ActionsConfig{}).Plan(context.Background(), req)
+	_, err := engine(t, c, ToolsConfig{}).Plan(context.Background(), req)
 	require.ErrorContains(t, err, "max_replicas of 20")
 
-	_, err = engine(t, c, ActionsConfig{MaxReplicas: 50}).Plan(context.Background(), req)
+	_, err = engine(t, c, ToolsConfig{MaxReplicas: 50}).Plan(context.Background(), req)
 	require.NoError(t, err)
 }
 
 func TestExecuteRefusesStaleState(t *testing.T) {
 	ctx := context.Background()
 	c := newCluster(t, deployment("payments", "api", 3))
-	e := engine(t, c, ActionsConfig{})
-	req := request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
+	e := engine(t, c, ToolsConfig{})
+	req := request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
 
 	plan, err := e.Plan(ctx, req)
 	require.NoError(t, err)
@@ -220,8 +220,8 @@ func TestExecuteRefusesStaleState(t *testing.T) {
 func TestPatchCarriesThePrecondition(t *testing.T) {
 	dep := deployment("payments", "api", 3)
 	dep.ResourceVersion = "7"
-	e := engine(t, newCluster(t), ActionsConfig{})
-	data := e.patchFor(dep, "7", &change{}, request(actionScale, nil))
+	e := engine(t, newCluster(t), ToolsConfig{})
+	data := e.patchFor(dep, "7", &change{}, request(toolScale, nil))
 
 	stale, err := json.Marshal(func() *appsv1.Deployment { d := dep.DeepCopy(); d.ResourceVersion = "8"; return d }())
 	require.NoError(t, err)
@@ -245,13 +245,13 @@ func TestGitOpsManagedObjectsAreRefused(t *testing.T) {
 			dep := deployment("payments", "api", 3)
 			mutate(dep)
 			c := newCluster(t, dep)
-			req := request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
+			req := request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)})
 
-			_, err := engine(t, c, ActionsConfig{}).Plan(context.Background(), req)
+			_, err := engine(t, c, ToolsConfig{}).Plan(context.Background(), req)
 			require.ErrorIs(t, err, ErrGitOpsManaged)
 			assert.Contains(t, err.Error(), "Git")
 
-			_, err = engine(t, c, ActionsConfig{AllowGitOpsManaged: true}).Plan(context.Background(), req)
+			_, err = engine(t, c, ToolsConfig{AllowGitOpsManaged: true}).Plan(context.Background(), req)
 			require.NoError(t, err)
 		})
 	}
@@ -259,43 +259,43 @@ func TestGitOpsManagedObjectsAreRefused(t *testing.T) {
 	// A Helm chart's instance label alone is not GitOps.
 	dep := deployment("payments", "api", 3)
 	dep.Labels["app.kubernetes.io/instance"] = "api"
-	_, err := engine(t, newCluster(t, dep), ActionsConfig{}).Plan(context.Background(),
-		request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)}))
+	_, err := engine(t, newCluster(t, dep), ToolsConfig{}).Plan(context.Background(),
+		request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)}))
 	require.NoError(t, err)
 }
 
 func TestScope(t *testing.T) {
 	ctx := context.Background()
 	c := newCluster(t, deployment("payments", "api", 3), deployment("kube-system", "coredns", 2))
-	scale := func(ns, name string) pluginsdk.ActionRequest {
-		return request(actionScale, map[string]any{"kind": "deployment", "namespace": ns, "name": name, "replicas": int64(1)})
+	scale := func(ns, name string) pluginsdk.ToolRequest {
+		return request(toolScale, map[string]any{"kind": "deployment", "namespace": ns, "name": name, "replicas": int64(1)})
 	}
 
 	before := len(c.Actions())
-	_, err := engine(t, c, ActionsConfig{}).Plan(ctx, scale("kube-system", "coredns"))
+	_, err := engine(t, c, ToolsConfig{}).Plan(ctx, scale("kube-system", "coredns"))
 	require.ErrorIs(t, err, ErrOutOfScope)
 	assert.Len(t, c.Actions(), before, "an out of scope namespace is not even read")
 
-	_, err = engine(t, c, ActionsConfig{Namespaces: []string{"kube-system"}}).Plan(ctx, scale("kube-system", "coredns"))
+	_, err = engine(t, c, ToolsConfig{Namespaces: []string{"kube-system"}}).Plan(ctx, scale("kube-system", "coredns"))
 	require.NoError(t, err, "naming a system namespace allows it")
 
-	_, err = engine(t, c, ActionsConfig{Namespaces: []string{"orders"}}).Plan(ctx, scale("payments", "api"))
+	_, err = engine(t, c, ToolsConfig{Namespaces: []string{"orders"}}).Plan(ctx, scale("payments", "api"))
 	require.ErrorIs(t, err, ErrOutOfScope)
 
-	_, err = engine(t, c, ActionsConfig{Selector: "marmot.io/actions=enabled"}).Plan(ctx, scale("payments", "api"))
+	_, err = engine(t, c, ToolsConfig{Selector: "marmot.io/tools=enabled"}).Plan(ctx, scale("payments", "api"))
 	require.ErrorIs(t, err, ErrOutOfScope)
 
-	_, err = engine(t, c, ActionsConfig{Selector: "app=api"}).Plan(ctx, scale("payments", "api"))
+	_, err = engine(t, c, ToolsConfig{Selector: "app=api"}).Plan(ctx, scale("payments", "api"))
 	require.NoError(t, err)
 
-	_, err = NewActionEngine(c, ActionsConfig{Selector: "=bad"})
+	_, err = NewToolEngine(c, ToolsConfig{Selector: "=bad"})
 	require.Error(t, err)
 }
 
 func TestRolloutRestart(t *testing.T) {
 	c := newCluster(t, deployment("payments", "api", 3))
-	plan, result := planAndExecute(t, c, engine(t, c, ActionsConfig{}),
-		request(actionRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api"}))
+	plan, result := planAndExecute(t, c, engine(t, c, ToolsConfig{}),
+		request(toolRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api"}))
 	assert.Contains(t, plan.Diff, `spec.template.metadata.annotations["kubectl.kubernetes.io/restartedAt"]: "2026-11-25T09:00:00Z"`)
 	assert.Nil(t, result.Undo, "restart is self healing, not reversible")
 
@@ -306,8 +306,8 @@ func TestRolloutRestart(t *testing.T) {
 
 	paused := deployment("payments", "paused", 1)
 	paused.Spec.Paused = true
-	_, err = engine(t, newCluster(t, paused), ActionsConfig{}).Plan(context.Background(),
-		request(actionRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "paused"}))
+	_, err = engine(t, newCluster(t, paused), ToolsConfig{}).Plan(context.Background(),
+		request(toolRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "paused"}))
 	require.ErrorContains(t, err, "paused")
 }
 
@@ -319,8 +319,8 @@ func TestRolloutRestartDaemonSet(t *testing.T) {
 		}},
 	}
 	c := newCluster(t, ds)
-	planAndExecute(t, c, engine(t, c, ActionsConfig{}),
-		request(actionRolloutRestart, map[string]any{"kind": "daemonset", "namespace": "payments", "name": "agent"}))
+	planAndExecute(t, c, engine(t, c, ToolsConfig{}),
+		request(toolRolloutRestart, map[string]any{"kind": "daemonset", "namespace": "payments", "name": "agent"}))
 
 	got, err := c.AppsV1().DaemonSets("payments").Get(context.Background(), "agent", metav1.GetOptions{})
 	require.NoError(t, err)
@@ -349,8 +349,8 @@ func TestRolloutUndo(t *testing.T) {
 	stranger.Labels = map[string]string{"app": "api"} // matches the selector, but another owner
 	c := newCluster(t, dep, replicaSet(dep, "1", "app:v1"), replicaSet(dep, "2", "app:v2"), stranger)
 
-	plan, result := planAndExecute(t, c, engine(t, c, ActionsConfig{}),
-		request(actionRolloutUndo, map[string]any{"namespace": "payments", "name": "api"}))
+	plan, result := planAndExecute(t, c, engine(t, c, ToolsConfig{}),
+		request(toolRolloutUndo, map[string]any{"namespace": "payments", "name": "api"}))
 	assert.Contains(t, plan.Summary, "from revision 2 to revision 1")
 
 	got, err := c.AppsV1().Deployments("payments").Get(context.Background(), "api", metav1.GetOptions{})
@@ -359,11 +359,11 @@ func TestRolloutUndo(t *testing.T) {
 	assert.NotContains(t, got.Spec.Template.Labels, appsv1.DefaultDeploymentUniqueLabelKey)
 
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionRolloutUndo, result.Undo.Action)
+	assert.Equal(t, toolRolloutUndo, result.Undo.Tool)
 	assert.Equal(t, int64(2), result.Undo.Params["to_revision"])
 
-	_, err = engine(t, c, ActionsConfig{}).Plan(context.Background(),
-		request(actionRolloutUndo, map[string]any{"namespace": "payments", "name": "api", "to_revision": int64(9)}))
+	_, err = engine(t, c, ToolsConfig{}).Plan(context.Background(),
+		request(toolRolloutUndo, map[string]any{"namespace": "payments", "name": "api", "to_revision": int64(9)}))
 	require.ErrorContains(t, err, "no revision 9")
 }
 
@@ -382,8 +382,8 @@ func TestCordonCountsOnlyNodesThatTakePods(t *testing.T) {
 	notReady := node("down", false)
 	notReady.Status.Conditions[0].Status = corev1.ConditionFalse
 	c := newCluster(t, controlPlane, notReady, node("worker", false))
-	e := engine(t, c, ActionsConfig{})
-	_, err := e.Plan(t.Context(), request(actionCordon, map[string]any{"name": "worker"}))
+	e := engine(t, c, ToolsConfig{})
+	_, err := e.Plan(t.Context(), request(toolCordon, map[string]any{"name": "worker"}))
 	require.ErrorIs(t, err, ErrLastNode)
 	assert.Equal(t, codes.FailedPrecondition, status.Code(wireError(err)))
 }
@@ -397,39 +397,39 @@ func TestWireErrorCodes(t *testing.T) {
 
 func TestCordon(t *testing.T) {
 	c := newCluster(t, node("a", false), node("b", false))
-	e := engine(t, c, ActionsConfig{})
-	_, result := planAndExecute(t, c, e, request(actionCordon, map[string]any{"name": "a"}))
+	e := engine(t, c, ToolsConfig{})
+	_, result := planAndExecute(t, c, e, request(toolCordon, map[string]any{"name": "a"}))
 	require.NotNil(t, result.Undo)
-	assert.Equal(t, actionUncordon, result.Undo.Action)
+	assert.Equal(t, toolUncordon, result.Undo.Tool)
 
 	got, err := c.CoreV1().Nodes().Get(context.Background(), "a", metav1.GetOptions{})
 	require.NoError(t, err)
 	assert.True(t, got.Spec.Unschedulable)
 
-	_, err = e.Plan(context.Background(), request(actionCordon, map[string]any{"name": "b"}))
+	_, err = e.Plan(context.Background(), request(toolCordon, map[string]any{"name": "b"}))
 	require.ErrorContains(t, err, "last schedulable node")
 
-	_, result = planAndExecute(t, c, e, request(actionUncordon, map[string]any{"name": "a"}))
-	assert.Equal(t, actionCordon, result.Undo.Action)
+	_, result = planAndExecute(t, c, e, request(toolUncordon, map[string]any{"name": "a"}))
+	assert.Equal(t, toolCordon, result.Undo.Tool)
 }
 
 func TestSuspendAndResumeCronJob(t *testing.T) {
 	cj := &batchv1.CronJob{ObjectMeta: metav1.ObjectMeta{Namespace: "payments", Name: "nightly"}}
 	c := newCluster(t, cj)
-	e := engine(t, c, ActionsConfig{})
+	e := engine(t, c, ToolsConfig{})
 	params := map[string]any{"namespace": "payments", "name": "nightly"}
 
-	_, result := planAndExecute(t, c, e, request(actionSuspendCronJob, params))
-	assert.Equal(t, actionResumeCronJob, result.Undo.Action)
+	_, result := planAndExecute(t, c, e, request(toolSuspendCronJob, params))
+	assert.Equal(t, toolResumeCronJob, result.Undo.Tool)
 	got, err := c.BatchV1().CronJobs("payments").Get(context.Background(), "nightly", metav1.GetOptions{})
 	require.NoError(t, err)
 	assert.True(t, *got.Spec.Suspend)
 
-	_, err = e.Plan(context.Background(), request(actionSuspendCronJob, params))
+	_, err = e.Plan(context.Background(), request(toolSuspendCronJob, params))
 	require.ErrorContains(t, err, "already suspended")
 
-	_, result = planAndExecute(t, c, e, request(actionResumeCronJob, params))
-	assert.Equal(t, actionSuspendCronJob, result.Undo.Action)
+	_, result = planAndExecute(t, c, e, request(toolResumeCronJob, params))
+	assert.Equal(t, toolSuspendCronJob, result.Undo.Tool)
 }
 
 // Whatever the verb, the engine only ever reads and patches, and never
@@ -439,14 +439,14 @@ func TestEngineOnlyReadsAndPatches(t *testing.T) {
 	dep.Annotations = map[string]string{revisionAnnotation: "2"}
 	c := newCluster(t, dep, replicaSet(dep, "1", "app:v1"), replicaSet(dep, "2", "app:v2"),
 		node("a", false), node("b", false), &batchv1.CronJob{ObjectMeta: metav1.ObjectMeta{Namespace: "payments", Name: "nightly"}})
-	e := engine(t, c, ActionsConfig{})
+	e := engine(t, c, ToolsConfig{})
 
-	for _, req := range []pluginsdk.ActionRequest{
-		request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(4)}),
-		request(actionRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api"}),
-		request(actionRolloutUndo, map[string]any{"namespace": "payments", "name": "api"}),
-		request(actionCordon, map[string]any{"name": "a"}),
-		request(actionSuspendCronJob, map[string]any{"namespace": "payments", "name": "nightly"}),
+	for _, req := range []pluginsdk.ToolRequest{
+		request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(4)}),
+		request(toolRolloutRestart, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api"}),
+		request(toolRolloutUndo, map[string]any{"namespace": "payments", "name": "api"}),
+		request(toolCordon, map[string]any{"name": "a"}),
+		request(toolSuspendCronJob, map[string]any{"namespace": "payments", "name": "nightly"}),
 	} {
 		planAndExecute(t, c, e, req)
 	}
@@ -459,7 +459,7 @@ func TestEngineOnlyReadsAndPatches(t *testing.T) {
 	}
 }
 
-func TestActionClientUserAgent(t *testing.T) {
+func TestToolClientUserAgent(t *testing.T) {
 	var mu sync.Mutex
 	var agent string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -471,7 +471,7 @@ func TestActionClientUserAgent(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client, err := newActionClient(&Config{Host: srv.URL, Token: "t"}, "task_run:42")
+	client, err := newToolClient(&Config{Host: srv.URL, Token: "t"}, "task_run:42")
 	require.NoError(t, err)
 	_, err = client.CoreV1().Nodes().Get(context.Background(), "a", metav1.GetOptions{})
 	require.NoError(t, err)
@@ -480,7 +480,7 @@ func TestActionClientUserAgent(t *testing.T) {
 	assert.Contains(t, agent, "origin task_run:42")
 }
 
-func TestActionClientRefusesImpersonation(t *testing.T) {
+func TestToolClientRefusesImpersonation(t *testing.T) {
 	kubeconfig := filepath.Join(t.TempDir(), "config")
 	require.NoError(t, os.WriteFile(kubeconfig, []byte(`apiVersion: v1
 kind: Config
@@ -490,20 +490,20 @@ contexts: [{name: x, context: {cluster: c, user: u}}]
 current-context: x
 `), 0o600))
 
-	_, err := newActionClient(&Config{KubeconfigPath: kubeconfig}, "task_run:42")
+	_, err := newToolClient(&Config{KubeconfigPath: kubeconfig}, "task_run:42")
 	require.ErrorContains(t, err, "impersonates")
 }
 
 // The Source, over the SDK's own checks, refuses out of bounds parameters
 // before the engine ever runs; this covers the config wiring end to end.
-func TestSourceActionsUseConfig(t *testing.T) {
+func TestSourceToolsUseConfig(t *testing.T) {
 	s := &Source{client: newCluster(t, deployment("payments", "api", 3))}
-	raw := pluginsdk.RawConfig{"actions": map[string]any{"max_replicas": 4}}
-	_, err := s.PlanAction(context.Background(), raw,
-		request(actionScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)}))
+	raw := pluginsdk.RawConfig{"tools": map[string]any{"max_replicas": 4}}
+	_, err := s.PlanTool(context.Background(), raw,
+		request(toolScale, map[string]any{"kind": "deployment", "namespace": "payments", "name": "api", "replicas": int64(5)}))
 	require.ErrorContains(t, err, "max_replicas of 4")
 
-	_, err = s.Validate(pluginsdk.RawConfig{"actions": map[string]any{"selector": "=bad"}})
+	_, err = s.Validate(pluginsdk.RawConfig{"tools": map[string]any{"selector": "=bad"}})
 	require.Error(t, err)
 }
 

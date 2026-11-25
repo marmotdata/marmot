@@ -36,8 +36,8 @@ type Enrolment struct {
 	Credential      auth.Credential
 	CreatedAt       time.Time
 	ExpiresAt       time.Time
-	// ServedActions is the process's report for each source that has actions or triggers, as it enrolled with it.
-	ServedActions map[string]*ServedActions
+	// ServedTools is the process's report for each source that has tools or triggers, as it enrolled with it.
+	ServedTools map[string]*ServedTools
 }
 
 // active reports whether the enrolment may still carry queries at now.
@@ -178,10 +178,10 @@ func (t keyTx) retireGenerations(ctx context.Context, retires time.Time) error {
 
 func (s *Store) createEnrolment(ctx context.Context, e *Enrolment) error {
 	err := s.db.QueryRow(ctx,
-		`INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, credential_lookup, expires_at, served_actions)
+		`INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, credential_lookup, expires_at, served_tools)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		 RETURNING id, created_at`,
-		e.PrincipalType, e.PrincipalID, e.AuditSubject, e.Sources, e.PublicKeySHA256, e.Credential.Type, nilIfEmpty(e.Credential.Lookup), e.ExpiresAt, servedJSON(e.ServedActions),
+		e.PrincipalType, e.PrincipalID, e.AuditSubject, e.Sources, e.PublicKeySHA256, e.Credential.Type, nilIfEmpty(e.Credential.Lookup), e.ExpiresAt, servedJSON(e.ServedTools),
 	).Scan(&e.ID, &e.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("creating enrolment: %w", err)
@@ -193,7 +193,7 @@ func (s *Store) enrolment(ctx context.Context, id string) (*Enrolment, error) {
 	var e Enrolment
 	var served []byte
 	err := s.db.QueryRow(ctx,
-		`SELECT id, principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, COALESCE(credential_lookup, ''), created_at, expires_at, served_actions
+		`SELECT id, principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, COALESCE(credential_lookup, ''), created_at, expires_at, served_tools
 		 FROM plugin_serve_enrolments WHERE id = $1`, id,
 	).Scan(&e.ID, &e.PrincipalType, &e.PrincipalID, &e.AuditSubject, &e.Sources, &e.PublicKeySHA256, &e.Credential.Type, &e.Credential.Lookup, &e.CreatedAt, &e.ExpiresAt, &served)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -203,8 +203,8 @@ func (s *Store) enrolment(ctx context.Context, id string) (*Enrolment, error) {
 		return nil, fmt.Errorf("reading enrolment: %w", err)
 	}
 	if len(served) > 0 {
-		if err := json.Unmarshal(served, &e.ServedActions); err != nil {
-			return nil, fmt.Errorf("reading enrolment: its served actions do not decode: %w", err)
+		if err := json.Unmarshal(served, &e.ServedTools); err != nil {
+			return nil, fmt.Errorf("reading enrolment: its served tools do not decode: %w", err)
 		}
 	}
 	return &e, nil
@@ -327,8 +327,8 @@ func (s *Store) apiKeyExists(ctx context.Context, c auth.Credential) (bool, erro
 	return exists, nil
 }
 
-// servedJSON encodes the served actions for the JSONB column, or NULL when there are none.
-func servedJSON(m map[string]*ServedActions) []byte {
+// servedJSON encodes the served tools for the JSONB column, or NULL when there are none.
+func servedJSON(m map[string]*ServedTools) []byte {
 	if len(m) == 0 {
 		return nil
 	}

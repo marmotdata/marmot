@@ -33,7 +33,7 @@ const (
 	diffContext   = 3
 )
 
-// engine plans and executes the plugin's actions against one owner.
+// engine plans and executes the plugin's tools against one owner.
 type engine struct {
 	client *client
 	config *Config
@@ -49,7 +49,7 @@ func newEngine(rawConfig pluginsdk.RawConfig, origin string) (*engine, error) {
 	}
 	// The SDK has already refused an origin that is not printable ASCII
 	// without spaces, so it cannot split the header.
-	c, err := newClient(config.BaseURL, config.token(), fmt.Sprintf("marmot-plugin-github/actions (origin %s)", origin))
+	c, err := newClient(config.BaseURL, config.token(), fmt.Sprintf("marmot-plugin-github/tools (origin %s)", origin))
 	if err != nil {
 		return nil, err
 	}
@@ -67,12 +67,12 @@ type prepared struct {
 	precondition string
 	warnings     []string
 	// run makes the change; only Execute calls it.
-	run func(ctx context.Context) (after any, undo *pluginsdk.ActionRequest, err error)
+	run func(ctx context.Context) (after any, undo *pluginsdk.ToolRequest, err error)
 }
 
 // Plan previews a write. Every call it makes is a read.
-func (e *engine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionPlan, error) {
-	if _, err := pluginsdk.CheckActionRequest(ActionSpecs(), req, false); err != nil {
+func (e *engine) Plan(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolPlan, error) {
+	if _, err := pluginsdk.CheckToolRequest(ToolSpecs(), req, false); err != nil {
 		return nil, err
 	}
 	p, err := e.prepare(ctx, req)
@@ -83,7 +83,7 @@ func (e *engine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*plugin
 	if err != nil {
 		return nil, err
 	}
-	return &pluginsdk.ActionPlan{
+	return &pluginsdk.ToolPlan{
 		Target:       p.target,
 		TargetKind:   p.kind,
 		Summary:      p.summary,
@@ -100,11 +100,11 @@ func (e *engine) Plan(ctx context.Context, req pluginsdk.ActionRequest) (*plugin
 // the check is a fresh read just before the write; open_pull_request is the
 // exception that needs none, since its commit is built on the planned base
 // commit itself and never on whatever the branch points at by then.
-func (e *engine) Execute(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, error) {
-	if isRead(req.Action) {
+func (e *engine) Execute(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, error) {
+	if isRead(req.Tool) {
 		return e.read(ctx, req)
 	}
-	if _, err := pluginsdk.CheckActionRequest(ActionSpecs(), req, true); err != nil {
+	if _, err := pluginsdk.CheckToolRequest(ToolSpecs(), req, true); err != nil {
 		return nil, err
 	}
 	p, err := e.prepare(ctx, req)
@@ -123,7 +123,7 @@ func (e *engine) Execute(ctx context.Context, req pluginsdk.ActionRequest) (*plu
 		// The change has happened; failing now would report it as not.
 		before, after = nil, nil
 	}
-	return &pluginsdk.ActionResult{
+	return &pluginsdk.ToolResult{
 		Target:     p.target,
 		TargetKind: p.kind,
 		Summary:    p.summary,
@@ -146,11 +146,11 @@ func marshalPair(before, after any) (json.RawMessage, json.RawMessage, error) {
 	return b, a, nil
 }
 
-func (e *engine) prepare(ctx context.Context, req pluginsdk.ActionRequest) (*prepared, error) {
+func (e *engine) prepare(ctx context.Context, req pluginsdk.ToolRequest) (*prepared, error) {
 	repo := req.StringParam("repo")
 	// Refused before anything is read from the repository.
-	if !e.config.Actions.writable(repo) {
-		return nil, fmt.Errorf("repository %s is %w: allow it in actions.repos", repo, ErrOutOfScope)
+	if !e.config.Tools.writable(repo) {
+		return nil, fmt.Errorf("repository %s is %w: allow it in tools.repos", repo, ErrOutOfScope)
 	}
 	r, err := repositoryInScope(ctx, e.client, e.config, repo)
 	if err != nil {
@@ -159,19 +159,19 @@ func (e *engine) prepare(ctx context.Context, req pluginsdk.ActionRequest) (*pre
 	if r.Archived {
 		return nil, fmt.Errorf("repository %s is archived and read-only", r.FullName)
 	}
-	switch req.Action {
-	case actionOpenPullRequest:
+	switch req.Tool {
+	case toolOpenPullRequest:
 		return e.openPullRequest(ctx, r, req)
-	case actionClosePullRequest:
+	case toolClosePullRequest:
 		return e.setPullRequestState(ctx, r, req, "closed")
-	case actionReopenPullRequest:
+	case toolReopenPullRequest:
 		return e.setPullRequestState(ctx, r, req, "open")
-	case actionComment:
+	case toolComment:
 		return e.comment(ctx, r, req)
-	case actionDeleteComment:
+	case toolDeleteComment:
 		return e.deleteComment(ctx, r, req)
 	}
-	return nil, fmt.Errorf("unknown action %q", req.Action)
+	return nil, fmt.Errorf("unknown tool %q", req.Tool)
 }
 
 // edit is one slot of open_pull_request.
@@ -179,7 +179,7 @@ type edit struct {
 	path, old, new string
 }
 
-func editsOf(req pluginsdk.ActionRequest) ([]edit, error) {
+func editsOf(req pluginsdk.ToolRequest) ([]edit, error) {
 	var edits []edit
 	for i := 1; i <= maxEdits; i++ {
 		p, okPath := req.Params[fmt.Sprintf("path_%d", i)]
@@ -252,7 +252,7 @@ type fileChange struct {
 	newText string
 }
 
-func (e *engine) openPullRequest(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*prepared, error) {
+func (e *engine) openPullRequest(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*prepared, error) {
 	edits, err := editsOf(req)
 	if err != nil {
 		return nil, err
@@ -262,15 +262,15 @@ func (e *engine) openPullRequest(ctx context.Context, r *repository, req plugins
 		if err := checkPath(ed.path); err != nil {
 			return nil, err
 		}
-		if isCIPath(ed.path) && !e.config.Actions.AllowCIChanges {
-			return nil, fmt.Errorf("%s is %w, which a pull request from this repository would run unreviewed with its secrets; set actions.allow_ci_changes to allow it: %w", ed.path, ErrCIPath, ErrOutOfScope)
+		if isCIPath(ed.path) && !e.config.Tools.AllowCIChanges {
+			return nil, fmt.Errorf("%s is %w, which a pull request from this repository would run unreviewed with its secrets; set tools.allow_ci_changes to allow it: %w", ed.path, ErrCIPath, ErrOutOfScope)
 		}
 		if !slices.Contains(paths, ed.path) {
 			paths = append(paths, ed.path)
 		}
 	}
-	if limit := e.config.Actions.maxFiles(); len(paths) > limit {
-		return nil, fmt.Errorf("%d files is above this runner's actions.max_files of %d", len(paths), limit)
+	if limit := e.config.Tools.maxFiles(); len(paths) > limit {
+		return nil, fmt.Errorf("%d files is above this runner's tools.max_files of %d", len(paths), limit)
 	}
 
 	base := req.StringParam("base")
@@ -307,8 +307,8 @@ func (e *engine) openPullRequest(ctx context.Context, r *repository, req plugins
 		fc.newText = strings.Replace(fc.newText, ed.old, ed.new, 1)
 	}
 	for _, fc := range files {
-		if int64(len(fc.newText)) > e.config.Actions.maxFileBytes() {
-			return nil, fmt.Errorf("%s would be %d bytes, above this runner's actions.max_file_bytes of %d", fc.path, len(fc.newText), e.config.Actions.maxFileBytes())
+		if int64(len(fc.newText)) > e.config.Tools.maxFileBytes() {
+			return nil, fmt.Errorf("%s would be %d bytes, above this runner's tools.max_file_bytes of %d", fc.path, len(fc.newText), e.config.Tools.maxFileBytes())
 		}
 		if fc.newText == fc.oldText {
 			return nil, fmt.Errorf("the edits leave %s unchanged", fc.path)
@@ -316,7 +316,7 @@ func (e *engine) openPullRequest(ctx context.Context, r *repository, req plugins
 		fc.newSHA = blobSHA(fc.newText)
 	}
 
-	prefix := e.config.Actions.branchPrefix()
+	prefix := e.config.Tools.branchPrefix()
 	branch := prefix + branchName(req)
 	switch err := e.client.do(ctx, "GET", repoPath(e.config.Owner, r.Name)+"/git/ref/heads/"+escapePath(branch), nil, nil, &gitRef{}); {
 	case err == nil:
@@ -348,7 +348,7 @@ func (e *engine) openPullRequest(ctx context.Context, r *repository, req plugins
 		p.warnings = append(p.warnings, fmt.Sprintf("the pull request targets %s, not the default branch %s", base, r.DefaultBranch))
 	}
 
-	p.run = func(ctx context.Context) (any, *pluginsdk.ActionRequest, error) {
+	p.run = func(ctx context.Context) (any, *pluginsdk.ToolRequest, error) {
 		repo := repoPath(e.config.Owner, r.Name)
 		entries := make([]map[string]string, 0, len(files))
 		for _, fc := range files {
@@ -381,7 +381,7 @@ func (e *engine) openPullRequest(ctx context.Context, r *repository, req plugins
 		}
 		after := map[string]any{"branch": branch, "commit": newCommit.SHA, "files": afterFiles,
 			"pull_request": map[string]any{"number": pr.Number, "url": pr.HTMLURL, "title": title, "base": base, "head": branch}}
-		undo := &pluginsdk.ActionRequest{Action: actionClosePullRequest, Params: map[string]any{"repo": r.Name, "number": int64(pr.Number)}}
+		undo := &pluginsdk.ToolRequest{Tool: toolClosePullRequest, Params: map[string]any{"repo": r.Name, "number": int64(pr.Number)}}
 		return after, undo, nil
 	}
 	return p, nil
@@ -399,8 +399,8 @@ func (e *engine) readForEdit(ctx context.Context, w *treeWalker, rootTree, path 
 		return nil, fmt.Errorf("%s is a directory, not a file", path)
 	case entry.Mode == symlinkMode:
 		return nil, fmt.Errorf("%s is a symbolic link; edit the file it points at", path)
-	case entry.Size > e.config.Actions.maxFileBytes():
-		return nil, fmt.Errorf("%s is %d bytes, above this runner's actions.max_file_bytes of %d", path, entry.Size, e.config.Actions.maxFileBytes())
+	case entry.Size > e.config.Tools.maxFileBytes():
+		return nil, fmt.Errorf("%s is %d bytes, above this runner's tools.max_file_bytes of %d", path, entry.Size, e.config.Tools.maxFileBytes())
 	}
 	data, err := w.blob(ctx, entry.SHA)
 	if err != nil {
@@ -494,7 +494,7 @@ var nonSlug = regexp.MustCompile(`[^a-z0-9]+`)
 // same origin and parameters, and differs for any other request, so
 // executing twice finds the branch already there instead of opening a
 // second pull request.
-func branchName(req pluginsdk.ActionRequest) string {
+func branchName(req pluginsdk.ToolRequest) string {
 	name := req.StringParam("branch")
 	if name == "" {
 		name = strings.Trim(nonSlug.ReplaceAllString(strings.ToLower(req.StringParam("title")), "-"), "-")
@@ -513,7 +513,7 @@ func branchName(req pluginsdk.ActionRequest) string {
 // footer is appended to everything the plugin writes for people to read,
 // naming who asked and from where. Identity and origin are printable ASCII
 // without spaces; backticks are dropped so neither can close the code span.
-func footer(verb string, req pluginsdk.ActionRequest) string {
+func footer(verb string, req pluginsdk.ToolRequest) string {
 	clean := func(s string) string { return strings.ReplaceAll(s, "`", "") }
 	return fmt.Sprintf("%s%s by Marmot for `%s` (`%s`)._\n%s", footerRule, verb, clean(req.Identity), clean(req.Origin), commentMarker)
 }
@@ -583,10 +583,10 @@ func (e *engine) getPullRequest(ctx context.Context, r *repository, number int64
 // branch anything, so the head repository must be this one.
 func (e *engine) isOurs(r *repository, pr *pullRequest) bool {
 	return pr.Head.Repo != nil && strings.EqualFold(pr.Head.Repo.FullName, e.config.Owner+"/"+r.Name) &&
-		strings.HasPrefix(pr.Head.Ref, e.config.Actions.branchPrefix())
+		strings.HasPrefix(pr.Head.Ref, e.config.Tools.branchPrefix())
 }
 
-func (e *engine) setPullRequestState(ctx context.Context, r *repository, req pluginsdk.ActionRequest, want string) (*prepared, error) {
+func (e *engine) setPullRequestState(ctx context.Context, r *repository, req pluginsdk.ToolRequest, want string) (*prepared, error) {
 	number, _ := req.IntParam("number")
 	pr, err := e.getPullRequest(ctx, r, number)
 	if err != nil {
@@ -594,7 +594,7 @@ func (e *engine) setPullRequestState(ctx context.Context, r *repository, req plu
 	}
 	target := fmt.Sprintf("%s/%s#%d", e.config.Owner, r.Name, number)
 	if !e.isOurs(r, pr) {
-		return nil, fmt.Errorf("%s is %w: its head is not a %s branch in this repository", target, ErrNotOurs, e.config.Actions.branchPrefix())
+		return nil, fmt.Errorf("%s is %w: its head is not a %s branch in this repository", target, ErrNotOurs, e.config.Tools.branchPrefix())
 	}
 	if pr.MergedAt != nil {
 		return nil, fmt.Errorf("%s is merged", target)
@@ -612,9 +612,9 @@ func (e *engine) setPullRequestState(ctx context.Context, r *repository, req plu
 		}
 	}
 
-	verb, inverse := "Close", actionReopenPullRequest
+	verb, inverse := "Close", toolReopenPullRequest
 	if want == "open" {
-		verb, inverse = "Reopen", actionClosePullRequest
+		verb, inverse = "Reopen", toolClosePullRequest
 	}
 	return &prepared{
 		target:       target,
@@ -624,18 +624,18 @@ func (e *engine) setPullRequestState(ctx context.Context, r *repository, req plu
 		after:        map[string]string{"state": want},
 		diff:         fmt.Sprintf("- state: %s\n+ state: %s\n", pr.State, want),
 		precondition: pullRequestPrecondition(pr),
-		run: func(ctx context.Context) (any, *pluginsdk.ActionRequest, error) {
+		run: func(ctx context.Context) (any, *pluginsdk.ToolRequest, error) {
 			var updated pullRequest
 			if err := e.client.do(ctx, "PATCH", repoPath(e.config.Owner, r.Name)+"/pulls/"+strconv.FormatInt(number, 10), nil, map[string]string{"state": want}, &updated); err != nil {
 				return nil, nil, fmt.Errorf("setting %s %s: %w", target, want, err)
 			}
-			undo := &pluginsdk.ActionRequest{Action: inverse, Params: map[string]any{"repo": r.Name, "number": number}}
+			undo := &pluginsdk.ToolRequest{Tool: inverse, Params: map[string]any{"repo": r.Name, "number": number}}
 			return map[string]string{"state": updated.State}, undo, nil
 		},
 	}, nil
 }
 
-func (e *engine) comment(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*prepared, error) {
+func (e *engine) comment(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*prepared, error) {
 	number, _ := req.IntParam("number")
 	pr, err := e.getPullRequest(ctx, r, number)
 	if err != nil {
@@ -658,12 +658,12 @@ func (e *engine) comment(ctx context.Context, r *repository, req pluginsdk.Actio
 		// it may no longer be true.
 		precondition: pr.Head.SHA,
 		warnings:     []string{"people watching the pull request are notified when the comment is posted, and deleting it later does not recall that"},
-		run: func(ctx context.Context) (any, *pluginsdk.ActionRequest, error) {
+		run: func(ctx context.Context) (any, *pluginsdk.ToolRequest, error) {
 			var c issueComment
 			if err := e.client.do(ctx, "POST", repoPath(e.config.Owner, r.Name)+"/issues/"+strconv.FormatInt(number, 10)+"/comments", nil, map[string]string{"body": body}, &c); err != nil {
 				return nil, nil, fmt.Errorf("commenting on %s: %w", target, err)
 			}
-			undo := &pluginsdk.ActionRequest{Action: actionDeleteComment, Params: map[string]any{"repo": r.Name, "comment_id": c.ID}}
+			undo := &pluginsdk.ToolRequest{Tool: toolDeleteComment, Params: map[string]any{"repo": r.Name, "comment_id": c.ID}}
 			return map[string]any{"head_sha": pr.Head.SHA, "comment_id": c.ID, "url": c.HTMLURL}, undo, nil
 		},
 	}, nil
@@ -671,7 +671,7 @@ func (e *engine) comment(ctx context.Context, r *repository, req pluginsdk.Actio
 
 var issueNumber = regexp.MustCompile(`/issues/([0-9]+)$`)
 
-func (e *engine) deleteComment(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*prepared, error) {
+func (e *engine) deleteComment(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*prepared, error) {
 	id, _ := req.IntParam("comment_id")
 	repo := repoPath(e.config.Owner, r.Name)
 	var c issueComment
@@ -725,11 +725,11 @@ func (e *engine) deleteComment(ctx context.Context, r *repository, req pluginsdk
 		after:        map[string]any{},
 		diff:         "- comment: " + strconv.Quote(text) + "\n",
 		precondition: c.UpdatedAt.UTC().Format(time.RFC3339Nano),
-		run: func(ctx context.Context) (any, *pluginsdk.ActionRequest, error) {
+		run: func(ctx context.Context) (any, *pluginsdk.ToolRequest, error) {
 			if err := e.client.do(ctx, "DELETE", repo+"/issues/comments/"+strconv.FormatInt(id, 10), nil, nil, nil); err != nil {
 				return nil, nil, fmt.Errorf("deleting %s: %w", target, err)
 			}
-			undo := &pluginsdk.ActionRequest{Action: actionComment, Params: map[string]any{"repo": r.Name, "number": number, "body": text}}
+			undo := &pluginsdk.ToolRequest{Tool: toolComment, Params: map[string]any{"repo": r.Name, "number": number, "body": text}}
 			return map[string]any{}, undo, nil
 		},
 	}, nil

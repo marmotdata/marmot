@@ -72,9 +72,9 @@ type held struct {
 type TriggerWatch struct {
 	trigger string
 	client  k8s.Interface
-	config  ActionsConfig
+	config  ToolsConfig
 	scope   labels.Selector
-	// selector is the trigger's own, on top of the actions scope.
+	// selector is the trigger's own, on top of the tools scope.
 	selector labels.Selector
 	// namespaces nil means cluster wide.
 	namespaces []string
@@ -99,9 +99,9 @@ type resourceCheck struct {
 }
 
 // NewTriggerWatch builds the watch for trigger with params from the
-// runner's policy, checking them against the actions scope. It reads
+// runner's policy, checking them against the tools scope. It reads
 // nothing yet.
-func NewTriggerWatch(client k8s.Interface, config ActionsConfig, trigger string, params map[string]any, emit func(pluginsdk.TriggerEvent) error) (*TriggerWatch, error) {
+func NewTriggerWatch(client k8s.Interface, config ToolsConfig, trigger string, params map[string]any, emit func(pluginsdk.TriggerEvent) error) (*TriggerWatch, error) {
 	if err := config.Validate(); err != nil {
 		return nil, invalid("%v", err)
 	}
@@ -119,7 +119,7 @@ func NewTriggerWatch(client k8s.Interface, config ActionsConfig, trigger string,
 
 	scope, err := labels.Parse(config.Selector)
 	if err != nil {
-		return nil, invalid("actions.selector: %v", err)
+		return nil, invalid("tools.selector: %v", err)
 	}
 	selector := labels.Everything()
 	if s, _ := params["selector"].(string); s != "" {
@@ -339,7 +339,7 @@ func shortKind(k pluginsdk.TargetKind) string {
 }
 
 // admits reports whether the watch may report on an object: in a namespace
-// actions may touch, matching actions.selector and the trigger's selector.
+// tools may touch, matching tools.selector and the trigger's selector.
 func (w *TriggerWatch) admits(namespace string, objLabels map[string]string) bool {
 	if namespace != "" && !w.config.inScope(namespace) {
 		return false
@@ -827,7 +827,7 @@ func (w *TriggerWatch) setupEvents(params map[string]any) error {
 				ns = ""
 			}
 			// Events carry no labels of the object they are about, so only
-			// the namespace scope applies, and actions.selector, when set,
+			// the namespace scope applies, and tools.selector, when set,
 			// is honoured by reporting nothing rather than guessing.
 			if (ns != "" && !w.config.inScope(ns)) || !w.scope.Empty() || !w.selector.Empty() {
 				return

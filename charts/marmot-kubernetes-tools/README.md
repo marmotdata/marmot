@@ -1,20 +1,20 @@
-# marmot-kubernetes-actions
+# marmot-kubernetes-tools
 
-Gives a Marmot runner exactly the access the Kubernetes plugin's actions need in your cluster, and an admission policy that holds it to the changes those actions make.
+Gives a Marmot runner exactly the access the Kubernetes plugin's tools need in your cluster, and an admission policy that holds it to the changes those tools make.
 
-Actions only ever run in your own runner (`marmot ingest --serve`), never on Marmot's servers. This chart is the cluster's side of that boundary: even a runner that misbehaves, or a token taken from it, can do no more than what is listed here.
+Tools only ever run in your own runner (`marmot ingest --serve`), never on Marmot's servers. This chart is the cluster's side of that boundary: even a runner that misbehaves, or a token taken from it, can do no more than what is listed here.
 
 ## Install
 
 ```bash
-helm install marmot-actions ./charts/marmot-kubernetes-actions \
+helm install marmot-tools ./charts/marmot-kubernetes-tools \
   --namespace marmot --create-namespace \
   --set 'namespaces={payments,orders}'
 ```
 
 Run the runner as the ServiceAccount this creates, or give it a token for that ServiceAccount. The admission policy recognises the runner by that ServiceAccount's username, so any other identity is not covered by it.
 
-Keep `namespaces`, `maxReplicas` and `selector` in step with the plugin's `actions.namespaces`, `actions.max_replicas` and `actions.selector`. The plugin refuses first, with a clearer error; the cluster refuses as well.
+Keep `namespaces`, `maxReplicas` and `selector` in step with the plugin's `tools.namespaces`, `tools.max_replicas` and `tools.selector`. The plugin refuses first, with a clearer error; the cluster refuses as well.
 
 ## What is granted
 
@@ -27,18 +27,18 @@ One Role and RoleBinding in each namespace in `namespaces`, with only what the s
 | `rollout_restart` | Deployments, StatefulSets, DaemonSets | get, list, watch, patch |
 | | ReplicaSets | get, list, to find the revision to restore |
 | `suspend_cronjob`, `resume_cronjob` | CronJobs | get, list, watch, patch |
-| `workload_status`, `pod_logs`, `recent_events` (`actions.observe`) | Pods, Events (core and `events.k8s.io`) | get, list, watch |
+| `workload_status`, `pod_logs`, `recent_events` (`tools.observe`) | Pods, Events (core and `events.k8s.io`) | get, list, watch |
 | | `pods/log` | get |
 | | Deployments, StatefulSets, DaemonSets, Jobs, CronJobs | get, list |
 | Triggers (`triggers.enabled`) | Pods, Events, PersistentVolumeClaims, ReplicaSets, Deployments, StatefulSets, DaemonSets, Jobs, CronJobs, HorizontalPodAutoscalers | get, list, watch |
 
-With `actions.cordon` on, one ClusterRole grants get, list, watch and patch on Nodes, since nodes belong to no namespace. List lets the plugin refuse to cordon the last schedulable node.
+With `tools.cordon` on, one ClusterRole grants get, list, watch and patch on Nodes, since nodes belong to no namespace. List lets the plugin refuse to cordon the last schedulable node.
 
 With `triggers.clusterWide` on, a second ClusterRole grants the triggers' get, list and watch across the whole cluster, and on Nodes. It is needed for `node_unhealthy`, a `custom_condition` on nodes, and any trigger watching every namespace rather than those in `namespaces`. It lets the runner read the status of every pod in the cluster, though still no Secret and no log, so it is off by default.
 
 The reads and triggers write nothing, so the admission policy below does not concern them.
 
-Nothing else is granted. In particular there is no access to Secrets, no create or delete on anything, no writes to pods, no `exec`, `attach` or `portforward`, no `log` unless `actions.observe` is on, no RBAC, and no `escalate`, `bind` or `impersonate`. The `scale` subresources are not granted either: the plugin writes the replica count on the workload itself, so the same write carries its audit annotations and the admission policy sees the whole object.
+Nothing else is granted. In particular there is no access to Secrets, no create or delete on anything, no writes to pods, no `exec`, `attach` or `portforward`, no `log` unless `tools.observe` is on, no RBAC, and no `escalate`, `bind` or `impersonate`. The `scale` subresources are not granted either: the plugin writes the replica count on the workload itself, so the same write carries its audit annotations and the admission policy sees the whole object.
 
 ## What the admission policy refuses
 
@@ -70,12 +70,12 @@ Kubernetes 1.30 or later, where ValidatingAdmissionPolicy is generally available
 | `serviceAccount.create` | `true` | Create the runner's ServiceAccount |
 | `serviceAccount.name` | release name | Name of the ServiceAccount |
 | `serviceAccount.annotations` | `{}` | Annotations, for example for cloud workload identity |
-| `namespaces` | `[]` | Namespaces actions may change; required for any namespaced verb |
-| `actions.scale` | `true` | Grant `scale` |
-| `actions.rolloutRestart` | `true` | Grant `rollout_restart` |
-| `actions.cronJobs` | `true` | Grant `suspend_cronjob` and `resume_cronjob` |
-| `actions.cordon` | `false` | Grant `cordon` and `uncordon` |
-| `actions.observe` | `true` | Grant the reads `workload_status`, `pod_logs` and `recent_events` |
+| `namespaces` | `[]` | Namespaces tools may change; required for any namespaced verb |
+| `tools.scale` | `true` | Grant `scale` |
+| `tools.rolloutRestart` | `true` | Grant `rollout_restart` |
+| `tools.cronJobs` | `true` | Grant `suspend_cronjob` and `resume_cronjob` |
+| `tools.cordon` | `false` | Grant `cordon` and `uncordon` |
+| `tools.observe` | `true` | Grant the reads `workload_status`, `pod_logs` and `recent_events` |
 | `triggers.enabled` | `true` | Grant what triggers watch, in each namespace in `namespaces` |
 | `triggers.clusterWide` | `false` | Grant it across the cluster, and Nodes, through a ClusterRole |
 | `maxReplicas` | `20` | Highest replica count admitted, from 1 to 1000 |

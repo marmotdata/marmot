@@ -76,36 +76,36 @@ tags:
   - "${labels.team}"
 ```
 
-## Actions
+## Tools
 
-Besides discovery, the plugin can make a small set of typed changes, which a runner allowed to take actions runs on your behalf. Every action is previewed with a server-side dry run first, and runs only if the object is still exactly as previewed.
+Besides discovery, the plugin can make a small set of typed changes, which a runner allowed to take tools runs on your behalf. Every tool is previewed with a server-side dry run first, and runs only if the object is still exactly as previewed.
 
-| Action | Changes | Undone by |
+| Tool | Changes | Undone by |
 | --- | --- | --- |
 | `scale` | A Deployment's or StatefulSet's replica count | `scale` back to the previous count |
 | `rollout_restart` | A Deployment's, StatefulSet's or DaemonSet's pods, with a rolling update | Nothing needed: the workload returns to the same state |
-| `rollout_undo` | A Deployment's pod template, restored from an earlier revision | `rollout_undo` to the revision it replaced (the `marmot-kubernetes-actions` chart refuses it; see its README) |
+| `rollout_undo` | A Deployment's pod template, restored from an earlier revision | `rollout_undo` to the revision it replaced (the `marmot-kubernetes-tools` chart refuses it; see its README) |
 | `cordon`, `uncordon` | Whether a node accepts new pods | Each other |
 | `suspend_cronjob`, `resume_cronjob` | Whether a CronJob starts new runs | Each other |
 
-Each change is made with the field manager `marmot` and leaves `marmot.io/origin` (the run that made it) and `marmot.io/actor` (who asked) annotations on the object. No action reads a Secret, reaches into a pod, or creates or deletes anything.
+Each change is made with the field manager `marmot` and leaves `marmot.io/origin` (the run that made it) and `marmot.io/actor` (who asked) annotations on the object. No tool reads a Secret, reaches into a pod, or creates or deletes anything.
 
-Objects that Flux or Argo CD manage are refused, since their changes belong in Git and the next reconcile would revert them. Limit actions further with:
+Objects that Flux or Argo CD manage are refused, since their changes belong in Git and the next reconcile would revert them. Limit tools further with:
 
 ```yaml
-actions:
+tools:
   max_replicas: 20
   namespaces:
     - "payments"
-  selector: "marmot.io/actions=enabled"
+  selector: "marmot.io/tools=enabled"
   allow_gitops_managed: false
 ```
 
-Without `namespaces`, actions may change every namespace except `kube-system`, `kube-public` and `kube-node-lease`. The [`marmot-kubernetes-actions` chart](https://github.com/marmotdata/marmot/tree/main/charts/marmot-kubernetes-actions) creates a service account with exactly the access these actions need, and an admission policy that refuses anything else from it.
+Without `namespaces`, tools may change every namespace except `kube-system`, `kube-public` and `kube-node-lease`. The [`marmot-kubernetes-tools` chart](https://github.com/marmotdata/marmot/tree/main/charts/marmot-kubernetes-tools) creates a service account with exactly the access these tools need, and an admission policy that refuses anything else from it.
 
 ### Reads
 
-Three actions only read, so a task can look before it proposes a change. They need no plan and no approval, but the runner's policy must still name each one, and they keep to the same `namespaces` and `selector`. Objects Flux or Argo CD manage are readable.
+Three tools only read, so a task can look before it proposes a change. They need no plan and no approval, but the runner's policy must still name each one, and they keep to the same `namespaces` and `selector`. Objects Flux or Argo CD manage are readable.
 
 | Read | Returns |
 | --- | --- |
@@ -128,4 +128,4 @@ Triggers watch the cluster and report what goes wrong as small, typed events. Th
 
 Each event fires once per object and condition while it holds, and can fire again after it clears. Its facts are fixed: `kind`, `namespace`, `name`, `workload`, `condition`, `reason`, `pods_affected` or `count`, `restart_count` where relevant, and `since`. Free text, such as an event message, travels only in the untrusted `detail`.
 
-Triggers watch the namespaces in `actions.namespaces`, or fewer. Nodes, and watching every namespace, need the chart's `triggers.clusterWide`.
+Triggers watch the namespaces in `tools.namespaces`, or fewer. Nodes, and watching every namespace, need the chart's `triggers.clusterWide`.

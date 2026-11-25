@@ -18,27 +18,27 @@ Run a runner in your cluster so [tasks](../Cloud/tasks.md) can look at what's wr
 
 ## How it works
 
-A chart gives the runner's service account only the access each action needs, and an admission policy refuses any other change from it. The runner's policy file then names the reads, actions and triggers it serves and how many people must approve each change.
+A chart gives the runner's service account only the access each tool needs, and an admission policy refuses any other change from it. The runner's policy file then names the reads, tools and triggers it serves and how many people must approve each change.
 
 ## Set it up
 
 <Steps>
-<Step title="Install the actions chart">
+<Step title="Install the tools chart">
 
 The chart creates the runner's service account, a Role in each namespace you list and the admission policy. List the namespaces tasks may touch:
 
 ```bash
-helm install marmot-actions marmotdata/marmot-kubernetes-actions \
+helm install marmot-tools marmotdata/marmot-kubernetes-tools \
   --namespace marmot --create-namespace \
   --set 'namespaces={payments,checkout}'
 ```
 
-Scale, restart, the reads and namespaced triggers are on by default. Cordoning nodes, and triggers that watch nodes or every namespace, are off until you turn them on with `actions.cordon` and `triggers.clusterWide`. Every value is in the [runner reference](../Configure/serving-reference.md#kubernetes-actions-chart).
+Scale, restart, the reads and namespaced triggers are on by default. Cordoning nodes, and triggers that watch nodes or every namespace, are off until you turn them on with `tools.cordon` and `triggers.clusterWide`. Every value is in the [runner reference](../Configure/serving-reference.md#kubernetes-tools-chart).
 
 </Step>
 <Step title="Write the pipeline">
 
-The pipeline catalogs the cluster and sets the plugin's own limits on actions. Keep `actions.namespaces` the same as the chart's `namespaces`:
+The pipeline catalogs the cluster and sets the plugin's own limits on tools. Keep `tools.namespaces` the same as the chart's `namespaces`:
 
 ```yaml
 name: prod-cluster
@@ -46,7 +46,7 @@ runs:
   - kubernetes:
       cluster_name: prod-cluster
       namespaces: [payments, checkout]
-      actions:
+      tools:
         namespaces: [payments, checkout]
         max_replicas: 10
       queryable: true
@@ -57,7 +57,7 @@ The source takes the pipeline's name, so tasks see it as `prod-cluster`. Run in 
 </Step>
 <Step title="Write the runner's policy">
 
-The policy names every read, action and trigger the runner serves. Anything it leaves out is refused, whatever Marmot asks:
+The policy names every read, tool and trigger the runner serves. Anything it leaves out is refused, whatever Marmot asks:
 
 ```yaml
 approvals:
@@ -66,8 +66,7 @@ approvals:
 sources:
   prod-cluster:
     query: false
-    origins: ["task_run:*"]
-    actions:
+    tools:
       workload_status: {}
       pod_logs: {}
       recent_events: {}
@@ -92,7 +91,7 @@ This runner lets tasks read status, logs and events, restart a workload with 1 a
 </Step>
 <Step title="Start the runner">
 
-Run it as a Deployment in the `marmot` namespace with the chart's service account, `marmot-actions`. Keep the API key in a Secret and the pipeline and policy in a ConfigMap:
+Run it as a Deployment in the `marmot` namespace with the chart's service account, `marmot-tools`. Keep the API key in a Secret and the pipeline and policy in a ConfigMap:
 
 ```yaml
 apiVersion: apps/v1
@@ -108,7 +107,7 @@ spec:
     metadata:
       labels: {app: marmot-runner}
     spec:
-      serviceAccountName: marmot-actions
+      serviceAccountName: marmot-tools
       containers:
         - name: runner
           image: ghcr.io/marmotdata/marmot:<version>
@@ -116,7 +115,7 @@ spec:
             - plugin
             - -c=/etc/marmot/pipeline.yaml
             - --serve
-            - --allow-actions
+            - --allow-tools
             - --policy=/etc/marmot/policy.yaml
             - --audit-log=/var/log/marmot/audit.jsonl
           env:
@@ -135,12 +134,12 @@ spec:
           persistentVolumeClaim: {claimName: marmot-runner-audit}
 ```
 
-`--allow-actions` turns on reads, actions and triggers, and needs `--audit-log`. Keep the audit log on a volume that outlives the pod, because the runner uses it to refuse an approval used before a restart.
+`--allow-tools` turns on reads, tools and triggers, and needs `--audit-log`. Keep the audit log on a volume that outlives the pod, because the runner uses it to refuse an approval used before a restart.
 
 </Step>
-<Step title="Optional: pin the plugin's actions">
+<Step title="Optional: pin the plugin's tools">
 
-When the runner starts, it logs the digest of the plugin's actions. Copy it into the policy so a plugin upgrade that changes any action, down to one bound, is refused until you review it:
+When the runner starts, it logs the digest of the plugin's tools. Copy it into the policy so a plugin upgrade that changes any tool, down to one bound, is refused until you review it:
 
 ```yaml
 sources:
@@ -155,7 +154,7 @@ sources:
 
 1. Open **Tasks** and select **New task**. **For your cluster** offers **Restart crash-looping deployments**.
 2. Select **Start from scratch**, then choose **When something happens**. Under **Where from**, `prod-cluster` shows **Set up**.
-3. Continue to **What may it do?**. It lists **Offered by the runner for prod-cluster**, with the reads and the actions your policy allows.
+3. Continue to **What may it do?**. It lists **Offered by the runner for prod-cluster**, with the reads and the tools your policy allows.
 
 To check the runner's own record:
 
@@ -167,13 +166,13 @@ marmot ingest verify-audit-log /var/log/marmot/audit.jsonl
 
 | What you see | What to do |
 | --- | --- |
-| `--allow-actions needs --audit-log` | Add `--audit-log` with a writable path. |
-| `action "<name>" is not in the plugin's manifest` or `has no parameter` | The policy names something the plugin doesn't offer. Check the spelling against the [plugin's actions](https://plugins.marmotdata.io). |
+| `--allow-tools needs --audit-log` | Add `--audit-log` with a writable path. |
+| `tool "<name>" is not in the plugin's manifest` or `has no parameter` | The policy names something the plugin doesn't offer. Check the spelling against the [plugin's tools](https://plugins.marmotdata.io). |
 | `no approvers configured: the policy has no approvals section` | Add `approvals: {trust: marmot}` to the policy. |
-| `the plugin's manifest is sha256:…, and the policy pins sha256:…` | The plugin's actions changed since you pinned them. Review what changed, then copy the new digest into `manifest`. |
-| An action is listed under **Not allowed by the runner** | The policy doesn't name it. Add it and restart the runner. |
+| `the plugin's manifest is sha256:…, and the policy pins sha256:…` | The plugin's tools changed since you pinned them. Review what changed, then copy the new digest into `manifest`. |
+| A tool is listed under **Not allowed by the runner** | The policy doesn't name it. Add it and restart the runner. |
 | An approved change fails with `forbidden` | The chart doesn't grant it, or the namespace isn't in the chart's `namespaces`. Upgrade the chart with the same namespaces as the pipeline. |
-| An approved change fails with `denied request` from the admission policy | The change touches more than the action may, or the object lacks a label in `selector`. |
+| An approved change fails with `denied request` from the admission policy | The change touches more than the tool may, or the object lacks a label in `selector`. |
 | A change is refused because the object is managed by Flux or Argo CD | Make the change in Git. |
 | A change is marked stale | The object changed since the plan. Select **Plan again** on the change, then approve the new plan. |
 

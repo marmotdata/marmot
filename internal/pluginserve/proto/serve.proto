@@ -8,9 +8,9 @@ option go_package = "github.com/marmotdata/marmot/internal/pluginserve/proto";
 service Plugin {
   rpc PlanQuery(SignedQuery) returns (PlanQueryResponse);
   rpc ExecuteQuery(SignedQuery) returns (stream QueryChunk);
-  // PlanAction and ExecuteAction carry a plugin action. The serving process runs one only when its operator passed --allow-actions and a policy naming the source and the action, and only within that policy, whatever Marmot signed.
-  rpc PlanAction(SignedQuery) returns (ActionResponse);
-  rpc ExecuteAction(SignedQuery) returns (ActionResponse);
+  // PlanTool and ExecuteTool carry a plugin tool. The serving process runs one only when its operator passed --allow-tools and a policy naming the source and the tool, and only within that policy, whatever Marmot signed.
+  rpc PlanTool(SignedQuery) returns (ToolResponse);
+  rpc ExecuteTool(SignedQuery) returns (ToolResponse);
   // WatchTriggers is opened by Marmot once per connection, with a Query for OPERATION_WATCH_TRIGGERS, and streams the events of the triggers the serving process's own policy runs until the connection closes. The Query names no trigger and carries no parameters: which triggers run, and with what, is the serving process's decision alone, and Marmot only receives what they find.
   rpc WatchTriggers(SignedQuery) returns (stream SignedTriggerEvent);
 }
@@ -19,17 +19,17 @@ service Plugin {
 service Replica {
   rpc PlanQuery(SignedForward) returns (PlanQueryResponse);
   rpc ExecuteQuery(SignedForward) returns (stream QueryChunk);
-  rpc PlanAction(SignedForward) returns (ActionResponse);
-  rpc ExecuteAction(SignedForward) returns (ActionResponse);
+  rpc PlanTool(SignedForward) returns (ToolResponse);
+  rpc ExecuteTool(SignedForward) returns (ToolResponse);
 }
 
 enum Operation {
   OPERATION_UNSPECIFIED = 0;
   OPERATION_PLAN = 1;
   OPERATION_EXECUTE = 2;
-  // The action operations are their own values rather than a flag beside plan and execute, so an envelope signed for one can never be presented as another: a serving process verifies the operation of the rpc it was called on.
-  OPERATION_ACTION_PLAN = 3;
-  OPERATION_ACTION_EXECUTE = 4;
+  // The tool operations are their own values rather than a flag beside plan and execute, so an envelope signed for one can never be presented as another: a serving process verifies the operation of the rpc it was called on.
+  OPERATION_TOOL_PLAN = 3;
+  OPERATION_TOOL_EXECUTE = 4;
   OPERATION_WATCH_TRIGGERS = 5;
 }
 
@@ -46,7 +46,7 @@ message Query {
   int64 max_rows = 7;
   // actor is the audit subject of the principal running the query.
   string actor = 8;
-  // query_id is the query's id in Marmot's query log, empty for plans, or for an action its id in Marmot's log when it keeps one.
+  // query_id is the query's id in Marmot's query log, empty for plans, or for a tool its id in Marmot's log when it keeps one.
   string query_id = 9;
   int64 issued_at_unix = 10;
   int64 expires_at_unix = 11;
@@ -57,14 +57,14 @@ message Query {
   string origin = 14;
   // receipt_wanted asks the serving process to end an execute with a signed Receipt. Marmot releases that predate receipts leave it unset, and a serving process sends none to them, because they would read the receipt chunk as rows.
   bool receipt_wanted = 15;
-  // action, params_json, precondition and manifest_digest are set for the action operations only. params_json is the action's parameters as a JSON object; the serving process hashes these exact bytes into its receipt.
-  string action = 16;
+  // tool, params_json, precondition and manifest_digest are set for the tool operations only. params_json is the tool's parameters as a JSON object; the serving process hashes these exact bytes into its receipt.
+  string tool = 16;
   bytes params_json = 17;
   // precondition is the token from the plan being executed, binding an execute to the state its plan looked at.
   string precondition = 18;
-  // manifest_digest is the ManifestDigest of the action manifest Marmot believes it is asking against. The serving process computes the digest from its own plugin and refuses on any difference, so a plugin whose actions changed is never driven by a request written for the old ones.
+  // manifest_digest is the ManifestDigest of the tool manifest Marmot believes it is asking against. The serving process computes the digest from its own plugin and refuses on any difference, so a plugin whose tools changed is never driven by a request written for the old ones.
   string manifest_digest = 19;
-  // approval is a serialised Approval, for ACTION_EXECUTE of a write only. The serving process checks every assertion in it against the approvers in its own policy and over an ApprovalDigest it computes from this Query, never one Marmot sends. A serving process that predates approvals refuses nothing for want of one, so a policy that relies on approvals needs a release that checks them.
+  // approval is a serialised Approval, for TOOL_EXECUTE of a write only. The serving process checks every assertion in it against the approvers in its own policy and over an ApprovalDigest it computes from this Query, never one Marmot sends. A serving process that predates approvals refuses nothing for want of one, so a policy that relies on approvals needs a release that checks them.
   bytes approval = 20;
 }
 
@@ -89,7 +89,7 @@ message ForwardedQuery {
   int64 issued_at_unix = 11;
   int64 expires_at_unix = 12;
   bytes nonce = 13;
-  string action = 14;
+  string tool = 14;
   bytes params_json = 15;
   string precondition = 16;
   string manifest_digest = 17;
@@ -131,16 +131,16 @@ message PlanQueryResponse {
   bytes plan_json = 1;
 }
 
-// ActionReceipt is the serving process's signed account of one action it planned or executed, carried in a SignedReceipt like a query's Receipt. It is its own message, signed under its own domain, so a query receipt can never be passed off as an action's or the other way round.
-message ActionReceipt {
+// ToolReceipt is the serving process's signed account of one tool it planned or executed, carried in a SignedReceipt like a query's Receipt. It is its own message, signed under its own domain, so a query receipt can never be passed off as a tool's or the other way round.
+message ToolReceipt {
   uint32 version = 1;
   Operation operation = 2;
-  // id is the action's id in Marmot's log, when it keeps one.
+  // id is the tool's id in Marmot's log, when it keeps one.
   string id = 3;
   string origin = 4;
   string source = 5;
   string actor = 6;
-  string action = 7;
+  string tool = 7;
   // params_sha256 is the SHA-256 of the signed params_json, byte for byte.
   bytes params_sha256 = 8;
   string precondition = 9;
@@ -155,7 +155,7 @@ message ActionReceipt {
   bytes output_sha256 = 15;
   int64 duration_ms = 16;
   int64 finished_at_unix = 17;
-  // approval_digest is the ApprovalDigest the serving process verified the approval over, empty when the action needed and carried none.
+  // approval_digest is the ApprovalDigest the serving process verified the approval over, empty when the tool needed and carried none.
   bytes approval_digest = 18;
   // approvers are the people the approval named, as it named them.
   repeated Approver approvers = 19;
@@ -170,7 +170,7 @@ message Approver {
   int64 approved_at_unix = 3;
 }
 
-// Approval is Marmot's statement that the named people approved exactly this action: signed with Marmot's approval key, a key of its own that never signs queries, over ApprovalSignedMessage, which covers the ApprovalDigest of the action (expires_at_unix included) and every approver. The serving process recomputes the digest from the Query it received, so the approval can only ever be spent on that action.
+// Approval is Marmot's statement that the named people approved exactly this tool: signed with Marmot's approval key, a key of its own that never signs queries, over ApprovalSignedMessage, which covers the ApprovalDigest of the tool (expires_at_unix included) and every approver. The serving process recomputes the digest from the Query it received, so the approval can only ever be spent on that tool.
 message Approval {
   uint32 version = 1;
   int64 expires_at_unix = 2;
@@ -209,9 +209,9 @@ message SignedTriggerEvent {
   bytes certificate = 3;
 }
 
-// ActionResponse answers PlanAction and ExecuteAction once the action reached the plugin, whether it succeeded or not. A refusal by the serving process is a PermissionDenied error instead, with no receipt, because nothing ran.
-message ActionResponse {
-  // output_json is the plan for ACTION_PLAN and the result for ACTION_EXECUTE, empty when the plugin failed.
+// ToolResponse answers PlanTool and ExecuteTool once the tool reached the plugin, whether it succeeded or not. A refusal by the serving process is a PermissionDenied error instead, with no receipt, because nothing ran.
+message ToolResponse {
+  // output_json is the plan for TOOL_PLAN and the result for TOOL_EXECUTE, empty when the plugin failed.
   bytes output_json = 1;
   SignedReceipt receipt = 2;
   // code is the gRPC code of the plugin's failure, zero when it succeeded. The failure's message is the receipt's error, which is signed; the code is not, and only classifies it.

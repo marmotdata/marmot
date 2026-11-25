@@ -217,6 +217,6 @@ AWS KMS, Google Cloud KMS, Azure Key Vault and HashiCorp Vault are supported; th
 
 ## Next steps
 
-- [Let tasks act on a Kubernetes cluster](kubernetes-actions.md): add reads, actions and triggers to a runner.
+- [Let tasks act on a Kubernetes cluster](kubernetes-tools.md): add reads, tools and triggers to a runner.
 - [Control who can query data](../Cloud/query-access.md): grant query access on the source.
 - [Runner reference](../Configure/serving-reference.md): every flag and policy key.

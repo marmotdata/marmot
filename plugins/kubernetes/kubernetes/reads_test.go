@@ -59,9 +59,9 @@ func healthyPod(ns, deploy, suffix string) *corev1.Pod {
 }
 
 func TestReadManifest(t *testing.T) {
-	specs := ActionSpecs()
+	specs := ToolSpecs()
 	require.NoError(t, pluginsdk.ValidateManifest(specs))
-	for _, name := range []string{actionWorkloadStatus, actionPodLogs, actionRecentEvents} {
+	for _, name := range []string{toolWorkloadStatus, toolPodLogs, toolRecentEvents} {
 		i := -1
 		for j := range specs {
 			if specs[j].Name == name {
@@ -81,9 +81,9 @@ func TestWorkloadStatus(t *testing.T) {
 	stray := healthyPod("payments", "crashy", "z")
 	stray.OwnerReferences[0].Name = "crashy-other-abc12"
 	c := newCluster(t, d, crashingPod("payments", "crashy", "a", 7), healthyPod("payments", "crashy", "b"), stray)
-	e := engine(t, c, ActionsConfig{Namespaces: []string{"payments"}})
+	e := engine(t, c, ToolsConfig{Namespaces: []string{"payments"}})
 
-	result, err := e.Execute(context.Background(), request(actionWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "payments", "name": "crashy"}))
+	result, err := e.Execute(context.Background(), request(toolWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "payments", "name": "crashy"}))
 	require.NoError(t, err)
 	assert.True(t, result.Untrusted)
 	assert.Equal(t, "deployment/payments/crashy", result.Target)
@@ -109,31 +109,31 @@ func TestReadsStayInScope(t *testing.T) {
 	c := newCluster(t, d, p, deployment("payments", "api", 1))
 	ctx := context.Background()
 
-	_, err := engine(t, c, ActionsConfig{Namespaces: []string{"payments"}}).Execute(ctx, request(actionWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "internal", "name": "admin"}))
+	_, err := engine(t, c, ToolsConfig{Namespaces: []string{"payments"}}).Execute(ctx, request(toolWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "internal", "name": "admin"}))
 	assert.ErrorIs(t, err, ErrOutOfScope)
-	_, err = engine(t, c, ActionsConfig{}).Execute(ctx, request(actionRecentEvents, map[string]any{"namespace": "kube-system", "limit": int64(5)}))
+	_, err = engine(t, c, ToolsConfig{}).Execute(ctx, request(toolRecentEvents, map[string]any{"namespace": "kube-system", "limit": int64(5)}))
 	assert.ErrorIs(t, err, ErrOutOfScope, "system namespaces are out of scope by default")
 
-	selected := engine(t, c, ActionsConfig{Selector: "marmot.io/actions=enabled"})
-	_, err = selected.Execute(ctx, request(actionPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(5)}))
+	selected := engine(t, c, ToolsConfig{Selector: "marmot.io/tools=enabled"})
+	_, err = selected.Execute(ctx, request(toolPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(5)}))
 	assert.ErrorIs(t, err, ErrOutOfScope)
-	_, err = selected.Execute(ctx, request(actionRecentEvents, map[string]any{"namespace": "payments", "limit": int64(5)}))
+	_, err = selected.Execute(ctx, request(toolRecentEvents, map[string]any{"namespace": "payments", "limit": int64(5)}))
 	assert.ErrorIs(t, err, ErrOutOfScope, "with a selector, events are read only for a matching object")
 
-	_, err = engine(t, c, ActionsConfig{}).Plan(ctx, request(actionPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(5)}))
+	_, err = engine(t, c, ToolsConfig{}).Plan(ctx, request(toolPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(5)}))
 	assert.ErrorContains(t, err, "nothing to plan")
 
 	// GitOps-managed objects are readable.
 	flux := deployment("payments", "ledger", 1)
 	flux.Labels["kustomize.toolkit.fluxcd.io/name"] = "apps"
-	_, err = engine(t, newCluster(t, flux), ActionsConfig{}).Execute(ctx, request(actionWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "payments", "name": "ledger"}))
+	_, err = engine(t, newCluster(t, flux), ToolsConfig{}).Execute(ctx, request(toolWorkloadStatus, map[string]any{"kind": "deployment", "namespace": "payments", "name": "ledger"}))
 	assert.NoError(t, err)
 }
 
 func TestPodLogs(t *testing.T) {
 	p := crashingPod("payments", "crashy", "a", 3)
 	c := newCluster(t, p)
-	result, err := engine(t, c, ActionsConfig{}).Execute(context.Background(), request(actionPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(10), "previous": true}))
+	result, err := engine(t, c, ToolsConfig{}).Execute(context.Background(), request(toolPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "tail_lines": int64(10), "previous": true}))
 	require.NoError(t, err)
 	assert.True(t, result.Untrusted)
 	var l podLogs
@@ -142,7 +142,7 @@ func TestPodLogs(t *testing.T) {
 	assert.Equal(t, []string{"fake logs"}, l.Lines)
 	assert.True(t, l.Untrusted)
 
-	_, err = engine(t, c, ActionsConfig{}).Execute(context.Background(), request(actionPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "container": "debugger", "tail_lines": int64(10)}))
+	_, err = engine(t, c, ToolsConfig{}).Execute(context.Background(), request(toolPodLogs, map[string]any{"namespace": "payments", "pod": p.Name, "container": "debugger", "tail_lines": int64(10)}))
 	assert.ErrorContains(t, err, "no container")
 }
 
@@ -233,8 +233,8 @@ func TestRecentEvents(t *testing.T) {
 		ev("e2", "Pod", "api-a", "Unhealthy", 2*time.Minute, "probe failed"),
 		ev("e3", "Pod", "crashy-a", "Pulled", 3*time.Minute, "pulled"),
 	)
-	e := engine(t, c, ActionsConfig{})
-	result, err := e.Execute(context.Background(), request(actionRecentEvents, map[string]any{"namespace": "payments", "limit": int64(2)}))
+	e := engine(t, c, ToolsConfig{})
+	result, err := e.Execute(context.Background(), request(toolRecentEvents, map[string]any{"namespace": "payments", "limit": int64(2)}))
 	require.NoError(t, err)
 	var out recentEvents
 	require.NoError(t, json.Unmarshal(result.Output, &out))
@@ -243,11 +243,11 @@ func TestRecentEvents(t *testing.T) {
 	assert.Len(t, out.Events[0].Message, maxEventMessage)
 	assert.True(t, out.Untrusted)
 
-	result, err = e.Execute(context.Background(), request(actionRecentEvents, map[string]any{"namespace": "payments", "involved_kind": "pod", "involved_name": "crashy-a", "limit": int64(10)}))
+	result, err = e.Execute(context.Background(), request(toolRecentEvents, map[string]any{"namespace": "payments", "involved_kind": "pod", "involved_name": "crashy-a", "limit": int64(10)}))
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(result.Output, &out))
 	assert.Len(t, out.Events, 2, "the plugin filters by object even when the server does not")
 
-	_, err = e.Execute(context.Background(), request(actionRecentEvents, map[string]any{"namespace": "payments", "involved_name": "crashy-a", "limit": int64(10)}))
+	_, err = e.Execute(context.Background(), request(toolRecentEvents, map[string]any{"namespace": "payments", "involved_name": "crashy-a", "limit": int64(10)}))
 	assert.ErrorContains(t, err, "together")
 }

@@ -1,5 +1,5 @@
 {{- if .Values.admissionPolicy.enabled }}
-{{- $fullname := include "marmot-actions.fullname" . }}
+{{- $fullname := include "marmot-tools.fullname" . }}
 {{- /*
 RBAC says which objects the runner may patch; this policy says what a patch
 may change. It applies only to requests made as the runner's ServiceAccount,
@@ -11,7 +11,7 @@ kind: ValidatingAdmissionPolicy
 metadata:
   name: {{ $fullname }}
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 spec:
   # A policy that cannot be evaluated refuses the change rather than
   # letting it through unchecked.
@@ -32,7 +32,7 @@ spec:
         resources: ["nodes"]
   matchConditions:
     - name: is-marmot-runner
-      expression: request.userInfo.username == {{ include "marmot-actions.username" . | toJson }}
+      expression: request.userInfo.username == {{ include "marmot-tools.username" . | toJson }}
   variables:
     - name: resource
       expression: request.resource.resource
@@ -111,7 +111,7 @@ kind: ValidatingAdmissionPolicyBinding
 metadata:
   name: {{ $fullname }}
   labels:
-    {{- include "marmot-actions.labels" . | nindent 4 }}
+    {{- include "marmot-tools.labels" . | nindent 4 }}
 spec:
   policyName: {{ $fullname }}
   validationActions: ["Deny"]

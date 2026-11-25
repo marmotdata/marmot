@@ -1,0 +1,10 @@
+{{- if and (include "marmot-tools.namespaced" .) (not .Values.namespaces) }}
+{{- fail "namespaces must list at least one namespace for the namespaced tools to act in" }}
+{{- end }}
+{{- if hasKey .Values.tools "rolloutUndo" }}
+{{- fail "tools.rolloutUndo is no longer offered: admission cannot tell a genuine rollback from any other pod template change, so the runner is never allowed to make one. Roll back through Git or by hand" }}
+{{- end }}
+{{- $max := int .Values.maxReplicas }}
+{{- if or (lt $max 1) (gt $max 1000) }}
+{{- fail "maxReplicas must be a whole number from 1 to 1000" }}
+{{- end }}

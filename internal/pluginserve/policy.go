@@ -22,7 +22,7 @@ import (
 //
 // Once a policy is given, a source it does not name is refused: an operator who writes a policy has said what may run, and a source added to the pipeline later should not slip past it.
 type Policy struct {
-	// Approvals says how approvals of writes are trusted: trust: marmot, the only mode today. Without it every write is refused, apart from an action the policy explicitly lets run with approvals: 0.
+	// Approvals says how approvals of writes are trusted: trust: marmot, the only mode today. Without it every write is refused, apart from a tool the policy explicitly lets run with approvals: 0.
 	Approvals *ApprovalsPolicy        `yaml:"approvals"`
 	Sources   map[string]SourcePolicy `yaml:"sources"`
 	// name is the policy file's base name, which refusals quote so whoever reads them in Marmot knows which local policy said no without learning the host's paths.
@@ -31,18 +31,18 @@ type Policy struct {
 
 // SourcePolicy is the policy for one served source. New per-source rules are added here as further keys; strict decoding means an older serving process refuses a policy that uses them rather than ignoring a rule it does not know.
 type SourcePolicy struct {
-	// Query, when false, refuses every plan and execute for the source. Unset means true. It says nothing about actions, which are refused unless listed under Actions.
+	// Query, when false, refuses every plan and execute for the source. Unset means true. It says nothing about tools, which are refused unless listed under Tools.
 	Query *bool `yaml:"query"`
 	// MaxRows, when set, is a ceiling on rows returned: a signed row limit above it is lowered to it.
 	MaxRows int64 `yaml:"max_rows"`
-	// Actors is an allow-list of globs over the signed actor, such as user:alice or task:*, where * matches any run of characters. Empty means any actor. It applies to the source's actions as well as its queries.
+	// Actors is an allow-list of globs over the signed actor, such as user:alice or task:*, where * matches any run of characters. Empty means any actor. It applies to the source's tools as well as its queries.
 	Actors []string `yaml:"actors"`
-	// Origins is an allow-list of globs over the signed origin, such as task_run:*. Tasks run as their own principal, so the origin is how a serving process tells task traffic from a person's. Empty means any origin, including none. Like Actors it applies to actions too.
+	// Origins is an allow-list of globs over the signed origin, such as task_run:*. Tasks run as their own principal, so the origin is how a serving process tells task traffic from a person's. Empty means any origin, including none. Like Actors it applies to tools too, though a tool's origin is always a task run: the plugin SDK refuses any other.
 	Origins []string `yaml:"origins"`
-	// Manifest, when set, pins the plugin's action manifest by its digest, sha256:<hex>: an action is refused unless the plugin's manifest, as this process computes it, has exactly that digest, so a plugin upgrade that changes any action or bound stops actions until the operator has looked at it.
+	// Manifest, when set, pins the plugin's tool manifest by its digest, sha256:<hex>: a tool is refused unless the plugin's manifest, as this process computes it, has exactly that digest, so a plugin upgrade that changes any tool or bound stops tools until the operator has looked at it.
 	Manifest string `yaml:"manifest"`
-	// Actions names each action that may run on the source. An action it does not name is refused, and with no Actions none is allowed: there is no default allow for writes.
-	Actions map[string]ActionPolicy `yaml:"actions"`
+	// Tools names each tool that may run on the source. A tool it does not name is refused, and with no Tools none is allowed: there is no default allow for writes.
+	Tools map[string]ToolPolicy `yaml:"tools"`
 	// Triggers names each trigger this process runs on the source, with its parameters. They come from here alone: Marmot never names a trigger, sends a parameter or an expression, it only receives the events. A trigger not named here never runs.
 	Triggers map[string]TriggerPolicy `yaml:"triggers"`
 }
@@ -61,24 +61,24 @@ const (
 	maxTriggerCooldown     = 24 * time.Hour
 )
 
-// ActionPolicy is the policy for one action on a source. Every rule only narrows what the plugin's manifest allows.
-type ActionPolicy struct {
+// ToolPolicy is the policy for one tool on a source. Every rule only narrows what the plugin's manifest allows.
+type ToolPolicy struct {
 	// Actors and Origins are allow-lists like the source's, checked as well as them.
 	Actors  []string `yaml:"actors"`
 	Origins []string `yaml:"origins"`
 	// Params narrows the manifest's bounds on named parameters. A constrained parameter must be given, so leaving it out cannot fall back to a plugin default the policy never saw.
 	Params map[string]ParamPolicy `yaml:"params"`
-	// Approvals is how many distinct people must approve each execute: 1 when unset, at most 2. 0 is allowed only for a risk 1, reversible action, and must be written out. A read never takes approvals.
+	// Approvals is how many distinct people must approve each execute: 1 when unset, at most 2. 0 is allowed only for a risk 1, reversible tool, and must be written out. A read never takes approvals.
 	Approvals *int `yaml:"approvals"`
-	// Approvers narrows who may approve the action, by Marmot user id or name. Only approvers it lists count towards Approvals.
+	// Approvers narrows who may approve the tool, by Marmot user id or name. Only approvers it lists count towards Approvals.
 	Approvers []string `yaml:"approvers"`
 }
 
-// maxRequiredApprovals is the most approvals an action may require.
+// maxRequiredApprovals is the most approvals a tool may require.
 const maxRequiredApprovals = 2
 
-// need is how many approvals the action needs, with the default applied.
-func (ap ActionPolicy) need() approvalNeed {
+// need is how many approvals the tool needs, with the default applied.
+func (ap ToolPolicy) need() approvalNeed {
 	n := 1
 	if ap.Approvals != nil {
 		n = *ap.Approvals
@@ -86,7 +86,7 @@ func (ap ActionPolicy) need() approvalNeed {
 	return approvalNeed{required: n, approvers: ap.Approvers}
 }
 
-// ParamPolicy narrows one action parameter. Min and Max apply to int parameters; Values lists the only values allowed and must match the parameter's type.
+// ParamPolicy narrows one tool parameter. Min and Max apply to int parameters; Values lists the only values allowed and must match the parameter's type.
 type ParamPolicy struct {
 	Min    *int64 `yaml:"min"`
 	Max    *int64 `yaml:"max"`
@@ -123,12 +123,12 @@ func LoadPolicy(path string) (*Policy, error) {
 		if sp.Manifest != "" && !manifestDigestPattern.MatchString(sp.Manifest) {
 			return nil, fmt.Errorf("policy %s: source %q: manifest must be sha256: followed by 64 lower case hex digits", path, name)
 		}
-		for action, ap := range sp.Actions {
+		for tool, ap := range sp.Tools {
 			if err := ap.check(); err != nil {
-				return nil, fmt.Errorf("policy %s: source %q: action %q: %w", path, name, action, err)
+				return nil, fmt.Errorf("policy %s: source %q: tool %q: %w", path, name, tool, err)
 			}
 			if err := ap.checkApprovers(p.Approvals); err != nil {
-				return nil, fmt.Errorf("policy %s: source %q: action %q: %w", path, name, action, err)
+				return nil, fmt.Errorf("policy %s: source %q: tool %q: %w", path, name, tool, err)
 			}
 		}
 		for trigger, tp := range sp.Triggers {
@@ -161,8 +161,8 @@ func checkPatterns(actors, origins []string) error {
 	return nil
 }
 
-// checkApprovers checks an action's approval rules. That each count can ever be met is checked here, so a policy that could never approve anything fails at start; whether the action may run with none is checked against the manifest.
-func (ap ActionPolicy) checkApprovers(approvals *ApprovalsPolicy) error {
+// checkApprovers checks a tool's approval rules. That each count can ever be met is checked here, so a policy that could never approve anything fails at start; whether the tool may run with none is checked against the manifest.
+func (ap ToolPolicy) checkApprovers(approvals *ApprovalsPolicy) error {
 	need := ap.need()
 	if need.required < 0 || need.required > maxRequiredApprovals {
 		return fmt.Errorf("approvals must be 0, 1 or 2")
@@ -189,8 +189,8 @@ func (p *Policy) approvals() *ApprovalsPolicy {
 	return p.Approvals
 }
 
-// check is what can be checked of an action's policy without the plugin's manifest. CheckManifest checks the rest once the manifest is known.
-func (ap ActionPolicy) check() error {
+// check is what can be checked of a tool's policy without the plugin's manifest. CheckManifest checks the rest once the manifest is known.
+func (ap ToolPolicy) check() error {
 	if err := checkPatterns(ap.Actors, ap.Origins); err != nil {
 		return err
 	}
@@ -215,41 +215,41 @@ func (ap ActionPolicy) check() error {
 	return nil
 }
 
-// CheckManifest checks the policy's actions on source against the plugin's manifest: every action it names is in the manifest, every parameter it constrains is declared by that action, and each constraint suits the parameter's type. The serving process runs it at start, when it first learns the manifest, so a misspelt action or parameter is an error there rather than a refusal at the first request; requests are checked against the manifest again, since the plugin can change while the process runs.
-func (p *Policy) CheckManifest(source string, specs []pluginsdk.ActionSpec) error {
+// CheckManifest checks the policy's tools on source against the plugin's manifest: every tool it names is in the manifest, every parameter it constrains is declared by that tool, and each constraint suits the parameter's type. The serving process runs it at start, when it first learns the manifest, so a misspelt tool or parameter is an error there rather than a refusal at the first request; requests are checked against the manifest again, since the plugin can change while the process runs.
+func (p *Policy) CheckManifest(source string, specs []pluginsdk.ToolSpec) error {
 	if p == nil {
 		return nil
 	}
-	for action, ap := range p.Sources[source].Actions {
-		if err := ap.checkAgainst(action, specs); err != nil {
+	for tool, ap := range p.Sources[source].Tools {
+		if err := ap.checkAgainst(tool, specs); err != nil {
 			return fmt.Errorf("policy %s: source %q: %w", p.name, source, err)
 		}
 	}
 	return nil
 }
 
-func (ap ActionPolicy) checkAgainst(action string, specs []pluginsdk.ActionSpec) error {
-	i := slices.IndexFunc(specs, func(s pluginsdk.ActionSpec) bool { return s.Name == action })
+func (ap ToolPolicy) checkAgainst(tool string, specs []pluginsdk.ToolSpec) error {
+	i := slices.IndexFunc(specs, func(s pluginsdk.ToolSpec) bool { return s.Name == tool })
 	if i < 0 {
-		return fmt.Errorf("action %q is not in the plugin's manifest", action)
+		return fmt.Errorf("tool %q is not in the plugin's manifest", tool)
 	}
 	if err := ap.approvalsSuit(specs[i]); err != nil {
-		return fmt.Errorf("action %q: %w", action, err)
+		return fmt.Errorf("tool %q: %w", tool, err)
 	}
 	for name, pp := range ap.Params {
-		j := slices.IndexFunc(specs[i].Params, func(a pluginsdk.ActionParam) bool { return a.Name == name })
+		j := slices.IndexFunc(specs[i].Params, func(a pluginsdk.ToolParam) bool { return a.Name == name })
 		if j < 0 {
-			return fmt.Errorf("action %q has no parameter %q", action, name)
+			return fmt.Errorf("tool %q has no parameter %q", tool, name)
 		}
 		if err := pp.suits(specs[i].Params[j]); err != nil {
-			return fmt.Errorf("action %q: parameter %q: %w", action, name, err)
+			return fmt.Errorf("tool %q: parameter %q: %w", tool, name, err)
 		}
 	}
 	return nil
 }
 
-// approvalsSuit checks an action's approval rules against what the action is. A read changes nothing and takes no approval, so rules for one are a mistake; going without approval is for an action that is both the lowest risk and undoable, and only when the policy says so.
-func (ap ActionPolicy) approvalsSuit(spec pluginsdk.ActionSpec) error {
+// approvalsSuit checks a tool's approval rules against what the tool is. A read changes nothing and takes no approval, so rules for one are a mistake; going without approval is for a tool that is both the lowest risk and undoable, and only when the policy says so.
+func (ap ToolPolicy) approvalsSuit(spec pluginsdk.ToolSpec) error {
 	if spec.ReadOnly() {
 		if ap.Approvals != nil || len(ap.Approvers) > 0 {
 			return errors.New("it only reads, and reads take no approvals")
@@ -257,7 +257,7 @@ func (ap ActionPolicy) approvalsSuit(spec pluginsdk.ActionSpec) error {
 		return nil
 	}
 	if ap.need().required == 0 && (spec.Risk != pluginsdk.RiskBounded || spec.Reversibility != pluginsdk.ReversibilityReversible) {
-		return fmt.Errorf("approvals: 0 is only allowed for a risk 1, reversible action, and it is risk %d, %s", spec.Risk, spec.Reversibility)
+		return fmt.Errorf("approvals: 0 is only allowed for a risk 1, reversible tool, and it is risk %d, %s", spec.Risk, spec.Reversibility)
 	}
 	return nil
 }
@@ -294,7 +294,7 @@ func yamlParams(params map[string]any) map[string]any {
 }
 
 // suits fails when a constraint cannot apply to the parameter it names, such as a range on a string or a value the manifest's enum does not hold, which would otherwise refuse every request or never match.
-func (pp ParamPolicy) suits(param pluginsdk.ActionParam) error {
+func (pp ParamPolicy) suits(param pluginsdk.ToolParam) error {
 	if (pp.Min != nil || pp.Max != nil) && param.Type != pluginsdk.ParamInt {
 		return fmt.Errorf("min and max apply to int parameters, and it is %s", param.Type)
 	}
@@ -367,32 +367,32 @@ func (p *Policy) decide(q *pb.Query) policyDecision {
 	return d
 }
 
-// actionPolicy returns the policy for an action on a source, failing unless actions are switched on with --allow-actions, a policy exists and it names both. Switching actions on takes the flag as well as a policy naming each action, so neither a policy file copied from elsewhere nor the flag alone is enough. A nil policy refuses: unlike queries, no action runs without an operator having named it.
-func (p *Policy) actionPolicy(allowActions bool, source, action string) (SourcePolicy, ActionPolicy, error) {
-	if !allowActions {
-		return SourcePolicy{}, ActionPolicy{}, errActionsOff
+// toolPolicy returns the policy for a tool on a source, failing unless tools are switched on with --allow-tools, a policy exists and it names both. Switching tools on takes the flag as well as a policy naming each tool, so neither a policy file copied from elsewhere nor the flag alone is enough. A nil policy refuses: unlike queries, no tool runs without an operator having named it.
+func (p *Policy) toolPolicy(allowTools bool, source, tool string) (SourcePolicy, ToolPolicy, error) {
+	if !allowTools {
+		return SourcePolicy{}, ToolPolicy{}, errToolsOff
 	}
 	if p == nil {
-		return SourcePolicy{}, ActionPolicy{}, errActionsWithoutPolicy
+		return SourcePolicy{}, ToolPolicy{}, errToolsWithoutPolicy
 	}
 	sp, ok := p.Sources[source]
 	if !ok {
-		return SourcePolicy{}, ActionPolicy{}, fmt.Errorf("source %q is not in the policy", source)
+		return SourcePolicy{}, ToolPolicy{}, fmt.Errorf("source %q is not in the policy", source)
 	}
-	ap, ok := sp.Actions[action]
+	ap, ok := sp.Tools[tool]
 	if !ok {
-		return SourcePolicy{}, ActionPolicy{}, fmt.Errorf("action %q is not allowed on %q by the policy", action, source)
+		return SourcePolicy{}, ToolPolicy{}, fmt.Errorf("tool %q is not allowed on %q by the policy", tool, source)
 	}
 	return sp, ap, nil
 }
 
 var (
-	errActionsOff           = errors.New("actions are switched off on this runner")
-	errActionsWithoutPolicy = errors.New("actions need a --policy naming each one; with no policy every action is refused")
+	errToolsOff           = errors.New("tools are switched off on this runner")
+	errToolsWithoutPolicy = errors.New("tools need a --policy naming each one; with no policy every tool is refused")
 )
 
-// allowAction applies the rules that need the plugin's manifest: the manifest pin, then the actor and origin allow-lists, then the parameter constraints, which are checked against the manifest again because the plugin may have changed since the process started.
-func (sp SourcePolicy) allowAction(ap ActionPolicy, q *pb.Query, params map[string]any, specs []pluginsdk.ActionSpec, digest string) error {
+// allowTool applies the rules that need the plugin's manifest: the manifest pin, then the actor and origin allow-lists, then the parameter constraints, which are checked against the manifest again because the plugin may have changed since the process started.
+func (sp SourcePolicy) allowTool(ap ToolPolicy, q *pb.Query, params map[string]any, specs []pluginsdk.ToolSpec, digest string) error {
 	if sp.Manifest != "" && sp.Manifest != digest {
 		return fmt.Errorf("the plugin's manifest is %s, and the policy pins %s", digest, sp.Manifest)
 	}
@@ -406,10 +406,10 @@ func (sp SourcePolicy) allowAction(ap ActionPolicy, q *pb.Query, params map[stri
 		{ap.Origins, q.Origin, "origin"},
 	} {
 		if len(rule.patterns) > 0 && !matchesAny(rule.patterns, rule.value) {
-			return fmt.Errorf("%s %q may not run %s on %q", rule.what, rule.value, q.Action, q.Source)
+			return fmt.Errorf("%s %q may not run %s on %q", rule.what, rule.value, q.Tool, q.Source)
 		}
 	}
-	if err := ap.checkAgainst(q.Action, specs); err != nil {
+	if err := ap.checkAgainst(q.Tool, specs); err != nil {
 		return fmt.Errorf("the policy no longer fits the plugin: %w", err)
 	}
 	// Sorted so a refusal names the same parameter every time.
@@ -432,7 +432,7 @@ func (pp ParamPolicy) allows(name string, params map[string]any) error {
 	if !ok {
 		return fmt.Errorf("parameter %s is constrained by the policy, so it must be given", name)
 	}
-	req := pluginsdk.ActionRequest{Params: params}
+	req := pluginsdk.ToolRequest{Params: params}
 	if pp.Min != nil || pp.Max != nil {
 		n, isInt := req.IntParam(name)
 		if !isInt {

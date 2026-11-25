@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func request(action string, params map[string]any) pluginsdk.ActionRequest {
-	return pluginsdk.ActionRequest{Action: action, Params: params, Identity: "user:alice", Origin: "task_run:42"}
+func request(tool string, params map[string]any) pluginsdk.ToolRequest {
+	return pluginsdk.ToolRequest{Tool: tool, Params: params, Identity: "user:alice", Origin: "task_run:42"}
 }
 
 func testEngine(t *testing.T, f *fakeGitHub, extra map[string]any) *engine {
@@ -24,7 +24,7 @@ func testEngine(t *testing.T, f *fakeGitHub, extra map[string]any) *engine {
 	return e
 }
 
-func runRead[T any](t *testing.T, e *engine, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, T) {
+func runRead[T any](t *testing.T, e *engine, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, T) {
 	t.Helper()
 	result, err := e.Execute(context.Background(), req)
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func readFixture(t *testing.T) *fakeGitHub {
 }
 
 func TestReadManifest(t *testing.T) {
-	specs := ActionSpecs()
+	specs := ToolSpecs()
 	require.NoError(t, pluginsdk.ValidateManifest(specs))
 	for _, s := range specs {
 		assert.Equal(t, isRead(s.Name), s.ReadOnly(), s.Name)
@@ -62,24 +62,24 @@ func TestReadFile(t *testing.T) {
 	f := readFixture(t)
 	e := testEngine(t, f, nil)
 
-	result, out := runRead[fileRead](t, e, request(actionReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py"}))
+	result, out := runRead[fileRead](t, e, request(toolReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py"}))
 	assert.Equal(t, "SCHEDULE = \"@daily\"\n", out.Content)
 	assert.Equal(t, "main", out.Ref)
 	assert.Equal(t, blobSHA(out.Content), out.SHA)
 	assert.Equal(t, kindFile, result.TargetKind)
 	assert.Equal(t, "acme/pipelines/dags/nightly.py@main", result.Target)
 
-	_, out = runRead[fileRead](t, e, request(actionReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py", "ref": "feature"}))
+	_, out = runRead[fileRead](t, e, request(toolReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py", "ref": "feature"}))
 	assert.Equal(t, "SCHEDULE = \"@weekly\"\n", out.Content)
 	commit := out.Commit
-	_, out = runRead[fileRead](t, e, request(actionReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py", "ref": commit}))
+	_, out = runRead[fileRead](t, e, request(toolReadFile, map[string]any{"repo": "pipelines", "path": "dags/nightly.py", "ref": commit}))
 	assert.Equal(t, "SCHEDULE = \"@weekly\"\n", out.Content, "a commit is a ref")
 
-	_, out = runRead[fileRead](t, e, request(actionReadFile, map[string]any{"repo": "pipelines", "path": "logo.png"}))
+	_, out = runRead[fileRead](t, e, request(toolReadFile, map[string]any{"repo": "pipelines", "path": "logo.png"}))
 	assert.True(t, out.Binary)
 	assert.Empty(t, out.Content)
 
-	_, out = runRead[fileRead](t, e, request(actionReadFile, map[string]any{"repo": "pipelines", "path": "big.sql"}))
+	_, out = runRead[fileRead](t, e, request(toolReadFile, map[string]any{"repo": "pipelines", "path": "big.sql"}))
 	assert.True(t, out.Truncated)
 	assert.Len(t, out.Content, maxReadFileBytes)
 	assert.Equal(t, int64(120000), out.Size)
@@ -91,16 +91,16 @@ func TestReadFile(t *testing.T) {
 		"dags/../x":       "not a plain path",
 		".git/config":     "not a plain path",
 	} {
-		_, err := e.Execute(context.Background(), request(actionReadFile, map[string]any{"repo": "pipelines", "path": path}))
+		_, err := e.Execute(context.Background(), request(toolReadFile, map[string]any{"repo": "pipelines", "path": path}))
 		require.ErrorContains(t, err, want, path)
 	}
-	_, err := e.Execute(context.Background(), request(actionReadFile, map[string]any{"repo": "pipelines", "path": "README.md", "ref": "main..feature"}))
+	_, err := e.Execute(context.Background(), request(toolReadFile, map[string]any{"repo": "pipelines", "path": "README.md", "ref": "main..feature"}))
 	require.ErrorContains(t, err, "not a valid")
 }
 
 func TestReadsStayInScope(t *testing.T) {
 	f := readFixture(t)
-	read := request(actionReadFile, map[string]any{"repo": "secret", "path": "x"})
+	read := request(toolReadFile, map[string]any{"repo": "secret", "path": "x"})
 
 	_, err := testEngine(t, f, map[string]any{"repositories": []string{"pipelines"}}).Execute(context.Background(), read)
 	require.ErrorIs(t, err, ErrOutOfScope)
@@ -114,14 +114,14 @@ func TestReadsStayInScope(t *testing.T) {
 	require.ErrorIs(t, err, ErrOutOfScope, "the name filter applies to reads")
 
 	_, err = testEngine(t, f, nil).Execute(context.Background(), read)
-	require.NoError(t, err, "reads need no actions.repos entry")
+	require.NoError(t, err, "reads need no tools.repos entry")
 }
 
 func TestListFiles(t *testing.T) {
 	f := readFixture(t)
 	e := testEngine(t, f, nil)
 
-	_, out := runRead[fileList](t, e, request(actionListFiles, map[string]any{"repo": "pipelines", "path": "dags", "limit": int64(10)}))
+	_, out := runRead[fileList](t, e, request(toolListFiles, map[string]any{"repo": "pipelines", "path": "dags", "limit": int64(10)}))
 	var paths []string
 	for _, file := range out.Files {
 		paths = append(paths, file.Path)
@@ -129,14 +129,14 @@ func TestListFiles(t *testing.T) {
 	assert.Equal(t, []string{"dags/hourly.py", "dags/lib/util.py", "dags/nightly.py"}, paths, "recursive, files only, full paths")
 	assert.False(t, out.Truncated)
 
-	_, out = runRead[fileList](t, e, request(actionListFiles, map[string]any{"repo": "pipelines", "limit": int64(2)}))
+	_, out = runRead[fileList](t, e, request(toolListFiles, map[string]any{"repo": "pipelines", "limit": int64(2)}))
 	assert.Len(t, out.Files, 2)
 	assert.Equal(t, 6, out.Total)
 	assert.True(t, out.Truncated)
 
-	_, err := e.Execute(context.Background(), request(actionListFiles, map[string]any{"repo": "pipelines", "path": "README.md", "limit": int64(1)}))
+	_, err := e.Execute(context.Background(), request(toolListFiles, map[string]any{"repo": "pipelines", "path": "README.md", "limit": int64(1)}))
 	require.ErrorContains(t, err, "not a directory")
-	_, err = e.Execute(context.Background(), request(actionListFiles, map[string]any{"repo": "pipelines", "limit": int64(501)}))
+	_, err = e.Execute(context.Background(), request(toolListFiles, map[string]any{"repo": "pipelines", "limit": int64(501)}))
 	require.Error(t, err, "the count is capped by the manifest")
 }
 
@@ -150,7 +150,7 @@ func TestListPullRequests(t *testing.T) {
 	r.pulls[4] = &fakePR{number: 4, title: "Old", state: "closed", head: "old", base: "main", headRepo: "acme/pipelines", user: "bob", merged: true}
 	e := testEngine(t, f, nil)
 
-	_, out := runRead[pullRequestList](t, e, request(actionListPullRequests, map[string]any{"repo": "pipelines", "state": "open", "limit": int64(10)}))
+	_, out := runRead[pullRequestList](t, e, request(toolListPullRequests, map[string]any{"repo": "pipelines", "state": "open", "limit": int64(10)}))
 	require.Len(t, out.PullRequests, 3)
 	byNumber := map[int]pullRequestSummary{}
 	for _, pr := range out.PullRequests {
@@ -161,16 +161,16 @@ func TestListPullRequests(t *testing.T) {
 	assert.False(t, byNumber[2].OpenedByMarmot)
 	assert.False(t, byNumber[3].OpenedByMarmot, "a fork's branch under the prefix is not the plugin's")
 
-	_, out = runRead[pullRequestList](t, e, request(actionListPullRequests, map[string]any{"repo": "pipelines", "state": "closed", "limit": int64(10)}))
+	_, out = runRead[pullRequestList](t, e, request(toolListPullRequests, map[string]any{"repo": "pipelines", "state": "closed", "limit": int64(10)}))
 	require.Len(t, out.PullRequests, 1)
 	assert.True(t, out.PullRequests[0].Merged)
 
-	_, out = runRead[pullRequestList](t, e, request(actionListPullRequests, map[string]any{"repo": "pipelines", "state": "open", "limit": int64(1)}))
+	_, out = runRead[pullRequestList](t, e, request(toolListPullRequests, map[string]any{"repo": "pipelines", "state": "open", "limit": int64(1)}))
 	assert.Len(t, out.PullRequests, 1)
 }
 
 func TestReadsAreNotPlanned(t *testing.T) {
 	f := readFixture(t)
-	_, err := testEngine(t, f, nil).Plan(context.Background(), request(actionReadFile, map[string]any{"repo": "pipelines", "path": "README.md"}))
+	_, err := testEngine(t, f, nil).Plan(context.Background(), request(toolReadFile, map[string]any{"repo": "pipelines", "path": "README.md"}))
 	require.ErrorContains(t, err, "nothing to plan")
 }

@@ -51,7 +51,7 @@ const (
 type KeyConfig struct {
 	CAKeyURI      string
 	SigningKeyURI string
-	// ApprovalKeyURI is the key that signs approvals of actions. It is a key of its own, never the signing key, so signing a query can never produce an approval.
+	// ApprovalKeyURI is the key that signs approvals of tools. It is a key of its own, never the signing key, so signing a query can never produce an approval.
 	ApprovalKeyURI string
 }
 

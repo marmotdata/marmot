@@ -1,4 +1,4 @@
-// Command fakeactor is a minimal action-capable plugin used by the ActionHost tests, after the plugin SDK's plugintest/testdata/actionplugin. It keeps a counter in the file its config names, since a test needs to see from outside whether an action ran.
+// Command faketools is a minimal tool-capable plugin used by the ToolHost tests, after the plugin SDK's plugintest/testdata/toolplugin. It keeps a counter in the file its config names, since a test needs to see from outside whether a tool ran.
 package main
 
 import (
@@ -33,8 +33,8 @@ func (s *Source) Discover(context.Context, pluginsdk.RawConfig) (*pluginsdk.Disc
 	return &pluginsdk.DiscoveryResult{}, nil
 }
 
-func (s *Source) Actions() []pluginsdk.ActionSpec {
-	return []pluginsdk.ActionSpec{{
+func (s *Source) Tools() []pluginsdk.ToolSpec {
+	return []pluginsdk.ToolSpec{{
 		Name:          "set_count",
 		Version:       1,
 		Title:         "Set count",
@@ -42,32 +42,32 @@ func (s *Source) Actions() []pluginsdk.ActionSpec {
 		Targets:       []pluginsdk.TargetKind{"test/counter"},
 		Reversibility: pluginsdk.ReversibilitySelfHealing,
 		Risk:          pluginsdk.RiskBounded,
-		Params: []pluginsdk.ActionParam{
+		Params: []pluginsdk.ToolParam{
 			{Name: "count", Description: "New value", Type: pluginsdk.ParamInt, Required: true, Min: 0, Max: 10},
 		},
 	}}
 }
 
-func (s *Source) PlanAction(_ context.Context, raw pluginsdk.RawConfig, req pluginsdk.ActionRequest) (*pluginsdk.ActionPlan, error) {
+func (s *Source) PlanTool(_ context.Context, raw pluginsdk.RawConfig, req pluginsdk.ToolRequest) (*pluginsdk.ToolPlan, error) {
 	count, _ := req.IntParam("count")
-	return &pluginsdk.ActionPlan{Target: "counter", TargetKind: "test/counter", Summary: fmt.Sprintf("set to %d", count), Precondition: "v1"}, nil
+	return &pluginsdk.ToolPlan{Target: "counter", TargetKind: "test/counter", Summary: fmt.Sprintf("set to %d", count), Precondition: "v1"}, nil
 }
 
-func (s *Source) ExecuteAction(_ context.Context, raw pluginsdk.RawConfig, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, error) {
+func (s *Source) ExecuteTool(_ context.Context, raw pluginsdk.RawConfig, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, error) {
 	count, _ := req.IntParam("count")
 	if err := os.WriteFile(raw["state_file"].(string), []byte(strconv.FormatInt(count, 10)), 0o600); err != nil {
 		return nil, err
 	}
-	return &pluginsdk.ActionResult{Target: "counter", TargetKind: "test/counter", Summary: fmt.Sprintf("set to %d", count)}, nil
+	return &pluginsdk.ToolResult{Target: "counter", TargetKind: "test/counter", Summary: fmt.Sprintf("set to %d", count)}, nil
 }
 
 func main() {
 	pluginsdk.Serve(&pluginsdk.ServeConfig{
 		Meta: pluginsdk.Meta{
-			ID:          "fakeactor",
+			ID:          "faketools",
 			Name:        "Fake Actor",
-			Description: "Test plugin for the action host",
-			Icon:        "fakeactor",
+			Description: "Test plugin for the tool host",
+			Icon:        "faketools",
 			Category:    "test",
 			ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
 		},

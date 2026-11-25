@@ -22,22 +22,22 @@ const (
 	AuditPlan    = "plan"
 	AuditExecute = "execute"
 	AuditRefused = "refused"
-	// AuditActionPlan records an action planned. AuditActionIntent is written before an action is executed, and the plugin is only called once it is on disk; AuditActionExecute records the outcome after. An intent with no outcome after it is an action whose result the process never learnt, such as one cut off by a crash.
-	AuditActionPlan    = "action_plan"
-	AuditActionIntent  = "action_intent"
-	AuditActionExecute = "action_execute"
-	// AuditActionRead records a read action executed. A read changes nothing, so like a plan it is written after, with no intent before.
-	AuditActionRead = "action_read"
+	// AuditToolPlan records a tool planned. AuditToolIntent is written before a tool is executed, and the plugin is only called once it is on disk; AuditToolExecute records the outcome after. An intent with no outcome after it is a tool whose result the process never learnt, such as one cut off by a crash.
+	AuditToolPlan    = "tool_plan"
+	AuditToolIntent  = "tool_intent"
+	AuditToolExecute = "tool_execute"
+	// AuditToolRead records a read tool executed. A read changes nothing, so like a plan it is written after, with no intent before.
+	AuditToolRead = "tool_read"
 	// AuditTrigger records a trigger event signed and sent to Marmot, and AuditTriggerDropped events the process would not send: over the rate limit, refused by the checks, or with nowhere to go. Drops are summed per source and written at most once a minute, so a plugin that floods cannot flood the log.
 	AuditTrigger        = "trigger"
 	AuditTriggerDropped = "trigger_dropped"
 )
 
-// AuditEntry is one line of a serving process's audit log: a plan or execute it served, with the receipt fields for an execute, an action planned, about to run or run, or a query or action it refused.
+// AuditEntry is one line of a serving process's audit log: a plan or execute it served, with the receipt fields for an execute, a tool planned, about to run or run, or a query or tool it refused.
 type AuditEntry struct {
 	Time  time.Time `json:"time"`
 	Event string    `json:"event"`
-	// Operation is plan, execute, action_plan or action_execute, for a refusal.
+	// Operation is plan, execute, tool_plan or tool_execute, for a refusal.
 	Operation string `json:"operation,omitempty"`
 	// Policy is the local policy's decision: allowed, allowed with what it changed, refused, none when no policy is set, or not applied when the query was refused before the policy was reached.
 	Policy           string `json:"policy"`
@@ -53,8 +53,8 @@ type AuditEntry struct {
 	DurationMS       int64  `json:"duration_ms"`
 	Error            string `json:"error,omitempty"`
 	ReceiptSignature string `json:"receipt_signature,omitempty"`
-	// The action fields are set for actions only. Parameters are recorded by hash, like statements, so the log holds no values that might be sensitive; the receipt Marmot keeps carries the same hash.
-	Action         string `json:"action,omitempty"`
+	// The tool fields are set for tools only. Parameters are recorded by hash, like statements, so the log holds no values that might be sensitive; the receipt Marmot keeps carries the same hash.
+	Tool           string `json:"tool,omitempty"`
 	ParamsSHA256   string `json:"params_sha256,omitempty"`
 	Precondition   string `json:"precondition,omitempty"`
 	ManifestDigest string `json:"manifest_digest,omitempty"`

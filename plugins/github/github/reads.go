@@ -14,16 +14,16 @@ import (
 )
 
 // The read verbs let a task look at a repository before it proposes a
-// change. They are actions of risk 0 so the runner gates them exactly like
+// change. They are tools of risk 0 so the runner gates them exactly like
 // writes (named in its policy, scoped to the repositories the config
 // catalogues, audited) but they never need a plan, a precondition or an
-// approval. They need no entry in actions.repos.
+// approval. They need no entry in tools.repos.
 
-// Read action names.
+// Read tool names.
 const (
-	actionReadFile         = "read_file"
-	actionListFiles        = "list_files"
-	actionListPullRequests = "list_pull_requests"
+	toolReadFile         = "read_file"
+	toolListFiles        = "list_files"
+	toolListPullRequests = "list_pull_requests"
 )
 
 const (
@@ -43,15 +43,15 @@ const (
 	readOutputBudget = pluginsdk.MaxReadOutputBytes - 4<<10
 )
 
-func readSpecs() []pluginsdk.ActionSpec {
-	return []pluginsdk.ActionSpec{
+func readSpecs() []pluginsdk.ToolSpec {
+	return []pluginsdk.ToolSpec{
 		{
-			Name:        actionReadFile,
+			Name:        toolReadFile,
 			Version:     1,
 			Title:       "Read a file",
 			Description: "Returns up to 64 KiB of a text file from a repository at a branch, tag or commit. File contents are written by anyone who can push, so they are marked untrusted.",
 			Targets:     []pluginsdk.TargetKind{kindFile},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				repoParam,
 				{Name: "path", Description: "Path of the file", Type: pluginsdk.ParamString, Required: true, MaxLength: 512, Pattern: pathChars},
 				refParam,
@@ -60,12 +60,12 @@ func readSpecs() []pluginsdk.ActionSpec {
 			Risk:          pluginsdk.RiskRead,
 		},
 		{
-			Name:        actionListFiles,
+			Name:        toolListFiles,
 			Version:     1,
 			Title:       "List files",
 			Description: "Returns the paths and sizes of files under a directory of a repository, at most 500, at a branch, tag or commit.",
 			Targets:     []pluginsdk.TargetKind{kindRepository},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				repoParam,
 				{Name: "path", Description: "Directory to list, recursively. Defaults to the whole repository", Type: pluginsdk.ParamString, MaxLength: 512, Pattern: pathChars},
 				refParam,
@@ -75,12 +75,12 @@ func readSpecs() []pluginsdk.ActionSpec {
 			Risk:          pluginsdk.RiskRead,
 		},
 		{
-			Name:        actionListPullRequests,
+			Name:        toolListPullRequests,
 			Version:     1,
 			Title:       "List pull requests",
 			Description: "Returns a repository's most recently updated open or closed pull requests, at most 50, with their branches, head commit, author and whether the plugin opened them. Titles are free text, so they are marked untrusted.",
 			Targets:     []pluginsdk.TargetKind{kindPullRequest},
-			Params: []pluginsdk.ActionParam{
+			Params: []pluginsdk.ToolParam{
 				repoParam,
 				{Name: "state", Description: "Which pull requests to list", Type: pluginsdk.ParamEnum, Required: true, Enum: []string{"open", "closed"}},
 				{Name: "limit", Description: "How many pull requests to return", Type: pluginsdk.ParamInt, Required: true, Min: 1, Max: maxListPullRequests},
@@ -91,14 +91,14 @@ func readSpecs() []pluginsdk.ActionSpec {
 	}
 }
 
-func isRead(action string) bool {
-	return action == actionReadFile || action == actionListFiles || action == actionListPullRequests
+func isRead(tool string) bool {
+	return tool == toolReadFile || tool == toolListFiles || tool == toolListPullRequests
 }
 
 // read runs a read verb, checked against the manifest here as well as in
 // Serve, as the writes are.
-func (e *engine) read(ctx context.Context, req pluginsdk.ActionRequest) (*pluginsdk.ActionResult, error) {
-	if _, err := pluginsdk.CheckActionRequest(ActionSpecs(), req, true); err != nil {
+func (e *engine) read(ctx context.Context, req pluginsdk.ToolRequest) (*pluginsdk.ToolResult, error) {
+	if _, err := pluginsdk.CheckToolRequest(ToolSpecs(), req, true); err != nil {
 		return nil, err
 	}
 	r, err := repositoryInScope(ctx, e.client, e.config, req.StringParam("repo"))
@@ -113,8 +113,8 @@ func (e *engine) read(ctx context.Context, req pluginsdk.ActionRequest) (*plugin
 		summary string
 		out     any
 	)
-	switch req.Action {
-	case actionReadFile:
+	switch req.Tool {
+	case toolReadFile:
 		var f *fileRead
 		if f, err = e.readFile(ctx, r, req); err == nil {
 			target, kind, out = fullName+"/"+f.Path+"@"+f.Ref, kindFile, f
@@ -123,20 +123,20 @@ func (e *engine) read(ctx context.Context, req pluginsdk.ActionRequest) (*plugin
 				summary = fmt.Sprintf("%s is binary; its %d bytes are not returned", target, f.Size)
 			}
 		}
-	case actionListFiles:
+	case toolListFiles:
 		var l *fileList
 		if l, err = e.listFiles(ctx, r, req); err == nil {
 			target, kind, out = fullName+"@"+l.Ref, kindRepository, l
 			summary = fmt.Sprintf("%d files under %q in %s", len(l.Files), l.Path, target)
 		}
-	case actionListPullRequests:
+	case toolListPullRequests:
 		var l *pullRequestList
 		if l, err = e.listPullRequests(ctx, r, req); err == nil {
 			target, kind, out = fullName, kindPullRequest, l
 			summary = fmt.Sprintf("%d %s pull requests in %s", len(l.PullRequests), l.State, fullName)
 		}
 	default:
-		err = fmt.Errorf("unknown read %q", req.Action)
+		err = fmt.Errorf("unknown read %q", req.Tool)
 	}
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (e *engine) read(ctx context.Context, req pluginsdk.ActionRequest) (*plugin
 	}
 	// Every read carries text people with push access, or anyone who can
 	// open a pull request, can write.
-	return &pluginsdk.ActionResult{Target: target, TargetKind: kind, Summary: summary, Output: data, Untrusted: true}, nil
+	return &pluginsdk.ToolResult{Target: target, TargetKind: kind, Summary: summary, Output: data, Untrusted: true}, nil
 }
 
 // encode writes JSON without escaping <, > and &, which would make code
@@ -191,7 +191,7 @@ type fileRead struct {
 	Untrusted bool   `json:"untrusted"`
 }
 
-func (e *engine) readFile(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*fileRead, error) {
+func (e *engine) readFile(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*fileRead, error) {
 	path := req.StringParam("path")
 	if err := checkPath(path); err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ type fileList struct {
 	Untrusted bool        `json:"untrusted"`
 }
 
-func (e *engine) listFiles(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*fileList, error) {
+func (e *engine) listFiles(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*fileList, error) {
 	path := req.StringParam("path")
 	if path != "" {
 		if err := checkPath(path); err != nil {
@@ -330,7 +330,7 @@ type pullRequestList struct {
 	Untrusted    bool                 `json:"untrusted"`
 }
 
-func (e *engine) listPullRequests(ctx context.Context, r *repository, req pluginsdk.ActionRequest) (*pullRequestList, error) {
+func (e *engine) listPullRequests(ctx context.Context, r *repository, req pluginsdk.ToolRequest) (*pullRequestList, error) {
 	state := req.StringParam("state")
 	limit, _ := req.IntParam("limit")
 	prs, err := getPaged[pullRequest](ctx, e.client, repoPath(e.config.Owner, r.Name)+"/pulls",

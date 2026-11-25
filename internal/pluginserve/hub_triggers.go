@@ -260,7 +260,7 @@ func (h *Hub) verifyTriggerEvent(msg *pb.SignedTriggerEvent, s *session, owner O
 
 // servedTrigger finds the trigger in the enrolment's own report: the plugin's trigger manifest at the digest the event names, with the trigger among those the policy summary says run. An event for a trigger the process never reported is refused, so the report and the events cannot disagree unnoticed.
 func servedTrigger(e *Enrolment, source, trigger, digest string) (pluginsdk.TriggerSpec, error) {
-	sa := e.ServedActions[source]
+	sa := e.ServedTools[source]
 	if sa == nil || len(sa.Triggers) == 0 {
 		return pluginsdk.TriggerSpec{}, fmt.Errorf("the enrolment reported no triggers for %q", source)
 	}

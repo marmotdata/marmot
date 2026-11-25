@@ -206,6 +206,9 @@ const config: Config = {
             const base = existingPath.replace(/\/$/, "");
             return ["claude-code", "claude-desktop", "cursor", "cline", "librechat"].map((c) => `${base}/${c}`);
           }
+          // Plugin actions were renamed tools.
+          const tools = existingPath.match(/^(\/docs(?:\/next)?\/Populating)\/kubernetes-tools\/?$/);
+          if (tools) return [`${tools[1]}/kubernetes-actions`];
           return undefined;
         },
       },

@@ -1,5 +1,5 @@
 // Package github catalogues the repositories of a GitHub organisation or
-// user and offers a small set of typed reads and pull request actions.
+// user and offers a small set of typed reads and pull request tools.
 package github
 
 import (
@@ -38,7 +38,7 @@ type Config struct {
 	IncludeReadme   bool     `json:"include_readme" group:"Discovery" label:"Include README" description:"Attach each repository's README as documentation, one request per repository" default:"true"`
 	IncludeOwners   bool     `json:"include_codeowners" group:"Discovery" label:"Include CODEOWNERS" description:"Read default owners from CODEOWNERS, up to three requests per repository" default:"false"`
 
-	Actions ActionsConfig `json:"actions,omitempty" group:"Actions" description:"Limits on the changes actions may make. Actions run only in a runner that allows them"`
+	Tools ToolsConfig `json:"tools,omitempty" group:"Tools" description:"Limits on the changes tools may make. Tools run only in a runner that allows them"`
 }
 
 // Example configuration for the plugin
@@ -89,14 +89,14 @@ func (c *Config) Validate() error {
 			}
 		}
 	}
-	if err := c.Actions.Validate(); err != nil {
+	if err := c.Tools.Validate(); err != nil {
 		return err
 	}
 	// Writes are narrower than reads, never wider.
 	if len(c.Repositories) > 0 {
-		for _, r := range c.Actions.Repos {
+		for _, r := range c.Tools.Repos {
 			if !slices.Contains(c.Repositories, r) {
-				return fmt.Errorf("actions.repos: %q is not in repositories, so it is not catalogued or readable", r)
+				return fmt.Errorf("tools.repos: %q is not in repositories, so it is not catalogued or readable", r)
 			}
 		}
 	}
@@ -111,8 +111,8 @@ func (c *Config) token() string {
 }
 
 // inScope reports whether the config allows a repository: catalogued,
-// readable and, for those in actions.repos, writable. Discovery and every
-// action go through it, so a read can never see a repository the catalogue
+// readable and, for those in tools.repos, writable. Discovery and every
+// tool go through it, so a read can never see a repository the catalogue
 // was told to leave out.
 func (c *Config) inScope(r *repository) bool {
 	if !strings.EqualFold(r.Owner.Login, c.Owner) {
@@ -276,7 +276,7 @@ func listRepositories(ctx context.Context, c *client, config *Config) ([]reposit
 	return getPaged[repository](ctx, c, "/users/"+url.PathEscape(config.Owner)+"/repos", url.Values{"type": {"owner"}}, maxRepositories)
 }
 
-// repositoryInScope fetches a repository named in an action and refuses it
+// repositoryInScope fetches a repository named in a tool and refuses it
 // unless the config allows it, before anything else is read from it.
 func repositoryInScope(ctx context.Context, c *client, config *Config, name string) (*repository, error) {
 	if !validRepoName(name) {

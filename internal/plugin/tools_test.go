@@ -22,16 +22,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Marmot's server runs data queries on an InstanceManager, so if the manager could act, a type assertion on the server's query runner would reach a local plugin's actions. Actions live on ActionHost instead, and this keeps them off the manager.
+// Marmot's server runs data queries on an InstanceManager, so if the manager could act, a type assertion on the server's query runner would reach a local plugin's tools. Tools live on ToolHost instead, and this keeps them off the manager.
 func TestInstanceManagerCannotAct(t *testing.T) {
 	typ := reflect.TypeOf(&InstanceManager{})
 	for i := range typ.NumMethod() {
-		assert.NotContains(t, typ.Method(i).Name, "Action", "InstanceManager is the server's query runner; actions belong on ActionHost only")
+		assert.NotContains(t, typ.Method(i).Name, "Tool", "InstanceManager is the server's query runner; tools belong on ToolHost only")
 	}
 }
 
-// Actions only ever run inside a customer's serving process, never in Marmot's server, so the only code that may build an ActionHost is the serving command's file. The rest of internal/cmd is not exempt, since Marmot's server command lives there too. Every other package reaches actions, if at all, through pluginserve's Hub, which only talks to served sessions.
-func TestOnlyTheServingProcessHostsActions(t *testing.T) {
+// Tools only ever run inside a customer's serving process, never in Marmot's server, so the only code that may build a ToolHost is the serving command's file. The rest of internal/cmd is not exempt, since Marmot's server command lives there too. Every other package reaches tools, if at all, through pluginserve's Hub, which only talks to served sessions.
+func TestOnlyTheServingProcessHostsTools(t *testing.T) {
 	root := moduleRoot(t)
 	allowed := filepath.Join(root, "internal", "cmd", "serve.go")
 	self := filepath.Join(root, "internal", "plugin")
@@ -60,7 +60,7 @@ func TestOnlyTheServingProcessHostsActions(t *testing.T) {
 			return err
 		}
 		ast.Inspect(file, func(n ast.Node) bool {
-			if sel, ok := n.(*ast.SelectorExpr); ok && (sel.Sel.Name == "NewActionHost" || sel.Sel.Name == "ActionHost") {
+			if sel, ok := n.(*ast.SelectorExpr); ok && (sel.Sel.Name == "NewToolHost" || sel.Sel.Name == "ToolHost") {
 				rel, _ := filepath.Rel(root, path)
 				offenders = append(offenders, rel)
 			}
@@ -69,7 +69,7 @@ func TestOnlyTheServingProcessHostsActions(t *testing.T) {
 		return nil
 	})
 	require.NoError(t, err)
-	assert.Empty(t, offenders, "only internal/cmd/serve.go, for marmot ingest --serve, may host plugin actions")
+	assert.Empty(t, offenders, "only internal/cmd/serve.go, for marmot ingest --serve, may host plugin tools")
 }
 
 func moduleRoot(t *testing.T) string {
@@ -91,62 +91,62 @@ func hasGoMod(dir string) bool {
 
 var (
 	fakeActorOnce sync.Once
-	fakeActorErr  error
+	fakeToolsErr  error
 )
 
 // registerFakeActor builds and registers the fake actor once per test binary, as registerFakeQuerier does.
 func registerFakeActor(t *testing.T) {
 	t.Helper()
 	fakeActorOnce.Do(func() {
-		dir, err := os.MkdirTemp("", "marmot-fakeactor")
+		dir, err := os.MkdirTemp("", "marmot-faketools")
 		if err != nil {
-			fakeActorErr = err
+			fakeToolsErr = err
 			return
 		}
-		path := filepath.Join(dir, "fakeactor")
+		path := filepath.Join(dir, "faketools")
 		cmd := exec.Command("go", "build", "-o", path, ".")
-		cmd.Dir = "testdata/fakeactor"
+		cmd.Dir = "testdata/faketools"
 		if out, err := cmd.CombinedOutput(); err != nil {
-			fakeActorErr = fmt.Errorf("building fake actor: %v\n%s", err, out)
+			fakeToolsErr = fmt.Errorf("building fake tools plugin: %v\n%s", err, out)
 			return
 		}
-		if _, err := GetRegistry().Get("fakeactor"); err == nil {
+		if _, err := GetRegistry().Get("faketools"); err == nil {
 			return
 		}
-		_, fakeActorErr = registerExternalPlugin(path)
+		_, fakeToolsErr = registerExternalPlugin(path)
 	})
-	require.NoError(t, fakeActorErr)
+	require.NoError(t, fakeToolsErr)
 }
 
-func TestActionHostGatesOnTheProcessManifest(t *testing.T) {
+func TestToolHostGatesOnTheProcessManifest(t *testing.T) {
 	registerFakeActor(t)
 	manager := NewInstanceManager(time.Minute)
 	t.Cleanup(manager.Stop)
-	host := NewActionHost(manager)
+	host := NewToolHost(manager)
 	ctx := context.Background()
 
 	state := filepath.Join(t.TempDir(), "count")
 	config := map[string]any{"state_file": state}
-	req := pluginsdk.ActionRequest{Action: "set_count", Params: map[string]any{"count": 4}, Identity: "user:alice", Origin: "task_run:1", Precondition: "v1"}
+	req := pluginsdk.ToolRequest{Tool: "set_count", Params: map[string]any{"count": 4}, Identity: "user:alice", Origin: "task_run:1", Precondition: "v1"}
 
-	specs, err := host.ActionManifest(ctx, "fakeactor")
+	specs, err := host.ToolManifest(ctx, "faketools")
 	require.NoError(t, err)
 	require.Len(t, specs, 1)
 
-	var gated []pluginsdk.ActionSpec
+	var gated []pluginsdk.ToolSpec
 	refuse := errors.New("refused by the gate")
-	_, err = host.ExecuteAction(ctx, "fakeactor", config, req, func(s []pluginsdk.ActionSpec) error { gated = s; return refuse })
+	_, err = host.ExecuteTool(ctx, "faketools", config, req, func(s []pluginsdk.ToolSpec) error { gated = s; return refuse })
 	assert.ErrorIs(t, err, refuse, "the gate's error comes back as it was")
 	assert.Equal(t, pluginsdk.ManifestDigest(specs), pluginsdk.ManifestDigest(gated), "the gate sees the process's own manifest")
-	assert.NoFileExists(t, state, "a refused action never reaches the plugin")
+	assert.NoFileExists(t, state, "a refused tool never reaches the plugin")
 
-	allow := func([]pluginsdk.ActionSpec) error { return nil }
-	plan, err := host.PlanAction(ctx, "fakeactor", config, req, allow)
+	allow := func([]pluginsdk.ToolSpec) error { return nil }
+	plan, err := host.PlanTool(ctx, "faketools", config, req, allow)
 	require.NoError(t, err)
 	assert.Equal(t, "v1", plan.Precondition)
 	assert.NoFileExists(t, state, "a plan changes nothing")
 
-	result, err := host.ExecuteAction(ctx, "fakeactor", config, req, allow)
+	result, err := host.ExecuteTool(ctx, "faketools", config, req, allow)
 	require.NoError(t, err)
 	assert.Equal(t, "set to 4", result.Summary)
 	data, err := os.ReadFile(state)
@@ -154,10 +154,10 @@ func TestActionHostGatesOnTheProcessManifest(t *testing.T) {
 	assert.Equal(t, "4", string(data))
 }
 
-func TestActionHostRefusesPluginsWithoutActions(t *testing.T) {
+func TestToolHostRefusesPluginsWithoutTools(t *testing.T) {
 	registerFakeQuerier(t)
 	manager := NewInstanceManager(time.Minute)
 	t.Cleanup(manager.Stop)
-	_, err := NewActionHost(manager).ActionManifest(context.Background(), "fakequerier")
-	assert.ErrorIs(t, err, ErrNoActions)
+	_, err := NewToolHost(manager).ToolManifest(context.Background(), "fakequerier")
+	assert.ErrorIs(t, err, ErrNoTools)
 }

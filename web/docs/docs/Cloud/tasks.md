@@ -43,9 +43,9 @@ Events don't widen this. A task started by an alert still reads only what its ow
 
 ## What a task may change
 
-A task only reads unless you give it actions under **What may it do?**. The list comes from connected runners: each offers the actions its policy allows, with how many approvals each needs. Leave everything unticked and the task never changes anything.
+A task only reads unless you give it tools under **What may it do?**. The list comes from connected runners: each offers the tools its policy allows, with how many approvals each needs. Leave everything unticked and the task never changes anything.
 
-A task given actions can:
+A task given tools can:
 
 - **Look** with reads, such as a workload's status, a pod's logs or recent events. Reads need no approval.
 - **Propose a change**, such as restarting a workload. It never makes the change itself.
@@ -63,9 +63,9 @@ These rules apply to every task:
 | A proposal waits for approval for | 24 hours |
 | All approvals must arrive within | 15 minutes of the first, or approving starts again |
 | Most changes one run may propose | 3 |
-| Times an alert may return before the task's actions pause | 2 |
+| Times an alert may return before the task's tools pause | 2 |
 
-The last rule stops a task from restarting the same thing over and over. When the same target keeps coming back after a change, the task's actions pause until someone resumes them.
+The last rule stops a task from restarting the same thing over and over. When the same target keeps coming back after a change, the task's tools pause until someone resumes them.
 
 ## Who can do what
 
@@ -97,7 +97,7 @@ Your plan also limits runs per day and tokens per month. **Plan** appears on the
 ## Limitations
 
 - A task reads your catalog, data and runners. It can't browse the web or reach systems no runner serves.
-- Changes go through runners only. Kubernetes is the only plugin with actions.
+- Changes go through runners only. Kubernetes is the only plugin with tools.
 - Every change needs at least 1 approval. Nothing runs unattended.
 - Objects managed by Flux or Argo CD can't be changed, because the next reconcile would revert them.
 
@@ -105,4 +105,4 @@ Your plan also limits runs per day and tokens per month. **Plan** appears on the
 
 - [Create a task](create-a-task.md): set one up from a starter or from scratch.
 - [Approve changes](approve-changes.md): review, approve, reject and undo what tasks propose.
-- [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-actions.md): connect a cluster.
+- [Let tasks act on a Kubernetes cluster](../Populating/kubernetes-tools.md): connect a cluster.

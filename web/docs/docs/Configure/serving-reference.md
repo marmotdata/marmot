@@ -5,7 +5,7 @@ description: Server settings, command flags, policy file keys, Kubernetes trigge
 
 # Runner reference
 
-Every setting for [runners](serving-plugins.md): the server's serving config, the runner's flags, its policy file, the Kubernetes plugin's triggers and the actions chart.
+Every setting for [runners](serving-plugins.md): the server's serving config, the runner's flags, its policy file, the Kubernetes plugin's triggers and the tools chart.
 
 ## Server configuration
 
@@ -38,8 +38,8 @@ Flags of `marmot plugin`, also called `marmot ingest`:
 | --- | --- |
 | `--serve` | After ingesting, stay running and serve the run marked `queryable: true` |
 | `--policy <path>` | A YAML policy limiting what the runner serves. Once given, sources it doesn't name are refused |
-| `--audit-log <path>` | Append a hash-chained JSON line for every query, read, plan, action and trigger event |
-| `--allow-actions` | Also serve the reads, actions and triggers the policy names. Needs `--audit-log` |
+| `--audit-log <path>` | Append a hash-chained JSON line for every query, read, plan, tool and trigger event |
+| `--allow-tools` | Also serve the reads, tools and triggers the policy names. Needs `--audit-log` |
 | `--ca-fingerprint sha256:<hex>` | A CA fingerprint Marmot's first enrolment must include. Repeatable |
 | `--ca-file <path>` | A PEM CA to trust for the Marmot API, as well as the system's. Also `MARMOT_CA_FILE` |
 
@@ -75,21 +75,21 @@ Unknown keys are an error, so a misspelt key can't loosen the policy. The runner
 | `query` | Whether the source answers queries. `false` refuses them | `true` |
 | `max_rows` | A ceiling on rows. A query signed with a higher limit is cut to it | No ceiling |
 | `actors` | Patterns the signed actor must match, such as `user:alice` or `service_account:*` | Any actor |
-| `origins` | Patterns the signed origin must match, such as `task_run:*` | Any origin |
-| `manifest` | `sha256:<hex>` pin of the plugin's actions. Any change to them refuses every action until updated | No pin |
-| `actions.<name>` | A read or action the runner serves. One the policy doesn't name is refused | |
+| `origins` | Patterns the signed origin must match, such as `task_run:*`. Tools only ever come from task runs, whatever this says | Any origin |
+| `manifest` | `sha256:<hex>` pin of the plugin's tools. Any change to them refuses every tool until updated | No pin |
+| `tools.<name>` | A read or tool the runner serves. One the policy doesn't name is refused | |
 | `triggers.<name>` | A trigger the runner runs | |
 
 In patterns, `*` matches any run of characters.
 
-### Actions
+### Tools
 
 | Key | Description |
 | --- | --- |
 | `actors`, `origins` | Allow-lists checked as well as the source's |
 | `params.<param>.min`, `.max` | Bounds for a whole-number parameter |
 | `params.<param>.values` | The only values allowed. A constrained parameter must be given |
-| `approvals` | Distinct people who must approve: 1 when unset, at most 2. `0` only for a risk 1, reversible action, written out |
+| `approvals` | Distinct people who must approve: 1 when unset, at most 2. `0` only for a risk 1, reversible tool, written out |
 | `approvers` | Only these people count, by Marmot user id or user name |
 
 Reads take no `approvals`.
@@ -129,23 +129,23 @@ custom_condition:
   cooldown: 2h
 ```
 
-## Kubernetes actions chart
+## Kubernetes tools chart
 
-Values of `marmotdata/marmot-kubernetes-actions`:
+Values of `marmotdata/marmot-kubernetes-tools`:
 
 | Value | Description | Default |
 | --- | --- | --- |
-| `namespaces` | Namespaces actions may change. Each gets its own Role. Match the plugin's `actions.namespaces` | `[]` |
-| `actions.scale` | Grant scaling Deployments and StatefulSets | `true` |
-| `actions.rolloutRestart` | Grant restarting Deployments, StatefulSets and DaemonSets | `true` |
-| `actions.cronJobs` | Grant suspending and resuming CronJobs | `true` |
-| `actions.cordon` | Grant cordoning and uncordoning nodes, through a ClusterRole | `false` |
-| `actions.observe` | Grant the reads: pods, their logs and events | `true` |
+| `namespaces` | Namespaces tools may change. Each gets its own Role. Match the plugin's `tools.namespaces` | `[]` |
+| `tools.scale` | Grant scaling Deployments and StatefulSets | `true` |
+| `tools.rolloutRestart` | Grant restarting Deployments, StatefulSets and DaemonSets | `true` |
+| `tools.cronJobs` | Grant suspending and resuming CronJobs | `true` |
+| `tools.cordon` | Grant cordoning and uncordoning nodes, through a ClusterRole | `false` |
+| `tools.observe` | Grant the reads: pods, their logs and events | `true` |
 | `triggers.enabled` | Grant watching workloads and events in `namespaces` | `true` |
 | `triggers.clusterWide` | Grant watching every namespace and nodes. Reads every pod's status, never a Secret or log | `false` |
-| `maxReplicas` | Most replicas the admission policy admits. At or above the plugin's `actions.max_replicas` | `20` |
-| `selector` | Labels every changed object must carry. Match the plugin's `actions.selector` | `{}` |
+| `maxReplicas` | Most replicas the admission policy admits. At or above the plugin's `tools.max_replicas` | `20` |
+| `selector` | Labels every changed object must carry. Match the plugin's `tools.selector` | `{}` |
 | `admissionPolicy.enabled` | Install the admission policy | `true` |
 | `serviceAccount.name` | The runner's service account | The release name |
 
-The chart grants no access to Secrets, no create or delete, no `exec` and nothing on RBAC. Its admission policy refuses, from the runner, any change beyond the fields an action touches, and refuses every change if it can't be evaluated. It doesn't grant rolling back, because admission can't tell a rollback from any other change to a pod template.
+The chart grants no access to Secrets, no create or delete, no `exec` and nothing on RBAC. Its admission policy refuses, from the runner, any change beyond the fields a tool touches, and refuses every change if it can't be evaluated. It doesn't grant rolling back, because admission can't tell a rollback from any other change to a pod template.

@@ -21,7 +21,7 @@ import (
 
 // Triggers run in the serving process, never in Marmot, and only as its own policy says. Each one the policy names is watched for the life of the process with the parameters the policy gives; Marmot never names a trigger, sends a parameter or an expression, and the WatchTriggers request that opens a connection's stream is refused if it tries. The process checks every event against the plugin's trigger manifest, drops repeats within the trigger's cooldown, rate limits each source, signs what is left with the connection's key and audits it, then streams it to Marmot, which only ever receives.
 
-// TriggerWatcher runs triggers on local plugin processes. Implemented by plugin.ActionHost. gate is run against the trigger manifest of the process that will watch, before the watch starts.
+// TriggerWatcher runs triggers on local plugin processes. Implemented by plugin.ToolHost. gate is run against the trigger manifest of the process that will watch, before the watch starts.
 type TriggerWatcher interface {
 	TriggerManifest(ctx context.Context, pluginID string) ([]pluginsdk.TriggerSpec, error)
 	WatchTrigger(ctx context.Context, pluginID string, config map[string]any, trigger string, params map[string]any, gate func([]pluginsdk.TriggerSpec) error) (pluginsdk.TriggerStream, error)
@@ -52,13 +52,13 @@ type processState struct {
 	triggers *triggerDispatcher
 }
 
-// startProcess checks the action and trigger setup, reads spent approvals back from the audit log and starts the policy's triggers. Not being able to read the audit log back is fatal with actions on: without it a restart could make spent approvals usable again.
+// startProcess checks the tool and trigger setup, reads spent approvals back from the audit log and starts the policy's triggers. Not being able to read the audit log back is fatal with tools on: without it a restart could make spent approvals usable again.
 func startProcess(ctx context.Context, opts ServeOptions) (*processState, error) {
-	if err := checkActionSetup(ctx, opts); err != nil {
+	if err := checkToolSetup(ctx, opts); err != nil {
 		return nil, err
 	}
 	state := &processState{spent: newSpentApprovals(), triggers: newTriggerDispatcher(opts.AuditLog)}
-	if opts.AllowActions && opts.AuditLog != nil {
+	if opts.AllowTools && opts.AuditLog != nil {
 		now := time.Now()
 		entries, err := opts.AuditLog.Since(now.Add(-maxApprovalAge - 2*envelopeSkew))
 		if err != nil {
@@ -76,7 +76,7 @@ func startProcess(ctx context.Context, opts ServeOptions) (*processState, error)
 
 // startTriggers starts a watch for each trigger the policy names, and refuses to start the process when one fails at once with InvalidArgument, which is a parameter or expression the plugin cannot use and only the operator can fix.
 func startTriggers(ctx context.Context, opts ServeOptions, d *triggerDispatcher) error {
-	if !opts.AllowActions || opts.Policy == nil {
+	if !opts.AllowTools || opts.Policy == nil {
 		return nil
 	}
 	var failed []error
@@ -376,7 +376,7 @@ func (b *tokenBucket) take(now time.Time) bool {
 	return true
 }
 
-// WatchTriggers streams the process's trigger events to Marmot on this connection until it closes, or until a newer connection's stream takes over. The request only opens the stream: it is refused if it names a source, a statement, an action, parameters or an approval, since nothing Marmot sends may choose what is watched.
+// WatchTriggers streams the process's trigger events to Marmot on this connection until it closes, or until a newer connection's stream takes over. The request only opens the stream: it is refused if it names a source, a statement, a tool, parameters or an approval, since nothing Marmot sends may choose what is watched.
 func (p *pluginService) WatchTriggers(signed *pb.SignedQuery, out grpc.ServerStreamingServer[pb.SignedTriggerEvent]) error {
 	op := pb.Operation_OPERATION_WATCH_TRIGGERS
 	q, err := p.verifier.Verify(signed, op)
@@ -385,12 +385,12 @@ func (p *pluginService) WatchTriggers(signed *pb.SignedQuery, out grpc.ServerStr
 		p.record(AuditEntry{Event: AuditRefused, Operation: "watch_triggers", Reason: err.Error()}, nil)
 		return status.Error(codes.PermissionDenied, ErrRejected.Error())
 	}
-	if q.Source != "" || q.Statement != "" || q.Action != "" || len(q.ParamsJson) > 0 || q.Precondition != "" || len(q.Approval) > 0 || q.MaxRows != 0 {
+	if q.Source != "" || q.Statement != "" || q.Tool != "" || len(q.ParamsJson) > 0 || q.Precondition != "" || len(q.Approval) > 0 || q.MaxRows != 0 {
 		reason := "a trigger stream request carries nothing but its envelope: what is watched is this process's decision"
 		p.record(AuditEntry{Event: AuditRefused, Operation: "watch_triggers", Reason: reason}, q)
 		return status.Error(codes.PermissionDenied, "refused by the serving process: "+reason)
 	}
-	if !p.actions || p.triggers == nil {
+	if !p.tools || p.triggers == nil {
 		// Nothing runs, so the stream ends at once rather than idling.
 		return nil
 	}

@@ -2800,12 +2800,6 @@ definitions:
     type: object
   PluginInfo:
     properties:
-      actions:
-        items:
-          $ref: '#/definitions/pluginsdk.ActionSpec'
-        type: array
-      actions_digest:
-        type: string
       asset_schemas:
         items:
           $ref: '#/definitions/pluginsdk.AssetSchema'
@@ -2857,14 +2851,20 @@ definitions:
         type: integer
       status:
         type: string
-      supports_actions:
-        type: boolean
       supports_data_preview:
         type: boolean
       supports_query:
         type: boolean
+      supports_tools:
+        type: boolean
       supports_triggers:
         type: boolean
+      tools:
+        items:
+          $ref: '#/definitions/pluginsdk.ToolSpec'
+        type: array
+      tools_digest:
+        type: string
       triggers:
         items:
           $ref: '#/definitions/pluginsdk.TriggerSpec'
@@ -5281,65 +5281,6 @@ definitions:
     - StatePending
     - StateCurrent
     - StateHistorical
-  pluginsdk.ActionParam:
-    properties:
-      description:
-        type: string
-      enum:
-        items:
-          type: string
-        type: array
-      max:
-        type: integer
-      max_items:
-        description: MaxItems bounds a list parameter and is set only on one.
-        type: integer
-      max_length:
-        type: integer
-      min:
-        type: integer
-      name:
-        type: string
-      pattern:
-        type: string
-      required:
-        type: boolean
-      type:
-        $ref: '#/definitions/pluginsdk.ParamType'
-    type: object
-  pluginsdk.ActionSpec:
-    properties:
-      description:
-        type: string
-      inverse:
-        description: |-
-          Inverse names the action that undoes this one, and is set exactly
-          when Reversibility is ReversibilityReversible.
-        type: string
-      name:
-        description: Name is the action's identifier, snake_case, such as "scale".
-        type: string
-      params:
-        items:
-          $ref: '#/definitions/pluginsdk.ActionParam'
-        type: array
-      reversibility:
-        $ref: '#/definitions/pluginsdk.Reversibility'
-      risk:
-        $ref: '#/definitions/pluginsdk.RiskTier'
-      targets:
-        description: Targets lists every kind of object the action can change.
-        items:
-          type: string
-        type: array
-      title:
-        type: string
-      version:
-        description: |-
-          Version is bumped whenever the action's meaning changes, so a policy
-          written against one version does not silently cover the next.
-        type: integer
-    type: object
   pluginsdk.AssetField:
     properties:
       description:
@@ -5483,6 +5424,65 @@ definitions:
       value:
         type: string
     type: object
+  pluginsdk.ToolParam:
+    properties:
+      description:
+        type: string
+      enum:
+        items:
+          type: string
+        type: array
+      max:
+        type: integer
+      max_items:
+        description: MaxItems bounds a list parameter and is set only on one.
+        type: integer
+      max_length:
+        type: integer
+      min:
+        type: integer
+      name:
+        type: string
+      pattern:
+        type: string
+      required:
+        type: boolean
+      type:
+        $ref: '#/definitions/pluginsdk.ParamType'
+    type: object
+  pluginsdk.ToolSpec:
+    properties:
+      description:
+        type: string
+      inverse:
+        description: |-
+          Inverse names the tool that undoes this one, and is set exactly
+          when Reversibility is ReversibilityReversible.
+        type: string
+      name:
+        description: Name is the tool's identifier, snake_case, such as "scale".
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/pluginsdk.ToolParam'
+        type: array
+      reversibility:
+        $ref: '#/definitions/pluginsdk.Reversibility'
+      risk:
+        $ref: '#/definitions/pluginsdk.RiskTier'
+      targets:
+        description: Targets lists every kind of object the tool can change.
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      version:
+        description: |-
+          Version is bumped whenever the tool's meaning changes, so a policy
+          written against one version does not silently cover the next.
+        type: integer
+    type: object
   pluginsdk.TriggerSpec:
     properties:
       conditions:
@@ -5501,11 +5501,11 @@ definitions:
         type: string
       params:
         description: |-
-          Params take the same types and bounds as action parameters, and
+          Params take the same types and bounds as tool parameters, and
           also lists and longer strings, since they come from the host's own
           configuration.
         items:
-          $ref: '#/definitions/pluginsdk.ActionParam'
+          $ref: '#/definitions/pluginsdk.ToolParam'
         type: array
       targets:
         description: Targets lists every kind of object an event can name.
@@ -5531,24 +5531,6 @@ definitions:
       pattern:
         type: string
     type: object
-  pluginserve.ActionSummary:
-    properties:
-      approvals:
-        description: Approvals is how many distinct people must approve an execute.
-        type: integer
-      approvers:
-        description: Approvers narrows who may approve, by Marmot user id or name;
-          empty means anyone Marmot names.
-        items:
-          type: string
-        type: array
-      name:
-        type: string
-      read:
-        description: Read is set for an action that only reads, which never needs
-          approval.
-        type: boolean
-    type: object
   pluginserve.EnrolInput:
     properties:
       csr:
@@ -5565,7 +5547,7 @@ definitions:
           uses its Marmot host name with Port.
         type: string
       approval_keys:
-        description: ApprovalKeys are the keys Marmot signs approvals of actions with,
+        description: ApprovalKeys are the keys Marmot signs approvals of tools with,
           pinned like SigningKeys and never used for anything else.
         items:
           type: string
@@ -5589,11 +5571,6 @@ definitions:
     type: object
   pluginserve.EnrolSource:
     properties:
-      actions:
-        allOf:
-        - $ref: '#/definitions/pluginserve.ServedActions'
-        description: 'Actions is the process''s report of the source''s actions and
-          triggers, when it serves any. Informative only: see ServedActions.'
       config:
         additionalProperties: {}
         type: object
@@ -5601,17 +5578,14 @@ definitions:
         type: string
       plugin_id:
         type: string
+      tools:
+        allOf:
+        - $ref: '#/definitions/pluginserve.ServedTools'
+        description: 'Tools is the process''s report of the source''s tools and triggers,
+          when it serves any. Informative only: see ServedTools.'
     type: object
   pluginserve.PolicySummary:
     properties:
-      actions:
-        items:
-          $ref: '#/definitions/pluginserve.ActionSummary'
-        type: array
-      actions_allowed:
-        description: 'ActionsAllowed is --allow-actions: without it nothing below
-          runs.'
-        type: boolean
       approval_max_age:
         description: ApprovalMaxAge is the longest an approval may run before it expires.
         type: string
@@ -5624,16 +5598,23 @@ definitions:
         description: PinnedManifest is the manifest digest the policy pins, when it
           pins one.
         type: string
+      tools:
+        items:
+          $ref: '#/definitions/pluginserve.ToolSummary'
+        type: array
+      tools_allowed:
+        description: 'ToolsAllowed is --allow-tools: without it nothing below runs.'
+        type: boolean
       triggers:
         items:
           $ref: '#/definitions/pluginserve.TriggerSummary'
         type: array
     type: object
-  pluginserve.ServedActions:
+  pluginserve.ServedTools:
     properties:
       manifest:
         items:
-          $ref: '#/definitions/pluginsdk.ActionSpec'
+          $ref: '#/definitions/pluginsdk.ToolSpec'
         type: array
       manifest_digest:
         type: string
@@ -5645,6 +5626,23 @@ definitions:
         type: array
       triggers_digest:
         type: string
+    type: object
+  pluginserve.ToolSummary:
+    properties:
+      approvals:
+        description: Approvals is how many distinct people must approve an execute.
+        type: integer
+      approvers:
+        description: Approvers narrows who may approve, by Marmot user id or name;
+          empty means anyone Marmot names.
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      read:
+        description: Read is set for a tool that only reads, which never needs approval.
+        type: boolean
     type: object
   pluginserve.TriggerSummary:
     properties:
