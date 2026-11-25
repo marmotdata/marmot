@@ -25,6 +25,7 @@
 	import { advisoryBanner } from '#lib/plugins/advisoryBanner.svelte.ts';
 	import ToastContainer from '#components/ui/ToastContainer.svelte';
 	import { kindOfType, knowledgeKinds, loadKinds } from '#lib/knowledge/kinds.ts';
+	import { addedSearchKind } from '#components/query/catalogSearch.ts';
 	import type {
 		MmCommandPalette,
 		PaletteCommand,
@@ -344,7 +345,8 @@
 	});
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team' | 'data_product';
+		/** The catalogue's kinds, or one an edition added (see registerSearchKind). */
+		type: 'asset' | 'glossary' | 'team' | 'data_product' | (string & {});
 		id: string;
 		name: string;
 		description?: string;
@@ -352,7 +354,7 @@
 		url: string;
 	}
 
-	const kindOf: Record<SearchResult['type'], PaletteResult['kind']> = {
+	const kindOf: Record<string, PaletteResult['kind']> = {
 		asset: 'asset',
 		glossary: 'glossary',
 		team: 'team',
@@ -372,6 +374,18 @@
 					: Array.isArray(providers) && typeof providers[0] === 'string'
 						? providers[0]
 						: undefined;
+			// A kind an edition added groups under its own heading, with its own icon
+			const added = addedSearchKind(r.type);
+			if (added)
+				return {
+					id: `${r.type}:${r.id}`,
+					kind: 'other',
+					group: added.pluralLabel(),
+					icon: added.icon,
+					label: r.name,
+					description: r.description,
+					href: r.url
+				};
 			return {
 				id: `${r.type}:${r.id}`,
 				kind: kindOf[r.type] ?? 'asset',

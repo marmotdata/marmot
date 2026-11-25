@@ -5,13 +5,8 @@ import (
 	"strings"
 )
 
-var (
-	kindGlossaryRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?glossary"?`)
-	kindAssetRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?asset"?`)
-	kindTeamRegex        = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?team"?`)
-	kindDataProductRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?data_product"?`)
-	kindStripRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?(glossary|asset|team|data_product)"?`)
-)
+// @kind takes any result type, so a type an edition adds to the index (such as the cloud's tasks) can be filtered by name like the catalogue's own.
+var kindRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?([a-z][a-z_]*)"?`)
 
 // extractKindFilters parses @kind filters from a query string.
 // Returns "__CONTRADICTION__" if multiple kinds are specified (nothing can be multiple types).
@@ -20,19 +15,14 @@ func extractKindFilters(queryStr string) []ResultType {
 		return nil
 	}
 
+	seen := map[ResultType]bool{}
 	var kinds []ResultType
-
-	if kindGlossaryRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeGlossary)
-	}
-	if kindAssetRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeAsset)
-	}
-	if kindTeamRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeTeam)
-	}
-	if kindDataProductRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeDataProduct)
+	for _, m := range kindRegex.FindAllStringSubmatch(queryStr, -1) {
+		k := ResultType(strings.ToLower(m[1]))
+		if !seen[k] {
+			seen[k] = true
+			kinds = append(kinds, k)
+		}
 	}
 
 	if len(kinds) > 1 {
@@ -48,7 +38,7 @@ func stripKindFilter(queryStr string) string {
 		return queryStr
 	}
 
-	result := kindStripRegex.ReplaceAllString(queryStr, "")
+	result := kindRegex.ReplaceAllString(queryStr, "")
 	result = strings.TrimSpace(result)
 
 	result = strings.ReplaceAll(result, "AND AND", "AND")
@@ -57,6 +47,11 @@ func stripKindFilter(queryStr string) string {
 	result = strings.TrimPrefix(result, "OR ")
 	result = strings.TrimSuffix(result, " AND")
 	result = strings.TrimSuffix(result, " OR")
+	result = strings.TrimSpace(result)
+	// Two filters joined by an operator leave the operator alone once both are gone
+	if strings.EqualFold(result, "AND") || strings.EqualFold(result, "OR") {
+		return ""
+	}
 
-	return strings.TrimSpace(result)
+	return result
 }

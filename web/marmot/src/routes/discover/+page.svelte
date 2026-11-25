@@ -27,13 +27,15 @@
 	import { kindOfType, knowledgeKinds } from '#lib/knowledge/kinds.ts';
 	import ProductBlade from '#components/product/ProductBlade.svelte';
 	import {
-		RESULT_KINDS,
+		addedSearchKind,
+		addedSearchKinds,
 		catalogFields,
 		compactNumber,
 		kindLabel,
 		loadFieldValues,
 		loadMetadataFields,
 		providerLabel,
+		resultKinds,
 		typeLabel
 	} from '#components/query/catalogSearch.ts';
 	import { PROVIDER_ICON_FALLBACK, hasProviderMark, typeIcon } from '@marmotdata/icons';
@@ -56,7 +58,8 @@
 	}
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team' | 'data_product';
+		/** The catalogue's kinds, or one an edition added (see registerSearchKind). */
+		type: 'asset' | 'glossary' | 'team' | 'data_product' | (string & {});
 		id: string;
 		name: string;
 		description?: string;
@@ -112,7 +115,7 @@
 		owners: string[];
 	}
 
-	const ALL_KINDS: string[] = [...RESULT_KINDS];
+	const ALL_KINDS: string[] = resultKinds();
 	const PAGE_SIZE = 20;
 
 	setCrumbs([{ label: m.discover_heading() }]);
@@ -505,7 +508,16 @@
 			label: m.discover_facet_teams(),
 			icon: 'groups',
 			count: facets.types.team ?? 0
-		}
+		},
+		// Kinds an edition added show only once something of theirs matches, so a catalogue without any is not offered an empty filter
+		...addedSearchKinds()
+			.filter((k) => (facets.types[k.value] ?? 0) > 0 || filters.kinds.includes(k.value))
+			.map((k) => ({
+				value: k.value,
+				label: k.pluralLabel(),
+				icon: k.icon,
+				count: facets.types[k.value] ?? 0
+			}))
 	]);
 	let typeOptions = $derived<MmFacetOption[]>(
 		// Knowledge kinds carry their own icons, so policies and decisions read apart from tables; other types take the shared type icon.
@@ -718,7 +730,10 @@
 										{#if r.type === 'asset' && providerOf(r)}
 											<AssetMark asset={{ type: r.metadata?.type, provider: providerOf(r) }} />
 										{:else}
-											<mm-icon name={kindIcons[r.type] ?? 'database'} size={20} aria-hidden="true"
+											<mm-icon
+												name={kindIcons[r.type] ?? addedSearchKind(r.type)?.icon ?? 'database'}
+												size={20}
+												aria-hidden="true"
 											></mm-icon>
 										{/if}
 									</span>

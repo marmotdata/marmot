@@ -594,15 +594,16 @@ func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuer
 
 	// For unfiltered empty queries, use cached facets from summary_counts
 	// This avoids expensive GROUP BY and UNNEST queries on the full table
-	// Note: selecting all 4 entity types is functionally equivalent to no type filter
-	allTypesSelected := len(filter.Types) == 4
-	noTypeFilter := len(filter.Types) == 0 || allTypesSelected
-	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 && len(filter.Owners) == 0 {
+	if len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 && len(filter.Owners) == 0 {
 		facets, total, err := r.buildCachedFacets(ctx, filter)
-		if err == nil {
-			r.addOwnerFacets(ctx, facets, "", nil, 0)
+		if err != nil {
+			return facets, total, err
 		}
-		return facets, total, err
+		// The cache counts every type in the index, including any an edition added, so it answers only when the request named all of them; otherwise the counts are computed
+		if namesEveryType(filter.Types, facets.Types) {
+			r.addOwnerFacets(ctx, facets, "", nil, 0)
+			return facets, total, nil
+		}
 	}
 
 	// For listing queries with filters, compute facets (filtered queries are fast)
@@ -992,6 +993,23 @@ func emptyFacets() *Facets {
 		Tags:       []FacetValue{},
 		Owners:     []OwnerFacetValue{},
 	}
+}
+
+// namesEveryType reports whether a type filter covers every type the index holds, which is the same as no filter at all.
+func namesEveryType(filter []ResultType, indexed map[ResultType]int) bool {
+	if len(filter) == 0 {
+		return true
+	}
+	named := make(map[ResultType]bool, len(filter))
+	for _, t := range filter {
+		named[t] = true
+	}
+	for t, n := range indexed {
+		if n > 0 && !named[t] {
+			return false
+		}
+	}
+	return true
 }
 
 // buildCachedFacets reads pre-computed facet counts from summary_counts table.

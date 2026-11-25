@@ -9,6 +9,38 @@ import { getLocale } from '#lib/paraglide/runtime.js';
 /** The search result kinds the backend knows, in the order the facets list them. */
 export const RESULT_KINDS = ['asset', 'data_product', 'glossary', 'team'] as const;
 
+/** A result type an edition adds to search beyond the catalogue's own, with how Discover, the search bar and the command palette show it. */
+export interface SearchKind {
+	/** The result type the search API returns, e.g. `task`. */
+	value: string;
+	/** One result, as a caption reads it: "Task". */
+	label: () => string;
+	/** Several, as a filter or a palette group reads it: "Tasks". */
+	pluralLabel: () => string;
+	icon: string;
+}
+
+const addedKinds: SearchKind[] = [];
+
+/** Adds a result type to search. Call it once, when the app starts, before any search page renders. */
+export function registerSearchKind(kind: SearchKind): void {
+	if (!addedKinds.some((k) => k.value === kind.value)) addedKinds.push(kind);
+}
+
+/** The result types an edition added, in the order they were registered. */
+export function addedSearchKinds(): readonly SearchKind[] {
+	return addedKinds;
+}
+
+export function addedSearchKind(kind: string): SearchKind | undefined {
+	return addedKinds.find((k) => k.value === kind);
+}
+
+/** Every result type search can return: the catalogue's own, then any an edition added. */
+export function resultKinds(): string[] {
+	return [...RESULT_KINDS, ...addedKinds.map((k) => k.value)];
+}
+
 export function kindLabel(kind: string): string {
 	const labels: Record<string, () => string> = {
 		asset: m.discover_kind_asset,
@@ -16,7 +48,7 @@ export function kindLabel(kind: string): string {
 		glossary: m.discover_kind_glossary_term,
 		team: m.discover_kind_team
 	};
-	return labels[kind]?.() ?? kind;
+	return (labels[kind] ?? addedSearchKind(kind)?.label)?.() ?? kind;
 }
 
 /** A provider key ("postgresql") or stored name ("PostgreSQL") in its usual spelling. */
@@ -45,7 +77,7 @@ export function catalogFields(known: FieldValues = {}): SearchBarField[] {
 			value: 'kind',
 			label: m.discover_field_kind(),
 			operators: ['='],
-			values: RESULT_KINDS.map((k) => ({ value: k, label: kindLabel(k) }))
+			values: resultKinds().map((k) => ({ value: k, label: kindLabel(k) }))
 		},
 		{
 			value: 'type',
