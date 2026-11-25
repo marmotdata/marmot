@@ -1,0 +1,54 @@
+# The identity the runner acts as. The admission policy matches requests by
+# this ServiceAccount's username, so the runner must use its token: in
+# cluster, run it as this ServiceAccount; outside, mint a token for it.
+serviceAccount:
+  create: true
+  # Defaults to the release's full name.
+  name: ""
+  annotations: {}
+
+# Namespaces actions may change. Each gets its own Role and RoleBinding, so
+# nothing is granted cluster wide except nodes, and only when cordon is on.
+# Keep this in step with the plugin's actions.namespaces.
+namespaces: []
+
+# Which verbs to grant. Each switch adds only the resources and verbs that
+# verb needs.
+actions:
+  # scale: patch Deployments and StatefulSets, read HorizontalPodAutoscalers.
+  scale: true
+  # rollout_restart: patch Deployments, StatefulSets and DaemonSets.
+  rolloutRestart: true
+  # rollout_undo is not offered: see "Rolling back" in the README.
+  # suspend_cronjob and resume_cronjob: patch CronJobs.
+  cronJobs: true
+  # cordon and uncordon: patch Nodes, through the only ClusterRole.
+  cordon: false
+  # The reads workload_status, pod_logs and recent_events: get, list and
+  # watch on pods, their logs and events, and get and list on the
+  # workloads they describe. Nothing is written.
+  observe: true
+
+# Triggers watch for unhealthy workloads, nodes and warning events, and
+# only ever read.
+triggers:
+  # get, list and watch, in each namespace in namespaces, on pods,
+  # ReplicaSets, Deployments, StatefulSets, DaemonSets, Jobs, CronJobs,
+  # events, PersistentVolumeClaims and HorizontalPodAutoscalers.
+  enabled: true
+  # The same kinds across the whole cluster, and Nodes, through a
+  # ClusterRole. Needed for node_unhealthy, a custom_condition on nodes, and
+  # any trigger watching every namespace. It lets the runner read every
+  # pod's status in the cluster, though never a Secret or a log.
+  clusterWide: false
+
+# Highest replica count the admission policy admits from the runner. Keep it
+# at or above the plugin's actions.max_replicas, which refuses first.
+maxReplicas: 20
+
+# Labels every changed object must carry, nodes included. Empty admits any.
+# Keep it in step with the plugin's actions.selector.
+selector: {}
+
+admissionPolicy:
+  enabled: true

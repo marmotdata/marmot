@@ -1,0 +1,151 @@
+{{- /*
+Only get, list, watch and patch, on named resources, and patch only for the
+write verbs. No create or delete, no Secrets, no exec, attach or
+port-forward, no RBAC, no escalate, bind or impersonate. Reads and triggers
+add get, list and watch, and pods/log get for pod_logs. The plugin writes replicas on the
+Deployment or StatefulSet itself rather than through its scale subresource,
+so the same write carries the origin and actor annotations and the
+admission policy sees the whole object; scale is therefore not granted.
+*/ -}}
+{{- $fullname := include "marmot-actions.fullname" . -}}
+{{- $a := .Values.actions -}}
+{{- if include "marmot-actions.namespaced" . }}
+{{- range $ns := .Values.namespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "marmot-actions.labels" $ | nindent 4 }}
+rules:
+  {{- if or $a.scale $a.rolloutRestart }}
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  {{- end }}
+  {{- if or $a.scale $a.rolloutRestart }}
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "list", "watch", "patch"]
+  {{- end }}
+  {{- if $a.rolloutRestart }}
+  - apiGroups: ["apps"]
+    resources: ["daemonsets"]
+    verbs: ["get", "list", "watch", "patch"]
+  {{- end }}
+  {{- if $a.scale }}
+  # Read only: a plan warns when an autoscaler would override a scale.
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if $a.cronJobs }}
+  - apiGroups: ["batch"]
+    resources: ["cronjobs"]
+    verbs: ["get", "list", "watch", "patch"]
+  {{- end }}
+  {{- if $a.observe }}
+  # The reads. pods/log is get only, which is all pod_logs asks for.
+  - apiGroups: [""]
+    resources: ["pods", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+  # workload_status reads the workload it describes, and recent_events the
+  # object whose events it reads when actions.selector is set.
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if $.Values.triggers.enabled }}
+  # Triggers watch these through informers, which list and then watch.
+  {{- include "marmot-actions.triggerRules" $ | nindent 2 }}
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "marmot-actions.labels" $ | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $fullname }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "marmot-actions.serviceAccountName" $ }}
+    namespace: {{ $.Release.Namespace }}
+{{- end }}
+{{- end }}
+{{- if $a.cordon }}
+---
+# Nodes are cluster scoped, so cordon needs the one ClusterRole. list lets a
+# plan refuse to cordon the last schedulable node.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fullname }}-nodes
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fullname }}-nodes
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $fullname }}-nodes
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "marmot-actions.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- if .Values.triggers.clusterWide }}
+---
+# Cluster-wide watching, for node_unhealthy, custom conditions on nodes and
+# triggers over every namespace. Read only; still no Secrets and no logs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fullname }}-triggers
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+rules:
+  {{- include "marmot-actions.triggerRules" . | nindent 2 }}
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fullname }}-triggers
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $fullname }}-triggers
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "marmot-actions.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

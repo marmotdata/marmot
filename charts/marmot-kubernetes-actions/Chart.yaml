@@ -1,0 +1,17 @@
+apiVersion: v2
+name: marmot-kubernetes-actions
+description: Grants a Marmot runner exactly the access the Kubernetes plugin's actions need, and an admission policy that holds it to those changes.
+type: application
+version: 0.1.0
+kubeVersion: ">=1.30.0-0"
+home: https://github.com/marmotdata/marmot
+sources:
+  - https://github.com/marmotdata/marmot/tree/main/plugins/kubernetes
+maintainers:
+  - name: The Marmot Authors
+    email: support@marmotdata.io
+keywords:
+  - marmot
+  - kubernetes
+  - rbac
+  - admission

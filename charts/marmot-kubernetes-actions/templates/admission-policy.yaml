@@ -1,0 +1,118 @@
+{{- if .Values.admissionPolicy.enabled }}
+{{- $fullname := include "marmot-actions.fullname" . }}
+{{- /*
+RBAC says which objects the runner may patch; this policy says what a patch
+may change. It applies only to requests made as the runner's ServiceAccount,
+so nothing else in the cluster is affected, and it holds even if the plugin,
+or a token stolen from it, sends something the plugin never would.
+*/}}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+spec:
+  # A policy that cannot be evaluated refuses the change rather than
+  # letting it through unchecked.
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["apps"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["deployments", "statefulsets", "daemonsets", "deployments/scale", "statefulsets/scale"]
+      - apiGroups: ["batch"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["cronjobs"]
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nodes"]
+  matchConditions:
+    - name: is-marmot-runner
+      expression: request.userInfo.username == {{ include "marmot-actions.username" . | toJson }}
+  variables:
+    - name: resource
+      expression: request.resource.resource
+    - name: workload
+      expression: variables.resource in ['deployments', 'statefulsets', 'daemonsets']
+    - name: labels
+      expression: object.metadata.?labels.orValue({})
+    - name: annotations
+      expression: object.metadata.?annotations.orValue({})
+    - name: oldAnnotations
+      expression: oldObject.metadata.?annotations.orValue({})
+    # The two stamps the plugin writes on everything it changes.
+    - name: stamps
+      expression: "['marmot.io/origin', 'marmot.io/actor']"
+    - name: templateAnnotations
+      expression: object.spec.template.metadata.?annotations.orValue({})
+    - name: oldTemplateAnnotations
+      expression: oldObject.spec.template.metadata.?annotations.orValue({})
+    # Everything in the pod template except the restartedAt stamp that
+    # rollout_restart writes is as it was.
+    - name: templateUnchanged
+      expression: >-
+        object.spec.template.spec == oldObject.spec.template.spec &&
+        object.spec.template.metadata.?labels.orValue({}) == oldObject.spec.template.metadata.?labels.orValue({}) &&
+        variables.templateAnnotations.all(k, k == 'kubectl.kubernetes.io/restartedAt' ||
+          (k in variables.oldTemplateAnnotations && variables.oldTemplateAnnotations[k] == variables.templateAnnotations[k])) &&
+        variables.oldTemplateAnnotations.all(k, k == 'kubectl.kubernetes.io/restartedAt' || k in variables.templateAnnotations)
+  validations:
+    # The API server leaves subResource out of a request that has none, so it is read optionally: a plain read errors, and an erroring rule denies every change.
+    - expression: request.operation == 'UPDATE' && request.?subResource.orValue('') == ''
+      message: The Marmot runner may only patch existing objects, never create, delete or scale them through a subresource.
+    # Every rule below holds on its own; the operation guard keeps each one
+    # from reading a missing object on a request the first rule refuses.
+    - expression: >-
+        request.operation != 'UPDATE' ||
+        object.metadata.?labels.orValue({}) == oldObject.metadata.?labels.orValue({})
+      message: The Marmot runner may not change labels.
+    - expression: >-
+        request.operation != 'UPDATE' || (
+        variables.annotations.all(k, k in variables.stamps ||
+          (k in variables.oldAnnotations && variables.oldAnnotations[k] == variables.annotations[k])) &&
+        variables.oldAnnotations.all(k, k in variables.stamps || k in variables.annotations))
+      message: The Marmot runner may only change the marmot.io/origin and marmot.io/actor annotations.
+    - expression: >-
+        request.operation != 'UPDATE' || !variables.workload || variables.templateUnchanged
+      message: The Marmot runner may only change a pod template's kubectl.kubernetes.io/restartedAt annotation.
+    - expression: >-
+        request.operation != 'UPDATE' || !(variables.resource in ['deployments', 'statefulsets']) ||
+        object.spec.?replicas.orValue(1) <= {{ int .Values.maxReplicas }}
+      message: The Marmot runner may not set more than {{ int .Values.maxReplicas }} replicas.
+    - expression: >-
+        request.operation != 'UPDATE' || variables.resource != 'cronjobs' || (
+        object.spec.jobTemplate == oldObject.spec.jobTemplate &&
+        object.spec.schedule == oldObject.spec.schedule &&
+        object.spec.?timeZone == oldObject.spec.?timeZone)
+      message: The Marmot runner may only suspend or resume a CronJob.
+    - expression: >-
+        request.operation != 'UPDATE' || variables.resource != 'nodes' ||
+        object.spec.?taints.orValue([]) == oldObject.spec.?taints.orValue([])
+      message: The Marmot runner may only cordon or uncordon a node.
+    {{- with .Values.selector }}
+    - expression: >-
+        request.operation != 'UPDATE' || (
+        {{- $first := true }}
+        {{- range $k, $v := . }}
+        {{ if not $first }}&& {{ end }}{{ $k | toJson }} in variables.labels && variables.labels[{{ $k | toJson }}] == {{ $v | toString | toJson }}
+        {{- $first = false }}
+        {{- end }})
+      {{- $pairs := list }}
+      {{- range $k, $v := . }}{{ $pairs = append $pairs (printf "%s=%v" $k $v) }}{{ end }}
+      message: The Marmot runner may only change objects labelled {{ join ", " $pairs }}.
+    {{- end }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "marmot-actions.labels" . | nindent 4 }}
+spec:
+  policyName: {{ $fullname }}
+  validationActions: ["Deny"]
+{{- end }}
