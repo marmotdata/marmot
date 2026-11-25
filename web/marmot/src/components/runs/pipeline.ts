@@ -126,8 +126,8 @@ export const BASE_FIELDS = new Set(['tags', 'external_links', 'filter']);
 // Plugin groups in the order the forms show them; any other group follows in the order the plugin uses it
 export const GROUP_ORDER = ['Authentication', 'Discovery', 'Advanced', 'AI enrichment'];
 
-// Groups that most people leave alone, so they start folded
-export const FOLDED_GROUPS = new Set(['Advanced', 'AI enrichment']);
+// Groups that most people leave alone, so they start folded; Tools only matter on a runner that allows them
+export const FOLDED_GROUPS = new Set(['Advanced', 'AI enrichment', 'Tools']);
 
 export const AWS_PLUGINS = ['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'];
 

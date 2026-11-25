@@ -21,7 +21,10 @@
 		</mm-description-list>
 	</mm-callout>
 {:else if result?.timed_out}
-	<mm-callout tone="warning" heading={m.pipelines_test_timed_out()}>
+	<mm-callout
+		tone="warning"
+		heading={m.pipelines_test_timed_out({ seconds: Math.round(result.duration_ms / 1000) })}
+	>
 		{m.pipelines_test_timed_out_body()}
 	</mm-callout>
 {:else if result}

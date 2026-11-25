@@ -437,6 +437,8 @@ github.com/mailru/easyjson v0.9.1 h1:LbtsOm5WAswyWbvTEOqhypdPeZzHavpZx96/n553mR8
 github.com/mailru/easyjson v0.9.1/go.mod h1:1+xMtQp2MRNVL/V1bOzuP3aP8VNwRW55fQUto+XFtTU=
 github.com/marmotdata/plugin-sdk v0.0.0-20261125212213-28dda09c4298 h1:Fu/A2R9ILNRJQHrk9XNdiRbzKmZYAzLIrjNnBK0oCkI=
 github.com/marmotdata/plugin-sdk v0.0.0-20261125212213-28dda09c4298/go.mod h1:81zMHzCJLjsqDkKWsQMXgJx7fCYtsHfmLZ6N8MhABZ4=
+github.com/marmotdata/plugin-sdk v0.0.0-20261125212700-a155c4833ccc h1:QOw2RYL2T0XfA9q9qyRBAHKMTgkVF8zXrfwrasVtxD8=
+github.com/marmotdata/plugin-sdk v0.0.0-20261125212700-a155c4833ccc/go.mod h1:81zMHzCJLjsqDkKWsQMXgJx7fCYtsHfmLZ6N8MhABZ4=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=

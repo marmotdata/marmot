@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,4 +71,11 @@ func TestConnectionTestStopsAtTheTimeout(t *testing.T) {
 	assert.False(t, got.Succeeded)
 	assert.True(t, got.TimedOut)
 	assert.Empty(t, got.Error)
+}
+
+func TestConnectionTestTimeout(t *testing.T) {
+	assert.Equal(t, DefaultConnectionTestTimeout, ConnectionTestTimeout(pluginsdk.Meta{}), "a plugin that asks for nothing gets the default")
+	assert.Equal(t, 2*time.Minute, ConnectionTestTimeout(pluginsdk.Meta{ConnectionTestTimeoutSeconds: 120}))
+	assert.Equal(t, MaxConnectionTestTimeout, ConnectionTestTimeout(pluginsdk.Meta{ConnectionTestTimeoutSeconds: 3600}), "capped")
+	assert.Equal(t, DefaultConnectionTestTimeout, ConnectionTestTimeout(pluginsdk.Meta{ConnectionTestTimeoutSeconds: -5}))
 }

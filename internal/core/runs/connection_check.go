@@ -7,10 +7,22 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
 // DefaultConnectionTestTimeout bounds a connection test. Plugins have no way to only connect, so a test is a discovery that is thrown away, and a large source would otherwise hold a request open for as long as a full run takes.
 const DefaultConnectionTestTimeout = 30 * time.Second
+
+// MaxConnectionTestTimeout caps the time a plugin may ask for, so a test still never holds a request open for as long as a full run of a large source.
+const MaxConnectionTestTimeout = 5 * time.Minute
+
+// ConnectionTestTimeout is how long a test of a plugin may run: the time the plugin asks for, up to MaxConnectionTestTimeout, or DefaultConnectionTestTimeout when it asks for none.
+func ConnectionTestTimeout(meta pluginsdk.Meta) time.Duration {
+	if meta.ConnectionTestTimeoutSeconds <= 0 {
+		return DefaultConnectionTestTimeout
+	}
+	return min(time.Duration(meta.ConnectionTestTimeoutSeconds)*time.Second, MaxConnectionTestTimeout)
+}
 
 // ConnectionTestResult is what a connection test learned. Succeeded means the plugin connected and finished discovering within the time allowed; TimedOut means it was still working when the time ran out, which a large source can do with correct settings.
 type ConnectionTestResult struct {

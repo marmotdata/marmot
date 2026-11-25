@@ -360,7 +360,7 @@ func (h *Handler) testConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := runs.TestConnection(r.Context(), entry.Source, validated, runs.DefaultConnectionTestTimeout)
+	result := runs.TestConnection(r.Context(), entry.Source, validated, runs.ConnectionTestTimeout(entry.Meta))
 	common.RespondJSON(w, http.StatusOK, TestConnectionResponse{Valid: true, Result: result})
 }
 

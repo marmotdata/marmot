@@ -35,7 +35,8 @@
 		'ml',
 		'compute',
 		'container',
-		'api'
+		'api',
+		'source-control'
 	];
 
 	const CATEGORY_LABELS: Record<string, () => string> = {
@@ -53,7 +54,8 @@
 		ml: m.plugins_category_ml,
 		compute: m.plugins_category_compute,
 		container: m.plugins_category_container,
-		api: m.plugins_category_api
+		api: m.plugins_category_api,
+		'source-control': m.plugins_category_source_control
 	};
 
 	let search = $state('');
