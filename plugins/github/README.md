@@ -1,8 +1,20 @@
 The GitHub plugin catalogues the repositories of a GitHub organisation or user. Each repository becomes an asset with its description, default branch, language, visibility, licence and URL, its topics as tags and, when it has one, its README as documentation. Discovery can be narrowed to named repositories or to those with given topics, and leaves private, internal and archived repositories out unless asked.
 
-Default owners can be read from CODEOWNERS: the owners of its catch-all `*` rule, which is who GitHub asks to review a file no later rule claims. It costs up to three requests per repository, so it is off by default.
+Inside each repository the plugin also catalogues:
 
-The plugin draws no lineage. A repository that holds a dbt project or a Dockerfile does not say which tables or images it produces, and guessing would put edges in the catalog that nothing checked. The plugins for the systems themselves (dbt, Airflow, Kubernetes) know what reads and writes what.
+| Asset | Name | What it carries |
+| --- | --- | --- |
+| Branch | `acme/pipelines:main` | Whether it is the default branch, and the commit it points at |
+| Pull Request | `acme/pipelines#12` | Open pull requests only: title, author, head and base branch, draft, labels, assignees and requested reviewers, with the body as documentation |
+| Issue | `acme/pipelines#34` | Open issues only: title, author, labels, assignees and comment count, with the body as documentation |
+
+Each is linked to its repository by a `CONTAINS` edge, and labels become tags. Up to 1000 of each are read per repository. Each kind can be turned off with `include_branches`, `include_pull_requests` or `include_issues`.
+
+Discovery reads ten repositories per GraphQL query, with four queries in flight, and reads through REST only a list longer than 100 items or a repository a query could not answer. An organisation of 150 repositories takes well under a minute. Where the GraphQL API is missing, as on an old GitHub Enterprise Server, every repository is read through REST. A read GitHub turns away for a rate limit is retried after the wait it asks for, up to a minute.
+
+Default owners can be read from CODEOWNERS: the owners of its catch-all `*` rule, which is who GitHub asks to review a file no later rule claims. It is off by default.
+
+Beyond containment, the plugin draws no lineage. A repository that holds a dbt project or a Dockerfile does not say which tables or images it produces, and guessing would put edges in the catalog that nothing checked. The plugins for the systems themselves (dbt, Airflow, Kubernetes) know what reads and writes what.
 
 ## Prerequisites
 
@@ -11,6 +23,7 @@ The plugin needs a token. Prefer a [fine-grained personal access token](https://
 | Capability | Repository permissions |
 | --- | --- |
 | Discovery, `read_file` and `list_files` | Metadata: read, Contents: read |
+| Discovery of pull requests and issues | Pull requests: read, Issues: read |
 | `list_pull_requests` | Pull requests: read |
 | `open_pull_request` | Contents: write, Pull requests: write |
 | `close_pull_request`, `reopen_pull_request` | Pull requests: write |

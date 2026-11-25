@@ -27,16 +27,21 @@ const maxRepositories = 10000
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
 
-	Owner   string `json:"owner" description:"Organisation or user whose repositories to catalogue" validate:"required"`
-	BaseURL string `json:"base_url,omitempty" label:"Base URL" description:"REST API URL. Defaults to https://api.github.com; for GitHub Enterprise Server use https://<host>/api/v3"`
-	Token   string `json:"token,omitempty" description:"Fine-grained personal access token or GitHub App installation token. Defaults to $GITHUB_TOKEN" sensitive:"true"`
+	Owner string `json:"owner" label:"Organisation" description:"GitHub organisation or user, for example acme" validate:"required"`
+	Token string `json:"token,omitempty" label:"Access Token" description:"Fine-grained personal access token. Defaults to $GITHUB_TOKEN" sensitive:"true"`
 
-	Repositories    []string `json:"repositories,omitempty" group:"Discovery" description:"Repositories to catalogue, by name. Empty catalogues every repository of the owner that the other filters allow"`
-	Topics          []string `json:"topics,omitempty" group:"Discovery" description:"Only catalogue repositories with at least one of these topics"`
-	IncludePrivate  bool     `json:"include_private" group:"Discovery" description:"Catalogue private and internal repositories" default:"false"`
-	IncludeArchived bool     `json:"include_archived" group:"Discovery" description:"Catalogue archived repositories" default:"false"`
-	IncludeReadme   bool     `json:"include_readme" group:"Discovery" label:"Include README" description:"Attach each repository's README as documentation, one request per repository" default:"true"`
-	IncludeOwners   bool     `json:"include_codeowners" group:"Discovery" label:"Include CODEOWNERS" description:"Read default owners from CODEOWNERS, up to three requests per repository" default:"false"`
+	Repositories    []string `json:"repositories,omitempty" group:"Discovery" description:"Only these repositories. Empty means all"`
+	Topics          []string `json:"topics,omitempty" group:"Discovery" description:"Only repositories with one of these topics"`
+	IncludePrivate  bool     `json:"include_private" group:"Discovery" description:"Include private and internal repositories" default:"false"`
+	IncludeArchived bool     `json:"include_archived" group:"Discovery" description:"Include archived repositories" default:"false"`
+	IncludeReadme   bool     `json:"include_readme" group:"Discovery" label:"Include README" description:"Attach each repository's README as documentation" default:"true"`
+	IncludeOwners   bool     `json:"include_codeowners" group:"Discovery" label:"Include CODEOWNERS" description:"Set owners from CODEOWNERS" default:"false"`
+
+	IncludeBranches     bool `json:"include_branches" group:"Discovery" description:"Discover every branch of each repository" default:"true"`
+	IncludePullRequests bool `json:"include_pull_requests" group:"Discovery" description:"Discover open pull requests" default:"true"`
+	IncludeIssues       bool `json:"include_issues" group:"Discovery" description:"Discover open issues" default:"true"`
+
+	BaseURL string `json:"base_url,omitempty" group:"Advanced" label:"API URL" description:"Defaults to https://api.github.com. For GitHub Enterprise Server, https://<host>/api/v3"`
 
 	Tools ToolsConfig `json:"tools,omitempty" group:"Tools" description:"Limits on the changes tools may make. Tools run only in a runner that allows them"`
 }
@@ -160,15 +165,24 @@ func Meta() pluginsdk.Meta {
 		ID:            "github",
 		MarmotVersion: ">=0.13.0",
 		Name:          "GitHub",
-		Description:   "Discover repositories from a GitHub organisation or user, and read and propose changes to them through pull requests",
+		Description:   "Discover repositories, branches, pull requests and issues from a GitHub organisation or user",
 		Icon:          "github",
 		Category:      "source-control",
 		Status:        "experimental",
-		Features:      []string{"Assets", "Documentation"},
-		ConfigSpec:    pluginsdk.GenerateConfigSpec(Config{}),
+		Features:      []string{"Assets", "Lineage", "Documentation"},
+		// GitHub asks for requests one at a time, and each repository costs
+		// several, so even a small organisation outlasts the default test.
+		ConnectionTestTimeoutSeconds: 120,
+		ConfigSpec:                   pluginsdk.GenerateConfigSpec(Config{}),
 		AssetSchemas: []pluginsdk.AssetSchema{
-			pluginsdk.AssetSchemaOf(RepositoryFields{}, "Repository",
+			pluginsdk.AssetSchemaOf(RepositoryFields{}, assetType,
 				"GitHub repository metadata fields"),
+			pluginsdk.AssetSchemaOf(BranchFields{}, branchType,
+				"GitHub branch metadata fields"),
+			pluginsdk.AssetSchemaOf(PullRequestFields{}, pullRequestType,
+				"GitHub pull request metadata fields"),
+			pluginsdk.AssetSchemaOf(IssueFields{}, issueType,
+				"GitHub issue metadata fields"),
 		},
 	}
 }
@@ -200,7 +214,8 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	return rawConfig, nil
 }
 
-// Discover catalogues the owner's repositories.
+// Discover catalogues the owner's repositories and, inside each, its
+// branches, open pull requests and open issues.
 func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
 	config, err := loadConfig(rawConfig)
 	if err != nil {
@@ -219,21 +234,31 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 		return nil, err
 	}
 
-	result := &pluginsdk.DiscoveryResult{}
+	var inScope []*repository
 	for i := range repos {
-		r := &repos[i]
-		if !config.inScope(r) {
-			continue
+		if config.inScope(&repos[i]) {
+			inScope = append(inScope, &repos[i])
 		}
-		asset, doc := describeRepository(ctx, c, config, r)
+	}
+	details := fetchDetails(ctx, c, config, inScope)
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	result := &pluginsdk.DiscoveryResult{}
+	for _, r := range inScope {
+		d := details[r.Name]
+		asset, doc := describeRepository(ctx, c, config, r, d)
 		result.Assets = append(result.Assets, asset)
 		if doc != nil {
 			result.Documentation = append(result.Documentation, *doc)
 		}
+		describeChildren(ctx, c, config, r, d, *asset.MRN, result)
 	}
 
 	log.Info().
 		Int("assets", len(result.Assets)).
+		Int("lineage", len(result.Lineage)).
 		Int("documentation", len(result.Documentation)).
 		Msg("GitHub discovery completed")
 	return result, nil

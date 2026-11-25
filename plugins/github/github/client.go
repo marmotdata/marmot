@@ -11,8 +11,11 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -25,6 +28,11 @@ const (
 	// maxErrorMessage caps the message quoted from a GitHub error.
 	maxErrorMessage = 300
 	requestTimeout  = 30 * time.Second
+	// maxRetries and maxBackoff bound how long a read waits out a rate
+	// limit before giving up: a primary limit that resets in an hour is
+	// reported, not slept through.
+	maxRetries = 3
+	maxBackoff = 60 * time.Second
 )
 
 // apiError is a GitHub response outside 2xx. Its message is GitHub's own,
@@ -134,31 +142,79 @@ func (c *client) do(ctx context.Context, method, path string, query url.Values, 
 	return err
 }
 
+// doURL sends one request. A read, or a GraphQL query, that GitHub turns
+// away for a rate limit is retried after the wait GitHub asks for; a write
+// never is, so it can never be sent twice.
 func (c *client) doURL(ctx context.Context, method, target, label string, body, out any) (http.Header, error) {
-	var reader io.Reader
+	var data []byte
 	if body != nil {
-		data, err := json.Marshal(body)
-		if err != nil {
+		var err error
+		if data, err = json.Marshal(body); err != nil {
 			return nil, fmt.Errorf("encoding the request to %s: %w", label, err)
 		}
+	}
+	retryable := method == http.MethodGet || label == "/graphql"
+	for attempt := 0; ; attempt++ {
+		header, wait, err := c.send(ctx, method, target, label, data, out)
+		if wait <= 0 || !retryable || attempt == maxRetries {
+			return header, err
+		}
+		log.Warn().Str("path", label).Dur("wait", wait).Msg("GitHub rate limit, waiting before retrying")
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(wait):
+		}
+	}
+}
+
+// rateLimitWait is how long GitHub asks a turned-away request to wait, or
+// zero when the response is not a rate limit or the wait is too long.
+func rateLimitWait(resp *http.Response) time.Duration {
+	if resp.StatusCode != http.StatusForbidden && resp.StatusCode != http.StatusTooManyRequests {
+		return 0
+	}
+	var wait time.Duration
+	if s, err := strconv.Atoi(resp.Header.Get("Retry-After")); err == nil && s >= 0 {
+		wait = time.Duration(s) * time.Second
+	} else if resp.Header.Get("X-RateLimit-Remaining") == "0" {
+		reset, err := strconv.ParseInt(resp.Header.Get("X-RateLimit-Reset"), 10, 64)
+		if err != nil {
+			return 0
+		}
+		wait = time.Until(time.Unix(reset, 0))
+	} else if resp.StatusCode == http.StatusTooManyRequests {
+		wait = time.Minute
+	} else {
+		return 0
+	}
+	if wait > maxBackoff {
+		return 0
+	}
+	return max(wait, time.Second)
+}
+
+func (c *client) send(ctx context.Context, method, target, label string, data []byte, out any) (http.Header, time.Duration, error) {
+	var reader io.Reader
+	if data != nil {
 		reader = bytes.NewReader(data)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, target, reader)
 	if err != nil {
-		return nil, fmt.Errorf("building the request to %s: %w", label, err)
+		return nil, 0, fmt.Errorf("building the request to %s: %w", label, err)
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", apiVersion)
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("User-Agent", c.userAgent)
-	if body != nil {
+	if data != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {
 		// net/http errors quote the URL, which holds no credentials.
-		return nil, fmt.Errorf("GitHub %s %s: %w", method, label, err)
+		return nil, 0, fmt.Errorf("GitHub %s %s: %w", method, label, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -171,23 +227,23 @@ func (c *client) doURL(ctx context.Context, method, target, label string, body, 
 		if msg.Message == "" {
 			msg.Message = http.StatusText(resp.StatusCode)
 		}
-		return nil, &apiError{Status: resp.StatusCode, Method: method, Path: label, Message: capText(stripControl(msg.Message), maxErrorMessage)}
+		return nil, rateLimitWait(resp), &apiError{Status: resp.StatusCode, Method: method, Path: label, Message: capText(stripControl(msg.Message), maxErrorMessage)}
 	}
 	if out == nil {
 		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxResponseBytes))
-		return resp.Header, nil
+		return resp.Header, 0, nil
 	}
-	data, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
+	respData, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
 	if err != nil {
-		return nil, fmt.Errorf("reading GitHub %s %s: %w", method, label, err)
+		return nil, 0, fmt.Errorf("reading GitHub %s %s: %w", method, label, err)
 	}
-	if len(data) > maxResponseBytes {
-		return nil, fmt.Errorf("GitHub %s %s: the response is over %d MiB", method, label, maxResponseBytes>>20)
+	if len(respData) > maxResponseBytes {
+		return nil, 0, fmt.Errorf("GitHub %s %s: the response is over %d MiB", method, label, maxResponseBytes>>20)
 	}
-	if err := json.Unmarshal(data, out); err != nil {
-		return nil, fmt.Errorf("decoding GitHub %s %s: %w", method, label, err)
+	if err := json.Unmarshal(respData, out); err != nil {
+		return nil, 0, fmt.Errorf("decoding GitHub %s %s: %w", method, label, err)
 	}
-	return resp.Header, nil
+	return resp.Header, 0, nil
 }
 
 var nextLink = regexp.MustCompile(`<([^>]+)>;\s*rel="next"`)
@@ -231,6 +287,7 @@ type account struct {
 }
 
 type repository struct {
+	NodeID          string     `json:"node_id"`
 	Name            string     `json:"name"`
 	FullName        string     `json:"full_name"`
 	Owner           account    `json:"owner"`

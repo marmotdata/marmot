@@ -48,12 +48,20 @@ type fakeGitHub struct {
 	failPulls  bool
 	// foreignNext makes list pages link to another host.
 	foreignNext bool
+	// noGraphQL answers the GraphQL API with 404, as an old GitHub
+	// Enterprise Server does; graphqlError answers every query with an
+	// error instead.
+	noGraphQL    bool
+	graphqlError bool
 }
 
 type fakeRepo struct {
 	meta     map[string]any
 	branches map[string]string
 	pulls    map[int]*fakePR
+	// issues are listed by the issues API as they are given; nil makes it
+	// answer 410, as for a repository with issues turned off.
+	issues []map[string]any
 }
 
 type fakeFile struct {
@@ -126,13 +134,13 @@ func gitSHA(parts ...string) string {
 // addRepo creates a repository whose default branch main holds files.
 func (f *fakeGitHub) addRepo(name string, meta map[string]any, files map[string]string) *fakeRepo {
 	m := map[string]any{
-		"name": name, "full_name": f.owner + "/" + name, "owner": map[string]any{"login": f.owner},
+		"name": name, "node_id": "R_" + name, "full_name": f.owner + "/" + name, "owner": map[string]any{"login": f.owner},
 		"default_branch": "main", "visibility": "public", "html_url": "https://github.com/" + f.owner + "/" + name,
 	}
 	for k, v := range meta {
 		m[k] = v
 	}
-	r := &fakeRepo{meta: m, branches: map[string]string{}, pulls: map[int]*fakePR{}}
+	r := &fakeRepo{meta: m, branches: map[string]string{}, pulls: map[int]*fakePR{}, issues: []map[string]any{}}
 	f.repos[name] = r
 	f.order = append(f.order, name)
 	f.commit(name, "main", files, nil)
@@ -238,6 +246,8 @@ func (f *fakeGitHub) serve(w http.ResponseWriter, req *http.Request) {
 	route := req.Method + " " + seg[0]
 
 	switch {
+	case route == "POST graphql" && len(seg) == 1:
+		f.serveGraphQL(w, body)
 	case route == "GET user" && len(seg) == 1:
 		if f.login == "" {
 			fail(w, http.StatusForbidden, "Resource not accessible by integration")
@@ -382,6 +392,23 @@ func (f *fakeGitHub) serveRepo(w http.ResponseWriter, req *http.Request, name st
 	case route == "DELETE git refs":
 		delete(r.branches, strings.Join(rest[3:], "/"))
 		w.WriteHeader(204)
+	case route == "GET branches" && len(rest) == 1:
+		names := make([]string, 0, len(r.branches))
+		for b := range r.branches {
+			names = append(names, b)
+		}
+		slices.Sort(names)
+		var out []map[string]any
+		for _, b := range names {
+			out = append(out, map[string]any{"name": b, "protected": b == "main", "commit": map[string]any{"sha": r.branches[b]}})
+		}
+		writeJSON(w, 200, out)
+	case route == "GET issues" && len(rest) == 1:
+		if r.issues == nil {
+			fail(w, 410, "Issues are disabled for this repo")
+			return
+		}
+		writeJSON(w, 200, r.issues)
 	case route == "GET pulls" && len(rest) == 1:
 		var out []map[string]any
 		for n := len(r.pulls); n >= 1; n-- {

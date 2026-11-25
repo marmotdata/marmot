@@ -25,7 +25,10 @@ const (
 // codeownersPaths are where GitHub looks for CODEOWNERS, in its order.
 var codeownersPaths = []string{".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"}
 
-func describeRepository(ctx context.Context, c *client, config *Config, r *repository) (pluginsdk.Asset, *pluginsdk.Documentation) {
+// describeRepository builds a repository's asset. d is what a GraphQL query
+// already read about it; without it, the README and CODEOWNERS are read
+// through REST.
+func describeRepository(ctx context.Context, c *client, config *Config, r *repository, d *repoDetails) (pluginsdk.Asset, *pluginsdk.Documentation) {
 	visibility := r.Visibility
 	if visibility == "" {
 		visibility = "public"
@@ -62,7 +65,15 @@ func describeRepository(ctx context.Context, c *client, config *Config, r *repos
 		metadata["pushed_at"] = r.PushedAt.UTC().Format(time.RFC3339)
 	}
 	if config.IncludeOwners {
-		if owners := readCodeowners(ctx, c, config.Owner, r); len(owners) > 0 {
+		var owners []string
+		if d != nil {
+			if d.hasCodeowners {
+				owners = defaultOwners(d.codeowners)
+			}
+		} else {
+			owners = readCodeowners(ctx, c, config.Owner, r)
+		}
+		if len(owners) > 0 {
 			metadata["owners"] = owners
 		}
 	}
@@ -101,7 +112,12 @@ func describeRepository(ctx context.Context, c *client, config *Config, r *repos
 	if !config.IncludeReadme {
 		return asset, nil
 	}
-	readme, ok := readText(ctx, c, repoPath(config.Owner, r.Name)+"/readme", maxReadmeBytes)
+	readme, ok := "", false
+	if d != nil {
+		readme, ok = d.readme, d.hasReadme
+	} else {
+		readme, ok = readText(ctx, c, repoPath(config.Owner, r.Name)+"/readme", maxReadmeBytes)
+	}
 	if !ok {
 		return asset, nil
 	}

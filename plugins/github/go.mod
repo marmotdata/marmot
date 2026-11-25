@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/github
 go 1.26.5
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20261125212213-28dda09c4298
+	github.com/marmotdata/plugin-sdk v0.0.0-20261125212700-a155c4833ccc
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 )

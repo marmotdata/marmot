@@ -18,10 +18,17 @@ func findAsset(result *pluginsdk.DiscoveryResult, name string) *pluginsdk.Asset 
 	return nil
 }
 
+// assetNames returns the names of the repositories discovered.
 func assetNames(result *pluginsdk.DiscoveryResult) []string {
+	return namesOf(result, assetType)
+}
+
+func namesOf(result *pluginsdk.DiscoveryResult, assetType string) []string {
 	var names []string
 	for _, a := range result.Assets {
-		names = append(names, *a.Name)
+		if a.Type == assetType {
+			names = append(names, *a.Name)
+		}
 	}
 	return names
 }
@@ -79,7 +86,102 @@ func TestDiscoverOrganisation(t *testing.T) {
 	require.Len(t, result.Documentation, 1, "only pipelines has a README")
 	assert.Equal(t, *a.MRN, result.Documentation[0].MRN)
 	assert.Contains(t, result.Documentation[0].Content, "Runs the nightly loads.")
-	assert.Empty(t, result.Lineage, "repositories carry no lineage")
+	for _, e := range result.Lineage {
+		assert.Equal(t, "CONTAINS", e.Type, "only containment, never guessed data lineage")
+	}
+}
+
+// childFixture is orgFixture with a feature branch, an open and a closed
+// pull request, an issue and a repository with issues turned off.
+func childFixture(t *testing.T) *fakeGitHub {
+	f := orgFixture(t)
+	f.commit("pipelines", "feat/backfill", map[string]string{"dags/backfill.py": "x"}, nil)
+	f.repos["pipelines"].pulls[1] = &fakePR{number: 1, title: "Add backfill", body: "Backfills **2025**.", state: "open",
+		head: "feat/backfill", base: "main", user: "alice", created: f.clock, updated: f.clock}
+	f.repos["pipelines"].pulls[2] = &fakePR{number: 2, title: "Old", state: "closed", head: "old", base: "main", user: "bob", created: f.clock, updated: f.clock}
+	f.repos["pipelines"].issues = []map[string]any{
+		{"number": 3, "title": "Nightly load is slow", "body": "Takes 4h.", "html_url": "https://github.com/acme/pipelines/issues/3",
+			"user": map[string]any{"login": "carol"}, "labels": []map[string]any{{"name": "bug"}}, "assignees": []map[string]any{{"login": "alice"}},
+			"comments": 2, "created_at": "2026-11-01T00:00:00Z", "updated_at": "2026-11-02T00:00:00Z"},
+		{"number": 1, "title": "Add backfill", "pull_request": map[string]any{}, "user": map[string]any{"login": "alice"},
+			"created_at": "2026-11-01T00:00:00Z", "updated_at": "2026-11-02T00:00:00Z"},
+	}
+	f.repos["website"].issues = nil
+	return f
+}
+
+func TestDiscoverBranchesPullRequestsAndIssues(t *testing.T) {
+	for _, path := range []string{"graphql", "rest"} {
+		t.Run(path, func(t *testing.T) {
+			f := childFixture(t)
+			f.noGraphQL = path == "rest"
+			checkChildren(t, f)
+			if path == "graphql" {
+				for _, p := range []string{"/branches", "/pulls", "/issues", "/readme"} {
+					assert.False(t, f.requested("GET /repos/acme/pipelines"+p), "GraphQL answered %s", p)
+				}
+			}
+		})
+	}
+}
+
+func checkChildren(t *testing.T, f *fakeGitHub) {
+	t.Helper()
+	result := discover(t, f, map[string]any{"repositories": []string{"pipelines", "website"}})
+
+	assert.ElementsMatch(t, []string{"acme/pipelines:feat/backfill", "acme/pipelines:main", "acme/website:main"}, namesOf(result, branchType))
+	assert.Equal(t, []string{"acme/pipelines#1"}, namesOf(result, pullRequestType), "open pull requests only")
+	assert.Equal(t, []string{"acme/pipelines#3"}, namesOf(result, issueType), "pull requests in the issues API are not issues; disabled issues are skipped")
+
+	main := findAsset(result, "acme/pipelines:main")
+	require.NotNil(t, main)
+	assert.Equal(t, "mrn://asset/branch/github/acme.pipelines.main", *main.MRN)
+	assert.Equal(t, true, main.Metadata["default"])
+	assert.Equal(t, "https://github.com/acme/pipelines/tree/feat/backfill", findAsset(result, "acme/pipelines:feat/backfill").Metadata["url"])
+
+	pr := findAsset(result, "acme/pipelines#1")
+	require.NotNil(t, pr)
+	assert.Equal(t, "Add backfill", *pr.Description)
+	assert.Equal(t, "feat/backfill", pr.Metadata["head_branch"])
+	assert.Equal(t, "alice", pr.Metadata["author"])
+
+	is := findAsset(result, "acme/pipelines#3")
+	require.NotNil(t, is)
+	assert.Equal(t, "mrn://asset/issue/github/acme.pipelines.3", *is.MRN)
+	assert.Equal(t, []string{"bug"}, is.Metadata["labels"])
+	assert.Equal(t, []string{"alice"}, is.Metadata["assignees"])
+	assert.Contains(t, is.Tags, "bug", "labels become tags")
+
+	repo := findAsset(result, "acme/pipelines")
+	for _, child := range []*pluginsdk.Asset{main, pr, is} {
+		assert.Contains(t, result.Lineage, pluginsdk.LineageEdge{Source: *repo.MRN, Target: *child.MRN, Type: "CONTAINS"})
+	}
+	docs := map[string]string{}
+	for _, d := range result.Documentation {
+		docs[d.MRN] = d.Content
+	}
+	assert.Equal(t, "Backfills **2025**.", docs[*pr.MRN])
+	assert.Equal(t, "Takes 4h.", docs[*is.MRN])
+
+	result = discover(t, f, map[string]any{"include_branches": false, "include_pull_requests": false, "include_issues": false})
+	assert.Equal(t, len(assetNames(result)), len(result.Assets), "each kind can be turned off")
+	assert.Empty(t, result.Lineage)
+}
+
+func TestDiscoverReadsOverflowingListsThroughREST(t *testing.T) {
+	f := childFixture(t)
+	graphqlFirst = 1
+	t.Cleanup(func() { graphqlFirst = 100 })
+	checkChildren(t, f)
+	assert.True(t, f.requested("GET /repos/acme/pipelines/branches"), "two branches overflow a page of one")
+	assert.False(t, f.requested("GET /repos/acme/website/branches"), "one branch fits")
+}
+
+func TestDiscoverFallsBackToRESTWhenGraphQLFails(t *testing.T) {
+	f := childFixture(t)
+	f.graphqlError = true
+	checkChildren(t, f)
+	assert.True(t, f.requested("GET /repos/acme/pipelines/readme"))
 }
 
 func TestDiscoverFilters(t *testing.T) {
@@ -106,11 +208,11 @@ func TestDiscoverFollowsPagesOnTheAPIHostOnly(t *testing.T) {
 	f := orgFixture(t)
 	f.pageSize = 1
 	result := discover(t, f, nil)
-	assert.Len(t, result.Assets, 3)
+	assert.Len(t, assetNames(result), 3)
 
 	f.foreignNext = true
 	result = discover(t, f, nil)
-	assert.Len(t, result.Assets, 1, "a next link to another host is not followed")
+	assert.Len(t, assetNames(result), 1, "a next link to another host is not followed")
 }
 
 func TestDiscoverUser(t *testing.T) {
@@ -190,8 +292,10 @@ func TestConfigValidation(t *testing.T) {
 func TestMeta(t *testing.T) {
 	m := Meta()
 	assert.Equal(t, "github", m.ID)
-	require.Len(t, m.AssetSchemas, 1)
-	assert.NotEmpty(t, m.AssetSchemas[0].Fields)
+	require.Len(t, m.AssetSchemas, 4)
+	for _, s := range m.AssetSchemas {
+		assert.NotEmpty(t, s.Fields)
+	}
 	for _, f := range m.ConfigSpec {
 		if f.Name == "token" {
 			assert.True(t, f.Sensitive, "the token is never shown back")
