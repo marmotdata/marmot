@@ -62,10 +62,10 @@ type QueryRunner interface {
 	Status() []plugin.InstanceStatus
 }
 
-// ServedRunner sends queries to plugins that run outside Marmot and serve their own sources. Implemented by pluginserve.Hub.
+// ServedRunner sends queries to plugins that run outside Marmot and serve their own sources. Implemented by pluginserve.Hub. origin travels beside the plugin SDK's request, which has no field for it, so the serving plugin can record what caused each query. The stream ExecuteQuery returns implements ReceiptStream.
 type ServedRunner interface {
-	PlanQuery(ctx context.Context, source string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error)
-	ExecuteQuery(ctx context.Context, source, queryID string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error)
+	PlanQuery(ctx context.Context, source, origin string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error)
+	ExecuteQuery(ctx context.Context, source, queryID, origin string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error)
 }
 
 // Source is an ingestion source that answers data queries. Config is the
@@ -133,6 +133,8 @@ type QueryInput struct {
 	// Agent and Credential are set by the transport, never by the caller: the client that identified itself on the caller's behalf, such as an MCP client's name, and the kind of credential the request authenticated with.
 	Agent      string `json:"-"`
 	Credential string `json:"-"`
+	// Origin is set in-process by whatever caused the query, such as task_run:<id>, so the query log and a serving plugin's audit can be traced back to it. Like Agent, it never comes from request input.
+	Origin string `json:"-"`
 } // @name QueryRunInput
 
 // QueryColumn describes one result column.
@@ -379,6 +381,9 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
+	if err := validateOrigin(input.Origin); err != nil {
+		return nil, err
+	}
 
 	// A caller who may not query at all is refused before the source is looked up or the statement planned, so neither the source's existence nor the statement's errors reach them; the attempt is still recorded.
 	if !s.authorizer.Admits(ctx, principal) {
@@ -414,7 +419,7 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 	queryCtx, cancel := context.WithCancelCause(timeoutCtx)
 	defer cancel(nil)
 
-	resources, err := s.planResources(queryCtx, source, runner, req)
+	resources, err := s.planResources(queryCtx, source, runner, input.Origin, req)
 	if err != nil {
 		return nil, err
 	}
@@ -435,16 +440,16 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 	progress := s.running.add(record.ID, cancel)
 	defer s.running.remove(record.ID)
 
-	result, execErr := s.execute(queryCtx, runner, record.ID, req, maxRows, progress)
+	result, receipt, execErr := s.execute(queryCtx, runner, record.ID, input.Origin, req, maxRows, progress)
 	if execErr != nil {
 		// A query stopped by its caller, through Cancel or by hanging up, is cancelled rather than failed, and keeps the rows it had received.
 		if errors.Is(context.Cause(queryCtx), errCancelled) || errors.Is(ctx.Err(), context.Canceled) {
 			rows := progress.Load()
-			s.complete(ctx, record.ID, QueryOutcome{Status: StatusCancelled, Reason: ReasonCancelled, RowsReturned: &rows})
+			s.complete(ctx, record.ID, QueryOutcome{Status: StatusCancelled, Reason: ReasonCancelled, RowsReturned: &rows, Receipt: receipt})
 			return nil, fmt.Errorf("%w: the query was cancelled", ErrCancelled)
 		}
 		msg := pluginMessage(execErr)
-		s.complete(ctx, record.ID, QueryOutcome{Status: StatusFailed, Reason: failureReason(execErr), Error: &msg})
+		s.complete(ctx, record.ID, QueryOutcome{Status: StatusFailed, Reason: failureReason(execErr), Error: &msg, Receipt: receipt})
 		return nil, fmt.Errorf("%w: %s", ErrQueryFailed, msg)
 	}
 
@@ -454,6 +459,7 @@ func (s *service) Query(ctx context.Context, principal auth.Principal, input Que
 		RowsReturned: &result.RowCount,
 		Truncated:    result.Truncated,
 		Context:      assetContext,
+		Receipt:      receipt,
 	})
 
 	// Refresh the source's catalog off the back of real usage, so a
@@ -505,6 +511,10 @@ func (s *service) newRecord(principal auth.Principal, input QueryInput, client s
 	if input.Credential != "" {
 		credential := input.Credential
 		record.Credential = &credential
+	}
+	if input.Origin != "" {
+		origin := input.Origin
+		record.Origin = &origin
 	}
 	if decision.Allowed {
 		if record.OutcomeReason == "" {
@@ -567,10 +577,10 @@ func truncate(s string, n int) string {
 	return s[:n]
 }
 
-// sourceRunner plans and executes queries for one source.
+// sourceRunner plans and executes queries for one source. Only served sources use origin; a local plugin process has no audit of its own to put it in.
 type sourceRunner interface {
-	plan(ctx context.Context, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error)
-	execute(ctx context.Context, queryID string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error)
+	plan(ctx context.Context, origin string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error)
+	execute(ctx context.Context, queryID, origin string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error)
 }
 
 // runnerFor picks how a source's queries run: through a long-running local plugin process with the decrypted stored config, or through the plugin that serves the source from outside Marmot, which holds its own config.
@@ -629,11 +639,11 @@ type localRunner struct {
 	config   map[string]any
 }
 
-func (l localRunner) plan(ctx context.Context, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
+func (l localRunner) plan(ctx context.Context, _ string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
 	return l.runner.PlanQuery(ctx, l.pluginID, l.config, req)
 }
 
-func (l localRunner) execute(ctx context.Context, _ string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+func (l localRunner) execute(ctx context.Context, _, _ string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
 	return l.runner.ExecuteQuery(ctx, l.pluginID, l.config, req)
 }
 
@@ -642,12 +652,12 @@ type servedRunner struct {
 	source string
 }
 
-func (r servedRunner) plan(ctx context.Context, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
-	return r.runner.PlanQuery(ctx, r.source, req)
+func (r servedRunner) plan(ctx context.Context, origin string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
+	return r.runner.PlanQuery(ctx, r.source, origin, req)
 }
 
-func (r servedRunner) execute(ctx context.Context, queryID string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
-	return r.runner.ExecuteQuery(ctx, r.source, queryID, req)
+func (r servedRunner) execute(ctx context.Context, queryID, origin string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+	return r.runner.ExecuteQuery(ctx, r.source, queryID, origin, req)
 }
 
 // planResources asks the plugin what the statement touches. A plugin that
@@ -655,8 +665,8 @@ func (r servedRunner) execute(ctx context.Context, queryID string, req pluginsdk
 // the whole-source resource, so the authorizer must allow the entire source. So does
 // a plan the plugin marks incomplete, because the statement may read tables the
 // plan does not list; the listed tables are kept for the query log.
-func (s *service) planResources(ctx context.Context, source *Source, runner sourceRunner, req pluginsdk.QueryRequest) ([]string, error) {
-	plan, err := runner.plan(ctx, req)
+func (s *service) planResources(ctx context.Context, source *Source, runner sourceRunner, origin string, req pluginsdk.QueryRequest) ([]string, error) {
+	plan, err := runner.plan(ctx, origin, req)
 	if err != nil {
 		if status.Code(err) == codes.Unimplemented {
 			return []string{SourceMRN(source.Name)}, nil
@@ -672,13 +682,46 @@ func (s *service) planResources(ctx context.Context, source *Source, runner sour
 	return plan.ReferencedMRNs, nil
 }
 
-func (s *service) execute(ctx context.Context, runner sourceRunner, queryID string, req pluginsdk.QueryRequest, maxRows int64, progress *atomic.Int64) (*QueryResult, error) {
-	stream, err := runner.execute(ctx, queryID, req)
+// execute runs the statement and reads its rows, and for a served source the serving plugin's receipt, which is returned whether the query succeeded or not. The receipt is nil for a source Marmot runs itself.
+func (s *service) execute(ctx context.Context, runner sourceRunner, queryID, origin string, req pluginsdk.QueryRequest, maxRows int64, progress *atomic.Int64) (*QueryResult, *RunnerReceipt, error) {
+	stream, err := runner.execute(ctx, queryID, origin, req)
 	if err != nil {
-		return nil, err
+		return nil, missingReceipt(runner, queryID, err), err
 	}
 	defer func() { _ = stream.Close() }()
 
+	result, err := readRows(stream, maxRows, progress)
+	return result, streamReceipt(stream, queryID), err
+}
+
+// missingReceipt records that a served source's query never reached its serving plugin, so no receipt can exist.
+func missingReceipt(runner sourceRunner, queryID string, err error) *RunnerReceipt {
+	if _, served := runner.(servedRunner); !served {
+		return nil
+	}
+	log.Warn().Err(err).Str("query_id", queryID).Msg("Served query never reached its serving plugin, so it has no receipt")
+	return &RunnerReceipt{Status: ReceiptMissing, Problem: "the query never reached the serving plugin"}
+}
+
+// streamReceipt reads the receipt off a served source's stream. A missing or invalid receipt does not fail the query, since serving plugins that predate receipts send none, but it is logged and recorded as such.
+func streamReceipt(stream pluginsdk.QueryStream, queryID string) *RunnerReceipt {
+	rs, ok := stream.(ReceiptStream)
+	if !ok {
+		return nil
+	}
+	receipt := rs.Receipt()
+	switch {
+	case receipt == nil:
+		log.Warn().Str("query_id", queryID).Msg("Serving plugin sent no receipt")
+		return &RunnerReceipt{Status: ReceiptMissing, Problem: "the serving plugin sent no receipt"}
+	case receipt.Status != ReceiptVerified:
+		log.Warn().Str("query_id", queryID).Str("problem", receipt.Problem).Msg("Serving plugin's receipt did not verify")
+	}
+	return receipt
+}
+
+// readRows reads a result up to maxRows. A truncated served result is read on to its end, because the serving plugin's receipt follows the last rows; the serving plugin stops at the signed limit, one row past maxRows, so that is at most the rest of one chunk.
+func readRows(stream pluginsdk.QueryStream, maxRows int64, progress *atomic.Int64) (*QueryResult, error) {
 	result := &QueryResult{Columns: []QueryColumn{}, Rows: [][]any{}}
 	for {
 		chunk, err := stream.Recv()
@@ -697,6 +740,7 @@ func (s *service) execute(ctx context.Context, runner sourceRunner, queryID stri
 		for _, row := range chunk.Rows {
 			if result.RowCount >= maxRows {
 				result.Truncated = true
+				drainForReceipt(stream)
 				return result, nil
 			}
 			result.Rows = append(result.Rows, row)
@@ -704,6 +748,18 @@ func (s *service) execute(ctx context.Context, runner sourceRunner, queryID stri
 		}
 		if progress != nil {
 			progress.Store(result.RowCount)
+		}
+	}
+}
+
+// drainForReceipt reads a served stream to its end so its receipt arrives; the rows are discarded and an error only means the receipt is missing.
+func drainForReceipt(stream pluginsdk.QueryStream) {
+	if _, ok := stream.(ReceiptStream); !ok {
+		return
+	}
+	for {
+		if _, err := stream.Recv(); err != nil {
+			return
 		}
 	}
 }

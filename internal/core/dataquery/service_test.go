@@ -146,7 +146,7 @@ func (m *memRepo) CompleteQuery(_ context.Context, id string, o QueryOutcome) er
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	q := m.queries[id]
-	q.Status, q.RowsReturned, q.Truncated, q.Error, q.Context = o.Status, o.RowsReturned, o.Truncated, o.Error, o.Context
+	q.Status, q.RowsReturned, q.Truncated, q.Error, q.Context, q.RunnerReceipt = o.Status, o.RowsReturned, o.Truncated, o.Error, o.Context, o.Receipt
 	if o.Reason != "" {
 		q.OutcomeReason = o.Reason
 	}

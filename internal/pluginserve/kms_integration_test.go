@@ -62,7 +62,7 @@ func TestServeWithVaultTransitKeys(t *testing.T) {
 	source := newSourceName()
 	h.serve(hub, servePrincipal(), source, &fakeQuerier{rows: 4})
 
-	stream, err := hub.ExecuteQuery(ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
+	stream, err := hub.ExecuteQuery(ctx, source, "", "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
 	require.NoError(t, err)
 	assert.Equal(t, 4, collect(t, stream), "a query signed in Vault verifies at the serving process")
 

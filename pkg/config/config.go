@@ -192,9 +192,10 @@ type Config struct {
 			PublicAddress string `mapstructure:"public_address"`
 			// ReplicaAddress is the host, or host:port, other Marmot replicas reach this one on to forward queries for plugins connected here; without a port the listen port is used. Needed only with more than one replica.
 			ReplicaAddress string `mapstructure:"replica_address"`
-			// CAKeyURI and SigningKeyURI keep the serving CA key and query signing key in a KMS instead of the database, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://) naming ECDSA P-256 keys. They are used when serving first starts; later keys come from rotations.
-			CAKeyURI      string `mapstructure:"ca_key_uri"`
-			SigningKeyURI string `mapstructure:"signing_key_uri"`
+			// CAKeyURI, SigningKeyURI and ApprovalKeyURI keep the serving CA key, the query signing key and the approval key in a KMS instead of the database, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://) naming ECDSA P-256 keys; all three or none. The approval key signs only approvals of actions, so it must be a key of its own. They are used when serving first starts; later keys come from rotations. ApprovalKeyURI also gives KMS-held keys made before approval keys existed their approval key.
+			CAKeyURI       string `mapstructure:"ca_key_uri"`
+			SigningKeyURI  string `mapstructure:"signing_key_uri"`
+			ApprovalKeyURI string `mapstructure:"approval_key_uri"`
 		} `mapstructure:"serve"`
 	} `mapstructure:"query"`
 }
@@ -416,6 +417,7 @@ func loadConfig(configPath string) error {
 	v.BindEnv("query.serve.replica_address")
 	v.BindEnv("query.serve.ca_key_uri")
 	v.BindEnv("query.serve.signing_key_uri")
+	v.BindEnv("query.serve.approval_key_uri")
 
 	// Telemetry env vars
 	v.BindEnv("telemetry.enabled")

@@ -2,9 +2,11 @@ package pluginserve
 
 import (
 	"crypto/ecdsa"
+	"strings"
 	"testing"
 	"time"
 
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gproto "google.golang.org/protobuf/proto"
@@ -134,7 +136,7 @@ func TestVerifierForgetsExpiredNonces(t *testing.T) {
 	v.now = func() time.Time { return start.Add(envelopeLifetime + envelopeSkew + time.Second) }
 	_, err := v.Verify(signedPlan(t, id, v.now()), pb.Operation_OPERATION_PLAN)
 	require.NoError(t, err)
-	assert.Len(t, v.seen, 1, "nonces past their query's expiry are dropped")
+	assert.Len(t, v.seen.seen, 1, "nonces past their query's expiry are dropped")
 }
 
 // While Marmot rotates keys a connection pins both, and a query signed by either verifies.
@@ -152,4 +154,144 @@ func TestVerifyAcceptsAnyPinnedKey(t *testing.T) {
 	stranger.InstanceID = old.InstanceID
 	_, err = v.Verify(signedPlan(t, stranger, time.Now()), pb.Operation_OPERATION_PLAN)
 	assert.ErrorIs(t, err, ErrRejected)
+}
+
+const testReplicaAudience = "spiffe://instance/replica/target"
+
+func signedForward(t *testing.T, id *Keyring, audience string, now time.Time) *pb.SignedForward {
+	t.Helper()
+	fq, err := forwarded(pb.Operation_OPERATION_EXECUTE, "warehouse", "query-1", "task_run:7", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10, Identity: "user:alice"})
+	require.NoError(t, err)
+	signed, err := id.signForward(fq, audience, now)
+	require.NoError(t, err)
+	return signed
+}
+
+func forwardVerifierFor(id *Keyring) *forwardVerifier {
+	return newForwardVerifier(id, testReplicaAudience)
+}
+
+func TestForwardVerifierAcceptsSignedForward(t *testing.T) {
+	id := testIdentity(t)
+	fq, err := forwardVerifierFor(id).verify(signedForward(t, id, testReplicaAudience, time.Now()))
+	require.NoError(t, err)
+	assert.Equal(t, "SELECT 1", fq.Statement)
+	assert.Equal(t, "task_run:7", fq.Origin)
+}
+
+func TestForwardVerifierRejects(t *testing.T) {
+	id := testIdentity(t)
+	now := time.Now()
+
+	resign := func(mutate func(*pb.ForwardedQuery)) *pb.SignedForward {
+		var fq pb.ForwardedQuery
+		require.NoError(t, gproto.Unmarshal(signedForward(t, id, testReplicaAudience, now).Forward, &fq))
+		mutate(&fq)
+		data, err := gproto.Marshal(&fq)
+		require.NoError(t, err)
+		signature, err := id.Sign(append(append([]byte{}, forwardDomain...), data...))
+		require.NoError(t, err)
+		return &pb.SignedForward{Forward: data, Signature: signature}
+	}
+
+	tests := []struct {
+		name   string
+		signed *pb.SignedForward
+	}{
+		{"nil", nil},
+		{"unsigned", func() *pb.SignedForward {
+			s := signedForward(t, id, testReplicaAudience, now)
+			s.Signature = nil
+			return s
+		}()},
+		{"signed by another instance's key", signedForward(t, testIdentity(t), testReplicaAudience, now)},
+		{"signed as a query, without the forward domain", func() *pb.SignedForward {
+			s := signedForward(t, id, testReplicaAudience, now)
+			s.Signature, _ = id.Sign(s.Forward)
+			return s
+		}()},
+		{"for another replica", signedForward(t, id, "spiffe://instance/replica/other", now)},
+		{"expired", signedForward(t, id, testReplicaAudience, now.Add(-2*time.Minute))},
+		{"issued in the future", signedForward(t, id, testReplicaAudience, now.Add(2*time.Minute))},
+		{"lifetime too long", resign(func(fq *pb.ForwardedQuery) { fq.ExpiresAtUnix = fq.IssuedAtUnix + 3600 })},
+		{"wrong issuer", resign(func(fq *pb.ForwardedQuery) { fq.Issuer = "other-instance" })},
+		{"unknown version", resign(func(fq *pb.ForwardedQuery) { fq.Version = 2 })},
+		{"short nonce", resign(func(fq *pb.ForwardedQuery) { fq.Nonce = []byte{1} })},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := forwardVerifierFor(id).verify(tt.signed)
+			assert.ErrorIs(t, err, ErrRejected)
+		})
+	}
+}
+
+func TestForwardVerifierRejectsReplay(t *testing.T) {
+	id := testIdentity(t)
+	v := forwardVerifierFor(id)
+	signed := signedForward(t, id, testReplicaAudience, time.Now())
+	_, err := v.verify(signed)
+	require.NoError(t, err)
+	_, err = v.verify(signed)
+	assert.ErrorIs(t, err, ErrRejected)
+}
+
+// A forward's signature covers different bytes from a query's, so a serving process never accepts one as a query.
+func TestForwardSignatureIsNotAQuerySignature(t *testing.T) {
+	id := testIdentity(t)
+	forward := signedForward(t, id, testReplicaAudience, time.Now())
+	_, err := verifierFor(id).Verify(&pb.SignedQuery{Query: forward.Forward, Signature: forward.Signature}, pb.Operation_OPERATION_EXECUTE)
+	assert.ErrorIs(t, err, ErrRejected)
+}
+
+func TestSignQueryKeepsTheForwardersNonce(t *testing.T) {
+	id := testIdentity(t)
+	nonce := []byte("0123456789abcdef")
+	signed, err := id.signQuery(&pb.Query{Operation: pb.Operation_OPERATION_PLAN, Nonce: nonce}, testAudience, testBinding(), time.Now())
+	require.NoError(t, err)
+	q, err := verifierFor(id).Verify(signed, pb.Operation_OPERATION_PLAN)
+	require.NoError(t, err)
+	assert.Equal(t, nonce, q.Nonce)
+}
+
+func TestFirstEnrolmentCAFingerprint(t *testing.T) {
+	id := testIdentity(t)
+	cas, keys, _ := id.Bundle()
+	bundle, err := parseBundle(&EnrolResult{CABundle: cas, SigningKeys: keys})
+	require.NoError(t, err)
+	right := CAFingerprint(id.gens[0].caCert.Raw)
+	wrong := CAFingerprint([]byte("another CA"))
+
+	t.Run("matching fingerprint is accepted", func(t *testing.T) {
+		var p *pins
+		require.NoError(t, acceptBundle(&p, id.InstanceID, bundle, []string{wrong, right}))
+		assert.NotNil(t, p)
+	})
+	t.Run("no matching fingerprint is refused and nothing is pinned", func(t *testing.T) {
+		var p *pins
+		err := acceptBundle(&p, id.InstanceID, bundle, []string{wrong})
+		assert.ErrorIs(t, err, ErrCAFingerprintMismatch)
+		assert.ErrorContains(t, err, right, "the error shows what Marmot returned, to compare")
+		assert.Nil(t, p)
+	})
+	t.Run("without fingerprints the first enrolment is trusted", func(t *testing.T) {
+		var p *pins
+		require.NoError(t, acceptBundle(&p, id.InstanceID, bundle, nil))
+	})
+	t.Run("fingerprints only apply to the first enrolment", func(t *testing.T) {
+		var p *pins
+		require.NoError(t, acceptBundle(&p, id.InstanceID, bundle, []string{right}))
+		require.NoError(t, acceptBundle(&p, id.InstanceID, bundle, []string{wrong}), "later enrolments are held to the pins instead")
+	})
+}
+
+func TestParseCAFingerprint(t *testing.T) {
+	fp := CAFingerprint([]byte("ca"))
+	got, err := ParseCAFingerprint(strings.ToUpper(fp))
+	require.NoError(t, err)
+	assert.Equal(t, fp, got)
+	for _, bad := range []string{"", "sha256:", "sha1:" + fp[7:], fp[7:], fp + "00", "sha256:" + strings.Repeat("z", 64)} {
+		_, err := ParseCAFingerprint(bad)
+		assert.Error(t, err, bad)
+	}
 }

@@ -15,8 +15,8 @@ import (
 	"github.com/marmotdata/marmot/pkg/config"
 )
 
-// maxEnrolBody bounds an enrolment request: a CSR and up to a hundred masked source configs.
-const maxEnrolBody = 1 << 20
+// maxEnrolBody bounds an enrolment request: a CSR and up to a hundred masked source configs, with the action and trigger manifests of those that serve any.
+const maxEnrolBody = 4 << 20
 
 type Handler struct {
 	enroller    *pluginserve.Enroller
@@ -100,12 +100,14 @@ func (h *Handler) enrol(w http.ResponseWriter, r *http.Request) {
 type RotateKeysRequest struct {
 	// Immediate switches to the new keys at once and stops trusting the old ones, for a suspected compromise; serving plugins must then be restarted.
 	Immediate bool `json:"immediate"`
-	// CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty to have Marmot generate keys it stores encrypted, which is refused when the current keys are in a KMS.
-	CAKeyURI      string `json:"ca_key_uri,omitempty"`
-	SigningKeyURI string `json:"signing_key_uri,omitempty"`
+	// CAKeyURI, SigningKeyURI and ApprovalKeyURI name new KMS keys, all three or none; the approval key must be a key of its own. Leave them empty to have Marmot generate keys it stores encrypted, which is refused when the current keys are in a KMS.
+	CAKeyURI       string `json:"ca_key_uri,omitempty"`
+	SigningKeyURI  string `json:"signing_key_uri,omitempty"`
+	ApprovalKeyURI string `json:"approval_key_uri,omitempty"`
 } // @name ServeRotateKeysRequest
 
 // @Summary List serving key generations
+// @Description Lists the trusted generations of the serving CA and query signing key, with each CA's SHA-256 fingerprint. Pass a fingerprint to a serving plugin with --ca-fingerprint so it checks Marmot's CA before it first trusts it.
 // @Tags query
 // @Produce json
 // @Security ApiKeyAuth
@@ -133,7 +135,7 @@ func (h *Handler) rotateKeys(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	err := h.keyring.Rotate(r.Context(), pluginserve.KeyConfig{CAKeyURI: req.CAKeyURI, SigningKeyURI: req.SigningKeyURI}, req.Immediate)
+	err := h.keyring.Rotate(r.Context(), pluginserve.KeyConfig{CAKeyURI: req.CAKeyURI, SigningKeyURI: req.SigningKeyURI, ApprovalKeyURI: req.ApprovalKeyURI}, req.Immediate)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to rotate serving keys")
 		common.RespondError(w, http.StatusBadRequest, "Failed to rotate serving keys: "+err.Error())

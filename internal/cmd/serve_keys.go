@@ -17,9 +17,10 @@ const (
 )
 
 var (
-	rotateImmediate     bool
-	rotateCAKeyURI      string
-	rotateSigningKeyURI string
+	rotateImmediate      bool
+	rotateCAKeyURI       string
+	rotateSigningKeyURI  string
+	rotateApprovalKeyURI string
 )
 
 var adminServeKeysCmd = &cobra.Command{
@@ -43,12 +44,13 @@ By default the rotation is graceful: the new keys are published now, used after 
 
 Use --immediate when a key may be compromised. Marmot switches at once and stops trusting the old keys, and every serving plugin must be restarted to trust the new ones.
 
-When the keys are held in a KMS, name the new KMS keys with --ca-key-uri and --signing-key-uri.`,
+When the keys are held in a KMS, name the new KMS keys with --ca-key-uri, --signing-key-uri and --approval-key-uri. The approval key signs only approvals of actions and must be a key of its own.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		body := map[string]any{
-			"immediate":       rotateImmediate,
-			"ca_key_uri":      rotateCAKeyURI,
-			"signing_key_uri": rotateSigningKeyURI,
+			"immediate":        rotateImmediate,
+			"ca_key_uri":       rotateCAKeyURI,
+			"signing_key_uri":  rotateSigningKeyURI,
+			"approval_key_uri": rotateApprovalKeyURI,
 		}
 		var gens []pluginserve.GenerationStatus
 		if err := serveKeysRequest(cmd.Context(), http.MethodPost, apiServeKeysRotate, body, &gens); err != nil {
@@ -91,7 +93,12 @@ func printGenerations(gens []pluginserve.GenerationStatus) error {
 		if g.RetiresAt != nil {
 			state += ", retires " + g.RetiresAt.Format(time.RFC3339)
 		}
-		fmt.Printf("%s  %-8s  %s\n", g.ID, g.Storage, state)
+		fmt.Printf("%s  %-8s  %s  %s\n", g.ID, g.Storage, g.CAFingerprint, state)
+		if g.ApprovalKeyFingerprint != "" {
+			fmt.Printf("    approval key %s\n", g.ApprovalKeyFingerprint)
+		} else {
+			fmt.Println("    no approval key: actions cannot be approved until a rotation names one")
+		}
 	}
 	return nil
 }
@@ -100,6 +107,7 @@ func init() {
 	adminRotateServeKeysCmd.Flags().BoolVar(&rotateImmediate, "immediate", false, "Switch at once and stop trusting the old keys; serving plugins must be restarted")
 	adminRotateServeKeysCmd.Flags().StringVar(&rotateCAKeyURI, "ca-key-uri", "", "KMS URI of the new CA key (ECDSA P-256)")
 	adminRotateServeKeysCmd.Flags().StringVar(&rotateSigningKeyURI, "signing-key-uri", "", "KMS URI of the new query signing key (ECDSA P-256)")
+	adminRotateServeKeysCmd.Flags().StringVar(&rotateApprovalKeyURI, "approval-key-uri", "", "KMS URI of the new approval key (ECDSA P-256), a key of its own")
 	adminCmd.AddCommand(adminServeKeysCmd)
 	adminCmd.AddCommand(adminRotateServeKeysCmd)
 }

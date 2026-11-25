@@ -19,8 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Plugin_PlanQuery_FullMethodName    = "/marmot.serve.v1.Plugin/PlanQuery"
-	Plugin_ExecuteQuery_FullMethodName = "/marmot.serve.v1.Plugin/ExecuteQuery"
+	Plugin_PlanQuery_FullMethodName     = "/marmot.serve.v1.Plugin/PlanQuery"
+	Plugin_ExecuteQuery_FullMethodName  = "/marmot.serve.v1.Plugin/ExecuteQuery"
+	Plugin_PlanAction_FullMethodName    = "/marmot.serve.v1.Plugin/PlanAction"
+	Plugin_ExecuteAction_FullMethodName = "/marmot.serve.v1.Plugin/ExecuteAction"
+	Plugin_WatchTriggers_FullMethodName = "/marmot.serve.v1.Plugin/WatchTriggers"
 )
 
 // PluginClient is the client API for Plugin service.
@@ -31,6 +34,11 @@ const (
 type PluginClient interface {
 	PlanQuery(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (*PlanQueryResponse, error)
 	ExecuteQuery(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryChunk], error)
+	// PlanAction and ExecuteAction carry a plugin action. The serving process runs one only when its operator passed --allow-actions and a policy naming the source and the action, and only within that policy, whatever Marmot signed.
+	PlanAction(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (*ActionResponse, error)
+	ExecuteAction(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (*ActionResponse, error)
+	// WatchTriggers is opened by Marmot once per connection, with a Query for OPERATION_WATCH_TRIGGERS, and streams the events of the triggers the serving process's own policy runs until the connection closes. The Query names no trigger and carries no parameters: which triggers run, and with what, is the serving process's decision alone, and Marmot only receives what they find.
+	WatchTriggers(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SignedTriggerEvent], error)
 }
 
 type pluginClient struct {
@@ -70,6 +78,45 @@ func (c *pluginClient) ExecuteQuery(ctx context.Context, in *SignedQuery, opts .
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Plugin_ExecuteQueryClient = grpc.ServerStreamingClient[QueryChunk]
 
+func (c *pluginClient) PlanAction(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (*ActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActionResponse)
+	err := c.cc.Invoke(ctx, Plugin_PlanAction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pluginClient) ExecuteAction(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (*ActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActionResponse)
+	err := c.cc.Invoke(ctx, Plugin_ExecuteAction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pluginClient) WatchTriggers(ctx context.Context, in *SignedQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SignedTriggerEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Plugin_ServiceDesc.Streams[1], Plugin_WatchTriggers_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SignedQuery, SignedTriggerEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Plugin_WatchTriggersClient = grpc.ServerStreamingClient[SignedTriggerEvent]
+
 // PluginServer is the server API for Plugin service.
 // All implementations must embed UnimplementedPluginServer
 // for forward compatibility.
@@ -78,6 +125,11 @@ type Plugin_ExecuteQueryClient = grpc.ServerStreamingClient[QueryChunk]
 type PluginServer interface {
 	PlanQuery(context.Context, *SignedQuery) (*PlanQueryResponse, error)
 	ExecuteQuery(*SignedQuery, grpc.ServerStreamingServer[QueryChunk]) error
+	// PlanAction and ExecuteAction carry a plugin action. The serving process runs one only when its operator passed --allow-actions and a policy naming the source and the action, and only within that policy, whatever Marmot signed.
+	PlanAction(context.Context, *SignedQuery) (*ActionResponse, error)
+	ExecuteAction(context.Context, *SignedQuery) (*ActionResponse, error)
+	// WatchTriggers is opened by Marmot once per connection, with a Query for OPERATION_WATCH_TRIGGERS, and streams the events of the triggers the serving process's own policy runs until the connection closes. The Query names no trigger and carries no parameters: which triggers run, and with what, is the serving process's decision alone, and Marmot only receives what they find.
+	WatchTriggers(*SignedQuery, grpc.ServerStreamingServer[SignedTriggerEvent]) error
 	mustEmbedUnimplementedPluginServer()
 }
 
@@ -93,6 +145,15 @@ func (UnimplementedPluginServer) PlanQuery(context.Context, *SignedQuery) (*Plan
 }
 func (UnimplementedPluginServer) ExecuteQuery(*SignedQuery, grpc.ServerStreamingServer[QueryChunk]) error {
 	return status.Error(codes.Unimplemented, "method ExecuteQuery not implemented")
+}
+func (UnimplementedPluginServer) PlanAction(context.Context, *SignedQuery) (*ActionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PlanAction not implemented")
+}
+func (UnimplementedPluginServer) ExecuteAction(context.Context, *SignedQuery) (*ActionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExecuteAction not implemented")
+}
+func (UnimplementedPluginServer) WatchTriggers(*SignedQuery, grpc.ServerStreamingServer[SignedTriggerEvent]) error {
+	return status.Error(codes.Unimplemented, "method WatchTriggers not implemented")
 }
 func (UnimplementedPluginServer) mustEmbedUnimplementedPluginServer() {}
 func (UnimplementedPluginServer) testEmbeddedByValue()                {}
@@ -144,6 +205,53 @@ func _Plugin_ExecuteQuery_Handler(srv interface{}, stream grpc.ServerStream) err
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Plugin_ExecuteQueryServer = grpc.ServerStreamingServer[QueryChunk]
 
+func _Plugin_PlanAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignedQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServer).PlanAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Plugin_PlanAction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServer).PlanAction(ctx, req.(*SignedQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Plugin_ExecuteAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignedQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServer).ExecuteAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Plugin_ExecuteAction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServer).ExecuteAction(ctx, req.(*SignedQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Plugin_WatchTriggers_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SignedQuery)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PluginServer).WatchTriggers(m, &grpc.GenericServerStream[SignedQuery, SignedTriggerEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Plugin_WatchTriggersServer = grpc.ServerStreamingServer[SignedTriggerEvent]
+
 // Plugin_ServiceDesc is the grpc.ServiceDesc for Plugin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -155,6 +263,14 @@ var Plugin_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "PlanQuery",
 			Handler:    _Plugin_PlanQuery_Handler,
 		},
+		{
+			MethodName: "PlanAction",
+			Handler:    _Plugin_PlanAction_Handler,
+		},
+		{
+			MethodName: "ExecuteAction",
+			Handler:    _Plugin_ExecuteAction_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -162,23 +278,32 @@ var Plugin_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _Plugin_ExecuteQuery_Handler,
 			ServerStreams: true,
 		},
+		{
+			StreamName:    "WatchTriggers",
+			Handler:       _Plugin_WatchTriggers_Handler,
+			ServerStreams: true,
+		},
 	},
 	Metadata: "serve.proto",
 }
 
 const (
-	Replica_PlanQuery_FullMethodName    = "/marmot.serve.v1.Replica/PlanQuery"
-	Replica_ExecuteQuery_FullMethodName = "/marmot.serve.v1.Replica/ExecuteQuery"
+	Replica_PlanQuery_FullMethodName     = "/marmot.serve.v1.Replica/PlanQuery"
+	Replica_ExecuteQuery_FullMethodName  = "/marmot.serve.v1.Replica/ExecuteQuery"
+	Replica_PlanAction_FullMethodName    = "/marmot.serve.v1.Replica/PlanAction"
+	Replica_ExecuteAction_FullMethodName = "/marmot.serve.v1.Replica/ExecuteAction"
 )
 
 // ReplicaClient is the client API for Replica service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Replica is served by every Marmot replica to the others, so a query that arrives at one replica reaches the replica the plugin is connected to.
+// Replica is served by every Marmot replica to the others, so a query that arrives at one replica reaches the replica the plugin is connected to. It takes a SignedForward rather than a bare ForwardedQuery, so a replica certificate alone is not enough to have a replica sign queries; the change is not wire compatible with replicas that sent bare forwards, which is acceptable because every replica of an instance runs the same release (a rolling upgrade only fails the forwards made across versions while it runs).
 type ReplicaClient interface {
-	PlanQuery(ctx context.Context, in *ForwardedQuery, opts ...grpc.CallOption) (*PlanQueryResponse, error)
-	ExecuteQuery(ctx context.Context, in *ForwardedQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryChunk], error)
+	PlanQuery(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*PlanQueryResponse, error)
+	ExecuteQuery(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryChunk], error)
+	PlanAction(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*ActionResponse, error)
+	ExecuteAction(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*ActionResponse, error)
 }
 
 type replicaClient struct {
@@ -189,7 +314,7 @@ func NewReplicaClient(cc grpc.ClientConnInterface) ReplicaClient {
 	return &replicaClient{cc}
 }
 
-func (c *replicaClient) PlanQuery(ctx context.Context, in *ForwardedQuery, opts ...grpc.CallOption) (*PlanQueryResponse, error) {
+func (c *replicaClient) PlanQuery(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*PlanQueryResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PlanQueryResponse)
 	err := c.cc.Invoke(ctx, Replica_PlanQuery_FullMethodName, in, out, cOpts...)
@@ -199,13 +324,13 @@ func (c *replicaClient) PlanQuery(ctx context.Context, in *ForwardedQuery, opts 
 	return out, nil
 }
 
-func (c *replicaClient) ExecuteQuery(ctx context.Context, in *ForwardedQuery, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryChunk], error) {
+func (c *replicaClient) ExecuteQuery(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QueryChunk], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Replica_ServiceDesc.Streams[0], Replica_ExecuteQuery_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ForwardedQuery, QueryChunk]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SignedForward, QueryChunk]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -218,14 +343,36 @@ func (c *replicaClient) ExecuteQuery(ctx context.Context, in *ForwardedQuery, op
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Replica_ExecuteQueryClient = grpc.ServerStreamingClient[QueryChunk]
 
+func (c *replicaClient) PlanAction(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*ActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActionResponse)
+	err := c.cc.Invoke(ctx, Replica_PlanAction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *replicaClient) ExecuteAction(ctx context.Context, in *SignedForward, opts ...grpc.CallOption) (*ActionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActionResponse)
+	err := c.cc.Invoke(ctx, Replica_ExecuteAction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ReplicaServer is the server API for Replica service.
 // All implementations must embed UnimplementedReplicaServer
 // for forward compatibility.
 //
-// Replica is served by every Marmot replica to the others, so a query that arrives at one replica reaches the replica the plugin is connected to.
+// Replica is served by every Marmot replica to the others, so a query that arrives at one replica reaches the replica the plugin is connected to. It takes a SignedForward rather than a bare ForwardedQuery, so a replica certificate alone is not enough to have a replica sign queries; the change is not wire compatible with replicas that sent bare forwards, which is acceptable because every replica of an instance runs the same release (a rolling upgrade only fails the forwards made across versions while it runs).
 type ReplicaServer interface {
-	PlanQuery(context.Context, *ForwardedQuery) (*PlanQueryResponse, error)
-	ExecuteQuery(*ForwardedQuery, grpc.ServerStreamingServer[QueryChunk]) error
+	PlanQuery(context.Context, *SignedForward) (*PlanQueryResponse, error)
+	ExecuteQuery(*SignedForward, grpc.ServerStreamingServer[QueryChunk]) error
+	PlanAction(context.Context, *SignedForward) (*ActionResponse, error)
+	ExecuteAction(context.Context, *SignedForward) (*ActionResponse, error)
 	mustEmbedUnimplementedReplicaServer()
 }
 
@@ -236,11 +383,17 @@ type ReplicaServer interface {
 // pointer dereference when methods are called.
 type UnimplementedReplicaServer struct{}
 
-func (UnimplementedReplicaServer) PlanQuery(context.Context, *ForwardedQuery) (*PlanQueryResponse, error) {
+func (UnimplementedReplicaServer) PlanQuery(context.Context, *SignedForward) (*PlanQueryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PlanQuery not implemented")
 }
-func (UnimplementedReplicaServer) ExecuteQuery(*ForwardedQuery, grpc.ServerStreamingServer[QueryChunk]) error {
+func (UnimplementedReplicaServer) ExecuteQuery(*SignedForward, grpc.ServerStreamingServer[QueryChunk]) error {
 	return status.Error(codes.Unimplemented, "method ExecuteQuery not implemented")
+}
+func (UnimplementedReplicaServer) PlanAction(context.Context, *SignedForward) (*ActionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PlanAction not implemented")
+}
+func (UnimplementedReplicaServer) ExecuteAction(context.Context, *SignedForward) (*ActionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExecuteAction not implemented")
 }
 func (UnimplementedReplicaServer) mustEmbedUnimplementedReplicaServer() {}
 func (UnimplementedReplicaServer) testEmbeddedByValue()                 {}
@@ -264,7 +417,7 @@ func RegisterReplicaServer(s grpc.ServiceRegistrar, srv ReplicaServer) {
 }
 
 func _Replica_PlanQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ForwardedQuery)
+	in := new(SignedForward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -276,21 +429,57 @@ func _Replica_PlanQuery_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: Replica_PlanQuery_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReplicaServer).PlanQuery(ctx, req.(*ForwardedQuery))
+		return srv.(ReplicaServer).PlanQuery(ctx, req.(*SignedForward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Replica_ExecuteQuery_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ForwardedQuery)
+	m := new(SignedForward)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ReplicaServer).ExecuteQuery(m, &grpc.GenericServerStream[ForwardedQuery, QueryChunk]{ServerStream: stream})
+	return srv.(ReplicaServer).ExecuteQuery(m, &grpc.GenericServerStream[SignedForward, QueryChunk]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Replica_ExecuteQueryServer = grpc.ServerStreamingServer[QueryChunk]
+
+func _Replica_PlanAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignedForward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReplicaServer).PlanAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Replica_PlanAction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReplicaServer).PlanAction(ctx, req.(*SignedForward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Replica_ExecuteAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignedForward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReplicaServer).ExecuteAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Replica_ExecuteAction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReplicaServer).ExecuteAction(ctx, req.(*SignedForward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // Replica_ServiceDesc is the grpc.ServiceDesc for Replica service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -302,6 +491,14 @@ var Replica_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PlanQuery",
 			Handler:    _Replica_PlanQuery_Handler,
+		},
+		{
+			MethodName: "PlanAction",
+			Handler:    _Replica_PlanAction_Handler,
+		},
+		{
+			MethodName: "ExecuteAction",
+			Handler:    _Replica_ExecuteAction_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

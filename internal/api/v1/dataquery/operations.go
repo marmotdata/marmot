@@ -262,6 +262,7 @@ func (h *Handler) query(w http.ResponseWriter, r *http.Request) {
 // @Param    decision query string false "allowed or denied"
 // @Param    status query string false "running, completed, failed, cancelled or denied"
 // @Param    mrn query string false "Only queries that referenced this MRN"
+// @Param    origin query string false "Only queries with this origin, such as task_run:<id>"
 // @Param    principal_type query string false "Principal type"
 // @Param    principal_id query string false "Principal ID"
 // @Param    mine query bool false "Only the caller's own queries"
@@ -315,6 +316,7 @@ func (h *Handler) historyFilter(w http.ResponseWriter, r *http.Request) (dataque
 		Outcome:       q.Get("outcome"),
 		Reason:        q.Get("reason"),
 		MRN:           q.Get("mrn"),
+		Origin:        q.Get("origin"),
 		Clients:       splitList(q.Get("client")),
 		Search:        q.Get("q"),
 		Limit:         limit,
@@ -366,6 +368,7 @@ const exportMax = 100_000
 // @Param    caller query string false "A caller as principal_type:principal_id or as its audit subject"
 // @Param    outcome query string false "allowed, denied, failed, cancelled or running"
 // @Param    reason query string false "Outcome reason"
+// @Param    origin query string false "Only queries with this origin"
 // @Param    client query string false "Comma-separated clients"
 // @Param    from query string false "RFC 3339"
 // @Param    to query string false "RFC 3339"

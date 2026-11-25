@@ -33,6 +33,8 @@ type EnrolSource struct {
 	Name     string         `json:"name"`
 	PluginID string         `json:"plugin_id"`
 	Config   map[string]any `json:"config,omitempty"`
+	// Actions is the process's report of the source's actions and triggers, when it serves any. Informative only: see ServedActions.
+	Actions *ServedActions `json:"actions,omitempty"`
 }
 
 // EnrolInput is a serving process's request for a certificate.
@@ -43,12 +45,14 @@ type EnrolInput struct {
 
 // EnrolResult is everything a serving process needs to connect: its certificate, the trusted CAs and query signing keys to pin, and where to dial. More than one CA and key are listed while Marmot rotates them.
 type EnrolResult struct {
-	EnrolmentID string    `json:"enrolment_id"`
-	InstanceID  string    `json:"instance_id"`
-	Certificate string    `json:"certificate"`
-	CABundle    string    `json:"ca_bundle"`
-	SigningKeys []string  `json:"signing_keys"`
-	ExpiresAt   time.Time `json:"expires_at"`
+	EnrolmentID string   `json:"enrolment_id"`
+	InstanceID  string   `json:"instance_id"`
+	Certificate string   `json:"certificate"`
+	CABundle    string   `json:"ca_bundle"`
+	SigningKeys []string `json:"signing_keys"`
+	// ApprovalKeys are the keys Marmot signs approvals of actions with, pinned like SigningKeys and never used for anything else.
+	ApprovalKeys []string  `json:"approval_keys,omitempty"`
+	ExpiresAt    time.Time `json:"expires_at"`
 	// Address is the host:port to dial; when empty the serving process uses its Marmot host name with Port.
 	Address string `json:"address,omitempty"`
 	Port    string `json:"port"`
@@ -90,6 +94,16 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 		return nil, err
 	}
 
+	served := map[string]*ServedActions{}
+	for _, src := range in.Sources {
+		if err := checkServedActions(src.Name, src.Actions); err != nil {
+			return nil, err
+		}
+		if src.Actions != nil {
+			served[src.Name] = src.Actions
+		}
+	}
+
 	principalType, principalID := string(principal.Type()), principal.ID()
 	names := make([]string, 0, len(in.Sources))
 	claims := make([]*runs.Schedule, 0, len(in.Sources))
@@ -118,6 +132,7 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 		PublicKeySHA256: publicKeySHA256(csr.RawSubjectPublicKeyInfo),
 		Credential:      credential,
 		ExpiresAt:       e.now().Add(e.lifetime),
+		ServedActions:   served,
 	}
 	if err := e.store.createEnrolment(ctx, enrolment); err != nil {
 		return nil, err
@@ -128,16 +143,17 @@ func (e *Enroller) Enrol(ctx context.Context, principal auth.Principal, credenti
 		return nil, fmt.Errorf("issuing certificate: %w", err)
 	}
 
-	cas, signingKeys := e.keyring.Bundle()
+	cas, signingKeys, approvalKeys := e.keyring.Bundle()
 	return &EnrolResult{
-		EnrolmentID: enrolment.ID,
-		InstanceID:  e.keyring.InstanceID,
-		Certificate: string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})),
-		CABundle:    cas,
-		SigningKeys: signingKeys,
-		ExpiresAt:   enrolment.ExpiresAt,
-		Address:     e.address,
-		Port:        e.port,
+		EnrolmentID:  enrolment.ID,
+		InstanceID:   e.keyring.InstanceID,
+		Certificate:  string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})),
+		CABundle:     cas,
+		SigningKeys:  signingKeys,
+		ApprovalKeys: approvalKeys,
+		ExpiresAt:    enrolment.ExpiresAt,
+		Address:      e.address,
+		Port:         e.port,
 	}, nil
 }
 

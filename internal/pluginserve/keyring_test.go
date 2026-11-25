@@ -84,12 +84,71 @@ func TestOpenGenerationRefusesMismatchedKeys(t *testing.T) {
 	swappedPub.SigningPublicKey = b.SigningPublicKey
 	_, err = k.openGeneration(context.Background(), &swappedPub)
 	assert.Error(t, err)
+
+	swappedApproval := *a
+	swappedApproval.ApprovalPublicKey = b.ApprovalPublicKey
+	_, err = k.openGeneration(context.Background(), &swappedApproval)
+	assert.ErrorContains(t, err, "approval public key does not match")
+
+	// An approval key that is the signing key would let signing a query approve; the stored row is refused.
+	sameKey := *a
+	sameKey.ApprovalKey, sameKey.ApprovalPublicKey = a.SigningKey, &a.SigningPublicKey
+	_, err = k.openGeneration(context.Background(), &sameKey)
+	assert.ErrorContains(t, err, "the approval key is the signing key")
 }
 
-func TestNewGenerationNeedsBothKMSKeysOrNeither(t *testing.T) {
+func TestNewGenerationNeedsEveryKMSKeyOrNone(t *testing.T) {
 	k := &Keyring{InstanceID: uuid.NewString(), encryptor: testEncryptor(t), now: time.Now}
 	_, err := k.newGeneration(context.Background(), KeyConfig{CAKeyURI: "hashivault://ca"}, time.Now())
 	assert.Error(t, err)
+	_, err = k.newGeneration(context.Background(), KeyConfig{CAKeyURI: "hashivault://ca", SigningKeyURI: "hashivault://sign"}, time.Now())
+	assert.ErrorContains(t, err, "approval key")
+	_, err = k.newGeneration(context.Background(), KeyConfig{CAKeyURI: "hashivault://ca", SigningKeyURI: "hashivault://sign", ApprovalKeyURI: "hashivault://sign"}, time.Now())
+	assert.ErrorContains(t, err, "a key of its own")
+}
+
+// The approval key is a key of its own: generated with the others, encrypted like them, published beside them and never the signing key.
+func TestGenerationHasASeparateApprovalKey(t *testing.T) {
+	k := newTestKeyring(t)
+	g := k.gens[0]
+	require.NotNil(t, g.approvalKey)
+	assert.False(t, g.approvalPub.Equal(g.signingPub))
+	_, signing, approval := k.Bundle()
+	require.Len(t, approval, 1)
+	assert.NotEqual(t, signing[0], approval[0])
+
+	msg := []byte("an approval")
+	sig, err := k.SignApproval(msg)
+	require.NoError(t, err)
+	assert.True(t, signedByAny([]*ecdsa.PublicKey{g.approvalPub}, nil, msg, sig))
+	assert.False(t, signedByAny([]*ecdsa.PublicKey{g.signingPub}, nil, msg, sig), "the signing key cannot verify an approval")
+
+	g.approvalKey, g.approvalPub = nil, nil
+	_, err = k.SignApproval(msg)
+	assert.ErrorIs(t, err, ErrNoApprovalKey)
+}
+
+// Approval keys are pinned like signing keys: taken from the first enrolment, carried through overlapping rotations, and never replaced or dropped outright.
+func TestApprovalKeysArePinned(t *testing.T) {
+	k := newTestKeyring(t)
+	cas, signing, approval := k.Bundle()
+	bundle := func(approvalKeys []string) *trustedBundle {
+		b, err := parseBundle(&EnrolResult{CABundle: cas, SigningKeys: signing, ApprovalKeys: approvalKeys})
+		require.NoError(t, err)
+		return b
+	}
+	var p *pins
+	require.NoError(t, acceptBundle(&p, k.InstanceID, bundle(approval), nil))
+
+	other := newTestKeyring(t)
+	_, _, foreign := other.Bundle()
+	assert.ErrorContains(t, acceptBundle(&p, k.InstanceID, bundle(foreign), nil), "approval key was replaced with no overlap")
+	assert.ErrorContains(t, acceptBundle(&p, k.InstanceID, bundle(nil), nil), "approval key was replaced", "an enrolment cannot drop the pinned approval keys")
+	require.NoError(t, acceptBundle(&p, k.InstanceID, bundle(append(approval, foreign...)), nil), "an overlapping rotation moves on")
+	require.NoError(t, acceptBundle(&p, k.InstanceID, bundle(foreign), nil), "and then the old key can go")
+
+	_, err := parseBundle(&EnrolResult{CABundle: cas, SigningKeys: signing, ApprovalKeys: signing})
+	assert.ErrorContains(t, err, "a signing key as an approval key")
 }
 
 func TestParseCSR(t *testing.T) {
@@ -231,8 +290,9 @@ func TestKeyringGenerationsFollowTheClock(t *testing.T) {
 	gens, active := k.trusted()
 	assert.Len(t, gens, 2, "the next generation is published before it is used")
 	assert.Same(t, old, active)
-	cas, keys := k.Bundle()
+	cas, keys, approvals := k.Bundle()
 	assert.Len(t, keys, 2)
+	assert.Len(t, approvals, 2)
 	assert.Equal(t, 2, len(pemBlocks(cas)))
 
 	k.now = func() time.Time { return time.Now().Add(RotationOverlap + time.Second) }

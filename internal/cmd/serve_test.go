@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,4 +54,32 @@ func TestEnrolmentURLRequiresHTTPS(t *testing.T) {
 		_, err := enrolmentURL(bad)
 		assert.Error(t, err, bad)
 	}
+}
+
+// A plugin with actions and no queries, such as Kubernetes, is served only by a process that may run actions. Found by running a real runner against kind.
+func TestServedSourcesTakesActionPluginsOnlyWithAllowActions(t *testing.T) {
+	require.NoError(t, plugin.GetRegistry().Register(pluginsdk.Meta{ID: "servetest-actions-only", SupportsActions: true}, acceptingSource{}))
+	runs := map[string]plugin.RawPluginConfig{"servetest-actions-only": {}}
+
+	serveAllowActions = false
+	_, err := servedSources("pipeline", runs)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--allow-actions")
+
+	serveAllowActions = true
+	t.Cleanup(func() { serveAllowActions = false })
+	sources, err := servedSources("pipeline", runs)
+	require.NoError(t, err)
+	require.Len(t, sources, 1)
+	assert.Equal(t, "pipeline", sources[0].Name)
+}
+
+// acceptingSource stands in for a plugin whose config is always valid.
+type acceptingSource struct{}
+
+func (acceptingSource) Validate(c plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
+	return c, nil
+}
+func (acceptingSource) Discover(context.Context, plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+	return nil, nil
 }

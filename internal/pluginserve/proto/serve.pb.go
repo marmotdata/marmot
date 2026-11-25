@@ -27,6 +27,10 @@ const (
 	Operation_OPERATION_UNSPECIFIED Operation = 0
 	Operation_OPERATION_PLAN        Operation = 1
 	Operation_OPERATION_EXECUTE     Operation = 2
+	// The action operations are their own values rather than a flag beside plan and execute, so an envelope signed for one can never be presented as another: a serving process verifies the operation of the rpc it was called on.
+	Operation_OPERATION_ACTION_PLAN    Operation = 3
+	Operation_OPERATION_ACTION_EXECUTE Operation = 4
+	Operation_OPERATION_WATCH_TRIGGERS Operation = 5
 )
 
 // Enum value maps for Operation.
@@ -35,11 +39,17 @@ var (
 		0: "OPERATION_UNSPECIFIED",
 		1: "OPERATION_PLAN",
 		2: "OPERATION_EXECUTE",
+		3: "OPERATION_ACTION_PLAN",
+		4: "OPERATION_ACTION_EXECUTE",
+		5: "OPERATION_WATCH_TRIGGERS",
 	}
 	Operation_value = map[string]int32{
-		"OPERATION_UNSPECIFIED": 0,
-		"OPERATION_PLAN":        1,
-		"OPERATION_EXECUTE":     2,
+		"OPERATION_UNSPECIFIED":    0,
+		"OPERATION_PLAN":           1,
+		"OPERATION_EXECUTE":        2,
+		"OPERATION_ACTION_PLAN":    3,
+		"OPERATION_ACTION_EXECUTE": 4,
+		"OPERATION_WATCH_TRIGGERS": 5,
 	}
 )
 
@@ -84,15 +94,28 @@ type Query struct {
 	MaxRows   int64     `protobuf:"varint,7,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
 	// actor is the audit subject of the principal running the query.
 	Actor string `protobuf:"bytes,8,opt,name=actor,proto3" json:"actor,omitempty"`
-	// query_id is the query's id in Marmot's query log, empty for plans.
+	// query_id is the query's id in Marmot's query log, empty for plans, or for an action its id in Marmot's log when it keeps one.
 	QueryId       string `protobuf:"bytes,9,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	IssuedAtUnix  int64  `protobuf:"varint,10,opt,name=issued_at_unix,json=issuedAtUnix,proto3" json:"issued_at_unix,omitempty"`
 	ExpiresAtUnix int64  `protobuf:"varint,11,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
 	Nonce         []byte `protobuf:"bytes,12,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	// channel_binding is the RFC 9266 tls-exporter value of the connection the query is sent on.
 	ChannelBinding []byte `protobuf:"bytes,13,opt,name=channel_binding,json=channelBinding,proto3" json:"channel_binding,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// origin names what caused the query in Marmot, such as task_run:<id>, so the serving process's audit can be traced back to it.
+	Origin string `protobuf:"bytes,14,opt,name=origin,proto3" json:"origin,omitempty"`
+	// receipt_wanted asks the serving process to end an execute with a signed Receipt. Marmot releases that predate receipts leave it unset, and a serving process sends none to them, because they would read the receipt chunk as rows.
+	ReceiptWanted bool `protobuf:"varint,15,opt,name=receipt_wanted,json=receiptWanted,proto3" json:"receipt_wanted,omitempty"`
+	// action, params_json, precondition and manifest_digest are set for the action operations only. params_json is the action's parameters as a JSON object; the serving process hashes these exact bytes into its receipt.
+	Action     string `protobuf:"bytes,16,opt,name=action,proto3" json:"action,omitempty"`
+	ParamsJson []byte `protobuf:"bytes,17,opt,name=params_json,json=paramsJson,proto3" json:"params_json,omitempty"`
+	// precondition is the token from the plan being executed, binding an execute to the state its plan looked at.
+	Precondition string `protobuf:"bytes,18,opt,name=precondition,proto3" json:"precondition,omitempty"`
+	// manifest_digest is the ManifestDigest of the action manifest Marmot believes it is asking against. The serving process computes the digest from its own plugin and refuses on any difference, so a plugin whose actions changed is never driven by a request written for the old ones.
+	ManifestDigest string `protobuf:"bytes,19,opt,name=manifest_digest,json=manifestDigest,proto3" json:"manifest_digest,omitempty"`
+	// approval is a serialised Approval, for ACTION_EXECUTE of a write only. The serving process checks every assertion in it against the approvers in its own policy and over an ApprovalDigest it computes from this Query, never one Marmot sends. A serving process that predates approvals refuses nothing for want of one, so a policy that relies on approvals needs a release that checks them.
+	Approval      []byte `protobuf:"bytes,20,opt,name=approval,proto3" json:"approval,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Query) Reset() {
@@ -216,6 +239,55 @@ func (x *Query) GetChannelBinding() []byte {
 	return nil
 }
 
+func (x *Query) GetOrigin() string {
+	if x != nil {
+		return x.Origin
+	}
+	return ""
+}
+
+func (x *Query) GetReceiptWanted() bool {
+	if x != nil {
+		return x.ReceiptWanted
+	}
+	return false
+}
+
+func (x *Query) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *Query) GetParamsJson() []byte {
+	if x != nil {
+		return x.ParamsJson
+	}
+	return nil
+}
+
+func (x *Query) GetPrecondition() string {
+	if x != nil {
+		return x.Precondition
+	}
+	return ""
+}
+
+func (x *Query) GetManifestDigest() string {
+	if x != nil {
+		return x.ManifestDigest
+	}
+	return ""
+}
+
+func (x *Query) GetApproval() []byte {
+	if x != nil {
+		return x.Approval
+	}
+	return nil
+}
+
 type SignedQuery struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Query         []byte                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
@@ -268,15 +340,29 @@ func (x *SignedQuery) GetSignature() []byte {
 	return nil
 }
 
-// ForwardedQuery travels between replicas over mutual TLS. It is not signed: the receiving replica builds and signs the Query for its own connection to the plugin.
+// ForwardedQuery travels between replicas over mutual TLS, serialised and signed with the instance's query signing key inside a SignedForward. The receiving replica verifies it, then builds and signs the Query for its own connection to the plugin, reusing nonce as that Query's nonce so the forwarding replica can match the plugin's receipt to what it asked for.
 type ForwardedQuery struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Operation     Operation              `protobuf:"varint,1,opt,name=operation,proto3,enum=marmot.serve.v1.Operation" json:"operation,omitempty"`
-	Source        string                 `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
-	Statement     string                 `protobuf:"bytes,3,opt,name=statement,proto3" json:"statement,omitempty"`
-	MaxRows       int64                  `protobuf:"varint,4,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
-	Actor         string                 `protobuf:"bytes,5,opt,name=actor,proto3" json:"actor,omitempty"`
-	QueryId       string                 `protobuf:"bytes,6,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Operation Operation              `protobuf:"varint,1,opt,name=operation,proto3,enum=marmot.serve.v1.Operation" json:"operation,omitempty"`
+	Source    string                 `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
+	Statement string                 `protobuf:"bytes,3,opt,name=statement,proto3" json:"statement,omitempty"`
+	MaxRows   int64                  `protobuf:"varint,4,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
+	Actor     string                 `protobuf:"bytes,5,opt,name=actor,proto3" json:"actor,omitempty"`
+	QueryId   string                 `protobuf:"bytes,6,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	Origin    string                 `protobuf:"bytes,7,opt,name=origin,proto3" json:"origin,omitempty"`
+	Version   uint32                 `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
+	// issuer is the Marmot instance id; audience is the SPIFFE ID of the replica the forward is for.
+	Issuer         string `protobuf:"bytes,9,opt,name=issuer,proto3" json:"issuer,omitempty"`
+	Audience       string `protobuf:"bytes,10,opt,name=audience,proto3" json:"audience,omitempty"`
+	IssuedAtUnix   int64  `protobuf:"varint,11,opt,name=issued_at_unix,json=issuedAtUnix,proto3" json:"issued_at_unix,omitempty"`
+	ExpiresAtUnix  int64  `protobuf:"varint,12,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
+	Nonce          []byte `protobuf:"bytes,13,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Action         string `protobuf:"bytes,14,opt,name=action,proto3" json:"action,omitempty"`
+	ParamsJson     []byte `protobuf:"bytes,15,opt,name=params_json,json=paramsJson,proto3" json:"params_json,omitempty"`
+	Precondition   string `protobuf:"bytes,16,opt,name=precondition,proto3" json:"precondition,omitempty"`
+	ManifestDigest string `protobuf:"bytes,17,opt,name=manifest_digest,json=manifestDigest,proto3" json:"manifest_digest,omitempty"`
+	// approval is a serialised Approval, as on Query, copied untouched into the Query the receiving replica signs.
+	Approval      []byte `protobuf:"bytes,18,opt,name=approval,proto3" json:"approval,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -353,6 +439,338 @@ func (x *ForwardedQuery) GetQueryId() string {
 	return ""
 }
 
+func (x *ForwardedQuery) GetOrigin() string {
+	if x != nil {
+		return x.Origin
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *ForwardedQuery) GetIssuer() string {
+	if x != nil {
+		return x.Issuer
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetAudience() string {
+	if x != nil {
+		return x.Audience
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetIssuedAtUnix() int64 {
+	if x != nil {
+		return x.IssuedAtUnix
+	}
+	return 0
+}
+
+func (x *ForwardedQuery) GetExpiresAtUnix() int64 {
+	if x != nil {
+		return x.ExpiresAtUnix
+	}
+	return 0
+}
+
+func (x *ForwardedQuery) GetNonce() []byte {
+	if x != nil {
+		return x.Nonce
+	}
+	return nil
+}
+
+func (x *ForwardedQuery) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetParamsJson() []byte {
+	if x != nil {
+		return x.ParamsJson
+	}
+	return nil
+}
+
+func (x *ForwardedQuery) GetPrecondition() string {
+	if x != nil {
+		return x.Precondition
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetManifestDigest() string {
+	if x != nil {
+		return x.ManifestDigest
+	}
+	return ""
+}
+
+func (x *ForwardedQuery) GetApproval() []byte {
+	if x != nil {
+		return x.Approval
+	}
+	return nil
+}
+
+type SignedForward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Forward       []byte                 `protobuf:"bytes,1,opt,name=forward,proto3" json:"forward,omitempty"`
+	Signature     []byte                 `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignedForward) Reset() {
+	*x = SignedForward{}
+	mi := &file_serve_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignedForward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignedForward) ProtoMessage() {}
+
+func (x *SignedForward) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignedForward.ProtoReflect.Descriptor instead.
+func (*SignedForward) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SignedForward) GetForward() []byte {
+	if x != nil {
+		return x.Forward
+	}
+	return nil
+}
+
+func (x *SignedForward) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+// Receipt is the serving process's signed account of one execute, sent as the last chunk of the stream. It is signed with the private key of the connection's client certificate, so it verifies against this instance's CA and names the enrolment that served it.
+type Receipt struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Version         uint32                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	QueryId         string                 `protobuf:"bytes,2,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	Origin          string                 `protobuf:"bytes,3,opt,name=origin,proto3" json:"origin,omitempty"`
+	Source          string                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
+	Actor           string                 `protobuf:"bytes,5,opt,name=actor,proto3" json:"actor,omitempty"`
+	StatementSha256 []byte                 `protobuf:"bytes,6,opt,name=statement_sha256,json=statementSha256,proto3" json:"statement_sha256,omitempty"`
+	// nonce is the signed Query's nonce, tying the receipt to one query.
+	Nonce          []byte `protobuf:"bytes,7,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Rows           int64  `protobuf:"varint,8,opt,name=rows,proto3" json:"rows,omitempty"`
+	DurationMs     int64  `protobuf:"varint,9,opt,name=duration_ms,json=durationMs,proto3" json:"duration_ms,omitempty"`
+	Error          string `protobuf:"bytes,10,opt,name=error,proto3" json:"error,omitempty"`
+	FinishedAtUnix int64  `protobuf:"varint,11,opt,name=finished_at_unix,json=finishedAtUnix,proto3" json:"finished_at_unix,omitempty"`
+	// max_rows is the row limit the serving process applied: the signed one, or lower when its local policy lowered it.
+	MaxRows       int64 `protobuf:"varint,12,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Receipt) Reset() {
+	*x = Receipt{}
+	mi := &file_serve_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Receipt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Receipt) ProtoMessage() {}
+
+func (x *Receipt) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Receipt.ProtoReflect.Descriptor instead.
+func (*Receipt) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Receipt) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *Receipt) GetQueryId() string {
+	if x != nil {
+		return x.QueryId
+	}
+	return ""
+}
+
+func (x *Receipt) GetOrigin() string {
+	if x != nil {
+		return x.Origin
+	}
+	return ""
+}
+
+func (x *Receipt) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *Receipt) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+func (x *Receipt) GetStatementSha256() []byte {
+	if x != nil {
+		return x.StatementSha256
+	}
+	return nil
+}
+
+func (x *Receipt) GetNonce() []byte {
+	if x != nil {
+		return x.Nonce
+	}
+	return nil
+}
+
+func (x *Receipt) GetRows() int64 {
+	if x != nil {
+		return x.Rows
+	}
+	return 0
+}
+
+func (x *Receipt) GetDurationMs() int64 {
+	if x != nil {
+		return x.DurationMs
+	}
+	return 0
+}
+
+func (x *Receipt) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *Receipt) GetFinishedAtUnix() int64 {
+	if x != nil {
+		return x.FinishedAtUnix
+	}
+	return 0
+}
+
+func (x *Receipt) GetMaxRows() int64 {
+	if x != nil {
+		return x.MaxRows
+	}
+	return 0
+}
+
+type SignedReceipt struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Receipt   []byte                 `protobuf:"bytes,1,opt,name=receipt,proto3" json:"receipt,omitempty"`
+	Signature []byte                 `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	// certificate is the serving process's leaf certificate, DER, so the receipt can be verified later against the instance's CA.
+	Certificate   []byte `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignedReceipt) Reset() {
+	*x = SignedReceipt{}
+	mi := &file_serve_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignedReceipt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignedReceipt) ProtoMessage() {}
+
+func (x *SignedReceipt) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignedReceipt.ProtoReflect.Descriptor instead.
+func (*SignedReceipt) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SignedReceipt) GetReceipt() []byte {
+	if x != nil {
+		return x.Receipt
+	}
+	return nil
+}
+
+func (x *SignedReceipt) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+func (x *SignedReceipt) GetCertificate() []byte {
+	if x != nil {
+		return x.Certificate
+	}
+	return nil
+}
+
 type PlanQueryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanJson      []byte                 `protobuf:"bytes,1,opt,name=plan_json,json=planJson,proto3" json:"plan_json,omitempty"`
@@ -362,7 +780,7 @@ type PlanQueryResponse struct {
 
 func (x *PlanQueryResponse) Reset() {
 	*x = PlanQueryResponse{}
-	mi := &file_serve_proto_msgTypes[3]
+	mi := &file_serve_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -374,7 +792,7 @@ func (x *PlanQueryResponse) String() string {
 func (*PlanQueryResponse) ProtoMessage() {}
 
 func (x *PlanQueryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_serve_proto_msgTypes[3]
+	mi := &file_serve_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -387,7 +805,7 @@ func (x *PlanQueryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanQueryResponse.ProtoReflect.Descriptor instead.
 func (*PlanQueryResponse) Descriptor() ([]byte, []int) {
-	return file_serve_proto_rawDescGZIP(), []int{3}
+	return file_serve_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *PlanQueryResponse) GetPlanJson() []byte {
@@ -397,16 +815,632 @@ func (x *PlanQueryResponse) GetPlanJson() []byte {
 	return nil
 }
 
+// ActionReceipt is the serving process's signed account of one action it planned or executed, carried in a SignedReceipt like a query's Receipt. It is its own message, signed under its own domain, so a query receipt can never be passed off as an action's or the other way round.
+type ActionReceipt struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Version   uint32                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Operation Operation              `protobuf:"varint,2,opt,name=operation,proto3,enum=marmot.serve.v1.Operation" json:"operation,omitempty"`
+	// id is the action's id in Marmot's log, when it keeps one.
+	Id     string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	Origin string `protobuf:"bytes,4,opt,name=origin,proto3" json:"origin,omitempty"`
+	Source string `protobuf:"bytes,5,opt,name=source,proto3" json:"source,omitempty"`
+	Actor  string `protobuf:"bytes,6,opt,name=actor,proto3" json:"actor,omitempty"`
+	Action string `protobuf:"bytes,7,opt,name=action,proto3" json:"action,omitempty"`
+	// params_sha256 is the SHA-256 of the signed params_json, byte for byte.
+	ParamsSha256 []byte `protobuf:"bytes,8,opt,name=params_sha256,json=paramsSha256,proto3" json:"params_sha256,omitempty"`
+	Precondition string `protobuf:"bytes,9,opt,name=precondition,proto3" json:"precondition,omitempty"`
+	// manifest_digest is the digest of the plugin's manifest as the serving process computed it, which it only acts on when it equals the one Marmot signed.
+	ManifestDigest string `protobuf:"bytes,10,opt,name=manifest_digest,json=manifestDigest,proto3" json:"manifest_digest,omitempty"`
+	Nonce          []byte `protobuf:"bytes,11,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// target and summary are what the plugin's plan or result said it touched and did.
+	Target  string `protobuf:"bytes,12,opt,name=target,proto3" json:"target,omitempty"`
+	Summary string `protobuf:"bytes,13,opt,name=summary,proto3" json:"summary,omitempty"`
+	Error   string `protobuf:"bytes,14,opt,name=error,proto3" json:"error,omitempty"`
+	// output_sha256 is the SHA-256 of the response's output_json, so the plan or result Marmot reads is the one the serving process signed for.
+	OutputSha256   []byte `protobuf:"bytes,15,opt,name=output_sha256,json=outputSha256,proto3" json:"output_sha256,omitempty"`
+	DurationMs     int64  `protobuf:"varint,16,opt,name=duration_ms,json=durationMs,proto3" json:"duration_ms,omitempty"`
+	FinishedAtUnix int64  `protobuf:"varint,17,opt,name=finished_at_unix,json=finishedAtUnix,proto3" json:"finished_at_unix,omitempty"`
+	// approval_digest is the ApprovalDigest the serving process verified the approval over, empty when the action needed and carried none.
+	ApprovalDigest []byte `protobuf:"bytes,18,opt,name=approval_digest,json=approvalDigest,proto3" json:"approval_digest,omitempty"`
+	// approvers are the people the approval named, as it named them.
+	Approvers []*Approver `protobuf:"bytes,19,rep,name=approvers,proto3" json:"approvers,omitempty"`
+	// approval_trust is how the serving process verified the approval: "marmot" for an approval Marmot signed. Empty when there was none. It is stated on every receipt so nobody mistakes a Marmot-signed approval for stronger protection.
+	ApprovalTrust string `protobuf:"bytes,20,opt,name=approval_trust,json=approvalTrust,proto3" json:"approval_trust,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActionReceipt) Reset() {
+	*x = ActionReceipt{}
+	mi := &file_serve_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActionReceipt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActionReceipt) ProtoMessage() {}
+
+func (x *ActionReceipt) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActionReceipt.ProtoReflect.Descriptor instead.
+func (*ActionReceipt) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ActionReceipt) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *ActionReceipt) GetOperation() Operation {
+	if x != nil {
+		return x.Operation
+	}
+	return Operation_OPERATION_UNSPECIFIED
+}
+
+func (x *ActionReceipt) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetOrigin() string {
+	if x != nil {
+		return x.Origin
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetParamsSha256() []byte {
+	if x != nil {
+		return x.ParamsSha256
+	}
+	return nil
+}
+
+func (x *ActionReceipt) GetPrecondition() string {
+	if x != nil {
+		return x.Precondition
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetManifestDigest() string {
+	if x != nil {
+		return x.ManifestDigest
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetNonce() []byte {
+	if x != nil {
+		return x.Nonce
+	}
+	return nil
+}
+
+func (x *ActionReceipt) GetTarget() string {
+	if x != nil {
+		return x.Target
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *ActionReceipt) GetOutputSha256() []byte {
+	if x != nil {
+		return x.OutputSha256
+	}
+	return nil
+}
+
+func (x *ActionReceipt) GetDurationMs() int64 {
+	if x != nil {
+		return x.DurationMs
+	}
+	return 0
+}
+
+func (x *ActionReceipt) GetFinishedAtUnix() int64 {
+	if x != nil {
+		return x.FinishedAtUnix
+	}
+	return 0
+}
+
+func (x *ActionReceipt) GetApprovalDigest() []byte {
+	if x != nil {
+		return x.ApprovalDigest
+	}
+	return nil
+}
+
+func (x *ActionReceipt) GetApprovers() []*Approver {
+	if x != nil {
+		return x.Approvers
+	}
+	return nil
+}
+
+func (x *ActionReceipt) GetApprovalTrust() string {
+	if x != nil {
+		return x.ApprovalTrust
+	}
+	return ""
+}
+
+// Approver is one person who approved, as Marmot identifies them.
+type Approver struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ApprovedAtUnix int64                  `protobuf:"varint,3,opt,name=approved_at_unix,json=approvedAtUnix,proto3" json:"approved_at_unix,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Approver) Reset() {
+	*x = Approver{}
+	mi := &file_serve_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Approver) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Approver) ProtoMessage() {}
+
+func (x *Approver) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Approver.ProtoReflect.Descriptor instead.
+func (*Approver) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Approver) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *Approver) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Approver) GetApprovedAtUnix() int64 {
+	if x != nil {
+		return x.ApprovedAtUnix
+	}
+	return 0
+}
+
+// Approval is Marmot's statement that the named people approved exactly this action: signed with Marmot's approval key, a key of its own that never signs queries, over ApprovalSignedMessage, which covers the ApprovalDigest of the action (expires_at_unix included) and every approver. The serving process recomputes the digest from the Query it received, so the approval can only ever be spent on that action.
+type Approval struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       uint32                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	ExpiresAtUnix int64                  `protobuf:"varint,2,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
+	Approvers     []*Approver            `protobuf:"bytes,3,rep,name=approvers,proto3" json:"approvers,omitempty"`
+	// signature is ASN.1 ECDSA P-256 over the SHA-256 of ApprovalSignedMessage.
+	Signature     []byte `protobuf:"bytes,4,opt,name=signature,proto3" json:"signature,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Approval) Reset() {
+	*x = Approval{}
+	mi := &file_serve_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Approval) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Approval) ProtoMessage() {}
+
+func (x *Approval) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Approval.ProtoReflect.Descriptor instead.
+func (*Approval) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Approval) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *Approval) GetExpiresAtUnix() int64 {
+	if x != nil {
+		return x.ExpiresAtUnix
+	}
+	return 0
+}
+
+func (x *Approval) GetApprovers() []*Approver {
+	if x != nil {
+		return x.Approvers
+	}
+	return nil
+}
+
+func (x *Approval) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+// TriggerEvent is one event a trigger in the serving process found, signed like a receipt with the connection's key, under a domain of its own.
+type TriggerEvent struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Version         uint32                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Source          string                 `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
+	Trigger         string                 `protobuf:"bytes,3,opt,name=trigger,proto3" json:"trigger,omitempty"`
+	TargetKind      string                 `protobuf:"bytes,4,opt,name=target_kind,json=targetKind,proto3" json:"target_kind,omitempty"`
+	TargetNamespace string                 `protobuf:"bytes,5,opt,name=target_namespace,json=targetNamespace,proto3" json:"target_namespace,omitempty"`
+	TargetName      string                 `protobuf:"bytes,6,opt,name=target_name,json=targetName,proto3" json:"target_name,omitempty"`
+	// facts_json is a JSON object of strings, whole numbers and booleans, bounded by the plugin SDK's CheckTriggerFacts.
+	FactsJson      []byte `protobuf:"bytes,7,opt,name=facts_json,json=factsJson,proto3" json:"facts_json,omitempty"`
+	ObservedAtUnix int64  `protobuf:"varint,8,opt,name=observed_at_unix,json=observedAtUnix,proto3" json:"observed_at_unix,omitempty"`
+	// fingerprint is the plugin's, the same for every event about the same condition on the same object.
+	Fingerprint string `protobuf:"bytes,9,opt,name=fingerprint,proto3" json:"fingerprint,omitempty"`
+	// detail is free text from the watched system, at most 512 bytes, and never to be trusted.
+	Detail string `protobuf:"bytes,10,opt,name=detail,proto3" json:"detail,omitempty"`
+	// nonce is the WatchTriggers Query's nonce, which ties the event to the stream Marmot opened.
+	Nonce []byte `protobuf:"bytes,11,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// sequence counts the events on one stream from 1, so a replayed or reordered event is refused.
+	Sequence       uint64 `protobuf:"varint,12,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	TriggersDigest string `protobuf:"bytes,13,opt,name=triggers_digest,json=triggersDigest,proto3" json:"triggers_digest,omitempty"`
+	SentAtUnix     int64  `protobuf:"varint,14,opt,name=sent_at_unix,json=sentAtUnix,proto3" json:"sent_at_unix,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *TriggerEvent) Reset() {
+	*x = TriggerEvent{}
+	mi := &file_serve_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TriggerEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TriggerEvent) ProtoMessage() {}
+
+func (x *TriggerEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TriggerEvent.ProtoReflect.Descriptor instead.
+func (*TriggerEvent) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *TriggerEvent) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *TriggerEvent) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetTrigger() string {
+	if x != nil {
+		return x.Trigger
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetTargetKind() string {
+	if x != nil {
+		return x.TargetKind
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetTargetNamespace() string {
+	if x != nil {
+		return x.TargetNamespace
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetTargetName() string {
+	if x != nil {
+		return x.TargetName
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetFactsJson() []byte {
+	if x != nil {
+		return x.FactsJson
+	}
+	return nil
+}
+
+func (x *TriggerEvent) GetObservedAtUnix() int64 {
+	if x != nil {
+		return x.ObservedAtUnix
+	}
+	return 0
+}
+
+func (x *TriggerEvent) GetFingerprint() string {
+	if x != nil {
+		return x.Fingerprint
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetNonce() []byte {
+	if x != nil {
+		return x.Nonce
+	}
+	return nil
+}
+
+func (x *TriggerEvent) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *TriggerEvent) GetTriggersDigest() string {
+	if x != nil {
+		return x.TriggersDigest
+	}
+	return ""
+}
+
+func (x *TriggerEvent) GetSentAtUnix() int64 {
+	if x != nil {
+		return x.SentAtUnix
+	}
+	return 0
+}
+
+type SignedTriggerEvent struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Event     []byte                 `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+	Signature []byte                 `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	// certificate is the serving process's leaf certificate, DER, as on SignedReceipt.
+	Certificate   []byte `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignedTriggerEvent) Reset() {
+	*x = SignedTriggerEvent{}
+	mi := &file_serve_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignedTriggerEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignedTriggerEvent) ProtoMessage() {}
+
+func (x *SignedTriggerEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignedTriggerEvent.ProtoReflect.Descriptor instead.
+func (*SignedTriggerEvent) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SignedTriggerEvent) GetEvent() []byte {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+func (x *SignedTriggerEvent) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+func (x *SignedTriggerEvent) GetCertificate() []byte {
+	if x != nil {
+		return x.Certificate
+	}
+	return nil
+}
+
+// ActionResponse answers PlanAction and ExecuteAction once the action reached the plugin, whether it succeeded or not. A refusal by the serving process is a PermissionDenied error instead, with no receipt, because nothing ran.
+type ActionResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// output_json is the plan for ACTION_PLAN and the result for ACTION_EXECUTE, empty when the plugin failed.
+	OutputJson []byte         `protobuf:"bytes,1,opt,name=output_json,json=outputJson,proto3" json:"output_json,omitempty"`
+	Receipt    *SignedReceipt `protobuf:"bytes,2,opt,name=receipt,proto3" json:"receipt,omitempty"`
+	// code is the gRPC code of the plugin's failure, zero when it succeeded. The failure's message is the receipt's error, which is signed; the code is not, and only classifies it.
+	Code          uint32 `protobuf:"varint,3,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActionResponse) Reset() {
+	*x = ActionResponse{}
+	mi := &file_serve_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActionResponse) ProtoMessage() {}
+
+func (x *ActionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_serve_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActionResponse.ProtoReflect.Descriptor instead.
+func (*ActionResponse) Descriptor() ([]byte, []int) {
+	return file_serve_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ActionResponse) GetOutputJson() []byte {
+	if x != nil {
+		return x.OutputJson
+	}
+	return nil
+}
+
+func (x *ActionResponse) GetReceipt() *SignedReceipt {
+	if x != nil {
+		return x.Receipt
+	}
+	return nil
+}
+
+func (x *ActionResponse) GetCode() uint32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+// QueryChunk carries either rows or, as the very last message of an execute, the serving process's receipt.
 type QueryChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChunkJson     []byte                 `protobuf:"bytes,1,opt,name=chunk_json,json=chunkJson,proto3" json:"chunk_json,omitempty"`
+	Receipt       *SignedReceipt         `protobuf:"bytes,2,opt,name=receipt,proto3" json:"receipt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *QueryChunk) Reset() {
 	*x = QueryChunk{}
-	mi := &file_serve_proto_msgTypes[4]
+	mi := &file_serve_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -418,7 +1452,7 @@ func (x *QueryChunk) String() string {
 func (*QueryChunk) ProtoMessage() {}
 
 func (x *QueryChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_serve_proto_msgTypes[4]
+	mi := &file_serve_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -431,7 +1465,7 @@ func (x *QueryChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryChunk.ProtoReflect.Descriptor instead.
 func (*QueryChunk) Descriptor() ([]byte, []int) {
-	return file_serve_proto_rawDescGZIP(), []int{4}
+	return file_serve_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *QueryChunk) GetChunkJson() []byte {
@@ -441,11 +1475,18 @@ func (x *QueryChunk) GetChunkJson() []byte {
 	return nil
 }
 
+func (x *QueryChunk) GetReceipt() *SignedReceipt {
+	if x != nil {
+		return x.Receipt
+	}
+	return nil
+}
+
 var File_serve_proto protoreflect.FileDescriptor
 
 const file_serve_proto_rawDesc = "" +
 	"\n" +
-	"\vserve.proto\x12\x0fmarmot.serve.v1\"\x9e\x03\n" +
+	"\vserve.proto\x12\x0fmarmot.serve.v1\"\xff\x04\n" +
 	"\x05Query\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\rR\aversion\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x1a\n" +
@@ -460,33 +1501,149 @@ const file_serve_proto_rawDesc = "" +
 	" \x01(\x03R\fissuedAtUnix\x12&\n" +
 	"\x0fexpires_at_unix\x18\v \x01(\x03R\rexpiresAtUnix\x12\x14\n" +
 	"\x05nonce\x18\f \x01(\fR\x05nonce\x12'\n" +
-	"\x0fchannel_binding\x18\r \x01(\fR\x0echannelBinding\"A\n" +
+	"\x0fchannel_binding\x18\r \x01(\fR\x0echannelBinding\x12\x16\n" +
+	"\x06origin\x18\x0e \x01(\tR\x06origin\x12%\n" +
+	"\x0ereceipt_wanted\x18\x0f \x01(\bR\rreceiptWanted\x12\x16\n" +
+	"\x06action\x18\x10 \x01(\tR\x06action\x12\x1f\n" +
+	"\vparams_json\x18\x11 \x01(\fR\n" +
+	"paramsJson\x12\"\n" +
+	"\fprecondition\x18\x12 \x01(\tR\fprecondition\x12'\n" +
+	"\x0fmanifest_digest\x18\x13 \x01(\tR\x0emanifestDigest\x12\x1a\n" +
+	"\bapproval\x18\x14 \x01(\fR\bapproval\"A\n" +
 	"\vSignedQuery\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\fR\x05query\x12\x1c\n" +
-	"\tsignature\x18\x02 \x01(\fR\tsignature\"\xcc\x01\n" +
+	"\tsignature\x18\x02 \x01(\fR\tsignature\"\xb8\x04\n" +
 	"\x0eForwardedQuery\x128\n" +
 	"\toperation\x18\x01 \x01(\x0e2\x1a.marmot.serve.v1.OperationR\toperation\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x12\x1c\n" +
 	"\tstatement\x18\x03 \x01(\tR\tstatement\x12\x19\n" +
 	"\bmax_rows\x18\x04 \x01(\x03R\amaxRows\x12\x14\n" +
 	"\x05actor\x18\x05 \x01(\tR\x05actor\x12\x19\n" +
-	"\bquery_id\x18\x06 \x01(\tR\aqueryId\"0\n" +
+	"\bquery_id\x18\x06 \x01(\tR\aqueryId\x12\x16\n" +
+	"\x06origin\x18\a \x01(\tR\x06origin\x12\x18\n" +
+	"\aversion\x18\b \x01(\rR\aversion\x12\x16\n" +
+	"\x06issuer\x18\t \x01(\tR\x06issuer\x12\x1a\n" +
+	"\baudience\x18\n" +
+	" \x01(\tR\baudience\x12$\n" +
+	"\x0eissued_at_unix\x18\v \x01(\x03R\fissuedAtUnix\x12&\n" +
+	"\x0fexpires_at_unix\x18\f \x01(\x03R\rexpiresAtUnix\x12\x14\n" +
+	"\x05nonce\x18\r \x01(\fR\x05nonce\x12\x16\n" +
+	"\x06action\x18\x0e \x01(\tR\x06action\x12\x1f\n" +
+	"\vparams_json\x18\x0f \x01(\fR\n" +
+	"paramsJson\x12\"\n" +
+	"\fprecondition\x18\x10 \x01(\tR\fprecondition\x12'\n" +
+	"\x0fmanifest_digest\x18\x11 \x01(\tR\x0emanifestDigest\x12\x1a\n" +
+	"\bapproval\x18\x12 \x01(\fR\bapproval\"G\n" +
+	"\rSignedForward\x12\x18\n" +
+	"\aforward\x18\x01 \x01(\fR\aforward\x12\x1c\n" +
+	"\tsignature\x18\x02 \x01(\fR\tsignature\"\xd5\x02\n" +
+	"\aReceipt\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\rR\aversion\x12\x19\n" +
+	"\bquery_id\x18\x02 \x01(\tR\aqueryId\x12\x16\n" +
+	"\x06origin\x18\x03 \x01(\tR\x06origin\x12\x16\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\x12\x14\n" +
+	"\x05actor\x18\x05 \x01(\tR\x05actor\x12)\n" +
+	"\x10statement_sha256\x18\x06 \x01(\fR\x0fstatementSha256\x12\x14\n" +
+	"\x05nonce\x18\a \x01(\fR\x05nonce\x12\x12\n" +
+	"\x04rows\x18\b \x01(\x03R\x04rows\x12\x1f\n" +
+	"\vduration_ms\x18\t \x01(\x03R\n" +
+	"durationMs\x12\x14\n" +
+	"\x05error\x18\n" +
+	" \x01(\tR\x05error\x12(\n" +
+	"\x10finished_at_unix\x18\v \x01(\x03R\x0efinishedAtUnix\x12\x19\n" +
+	"\bmax_rows\x18\f \x01(\x03R\amaxRows\"i\n" +
+	"\rSignedReceipt\x12\x18\n" +
+	"\areceipt\x18\x01 \x01(\fR\areceipt\x12\x1c\n" +
+	"\tsignature\x18\x02 \x01(\fR\tsignature\x12 \n" +
+	"\vcertificate\x18\x03 \x01(\fR\vcertificate\"0\n" +
 	"\x11PlanQueryResponse\x12\x1b\n" +
-	"\tplan_json\x18\x01 \x01(\fR\bplanJson\"+\n" +
+	"\tplan_json\x18\x01 \x01(\fR\bplanJson\"\x9a\x05\n" +
+	"\rActionReceipt\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\rR\aversion\x128\n" +
+	"\toperation\x18\x02 \x01(\x0e2\x1a.marmot.serve.v1.OperationR\toperation\x12\x0e\n" +
+	"\x02id\x18\x03 \x01(\tR\x02id\x12\x16\n" +
+	"\x06origin\x18\x04 \x01(\tR\x06origin\x12\x16\n" +
+	"\x06source\x18\x05 \x01(\tR\x06source\x12\x14\n" +
+	"\x05actor\x18\x06 \x01(\tR\x05actor\x12\x16\n" +
+	"\x06action\x18\a \x01(\tR\x06action\x12#\n" +
+	"\rparams_sha256\x18\b \x01(\fR\fparamsSha256\x12\"\n" +
+	"\fprecondition\x18\t \x01(\tR\fprecondition\x12'\n" +
+	"\x0fmanifest_digest\x18\n" +
+	" \x01(\tR\x0emanifestDigest\x12\x14\n" +
+	"\x05nonce\x18\v \x01(\fR\x05nonce\x12\x16\n" +
+	"\x06target\x18\f \x01(\tR\x06target\x12\x18\n" +
+	"\asummary\x18\r \x01(\tR\asummary\x12\x14\n" +
+	"\x05error\x18\x0e \x01(\tR\x05error\x12#\n" +
+	"\routput_sha256\x18\x0f \x01(\fR\foutputSha256\x12\x1f\n" +
+	"\vduration_ms\x18\x10 \x01(\x03R\n" +
+	"durationMs\x12(\n" +
+	"\x10finished_at_unix\x18\x11 \x01(\x03R\x0efinishedAtUnix\x12'\n" +
+	"\x0fapproval_digest\x18\x12 \x01(\fR\x0eapprovalDigest\x127\n" +
+	"\tapprovers\x18\x13 \x03(\v2\x19.marmot.serve.v1.ApproverR\tapprovers\x12%\n" +
+	"\x0eapproval_trust\x18\x14 \x01(\tR\rapprovalTrust\"a\n" +
+	"\bApprover\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12(\n" +
+	"\x10approved_at_unix\x18\x03 \x01(\x03R\x0eapprovedAtUnix\"\xa3\x01\n" +
+	"\bApproval\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\rR\aversion\x12&\n" +
+	"\x0fexpires_at_unix\x18\x02 \x01(\x03R\rexpiresAtUnix\x127\n" +
+	"\tapprovers\x18\x03 \x03(\v2\x19.marmot.serve.v1.ApproverR\tapprovers\x12\x1c\n" +
+	"\tsignature\x18\x04 \x01(\fR\tsignature\"\xc7\x03\n" +
+	"\fTriggerEvent\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\rR\aversion\x12\x16\n" +
+	"\x06source\x18\x02 \x01(\tR\x06source\x12\x18\n" +
+	"\atrigger\x18\x03 \x01(\tR\atrigger\x12\x1f\n" +
+	"\vtarget_kind\x18\x04 \x01(\tR\n" +
+	"targetKind\x12)\n" +
+	"\x10target_namespace\x18\x05 \x01(\tR\x0ftargetNamespace\x12\x1f\n" +
+	"\vtarget_name\x18\x06 \x01(\tR\n" +
+	"targetName\x12\x1d\n" +
+	"\n" +
+	"facts_json\x18\a \x01(\fR\tfactsJson\x12(\n" +
+	"\x10observed_at_unix\x18\b \x01(\x03R\x0eobservedAtUnix\x12 \n" +
+	"\vfingerprint\x18\t \x01(\tR\vfingerprint\x12\x16\n" +
+	"\x06detail\x18\n" +
+	" \x01(\tR\x06detail\x12\x14\n" +
+	"\x05nonce\x18\v \x01(\fR\x05nonce\x12\x1a\n" +
+	"\bsequence\x18\f \x01(\x04R\bsequence\x12'\n" +
+	"\x0ftriggers_digest\x18\r \x01(\tR\x0etriggersDigest\x12 \n" +
+	"\fsent_at_unix\x18\x0e \x01(\x03R\n" +
+	"sentAtUnix\"j\n" +
+	"\x12SignedTriggerEvent\x12\x14\n" +
+	"\x05event\x18\x01 \x01(\fR\x05event\x12\x1c\n" +
+	"\tsignature\x18\x02 \x01(\fR\tsignature\x12 \n" +
+	"\vcertificate\x18\x03 \x01(\fR\vcertificate\"\x7f\n" +
+	"\x0eActionResponse\x12\x1f\n" +
+	"\voutput_json\x18\x01 \x01(\fR\n" +
+	"outputJson\x128\n" +
+	"\areceipt\x18\x02 \x01(\v2\x1e.marmot.serve.v1.SignedReceiptR\areceipt\x12\x12\n" +
+	"\x04code\x18\x03 \x01(\rR\x04code\"e\n" +
 	"\n" +
 	"QueryChunk\x12\x1d\n" +
 	"\n" +
-	"chunk_json\x18\x01 \x01(\fR\tchunkJson*Q\n" +
+	"chunk_json\x18\x01 \x01(\fR\tchunkJson\x128\n" +
+	"\areceipt\x18\x02 \x01(\v2\x1e.marmot.serve.v1.SignedReceiptR\areceipt*\xa8\x01\n" +
 	"\tOperation\x12\x19\n" +
 	"\x15OPERATION_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eOPERATION_PLAN\x10\x01\x12\x15\n" +
-	"\x11OPERATION_EXECUTE\x10\x022\xa4\x01\n" +
+	"\x11OPERATION_EXECUTE\x10\x02\x12\x19\n" +
+	"\x15OPERATION_ACTION_PLAN\x10\x03\x12\x1c\n" +
+	"\x18OPERATION_ACTION_EXECUTE\x10\x04\x12\x1c\n" +
+	"\x18OPERATION_WATCH_TRIGGERS\x10\x052\x97\x03\n" +
 	"\x06Plugin\x12M\n" +
 	"\tPlanQuery\x12\x1c.marmot.serve.v1.SignedQuery\x1a\".marmot.serve.v1.PlanQueryResponse\x12K\n" +
-	"\fExecuteQuery\x12\x1c.marmot.serve.v1.SignedQuery\x1a\x1b.marmot.serve.v1.QueryChunk0\x012\xab\x01\n" +
-	"\aReplica\x12P\n" +
-	"\tPlanQuery\x12\x1f.marmot.serve.v1.ForwardedQuery\x1a\".marmot.serve.v1.PlanQueryResponse\x12N\n" +
-	"\fExecuteQuery\x12\x1f.marmot.serve.v1.ForwardedQuery\x1a\x1b.marmot.serve.v1.QueryChunk0\x01B9Z7github.com/marmotdata/marmot/internal/pluginserve/protob\x06proto3"
+	"\fExecuteQuery\x12\x1c.marmot.serve.v1.SignedQuery\x1a\x1b.marmot.serve.v1.QueryChunk0\x01\x12K\n" +
+	"\n" +
+	"PlanAction\x12\x1c.marmot.serve.v1.SignedQuery\x1a\x1f.marmot.serve.v1.ActionResponse\x12N\n" +
+	"\rExecuteAction\x12\x1c.marmot.serve.v1.SignedQuery\x1a\x1f.marmot.serve.v1.ActionResponse\x12T\n" +
+	"\rWatchTriggers\x12\x1c.marmot.serve.v1.SignedQuery\x1a#.marmot.serve.v1.SignedTriggerEvent0\x012\xca\x02\n" +
+	"\aReplica\x12O\n" +
+	"\tPlanQuery\x12\x1e.marmot.serve.v1.SignedForward\x1a\".marmot.serve.v1.PlanQueryResponse\x12M\n" +
+	"\fExecuteQuery\x12\x1e.marmot.serve.v1.SignedForward\x1a\x1b.marmot.serve.v1.QueryChunk0\x01\x12M\n" +
+	"\n" +
+	"PlanAction\x12\x1e.marmot.serve.v1.SignedForward\x1a\x1f.marmot.serve.v1.ActionResponse\x12P\n" +
+	"\rExecuteAction\x12\x1e.marmot.serve.v1.SignedForward\x1a\x1f.marmot.serve.v1.ActionResponseB9Z7github.com/marmotdata/marmot/internal/pluginserve/protob\x06proto3"
 
 var (
 	file_serve_proto_rawDescOnce sync.Once
@@ -501,31 +1658,55 @@ func file_serve_proto_rawDescGZIP() []byte {
 }
 
 var file_serve_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_serve_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_serve_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_serve_proto_goTypes = []any{
-	(Operation)(0),            // 0: marmot.serve.v1.Operation
-	(*Query)(nil),             // 1: marmot.serve.v1.Query
-	(*SignedQuery)(nil),       // 2: marmot.serve.v1.SignedQuery
-	(*ForwardedQuery)(nil),    // 3: marmot.serve.v1.ForwardedQuery
-	(*PlanQueryResponse)(nil), // 4: marmot.serve.v1.PlanQueryResponse
-	(*QueryChunk)(nil),        // 5: marmot.serve.v1.QueryChunk
+	(Operation)(0),             // 0: marmot.serve.v1.Operation
+	(*Query)(nil),              // 1: marmot.serve.v1.Query
+	(*SignedQuery)(nil),        // 2: marmot.serve.v1.SignedQuery
+	(*ForwardedQuery)(nil),     // 3: marmot.serve.v1.ForwardedQuery
+	(*SignedForward)(nil),      // 4: marmot.serve.v1.SignedForward
+	(*Receipt)(nil),            // 5: marmot.serve.v1.Receipt
+	(*SignedReceipt)(nil),      // 6: marmot.serve.v1.SignedReceipt
+	(*PlanQueryResponse)(nil),  // 7: marmot.serve.v1.PlanQueryResponse
+	(*ActionReceipt)(nil),      // 8: marmot.serve.v1.ActionReceipt
+	(*Approver)(nil),           // 9: marmot.serve.v1.Approver
+	(*Approval)(nil),           // 10: marmot.serve.v1.Approval
+	(*TriggerEvent)(nil),       // 11: marmot.serve.v1.TriggerEvent
+	(*SignedTriggerEvent)(nil), // 12: marmot.serve.v1.SignedTriggerEvent
+	(*ActionResponse)(nil),     // 13: marmot.serve.v1.ActionResponse
+	(*QueryChunk)(nil),         // 14: marmot.serve.v1.QueryChunk
 }
 var file_serve_proto_depIdxs = []int32{
-	0, // 0: marmot.serve.v1.Query.operation:type_name -> marmot.serve.v1.Operation
-	0, // 1: marmot.serve.v1.ForwardedQuery.operation:type_name -> marmot.serve.v1.Operation
-	2, // 2: marmot.serve.v1.Plugin.PlanQuery:input_type -> marmot.serve.v1.SignedQuery
-	2, // 3: marmot.serve.v1.Plugin.ExecuteQuery:input_type -> marmot.serve.v1.SignedQuery
-	3, // 4: marmot.serve.v1.Replica.PlanQuery:input_type -> marmot.serve.v1.ForwardedQuery
-	3, // 5: marmot.serve.v1.Replica.ExecuteQuery:input_type -> marmot.serve.v1.ForwardedQuery
-	4, // 6: marmot.serve.v1.Plugin.PlanQuery:output_type -> marmot.serve.v1.PlanQueryResponse
-	5, // 7: marmot.serve.v1.Plugin.ExecuteQuery:output_type -> marmot.serve.v1.QueryChunk
-	4, // 8: marmot.serve.v1.Replica.PlanQuery:output_type -> marmot.serve.v1.PlanQueryResponse
-	5, // 9: marmot.serve.v1.Replica.ExecuteQuery:output_type -> marmot.serve.v1.QueryChunk
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0,  // 0: marmot.serve.v1.Query.operation:type_name -> marmot.serve.v1.Operation
+	0,  // 1: marmot.serve.v1.ForwardedQuery.operation:type_name -> marmot.serve.v1.Operation
+	0,  // 2: marmot.serve.v1.ActionReceipt.operation:type_name -> marmot.serve.v1.Operation
+	9,  // 3: marmot.serve.v1.ActionReceipt.approvers:type_name -> marmot.serve.v1.Approver
+	9,  // 4: marmot.serve.v1.Approval.approvers:type_name -> marmot.serve.v1.Approver
+	6,  // 5: marmot.serve.v1.ActionResponse.receipt:type_name -> marmot.serve.v1.SignedReceipt
+	6,  // 6: marmot.serve.v1.QueryChunk.receipt:type_name -> marmot.serve.v1.SignedReceipt
+	2,  // 7: marmot.serve.v1.Plugin.PlanQuery:input_type -> marmot.serve.v1.SignedQuery
+	2,  // 8: marmot.serve.v1.Plugin.ExecuteQuery:input_type -> marmot.serve.v1.SignedQuery
+	2,  // 9: marmot.serve.v1.Plugin.PlanAction:input_type -> marmot.serve.v1.SignedQuery
+	2,  // 10: marmot.serve.v1.Plugin.ExecuteAction:input_type -> marmot.serve.v1.SignedQuery
+	2,  // 11: marmot.serve.v1.Plugin.WatchTriggers:input_type -> marmot.serve.v1.SignedQuery
+	4,  // 12: marmot.serve.v1.Replica.PlanQuery:input_type -> marmot.serve.v1.SignedForward
+	4,  // 13: marmot.serve.v1.Replica.ExecuteQuery:input_type -> marmot.serve.v1.SignedForward
+	4,  // 14: marmot.serve.v1.Replica.PlanAction:input_type -> marmot.serve.v1.SignedForward
+	4,  // 15: marmot.serve.v1.Replica.ExecuteAction:input_type -> marmot.serve.v1.SignedForward
+	7,  // 16: marmot.serve.v1.Plugin.PlanQuery:output_type -> marmot.serve.v1.PlanQueryResponse
+	14, // 17: marmot.serve.v1.Plugin.ExecuteQuery:output_type -> marmot.serve.v1.QueryChunk
+	13, // 18: marmot.serve.v1.Plugin.PlanAction:output_type -> marmot.serve.v1.ActionResponse
+	13, // 19: marmot.serve.v1.Plugin.ExecuteAction:output_type -> marmot.serve.v1.ActionResponse
+	12, // 20: marmot.serve.v1.Plugin.WatchTriggers:output_type -> marmot.serve.v1.SignedTriggerEvent
+	7,  // 21: marmot.serve.v1.Replica.PlanQuery:output_type -> marmot.serve.v1.PlanQueryResponse
+	14, // 22: marmot.serve.v1.Replica.ExecuteQuery:output_type -> marmot.serve.v1.QueryChunk
+	13, // 23: marmot.serve.v1.Replica.PlanAction:output_type -> marmot.serve.v1.ActionResponse
+	13, // 24: marmot.serve.v1.Replica.ExecuteAction:output_type -> marmot.serve.v1.ActionResponse
+	16, // [16:25] is the sub-list for method output_type
+	7,  // [7:16] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_serve_proto_init() }
@@ -539,7 +1720,7 @@ func file_serve_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_serve_proto_rawDesc), len(file_serve_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

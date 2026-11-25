@@ -8635,6 +8635,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Only queries with this origin, such as task_run:\u003cid\u003e",
+                        "name": "origin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Principal type",
                         "name": "principal_type",
                         "in": "query"
@@ -8760,6 +8766,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Outcome reason",
                         "name": "reason",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Only queries with this origin",
+                        "name": "origin",
                         "in": "query"
                     },
                     {
@@ -13359,6 +13371,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Lists the trusted generations of the serving CA and query signing key, with each CA's SHA-256 fingerprint. Pass a fingerprint to a serving plugin with --ca-fingerprint so it checks Marmot's CA before it first trusts it.",
                 "produces": [
                     "application/json"
                 ],
@@ -17559,6 +17572,15 @@ const docTemplate = `{
         "PluginInfo": {
             "type": "object",
             "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ActionSpec"
+                    }
+                },
+                "actions_digest": {
+                    "type": "string"
+                },
                 "asset_schemas": {
                     "type": "array",
                     "items": {
@@ -17624,11 +17646,26 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "supports_actions": {
+                    "type": "boolean"
+                },
                 "supports_data_preview": {
                     "type": "boolean"
                 },
                 "supports_query": {
                     "type": "boolean"
+                },
+                "supports_triggers": {
+                    "type": "boolean"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.TriggerSpec"
+                    }
+                },
+                "triggers_digest": {
+                    "type": "string"
                 }
             }
         },
@@ -18231,6 +18268,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "origin": {
+                    "description": "Origin names what caused the query, such as task_run:\u003cid\u003e, when something other than a person's request did.",
+                    "type": "string"
+                },
                 "outcome_reason": {
                     "description": "OutcomeReason refines the decision and status, such as role, permission, policy, source_error, timeout, unreachable or cancelled.",
                     "type": "string"
@@ -18249,6 +18290,14 @@ const docTemplate = `{
                 },
                 "rows_returned": {
                     "type": "integer"
+                },
+                "runner_receipt": {
+                    "description": "RunnerReceipt is the serving plugin's signed receipt for a query on a served source, with whether it verified; nil for sources Marmot runs itself.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/QueryRunnerReceipt"
+                        }
+                    ]
                 },
                 "service_account": {
                     "description": "ServiceAccount names the service account a machine caller ran as, Agent the client that identified itself on its behalf (an MCP client's name) and Credential how the request authenticated.",
@@ -18388,6 +18437,67 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "statement": {
+                    "type": "string"
+                }
+            }
+        },
+        "QueryRunnerReceipt": {
+            "type": "object",
+            "properties": {
+                "actor": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string",
+                    "format": "byte"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "enrolment": {
+                    "description": "Enrolment is the serving plugin's enrolment, read from the certificate that signed the receipt.",
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "finished_at": {
+                    "type": "string"
+                },
+                "max_rows": {
+                    "type": "integer"
+                },
+                "nonce": {
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "problem": {
+                    "description": "Problem says why a receipt is invalid or missing.",
+                    "type": "string"
+                },
+                "query_id": {
+                    "type": "string"
+                },
+                "rows": {
+                    "type": "integer"
+                },
+                "signature": {
+                    "type": "string",
+                    "format": "byte"
+                },
+                "signed": {
+                    "type": "string",
+                    "format": "byte"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "statement_sha256": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -19578,6 +19688,14 @@ const docTemplate = `{
                 "active": {
                     "type": "boolean"
                 },
+                "approval_key_fingerprint": {
+                    "description": "ApprovalKeyFingerprint is the SHA-256 of the generation's approval public key, to give a serving process as approvals.key_fingerprint. Empty when it has no approval key.",
+                    "type": "string"
+                },
+                "ca_fingerprint": {
+                    "description": "CAFingerprint is the SHA-256 of the generation's CA certificate, as sha256:\u003chex\u003e, to give a serving process with --ca-fingerprint so it checks the CA before it first trusts it.",
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -19592,8 +19710,11 @@ const docTemplate = `{
         "ServeRotateKeysRequest": {
             "type": "object",
             "properties": {
+                "approval_key_uri": {
+                    "type": "string"
+                },
                 "ca_key_uri": {
-                    "description": "CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty to have Marmot generate keys it stores encrypted, which is refused when the current keys are in a KMS.",
+                    "description": "CAKeyURI, SigningKeyURI and ApprovalKeyURI name new KMS keys, all three or none; the approval key must be a key of its own. Leave them empty to have Marmot generate keys it stores encrypted, which is refused when the current keys are in a KMS.",
                     "type": "string"
                 },
                 "immediate": {
@@ -21015,6 +21136,87 @@ const docTemplate = `{
                 "StateHistorical"
             ]
         },
+        "pluginsdk.ActionParam": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enum": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "max": {
+                    "type": "integer"
+                },
+                "max_items": {
+                    "description": "MaxItems bounds a list parameter and is set only on one.",
+                    "type": "integer"
+                },
+                "max_length": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "$ref": "#/definitions/pluginsdk.ParamType"
+                }
+            }
+        },
+        "pluginsdk.ActionSpec": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "inverse": {
+                    "description": "Inverse names the action that undoes this one, and is set exactly\nwhen Reversibility is ReversibilityReversible.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name is the action's identifier, snake_case, such as \"scale\".",
+                    "type": "string"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ActionParam"
+                    }
+                },
+                "reversibility": {
+                    "$ref": "#/definitions/pluginsdk.Reversibility"
+                },
+                "risk": {
+                    "$ref": "#/definitions/pluginsdk.RiskTier"
+                },
+                "targets": {
+                    "description": "Targets lists every kind of object the action can change.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is bumped whenever the action's meaning changes, so a policy\nwritten against one version does not silently cover the next.",
+                    "type": "integer"
+                }
+            }
+        },
         "pluginsdk.AssetField": {
             "type": "object",
             "properties": {
@@ -21149,6 +21351,55 @@ const docTemplate = `{
                 "IdentityScopeFile"
             ]
         },
+        "pluginsdk.ParamType": {
+            "type": "string",
+            "enum": [
+                "string",
+                "int",
+                "bool",
+                "enum",
+                "enum_list",
+                "string_list"
+            ],
+            "x-enum-varnames": [
+                "ParamString",
+                "ParamInt",
+                "ParamBool",
+                "ParamEnum",
+                "ParamEnumList",
+                "ParamStringList"
+            ]
+        },
+        "pluginsdk.Reversibility": {
+            "type": "string",
+            "enum": [
+                "reversible",
+                "self_healing",
+                "irreversible",
+                "read_only"
+            ],
+            "x-enum-varnames": [
+                "ReversibilityReversible",
+                "ReversibilitySelfHealing",
+                "ReversibilityIrreversible",
+                "ReversibilityReadOnly"
+            ]
+        },
+        "pluginsdk.RiskTier": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "RiskRead",
+                "RiskBounded",
+                "RiskCostly",
+                "RiskDestructive"
+            ]
+        },
         "pluginsdk.ShowWhen": {
             "type": "object",
             "properties": {
@@ -21157,6 +21408,46 @@ const docTemplate = `{
                 },
                 "value": {
                     "type": "string"
+                }
+            }
+        },
+        "pluginsdk.TriggerSpec": {
+            "type": "object",
+            "properties": {
+                "conditions": {
+                    "description": "Conditions lists every value an event's \"condition\" fact can take,\nwhen the trigger sets one. A trigger whose conditions the host's\nconfiguration names, such as a customer's own CEL condition, leaves\nit empty.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name is the trigger's identifier, snake_case, such as \"workload_unhealthy\".",
+                    "type": "string"
+                },
+                "params": {
+                    "description": "Params take the same types and bounds as action parameters, and\nalso lists and longer strings, since they come from the host's own\nconfiguration.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ActionParam"
+                    }
+                },
+                "targets": {
+                    "description": "Targets lists every kind of object an event can name.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version is bumped whenever the trigger's meaning changes.",
+                    "type": "integer"
                 }
             }
         },
@@ -21180,6 +21471,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pluginserve.ActionSummary": {
+            "type": "object",
+            "properties": {
+                "approvals": {
+                    "description": "Approvals is how many distinct people must approve an execute.",
+                    "type": "integer"
+                },
+                "approvers": {
+                    "description": "Approvers narrows who may approve, by Marmot user id or name; empty means anyone Marmot names.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "read": {
+                    "description": "Read is set for an action that only reads, which never needs approval.",
+                    "type": "boolean"
+                }
+            }
+        },
         "pluginserve.EnrolInput": {
             "type": "object",
             "properties": {
@@ -21200,6 +21514,13 @@ const docTemplate = `{
                 "address": {
                     "description": "Address is the host:port to dial; when empty the serving process uses its Marmot host name with Port.",
                     "type": "string"
+                },
+                "approval_keys": {
+                    "description": "ApprovalKeys are the keys Marmot signs approvals of actions with, pinned like SigningKeys and never used for anything else.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "ca_bundle": {
                     "type": "string"
@@ -21230,6 +21551,14 @@ const docTemplate = `{
         "pluginserve.EnrolSource": {
             "type": "object",
             "properties": {
+                "actions": {
+                    "description": "Actions is the process's report of the source's actions and triggers, when it serves any. Informative only: see ServedActions.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pluginserve.ServedActions"
+                        }
+                    ]
+                },
                 "config": {
                     "type": "object",
                     "additionalProperties": {}
@@ -21239,6 +21568,80 @@ const docTemplate = `{
                 },
                 "plugin_id": {
                     "type": "string"
+                }
+            }
+        },
+        "pluginserve.PolicySummary": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginserve.ActionSummary"
+                    }
+                },
+                "actions_allowed": {
+                    "description": "ActionsAllowed is --allow-actions: without it nothing below runs.",
+                    "type": "boolean"
+                },
+                "approval_max_age": {
+                    "description": "ApprovalMaxAge is the longest an approval may run before it expires.",
+                    "type": "string"
+                },
+                "approval_trust": {
+                    "description": "ApprovalTrust is how the process trusts approvals: \"marmot\" for Marmot-signed. Empty when the policy has no approvals section, in which case every write that needs approval is refused.",
+                    "type": "string"
+                },
+                "pinned_manifest": {
+                    "description": "PinnedManifest is the manifest digest the policy pins, when it pins one.",
+                    "type": "string"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginserve.TriggerSummary"
+                    }
+                }
+            }
+        },
+        "pluginserve.ServedActions": {
+            "type": "object",
+            "properties": {
+                "manifest": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ActionSpec"
+                    }
+                },
+                "manifest_digest": {
+                    "type": "string"
+                },
+                "policy": {
+                    "$ref": "#/definitions/pluginserve.PolicySummary"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.TriggerSpec"
+                    }
+                },
+                "triggers_digest": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginserve.TriggerSummary": {
+            "type": "object",
+            "properties": {
+                "cooldown": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "params": {
+                    "type": "object",
+                    "additionalProperties": {}
                 }
             }
         },

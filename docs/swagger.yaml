@@ -2800,6 +2800,12 @@ definitions:
     type: object
   PluginInfo:
     properties:
+      actions:
+        items:
+          $ref: '#/definitions/pluginsdk.ActionSpec'
+        type: array
+      actions_digest:
+        type: string
       asset_schemas:
         items:
           $ref: '#/definitions/pluginsdk.AssetSchema'
@@ -2851,10 +2857,20 @@ definitions:
         type: integer
       status:
         type: string
+      supports_actions:
+        type: boolean
       supports_data_preview:
         type: boolean
       supports_query:
         type: boolean
+      supports_triggers:
+        type: boolean
+      triggers:
+        items:
+          $ref: '#/definitions/pluginsdk.TriggerSpec'
+        type: array
+      triggers_digest:
+        type: string
     type: object
   PluginInstanceStatus:
     properties:
@@ -3271,6 +3287,10 @@ definitions:
         type: string
       id:
         type: string
+      origin:
+        description: Origin names what caused the query, such as task_run:<id>, when
+          something other than a person's request did.
+        type: string
       outcome_reason:
         description: OutcomeReason refines the decision and status, such as role,
           permission, policy, source_error, timeout, unreachable or cancelled.
@@ -3285,6 +3305,12 @@ definitions:
         type: array
       rows_returned:
         type: integer
+      runner_receipt:
+        allOf:
+        - $ref: '#/definitions/QueryRunnerReceipt'
+        description: RunnerReceipt is the serving plugin's signed receipt for a query
+          on a served source, with whether it verified; nil for sources Marmot runs
+          itself.
       service_account:
         description: ServiceAccount names the service account a machine caller ran
           as, Agent the client that identified itself on its behalf (an MCP client's
@@ -3384,6 +3410,49 @@ definitions:
     required:
     - source
     - statement
+    type: object
+  QueryRunnerReceipt:
+    properties:
+      actor:
+        type: string
+      certificate:
+        format: byte
+        type: string
+      duration_ms:
+        type: integer
+      enrolment:
+        description: Enrolment is the serving plugin's enrolment, read from the certificate
+          that signed the receipt.
+        type: string
+      error:
+        type: string
+      finished_at:
+        type: string
+      max_rows:
+        type: integer
+      nonce:
+        type: string
+      origin:
+        type: string
+      problem:
+        description: Problem says why a receipt is invalid or missing.
+        type: string
+      query_id:
+        type: string
+      rows:
+        type: integer
+      signature:
+        format: byte
+        type: string
+      signed:
+        format: byte
+        type: string
+      source:
+        type: string
+      statement_sha256:
+        type: string
+      status:
+        type: string
     type: object
   QuerySource:
     properties:
@@ -4206,6 +4275,16 @@ definitions:
         type: string
       active:
         type: boolean
+      approval_key_fingerprint:
+        description: ApprovalKeyFingerprint is the SHA-256 of the generation's approval
+          public key, to give a serving process as approvals.key_fingerprint. Empty
+          when it has no approval key.
+        type: string
+      ca_fingerprint:
+        description: CAFingerprint is the SHA-256 of the generation's CA certificate,
+          as sha256:<hex>, to give a serving process with --ca-fingerprint so it checks
+          the CA before it first trusts it.
+        type: string
       id:
         type: string
       retires_at:
@@ -4215,10 +4294,13 @@ definitions:
     type: object
   ServeRotateKeysRequest:
     properties:
+      approval_key_uri:
+        type: string
       ca_key_uri:
-        description: CAKeyURI and SigningKeyURI name new KMS keys. Leave both empty
-          to have Marmot generate keys it stores encrypted, which is refused when
-          the current keys are in a KMS.
+        description: CAKeyURI, SigningKeyURI and ApprovalKeyURI name new KMS keys,
+          all three or none; the approval key must be a key of its own. Leave them
+          empty to have Marmot generate keys it stores encrypted, which is refused
+          when the current keys are in a KMS.
         type: string
       immediate:
         description: Immediate switches to the new keys at once and stops trusting
@@ -5199,6 +5281,65 @@ definitions:
     - StatePending
     - StateCurrent
     - StateHistorical
+  pluginsdk.ActionParam:
+    properties:
+      description:
+        type: string
+      enum:
+        items:
+          type: string
+        type: array
+      max:
+        type: integer
+      max_items:
+        description: MaxItems bounds a list parameter and is set only on one.
+        type: integer
+      max_length:
+        type: integer
+      min:
+        type: integer
+      name:
+        type: string
+      pattern:
+        type: string
+      required:
+        type: boolean
+      type:
+        $ref: '#/definitions/pluginsdk.ParamType'
+    type: object
+  pluginsdk.ActionSpec:
+    properties:
+      description:
+        type: string
+      inverse:
+        description: |-
+          Inverse names the action that undoes this one, and is set exactly
+          when Reversibility is ReversibilityReversible.
+        type: string
+      name:
+        description: Name is the action's identifier, snake_case, such as "scale".
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/pluginsdk.ActionParam'
+        type: array
+      reversibility:
+        $ref: '#/definitions/pluginsdk.Reversibility'
+      risk:
+        $ref: '#/definitions/pluginsdk.RiskTier'
+      targets:
+        description: Targets lists every kind of object the action can change.
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      version:
+        description: |-
+          Version is bumped whenever the action's meaning changes, so a policy
+          written against one version does not silently cover the next.
+        type: integer
+    type: object
   pluginsdk.AssetField:
     properties:
       description:
@@ -5295,12 +5436,87 @@ definitions:
     - IdentityScopeNetwork
     - IdentityScopeAccount
     - IdentityScopeFile
+  pluginsdk.ParamType:
+    enum:
+    - string
+    - int
+    - bool
+    - enum
+    - enum_list
+    - string_list
+    type: string
+    x-enum-varnames:
+    - ParamString
+    - ParamInt
+    - ParamBool
+    - ParamEnum
+    - ParamEnumList
+    - ParamStringList
+  pluginsdk.Reversibility:
+    enum:
+    - reversible
+    - self_healing
+    - irreversible
+    - read_only
+    type: string
+    x-enum-varnames:
+    - ReversibilityReversible
+    - ReversibilitySelfHealing
+    - ReversibilityIrreversible
+    - ReversibilityReadOnly
+  pluginsdk.RiskTier:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - RiskRead
+    - RiskBounded
+    - RiskCostly
+    - RiskDestructive
   pluginsdk.ShowWhen:
     properties:
       field:
         type: string
       value:
         type: string
+    type: object
+  pluginsdk.TriggerSpec:
+    properties:
+      conditions:
+        description: |-
+          Conditions lists every value an event's "condition" fact can take,
+          when the trigger sets one. A trigger whose conditions the host's
+          configuration names, such as a customer's own CEL condition, leaves
+          it empty.
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      name:
+        description: Name is the trigger's identifier, snake_case, such as "workload_unhealthy".
+        type: string
+      params:
+        description: |-
+          Params take the same types and bounds as action parameters, and
+          also lists and longer strings, since they come from the host's own
+          configuration.
+        items:
+          $ref: '#/definitions/pluginsdk.ActionParam'
+        type: array
+      targets:
+        description: Targets lists every kind of object an event can name.
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      version:
+        description: Version is bumped whenever the trigger's meaning changes.
+        type: integer
     type: object
   pluginsdk.Validation:
     properties:
@@ -5314,6 +5530,24 @@ definitions:
         type: integer
       pattern:
         type: string
+    type: object
+  pluginserve.ActionSummary:
+    properties:
+      approvals:
+        description: Approvals is how many distinct people must approve an execute.
+        type: integer
+      approvers:
+        description: Approvers narrows who may approve, by Marmot user id or name;
+          empty means anyone Marmot names.
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      read:
+        description: Read is set for an action that only reads, which never needs
+          approval.
+        type: boolean
     type: object
   pluginserve.EnrolInput:
     properties:
@@ -5330,6 +5564,12 @@ definitions:
         description: Address is the host:port to dial; when empty the serving process
           uses its Marmot host name with Port.
         type: string
+      approval_keys:
+        description: ApprovalKeys are the keys Marmot signs approvals of actions with,
+          pinned like SigningKeys and never used for anything else.
+        items:
+          type: string
+        type: array
       ca_bundle:
         type: string
       certificate:
@@ -5349,6 +5589,11 @@ definitions:
     type: object
   pluginserve.EnrolSource:
     properties:
+      actions:
+        allOf:
+        - $ref: '#/definitions/pluginserve.ServedActions'
+        description: 'Actions is the process''s report of the source''s actions and
+          triggers, when it serves any. Informative only: see ServedActions.'
       config:
         additionalProperties: {}
         type: object
@@ -5356,6 +5601,60 @@ definitions:
         type: string
       plugin_id:
         type: string
+    type: object
+  pluginserve.PolicySummary:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/pluginserve.ActionSummary'
+        type: array
+      actions_allowed:
+        description: 'ActionsAllowed is --allow-actions: without it nothing below
+          runs.'
+        type: boolean
+      approval_max_age:
+        description: ApprovalMaxAge is the longest an approval may run before it expires.
+        type: string
+      approval_trust:
+        description: 'ApprovalTrust is how the process trusts approvals: "marmot"
+          for Marmot-signed. Empty when the policy has no approvals section, in which
+          case every write that needs approval is refused.'
+        type: string
+      pinned_manifest:
+        description: PinnedManifest is the manifest digest the policy pins, when it
+          pins one.
+        type: string
+      triggers:
+        items:
+          $ref: '#/definitions/pluginserve.TriggerSummary'
+        type: array
+    type: object
+  pluginserve.ServedActions:
+    properties:
+      manifest:
+        items:
+          $ref: '#/definitions/pluginsdk.ActionSpec'
+        type: array
+      manifest_digest:
+        type: string
+      policy:
+        $ref: '#/definitions/pluginserve.PolicySummary'
+      triggers:
+        items:
+          $ref: '#/definitions/pluginsdk.TriggerSpec'
+        type: array
+      triggers_digest:
+        type: string
+    type: object
+  pluginserve.TriggerSummary:
+    properties:
+      cooldown:
+        type: string
+      name:
+        type: string
+      params:
+        additionalProperties: {}
+        type: object
     type: object
   sysinfo.Build:
     properties:
@@ -10931,6 +11230,10 @@ paths:
         in: query
         name: mrn
         type: string
+      - description: Only queries with this origin, such as task_run:<id>
+        in: query
+        name: origin
+        type: string
       - description: Principal type
         in: query
         name: principal_type
@@ -11075,6 +11378,10 @@ paths:
       - description: Outcome reason
         in: query
         name: reason
+        type: string
+      - description: Only queries with this origin
+        in: query
+        name: origin
         type: string
       - description: Comma-separated clients
         in: query
@@ -13957,6 +14264,9 @@ paths:
       - query
   /query/serve/keys:
     get:
+      description: Lists the trusted generations of the serving CA and query signing
+        key, with each CA's SHA-256 fingerprint. Pass a fingerprint to a serving plugin
+        with --ca-fingerprint so it checks Marmot's CA before it first trusts it.
       produces:
       - application/json
       responses:

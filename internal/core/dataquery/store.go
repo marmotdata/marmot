@@ -104,15 +104,19 @@ type Query struct {
 	// OutcomeReason refines the decision and status, such as role, permission, policy, source_error, timeout, unreachable or cancelled.
 	OutcomeReason string `json:"outcome_reason,omitempty"`
 	// ServiceAccount names the service account a machine caller ran as, Agent the client that identified itself on its behalf (an MCP client's name) and Credential how the request authenticated.
-	ServiceAccount *string        `json:"service_account,omitempty"`
-	Agent          *string        `json:"agent,omitempty"`
-	Credential     *string        `json:"credential,omitempty"`
-	RowsReturned   *int64         `json:"rows_returned,omitempty"`
-	Truncated      bool           `json:"truncated"`
-	Error          *string        `json:"error,omitempty"`
-	Context        []AssetContext `json:"context,omitempty"`
-	StartedAt      time.Time      `json:"started_at"`
-	CompletedAt    *time.Time     `json:"completed_at,omitempty"`
+	ServiceAccount *string `json:"service_account,omitempty"`
+	Agent          *string `json:"agent,omitempty"`
+	Credential     *string `json:"credential,omitempty"`
+	// Origin names what caused the query, such as task_run:<id>, when something other than a person's request did.
+	Origin       *string        `json:"origin,omitempty"`
+	RowsReturned *int64         `json:"rows_returned,omitempty"`
+	Truncated    bool           `json:"truncated"`
+	Error        *string        `json:"error,omitempty"`
+	Context      []AssetContext `json:"context,omitempty"`
+	// RunnerReceipt is the serving plugin's signed receipt for a query on a served source, with whether it verified; nil for sources Marmot runs itself.
+	RunnerReceipt *RunnerReceipt `json:"runner_receipt,omitempty"`
+	StartedAt     time.Time      `json:"started_at"`
+	CompletedAt   *time.Time     `json:"completed_at,omitempty"`
 } // @name QueryRecord
 
 // QueryFilter narrows query log listings. MRN matches queries that referenced
@@ -128,6 +132,8 @@ type QueryFilter struct {
 	MRN           string
 	// Caller matches a principal as principal_type:principal_id or as its audit subject, such as user:alice.
 	Caller string
+	// Origin keeps the queries one cause ran, such as task_run:<id>.
+	Origin string
 	// Outcome is allowed, denied, failed, cancelled or running (see OutcomeAllowed), and Reason an outcome reason within it.
 	Outcome string
 	Reason  string
@@ -150,6 +156,7 @@ type QueryOutcome struct {
 	Truncated    bool
 	Error        *string
 	Context      []AssetContext
+	Receipt      *RunnerReceipt
 }
 
 // Repository is the data query persistence boundary. Queryable sources are not
@@ -191,11 +198,11 @@ func (r *PostgresRepository) CreateQuery(ctx context.Context, q *Query) error {
 	}
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO data_queries (principal_type, principal_id, audit_subject, client, source_id, source_name,
-			statement, referenced_mrns, decision, decision_detail, status, outcome_reason, service_account, agent, credential)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NULLIF($12, ''), $13, $14, $15)
+			statement, referenced_mrns, decision, decision_detail, status, outcome_reason, service_account, agent, credential, origin)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NULLIF($12, ''), $13, $14, $15, $16)
 		RETURNING id, started_at`,
 		q.PrincipalType, q.PrincipalID, q.AuditSubject, q.Client, q.SourceID, q.SourceName,
-		q.Statement, q.ReferencedMRNs, q.Decision, q.DecisionDetail, q.Status, q.OutcomeReason, q.ServiceAccount, q.Agent, q.Credential,
+		q.Statement, q.ReferencedMRNs, q.Decision, q.DecisionDetail, q.Status, q.OutcomeReason, q.ServiceAccount, q.Agent, q.Credential, q.Origin,
 	).Scan(&q.ID, &q.StartedAt)
 	if err != nil {
 		return fmt.Errorf("recording query: %w", err)
@@ -206,15 +213,18 @@ func (r *PostgresRepository) CreateQuery(ctx context.Context, q *Query) error {
 // CompleteQuery records a query's outcome and folds it into the hourly
 // rollups in one statement, so the dashboards can never drift from the log.
 func (r *PostgresRepository) CompleteQuery(ctx context.Context, id string, outcome QueryOutcome) error {
-	var contextArg any
+	var contextArg, receiptArg any
 	if len(outcome.Context) > 0 {
 		contextArg = outcome.Context
+	}
+	if outcome.Receipt != nil {
+		receiptArg = outcome.Receipt
 	}
 	_, err := r.db.Exec(ctx, `
 		WITH q AS (
 			UPDATE data_queries
 			SET status = $2, rows_returned = $3, truncated = $4, error = $5, context = $6, completed_at = NOW(),
-			    outcome_reason = COALESCE(NULLIF($7, ''), outcome_reason)
+			    outcome_reason = COALESCE(NULLIF($7, ''), outcome_reason), runner_receipt = $8
 			WHERE id = $1
 			RETURNING date_trunc('hour', started_at) AS bucket, principal_type, principal_id, audit_subject,
 			          source_name, decision, status, referenced_mrns, COALESCE(rows_returned, 0) AS rows_returned
@@ -233,7 +243,7 @@ func (r *PostgresRepository) CompleteQuery(ctx context.Context, id string, outco
 		ON CONFLICT (bucket, mrn, principal_type, principal_id, decision) DO UPDATE
 		SET queries = data_query_table_stats_hourly.queries + 1,
 		    audit_subject = EXCLUDED.audit_subject`,
-		id, outcome.Status, outcome.RowsReturned, outcome.Truncated, outcome.Error, contextArg, outcome.Reason)
+		id, outcome.Status, outcome.RowsReturned, outcome.Truncated, outcome.Error, contextArg, outcome.Reason, receiptArg)
 	if err != nil {
 		return fmt.Errorf("completing query: %w", err)
 	}
@@ -241,16 +251,16 @@ func (r *PostgresRepository) CompleteQuery(ctx context.Context, id string, outco
 }
 
 var queryColumns = `id, principal_type, principal_id, audit_subject, client, source_id, source_name,
-	statement, referenced_mrns, decision, decision_detail, status, COALESCE(` + reasonExpr + `, ''), service_account, agent, credential,
-	rows_returned, truncated, error, context, started_at, completed_at,
+	statement, referenced_mrns, decision, decision_detail, status, COALESCE(` + reasonExpr + `, ''), service_account, agent, credential, origin,
+	rows_returned, truncated, error, context, runner_receipt, started_at, completed_at,
 	COALESCE((SELECT sc.plugin_id FROM ingestion_schedules sc WHERE sc.name = data_queries.source_name LIMIT 1), '')`
 
 func scanQuery(row pgx.Row) (*Query, error) {
 	var q Query
 	if err := row.Scan(&q.ID, &q.PrincipalType, &q.PrincipalID, &q.AuditSubject, &q.Client, &q.SourceID, &q.SourceName,
-		&q.Statement, &q.ReferencedMRNs, &q.Decision, &q.DecisionDetail, &q.Status, &q.OutcomeReason, &q.ServiceAccount, &q.Agent, &q.Credential,
+		&q.Statement, &q.ReferencedMRNs, &q.Decision, &q.DecisionDetail, &q.Status, &q.OutcomeReason, &q.ServiceAccount, &q.Agent, &q.Credential, &q.Origin,
 		&q.RowsReturned, &q.Truncated, &q.Error,
-		&q.Context, &q.StartedAt, &q.CompletedAt, &q.SourceProvider); err != nil {
+		&q.Context, &q.RunnerReceipt, &q.StartedAt, &q.CompletedAt, &q.SourceProvider); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrQueryNotFound
 		}
@@ -288,6 +298,9 @@ func queryWhere(filter QueryFilter) (string, []any) {
 	}
 	if filter.SourceName != "" {
 		where += ` AND source_name = ` + arg(filter.SourceName)
+	}
+	if filter.Origin != "" {
+		where += ` AND origin = ` + arg(filter.Origin)
 	}
 	if len(filter.Clients) > 0 {
 		where += ` AND client = ANY(` + arg(filter.Clients) + `)`

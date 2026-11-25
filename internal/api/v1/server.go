@@ -792,7 +792,7 @@ func newPluginVersions(cfg *config.Config, db *pgxpool.Pool, opts install.Option
 // startServeHub starts accepting plugins that serve queries from outside Marmot. Serving was explicitly enabled, so a missing encryption key or an unusable listener stops startup rather than silently leaving served sources unreachable.
 func startServeHub(cfg *config.Config, db *pgxpool.Pool, schedules *runService.ScheduleService, encryptor *crypto.Encryptor, principals pluginserve.Principals) (*pluginserve.Hub, *pluginserve.Enroller, *pluginserve.Keyring) {
 	store := pluginserve.NewStore(db)
-	keyCfg := pluginserve.KeyConfig{CAKeyURI: cfg.Query.Serve.CAKeyURI, SigningKeyURI: cfg.Query.Serve.SigningKeyURI}
+	keyCfg := pluginserve.KeyConfig{CAKeyURI: cfg.Query.Serve.CAKeyURI, SigningKeyURI: cfg.Query.Serve.SigningKeyURI, ApprovalKeyURI: cfg.Query.Serve.ApprovalKeyURI}
 	keyring, err := pluginserve.LoadKeyring(context.Background(), store, encryptor, keyCfg)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load plugin serving keys")

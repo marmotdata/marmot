@@ -417,11 +417,18 @@ func runIngestion(ctx context.Context) error {
 
 	var served []pluginserve.LocalSource
 	var marmotURL *url.URL
+	var settings *serveSettings
+	if !serve && serveOnlyFlagsSet() {
+		return fmt.Errorf("--ca-fingerprint, --policy, --audit-log and --allow-actions only apply with --serve")
+	}
 	if serve {
 		if marmotURL, err = enrolmentURL(getHost()); err != nil {
 			return err
 		}
 		if served, err = servedSources(config.Name, queryable); err != nil {
+			return err
+		}
+		if settings, err = loadServeSettings(); err != nil {
 			return err
 		}
 	}
@@ -439,7 +446,7 @@ func runIngestion(ctx context.Context) error {
 	printSummary(overallSummary)
 
 	if serve {
-		return serveQueries(ctx, marmotURL, served)
+		return serveQueries(ctx, marmotURL, served, settings)
 	}
 	return nil
 }

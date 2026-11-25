@@ -11,6 +11,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -46,19 +47,24 @@ const (
 	RotationOverlap = 2 * CertLifetime
 )
 
-// KeyConfig names KMS keys for a generation, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://). Both must be ECDSA P-256 keys. When empty, Marmot generates the keys and stores them encrypted with the server encryption key.
+// KeyConfig names KMS keys for a generation, as sigstore KMS URIs (awskms://, gcpkms://, azurekms://, hashivault://). All must be ECDSA P-256 keys, and either all three are named or none. When empty, Marmot generates the keys and stores them encrypted with the server encryption key.
 type KeyConfig struct {
 	CAKeyURI      string
 	SigningKeyURI string
+	// ApprovalKeyURI is the key that signs approvals of actions. It is a key of its own, never the signing key, so signing a query can never produce an approval.
+	ApprovalKeyURI string
 }
 
-// generation is one CA and query signing key pair.
+// generation is one CA, query signing key and approval key.
 type generation struct {
-	id          string
-	caCert      *x509.Certificate
-	caKey       crypto.Signer
-	signingKey  crypto.Signer
-	signingPub  *ecdsa.PublicKey
+	id         string
+	caCert     *x509.Certificate
+	caKey      crypto.Signer
+	signingKey crypto.Signer
+	signingPub *ecdsa.PublicKey
+	// approvalKey is nil for a KMS-held generation made before approval keys, until a rotation gives one.
+	approvalKey crypto.Signer
+	approvalPub *ecdsa.PublicKey
 	activatesAt time.Time
 	retiresAt   *time.Time
 }
@@ -91,8 +97,11 @@ func LoadKeyring(ctx context.Context, store *Store, encryptor *mcrypto.Encryptor
 	k := &Keyring{InstanceID: instanceID, store: store, encryptor: encryptor, now: time.Now}
 	if err := store.withKeyLock(ctx, func(ctx context.Context, tx keyTx) error {
 		exists, err := tx.anyGeneration(ctx)
-		if err != nil || exists {
+		if err != nil {
 			return err
+		}
+		if exists {
+			return k.addApprovalKeys(ctx, tx, cfg)
 		}
 		record, err := k.newGeneration(ctx, cfg, k.now())
 		if err != nil {
@@ -106,6 +115,70 @@ func LoadKeyring(ctx context.Context, store *Store, encryptor *mcrypto.Encryptor
 		return nil, err
 	}
 	return k, nil
+}
+
+// addApprovalKeys gives generations made before approval keys one each: generated and encrypted here for keys Marmot holds, or the configured KMS key for KMS-held ones. A KMS-held generation with no approval key URI configured is left without one, and approvals are refused until a rotation names one.
+func (k *Keyring) addApprovalKeys(ctx context.Context, tx keyTx, cfg KeyConfig) error {
+	ids, kms, err := tx.generationsWithoutApprovalKey(ctx)
+	if err != nil {
+		return err
+	}
+	for i, id := range ids {
+		var signer crypto.Signer
+		var sealed, uri *string
+		switch {
+		case !kms[i]:
+			key, enc, err := k.generateSealed()
+			if err != nil {
+				return err
+			}
+			signer, sealed = key, &enc
+		case cfg.ApprovalKeyURI != "":
+			if signer, err = kmsSigner(ctx, cfg.ApprovalKeyURI); err != nil {
+				return fmt.Errorf("approval key: %w", err)
+			}
+			uri = &cfg.ApprovalKeyURI
+		default:
+			continue
+		}
+		pub, err := publicPEM(signer)
+		if err != nil {
+			return fmt.Errorf("approval key: %w", err)
+		}
+		if err := tx.setApprovalKey(ctx, id, pub, sealed, uri); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// generateSealed makes a P-256 key and encrypts it for the database.
+func (k *Keyring) generateSealed() (*ecdsa.PrivateKey, string, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, "", fmt.Errorf("generating key: %w", err)
+	}
+	der, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return nil, "", fmt.Errorf("encoding key: %w", err)
+	}
+	enc, err := k.encryptor.Encrypt(der)
+	if err != nil {
+		return nil, "", fmt.Errorf("encrypting key: %w", err)
+	}
+	return key, enc, nil
+}
+
+func publicPEM(key crypto.Signer) (string, error) {
+	pub, err := p256Public(key)
+	if err != nil {
+		return "", err
+	}
+	der, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return "", err
+	}
+	return string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der})), nil
 }
 
 // Refresh reloads the trusted generations, reusing the signers of ones already loaded.
@@ -149,7 +222,7 @@ func (k *Keyring) Refresh(ctx context.Context) error {
 
 // Rotate starts a new generation of keys from cfg. A graceful rotation publishes them now, starts using them after RotationOverlap and retires the current keys RotationOverlap after that, so connected serving processes move over without noticing. An immediate rotation, for when a key may be compromised, switches at once and retires every current key; serving processes must then be restarted, because they refuse a new identity that shares nothing with the one they trusted.
 func (k *Keyring) Rotate(ctx context.Context, cfg KeyConfig, immediate bool) error {
-	if cfg.CAKeyURI == "" && cfg.SigningKeyURI == "" && k.UsesKMS() {
+	if cfg.CAKeyURI == "" && cfg.SigningKeyURI == "" && cfg.ApprovalKeyURI == "" && k.UsesKMS() {
 		return ErrKMSKeysRequired
 	}
 	now := k.now()
@@ -176,13 +249,22 @@ func (k *Keyring) Rotate(ctx context.Context, cfg KeyConfig, immediate bool) err
 
 // newGeneration creates the keys for a generation, or connects to the KMS keys cfg names, and issues the generation's CA certificate.
 func (k *Keyring) newGeneration(ctx context.Context, cfg KeyConfig, activates time.Time) (*generationRecord, error) {
-	if (cfg.CAKeyURI == "") != (cfg.SigningKeyURI == "") {
-		return nil, errors.New("set both a CA key and a signing key URI, or neither")
+	named := 0
+	for _, uri := range []string{cfg.CAKeyURI, cfg.SigningKeyURI, cfg.ApprovalKeyURI} {
+		if uri != "" {
+			named++
+		}
+	}
+	if named != 0 && named != 3 {
+		return nil, errors.New("set a CA key, a signing key and an approval key URI, or none of them")
+	}
+	if named == 3 && (cfg.ApprovalKeyURI == cfg.SigningKeyURI || cfg.ApprovalKeyURI == cfg.CAKeyURI) {
+		return nil, errors.New("the approval key must be a key of its own, not the CA or signing key")
 	}
 
 	record := &generationRecord{ActivatesAt: activates}
-	var caKey, signingKey crypto.Signer
-	if cfg.CAKeyURI != "" {
+	var caKey, signingKey, approvalKey crypto.Signer
+	if named == 3 {
 		var err error
 		if caKey, err = kmsSigner(ctx, cfg.CAKeyURI); err != nil {
 			return nil, fmt.Errorf("CA key: %w", err)
@@ -190,38 +272,34 @@ func (k *Keyring) newGeneration(ctx context.Context, cfg KeyConfig, activates ti
 		if signingKey, err = kmsSigner(ctx, cfg.SigningKeyURI); err != nil {
 			return nil, fmt.Errorf("signing key: %w", err)
 		}
-		record.CAKeyURI, record.SigningKeyURI = &cfg.CAKeyURI, &cfg.SigningKeyURI
-	} else {
-		generated := make([]*ecdsa.PrivateKey, 2)
-		sealed := make([]*string, 2)
-		for i := range generated {
-			key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-			if err != nil {
-				return nil, fmt.Errorf("generating key: %w", err)
-			}
-			der, err := x509.MarshalPKCS8PrivateKey(key)
-			if err != nil {
-				return nil, fmt.Errorf("encoding key: %w", err)
-			}
-			enc, err := k.encryptor.Encrypt(der)
-			if err != nil {
-				return nil, fmt.Errorf("encrypting key: %w", err)
-			}
-			generated[i], sealed[i] = key, &enc
+		if approvalKey, err = kmsSigner(ctx, cfg.ApprovalKeyURI); err != nil {
+			return nil, fmt.Errorf("approval key: %w", err)
 		}
-		caKey, signingKey = generated[0], generated[1]
-		record.CAKey, record.SigningKey = sealed[0], sealed[1]
+		record.CAKeyURI, record.SigningKeyURI, record.ApprovalKeyURI = &cfg.CAKeyURI, &cfg.SigningKeyURI, &cfg.ApprovalKeyURI
+	} else {
+		keys := make([]crypto.Signer, 3)
+		sealed := make([]*string, 3)
+		for i := range keys {
+			key, enc, err := k.generateSealed()
+			if err != nil {
+				return nil, err
+			}
+			keys[i], sealed[i] = key, &enc
+		}
+		caKey, signingKey, approvalKey = keys[0], keys[1], keys[2]
+		record.CAKey, record.SigningKey, record.ApprovalKey = sealed[0], sealed[1], sealed[2]
 	}
 
-	signingPub, err := p256Public(signingKey)
+	signingPEM, err := publicPEM(signingKey)
 	if err != nil {
 		return nil, fmt.Errorf("signing key: %w", err)
 	}
-	pubDER, err := x509.MarshalPKIXPublicKey(signingPub)
+	record.SigningPublicKey = signingPEM
+	approvalPEM, err := publicPEM(approvalKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("approval key: %w", err)
 	}
-	record.SigningPublicKey = string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubDER}))
+	record.ApprovalPublicKey = &approvalPEM
 
 	caDER, err := k.createCA(caKey)
 	if err != nil {
@@ -298,7 +376,7 @@ func (k *Keyring) openGeneration(ctx context.Context, r *generationRecord) (*gen
 		return nil, errors.New("signing public key does not match its key")
 	}
 
-	return &generation{
+	g := &generation{
 		id:          r.ID,
 		caCert:      caCert,
 		caKey:       caKey,
@@ -306,7 +384,31 @@ func (k *Keyring) openGeneration(ctx context.Context, r *generationRecord) (*gen
 		signingPub:  signingPub,
 		activatesAt: r.ActivatesAt,
 		retiresAt:   r.RetiresAt,
-	}, nil
+	}
+	if r.ApprovalPublicKey != nil {
+		approvalKey, err := k.openKey(ctx, r.ApprovalKey, r.ApprovalKeyURI)
+		if err != nil {
+			return nil, fmt.Errorf("approval key: %w", err)
+		}
+		approvalPub, err := p256Public(approvalKey)
+		if err != nil {
+			return nil, fmt.Errorf("approval key: %w", err)
+		}
+		block, _ := pem.Decode([]byte(*r.ApprovalPublicKey))
+		if block == nil {
+			return nil, errors.New("decoding approval public key")
+		}
+		stored, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil || !approvalPub.Equal(stored) {
+			return nil, errors.New("approval public key does not match its key")
+		}
+		// The schema keeps the keys apart; refusing equal keys here keeps it so even if the database was edited.
+		if approvalPub.Equal(signingPub) {
+			return nil, errors.New("the approval key is the signing key")
+		}
+		g.approvalKey, g.approvalPub = approvalKey, approvalPub
+	}
+	return g, nil
 }
 
 func (k *Keyring) openKey(ctx context.Context, sealed, uri *string) (crypto.Signer, error) {
@@ -390,19 +492,51 @@ func (k *Keyring) Pool() *x509.CertPool {
 	return pool
 }
 
-// Bundle returns the trusted CA certificates and query signing keys, as PEM, for a serving process to pin.
-func (k *Keyring) Bundle() (cas string, signingKeys []string) {
+// Bundle returns the trusted CA certificates, query signing keys and approval keys, as PEM, for a serving process to pin.
+func (k *Keyring) Bundle() (cas string, signingKeys, approvalKeys []string) {
 	gens, _ := k.trusted()
 	var b strings.Builder
 	for _, g := range gens {
 		b.Write(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: g.caCert.Raw}))
-		der, err := x509.MarshalPKIXPublicKey(g.signingPub)
-		if err != nil {
+		if der, err := x509.MarshalPKIXPublicKey(g.signingPub); err == nil {
+			signingKeys = append(signingKeys, string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der})))
+		}
+		if g.approvalPub == nil {
 			continue
 		}
-		signingKeys = append(signingKeys, string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der})))
+		if der, err := x509.MarshalPKIXPublicKey(g.approvalPub); err == nil {
+			approvalKeys = append(approvalKeys, string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: der})))
+		}
 	}
-	return b.String(), signingKeys
+	return b.String(), signingKeys, approvalKeys
+}
+
+// signingKeys returns the public halves of every trusted signing key, which a replica accepts a forward from: the same keys a serving process pins, so a forward signed during a rotation verifies on replicas that have and have not yet switched.
+func (k *Keyring) signingKeys() []*ecdsa.PublicKey {
+	gens, _ := k.trusted()
+	keys := make([]*ecdsa.PublicKey, len(gens))
+	for i, g := range gens {
+		keys[i] = g.signingPub
+	}
+	return keys
+}
+
+// CAFingerprint is the form a serving process is given a CA in with --ca-fingerprint: the SHA-256 of the certificate's DER, as sha256:<hex>.
+func CAFingerprint(der []byte) string {
+	sum := sha256.Sum256(der)
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+
+// ParseCAFingerprint checks and normalises a CA fingerprint written as sha256:<64 hex digits>, in either case.
+func ParseCAFingerprint(s string) (string, error) {
+	digits, ok := strings.CutPrefix(strings.ToLower(strings.TrimSpace(s)), "sha256:")
+	if !ok || len(digits) != 2*sha256.Size {
+		return "", fmt.Errorf("CA fingerprint %q must be sha256: followed by 64 hex digits", s)
+	}
+	if _, err := hex.DecodeString(digits); err != nil {
+		return "", fmt.Errorf("CA fingerprint %q must be sha256: followed by 64 hex digits", s)
+	}
+	return "sha256:" + digits, nil
 }
 
 // Sign signs a serialised Query with the active signing key.
@@ -413,6 +547,22 @@ func (k *Keyring) Sign(message []byte) ([]byte, error) {
 	}
 	digest := sha256.Sum256(message)
 	return g.signingKey.Sign(rand.Reader, digest[:], crypto.SHA256)
+}
+
+// ErrNoApprovalKey is returned when the active generation has no approval key: a KMS-held generation made before approval keys, until a rotation names one.
+var ErrNoApprovalKey = errors.New("the active serving keys have no approval key; rotate them naming an approval key URI")
+
+// SignApproval signs an approval message with the active approval key. Only Hub.SignApproval calls it, with ApprovalSignedMessage, whose domain no query or forward shares.
+func (k *Keyring) SignApproval(message []byte) ([]byte, error) {
+	g, err := k.active()
+	if err != nil {
+		return nil, err
+	}
+	if g.approvalKey == nil {
+		return nil, ErrNoApprovalKey
+	}
+	digest := sha256.Sum256(message)
+	return g.approvalKey.Sign(rand.Reader, digest[:], crypto.SHA256)
 }
 
 // ServerName is the name serving processes and replicas verify a replica's certificate against. It is fixed per instance rather than a real host name, so a replica is recognised by the CA that issued its certificate wherever it is reached from, behind any load balancer.
@@ -568,11 +718,15 @@ func (k *Keyring) trustVersion() string {
 
 // GenerationStatus describes one trusted key generation.
 type GenerationStatus struct {
-	ID          string     `json:"id"`
-	Storage     string     `json:"storage"`
-	Active      bool       `json:"active"`
-	ActivatesAt time.Time  `json:"activates_at"`
-	RetiresAt   *time.Time `json:"retires_at,omitempty"`
+	ID      string `json:"id"`
+	Storage string `json:"storage"`
+	// CAFingerprint is the SHA-256 of the generation's CA certificate, as sha256:<hex>, to give a serving process with --ca-fingerprint so it checks the CA before it first trusts it.
+	CAFingerprint string `json:"ca_fingerprint"`
+	// ApprovalKeyFingerprint is the SHA-256 of the generation's approval public key, to give a serving process as approvals.key_fingerprint. Empty when it has no approval key.
+	ApprovalKeyFingerprint string     `json:"approval_key_fingerprint,omitempty"`
+	Active                 bool       `json:"active"`
+	ActivatesAt            time.Time  `json:"activates_at"`
+	RetiresAt              *time.Time `json:"retires_at,omitempty"`
 } // @name ServeKeyGeneration
 
 // Generations lists the trusted key generations, oldest first.
@@ -584,7 +738,11 @@ func (k *Keyring) Generations() []GenerationStatus {
 		if _, local := g.caKey.(*ecdsa.PrivateKey); !local {
 			storage = "kms"
 		}
-		out = append(out, GenerationStatus{ID: g.id, Storage: storage, Active: g == active, ActivatesAt: g.activatesAt, RetiresAt: g.retiresAt})
+		status := GenerationStatus{ID: g.id, Storage: storage, CAFingerprint: CAFingerprint(g.caCert.Raw), Active: g == active, ActivatesAt: g.activatesAt, RetiresAt: g.retiresAt}
+		if g.approvalPub != nil {
+			status.ApprovalKeyFingerprint = ApprovalKeyFingerprint(g.approvalPub)
+		}
+		out = append(out, status)
 	}
 	return out
 }

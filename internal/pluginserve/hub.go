@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 
+	"github.com/marmotdata/marmot/internal/core/dataquery"
 	pb "github.com/marmotdata/marmot/internal/pluginserve/proto"
 )
 
@@ -84,6 +85,12 @@ type Hub struct {
 	replicaServer *grpc.Server
 	replicaConns  *connListener
 
+	// forwards checks the signed forwards other replicas send this one.
+	forwards *forwardVerifier
+
+	// triggerSubs are the subscribers to trigger events arriving on sessions held here.
+	triggerSubs triggerSubscribers
+
 	mu         sync.Mutex
 	sessions   map[string]*session
 	peers      map[string]*grpc.ClientConn
@@ -108,13 +115,15 @@ type session struct {
 }
 
 func NewHub(keyring *Keyring, store *Store, owners OwnerLookup, checker PrincipalChecker, cfg HubConfig) *Hub {
+	replicaID := uuid.NewString()
 	return &Hub{
 		keyring:   keyring,
 		store:     store,
 		owners:    owners,
 		checker:   checker,
 		cfg:       cfg,
-		replicaID: uuid.NewString(),
+		replicaID: replicaID,
+		forwards:  newForwardVerifier(keyring, keyring.replicaID(replicaID)),
 		sessions:  make(map[string]*session),
 		peers:     make(map[string]*grpc.ClientConn),
 		stop:      make(chan struct{}),
@@ -384,6 +393,9 @@ func (h *Hub) openSession(conn *tls.Conn, state tls.ConnectionState, enrolmentID
 		h.closeSession(s)
 	}()
 
+	// The trigger stream is opened for every session; a process with no triggers ends it at once.
+	go h.watchTriggers(s)
+
 	log.Info().Str("enrolment", enrolment.ID).Str("principal", enrolment.AuditSubject).Strs("sources", enrolment.Sources).Msg("Serving plugin connected")
 	return nil
 }
@@ -520,27 +532,52 @@ func (h *Hub) localSession(source string, owner Owner) *session {
 	return nil
 }
 
-// PlanQuery asks the serving plugin for source what a statement would touch.
-func (h *Hub) PlanQuery(ctx context.Context, source string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
-	resp, err := h.plan(ctx, forwarded(pb.Operation_OPERATION_PLAN, source, "", req), true)
+// PlanQuery asks the serving plugin for source what a statement would touch. origin names what caused the query, for the serving process's audit.
+func (h *Hub) PlanQuery(ctx context.Context, source, origin string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
+	fq, err := forwarded(pb.Operation_OPERATION_PLAN, source, "", origin, req)
+	if err != nil {
+		return nil, err
+	}
+	owner, err := h.owners(ctx, source)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := h.plan(ctx, fq, owner, true)
 	if err != nil {
 		return nil, err
 	}
 	return decodePlan(resp.PlanJson)
 }
 
-// ExecuteQuery runs a statement on the serving plugin for source. queryID is the query's id in Marmot's log, which the serving process records so both audit trails can be matched.
-func (h *Hub) ExecuteQuery(ctx context.Context, source, queryID string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+// ExecuteQuery runs a statement on the serving plugin for source. queryID is the query's id in Marmot's log and origin what caused it, which the serving process records so both audit trails can be matched. The stream it returns implements dataquery.ReceiptStream.
+func (h *Hub) ExecuteQuery(ctx context.Context, source, queryID, origin string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+	fq, err := forwarded(pb.Operation_OPERATION_EXECUTE, source, queryID, origin, req)
+	if err != nil {
+		return nil, err
+	}
+	owner, err := h.owners(ctx, source)
+	if err != nil {
+		return nil, err
+	}
 	ctx, cancel := context.WithCancel(ctx)
-	stream, err := h.execute(ctx, forwarded(pb.Operation_OPERATION_EXECUTE, source, queryID, req), true)
+	stream, s, err := h.execute(ctx, fq, owner, true)
 	if err != nil {
 		cancel()
 		return nil, err
 	}
-	return &resultStream{stream: stream, cancel: cancel}, nil
+	exp := receiptExpectation{fq: fq, owner: owner}
+	if s != nil {
+		exp.enrolmentID = s.enrolment.ID
+	}
+	return &resultStream{hub: h, ctx: ctx, stream: stream, cancel: cancel, expect: exp}, nil
 }
 
-func forwarded(op pb.Operation, source, queryID string, req pluginsdk.QueryRequest) *pb.ForwardedQuery {
+// forwarded builds the query as it travels between replicas. Its nonce is chosen here, by the replica that took the query, and is the nonce of the Query the serving process receives wherever the query is routed, so this replica can match the receipt that comes back.
+func forwarded(op pb.Operation, source, queryID, origin string, req pluginsdk.QueryRequest) (*pb.ForwardedQuery, error) {
+	nonce, err := newNonce()
+	if err != nil {
+		return nil, err
+	}
 	return &pb.ForwardedQuery{
 		Operation: op,
 		Source:    source,
@@ -548,15 +585,13 @@ func forwarded(op pb.Operation, source, queryID string, req pluginsdk.QueryReque
 		MaxRows:   req.MaxRows,
 		Actor:     req.Identity,
 		QueryId:   queryID,
-	}
+		Origin:    origin,
+		Nonce:     nonce,
+	}, nil
 }
 
 // plan sends a plan to a local session, or to a replica holding one when mayForward is set. Forwarded queries are never forwarded again, so they cannot loop between replicas.
-func (h *Hub) plan(ctx context.Context, fq *pb.ForwardedQuery, mayForward bool) (*pb.PlanQueryResponse, error) {
-	owner, err := h.owners(ctx, fq.Source)
-	if err != nil {
-		return nil, err
-	}
+func (h *Hub) plan(ctx context.Context, fq *pb.ForwardedQuery, owner Owner, mayForward bool) (*pb.PlanQueryResponse, error) {
 	if s := h.localSession(fq.Source, owner); s != nil {
 		signed, err := h.signFor(s, fq)
 		if err != nil {
@@ -567,69 +602,90 @@ func (h *Hub) plan(ctx context.Context, fq *pb.ForwardedQuery, mayForward bool) 
 	if !mayForward {
 		return nil, status.Error(codes.Unavailable, ErrNotConnected.Error())
 	}
-	peer, err := h.peerFor(ctx, fq.Source, owner)
+	peer, signed, err := h.forwardTo(ctx, fq, owner)
 	if err != nil {
 		return nil, err
 	}
-	return pb.NewReplicaClient(peer).PlanQuery(ctx, fq)
+	return pb.NewReplicaClient(peer).PlanQuery(ctx, signed)
 }
 
-func (h *Hub) execute(ctx context.Context, fq *pb.ForwardedQuery, mayForward bool) (grpc.ServerStreamingClient[pb.QueryChunk], error) {
-	owner, err := h.owners(ctx, fq.Source)
-	if err != nil {
-		return nil, err
-	}
+// execute sends an execute like plan does, and returns the session it went to, or nil when it was forwarded.
+func (h *Hub) execute(ctx context.Context, fq *pb.ForwardedQuery, owner Owner, mayForward bool) (grpc.ServerStreamingClient[pb.QueryChunk], *session, error) {
 	if s := h.localSession(fq.Source, owner); s != nil {
 		signed, err := h.signFor(s, fq)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return s.client.ExecuteQuery(ctx, signed)
+		stream, err := s.client.ExecuteQuery(ctx, signed)
+		return stream, s, err
 	}
 	if !mayForward {
-		return nil, status.Error(codes.Unavailable, ErrNotConnected.Error())
+		return nil, nil, status.Error(codes.Unavailable, ErrNotConnected.Error())
 	}
-	peer, err := h.peerFor(ctx, fq.Source, owner)
+	peer, signed, err := h.forwardTo(ctx, fq, owner)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return pb.NewReplicaClient(peer).ExecuteQuery(ctx, fq)
+	stream, err := pb.NewReplicaClient(peer).ExecuteQuery(ctx, signed)
+	return stream, nil, err
 }
 
-// signFor turns a query into a Query signed for, and bound to, one session's connection.
+// forwardTo finds a replica holding a session for the query's source and signs the query for that replica alone.
+func (h *Hub) forwardTo(ctx context.Context, fq *pb.ForwardedQuery, owner Owner) (*grpc.ClientConn, *pb.SignedForward, error) {
+	peer, replica, err := h.peerFor(ctx, fq.Source, owner)
+	if err != nil {
+		return nil, nil, err
+	}
+	signed, err := h.keyring.signForward(fq, h.keyring.replicaID(replica), time.Now())
+	if err != nil {
+		return nil, nil, err
+	}
+	return peer, signed, nil
+}
+
+// signFor turns a query or action into a Query signed for, and bound to, one session's connection.
 func (h *Hub) signFor(s *session, fq *pb.ForwardedQuery) (*pb.SignedQuery, error) {
 	return h.keyring.signQuery(&pb.Query{
-		Operation: fq.Operation,
-		Source:    fq.Source,
-		Statement: fq.Statement,
-		MaxRows:   fq.MaxRows,
-		Actor:     fq.Actor,
-		QueryId:   fq.QueryId,
+		Operation:     fq.Operation,
+		Source:        fq.Source,
+		Statement:     fq.Statement,
+		MaxRows:       fq.MaxRows,
+		Actor:         fq.Actor,
+		QueryId:       fq.QueryId,
+		Origin:        fq.Origin,
+		Nonce:         fq.Nonce,
+		ReceiptWanted: fq.Operation == pb.Operation_OPERATION_EXECUTE,
+		// An action's fields are copied as they came, so the serving process acts on what the replica that took the action asked for and its receipt hashes the same parameter bytes.
+		Action:         fq.Action,
+		ParamsJson:     fq.ParamsJson,
+		Precondition:   fq.Precondition,
+		ManifestDigest: fq.ManifestDigest,
+		Approval:       fq.Approval,
 	}, s.audience, s.binding, time.Now())
 }
 
-// peerFor returns a mutual TLS gRPC client to a replica holding a session for source.
-func (h *Hub) peerFor(ctx context.Context, source string, owner Owner) (*grpc.ClientConn, error) {
-	addresses, err := h.store.remoteReplicas(ctx, source, owner.Type, owner.ID, h.replicaID, sessionFreshness)
+// peerFor returns a mutual TLS gRPC client to a replica holding a session for source, and that replica's id, which a forward to it is signed for.
+func (h *Hub) peerFor(ctx context.Context, source string, owner Owner) (*grpc.ClientConn, string, error) {
+	replicas, err := h.store.remoteReplicas(ctx, source, owner.Type, owner.ID, h.replicaID, sessionFreshness)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	if len(addresses) == 0 {
-		return nil, ErrNotConnected
+	if len(replicas) == 0 {
+		return nil, "", ErrNotConnected
 	}
-	address := addresses[0]
+	target := replicas[0]
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if conn, ok := h.peers[address]; ok {
-		return conn, nil
+	if conn, ok := h.peers[target.address]; ok {
+		return conn, target.id, nil
 	}
-	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(h.clientTLS())))
+	conn, err := grpc.NewClient(target.address, grpc.WithTransportCredentials(credentials.NewTLS(h.clientTLS())))
 	if err != nil {
-		return nil, fmt.Errorf("connecting to replica %s: %w", address, err)
+		return nil, "", fmt.Errorf("connecting to replica %s: %w", target.address, err)
 	}
-	h.peers[address] = conn
-	return conn, nil
+	h.peers[target.address] = conn
+	return conn, target.id, nil
 }
 
 // clientTLS is how a replica dials another: TLS 1.3, the peer verified against this instance's CA under the fixed replica server name, and this replica's own certificate presented.
@@ -648,12 +704,38 @@ type replicaService struct {
 	hub *Hub
 }
 
-func (r *replicaService) PlanQuery(ctx context.Context, fq *pb.ForwardedQuery) (*pb.PlanQueryResponse, error) {
-	return r.hub.plan(ctx, fq, false)
+// accept verifies a forward and resolves its source's owner. The owner is looked up here rather than trusted from the forward, as the forwarding replica's own lookup was.
+func (r *replicaService) accept(ctx context.Context, signed *pb.SignedForward, op pb.Operation) (*pb.ForwardedQuery, Owner, error) {
+	fq, err := r.hub.forwards.verify(signed)
+	if err == nil && fq.Operation != op {
+		err = fmt.Errorf("%w: wrong operation", ErrRejected)
+	}
+	if err != nil {
+		log.Warn().Err(err).Msg("Refused forwarded query")
+		return nil, Owner{}, status.Error(codes.PermissionDenied, ErrRejected.Error())
+	}
+	owner, err := r.hub.owners(ctx, fq.Source)
+	if err != nil {
+		return nil, Owner{}, err
+	}
+	return fq, owner, nil
 }
 
-func (r *replicaService) ExecuteQuery(fq *pb.ForwardedQuery, out grpc.ServerStreamingServer[pb.QueryChunk]) error {
-	in, err := r.hub.execute(out.Context(), fq, false)
+func (r *replicaService) PlanQuery(ctx context.Context, signed *pb.SignedForward) (*pb.PlanQueryResponse, error) {
+	fq, owner, err := r.accept(ctx, signed, pb.Operation_OPERATION_PLAN)
+	if err != nil {
+		return nil, err
+	}
+	return r.hub.plan(ctx, fq, owner, false)
+}
+
+// ExecuteQuery relays a forwarded execute's chunks untouched, the serving process's receipt among them, so the replica that took the query verifies the receipt against what it asked for.
+func (r *replicaService) ExecuteQuery(signed *pb.SignedForward, out grpc.ServerStreamingServer[pb.QueryChunk]) error {
+	fq, owner, err := r.accept(out.Context(), signed, pb.Operation_OPERATION_EXECUTE)
+	if err != nil {
+		return err
+	}
+	in, _, err := r.hub.execute(out.Context(), fq, owner, false)
 	if err != nil {
 		return err
 	}
@@ -675,26 +757,59 @@ func (r *replicaService) ExecuteQuery(fq *pb.ForwardedQuery, out grpc.ServerStre
 	}
 }
 
-// resultStream decodes chunks from a serving plugin and enforces the result size cap.
+// resultStream decodes chunks from a serving plugin, enforces the result size cap and takes the serving plugin's receipt off the end of the stream, verifying it rather than handing it to the caller as rows.
 type resultStream struct {
+	hub    *Hub
+	ctx    context.Context
 	stream grpc.ServerStreamingClient[pb.QueryChunk]
 	cancel context.CancelFunc
+	expect receiptExpectation
 	total  int
+	rows   int64
+
+	receipt *dataquery.RunnerReceipt
 }
 
 func (r *resultStream) Recv() (*pluginsdk.QueryResultChunk, error) {
-	msg, err := r.stream.Recv()
-	if err != nil {
-		return nil, err
+	for {
+		msg, err := r.stream.Recv()
+		if err != nil {
+			return nil, err
+		}
+		if msg.Receipt != nil {
+			r.takeReceipt(msg.Receipt)
+			continue
+		}
+		if r.receipt != nil {
+			// The receipt counts the rows sent before it, so rows after it would make it a false account.
+			r.receipt.Status, r.receipt.Problem = dataquery.ReceiptInvalid, "rows arrived after the receipt"
+		}
+		if r.total += len(msg.ChunkJson); r.total > maxResultBytes {
+			return nil, status.Error(codes.ResourceExhausted, "query result too large")
+		}
+		var chunk pluginsdk.QueryResultChunk
+		if err := json.Unmarshal(msg.ChunkJson, &chunk); err != nil {
+			return nil, fmt.Errorf("decoding result chunk: %w", err)
+		}
+		r.rows += int64(len(chunk.Rows))
+		return &chunk, nil
 	}
-	if r.total += len(msg.ChunkJson); r.total > maxResultBytes {
-		return nil, status.Error(codes.ResourceExhausted, "query result too large")
+}
+
+// takeReceipt verifies the receipt. A second receipt marks the query's receipt invalid, since a serving process sends exactly one.
+func (r *resultStream) takeReceipt(signed *pb.SignedReceipt) {
+	if r.receipt != nil {
+		r.receipt.Status, r.receipt.Problem = dataquery.ReceiptInvalid, "the serving plugin sent more than one receipt"
+		return
 	}
-	var chunk pluginsdk.QueryResultChunk
-	if err := json.Unmarshal(msg.ChunkJson, &chunk); err != nil {
-		return nil, fmt.Errorf("decoding result chunk: %w", err)
-	}
-	return &chunk, nil
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.ctx), handshakeTimeout)
+	defer cancel()
+	r.receipt = r.hub.verifyReceipt(ctx, signed, r.expect, r.rows)
+}
+
+// Receipt returns the serving plugin's receipt once the stream has ended, or nil when none arrived.
+func (r *resultStream) Receipt() *dataquery.RunnerReceipt {
+	return r.receipt
 }
 
 func (r *resultStream) Close() error {

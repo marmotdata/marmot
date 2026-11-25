@@ -137,29 +137,38 @@ func (h *harness) serve(hub *Hub, principal auth.Principal, source string, queri
 	h.serveWith(h.enroller(hub), hub, principal, sessionCredential, source, querier)
 }
 
-func (h *harness) serveWith(enroller *Enroller, hub *Hub, principal auth.Principal, credential auth.Credential, source string, querier Querier) {
+// serveWith runs a serving process like serve, with configure applied to its options.
+func (h *harness) serveWith(enroller *Enroller, hub *Hub, principal auth.Principal, credential auth.Credential, source string, querier Querier, configure ...func(*ServeOptions)) {
 	h.t.Helper()
 	ctx, cancel := context.WithCancel(h.ctx)
 	done := make(chan struct{})
+	opts := h.serveOptions(enroller, principal, credential, source, querier)
+	for _, c := range configure {
+		c(&opts)
+	}
 	go func() {
 		defer close(done)
-		_ = Serve(ctx, ServeOptions{
-			Sources: []LocalSource{{
-				Name:          source,
-				PluginID:      "servetest",
-				Config:        map[string]any{"host": "db.internal", "password": "s3cret"},
-				DisplayConfig: map[string]any{"host": "db.internal", "password": "s3cret"},
-			}},
-			Enrol: func(ctx context.Context, in EnrolInput) (*EnrolResult, error) {
-				return enroller.Enrol(ctx, principal, credential, in)
-			},
-			Querier: querier,
-		})
+		_ = Serve(ctx, opts)
 	}()
 	h.t.Cleanup(func() { cancel(); <-done })
 
 	owner := Owner{Type: string(principal.Type()), ID: principal.ID()}
 	require.Eventually(h.t, func() bool { return hub.localSession(source, owner) != nil }, 5*time.Second, 20*time.Millisecond)
+}
+
+func (h *harness) serveOptions(enroller *Enroller, principal auth.Principal, credential auth.Credential, source string, querier Querier) ServeOptions {
+	return ServeOptions{
+		Sources: []LocalSource{{
+			Name:          source,
+			PluginID:      "servetest",
+			Config:        map[string]any{"host": "db.internal", "password": "s3cret"},
+			DisplayConfig: map[string]any{"host": "db.internal", "password": "s3cret"},
+		}},
+		Enrol: func(ctx context.Context, in EnrolInput) (*EnrolResult, error) {
+			return enroller.Enrol(ctx, principal, credential, in)
+		},
+		Querier: querier,
+	}
 }
 
 // fakeQuerier stands in for the local plugin processes and records what it was asked.
@@ -232,11 +241,11 @@ func TestServeEndToEnd(t *testing.T) {
 	querier := &fakeQuerier{rows: 25}
 	h.serve(hub, principal, source, querier)
 
-	plan, err := hub.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT * FROM orders", MaxRows: 100, Identity: "user:alice"})
+	plan, err := hub.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT * FROM orders", MaxRows: 100, Identity: "user:alice"})
 	require.NoError(t, err)
 	assert.Equal(t, []string{"mrn://table/postgresql/orders"}, plan.ReferencedMRNs)
 
-	stream, err := hub.ExecuteQuery(h.ctx, source, uuid.NewString(), pluginsdk.QueryRequest{Statement: "SELECT * FROM orders", MaxRows: 100, Identity: "user:alice"})
+	stream, err := hub.ExecuteQuery(h.ctx, source, uuid.NewString(), "", pluginsdk.QueryRequest{Statement: "SELECT * FROM orders", MaxRows: 100, Identity: "user:alice"})
 	require.NoError(t, err)
 	assert.Equal(t, 25, collect(t, stream))
 
@@ -257,7 +266,7 @@ func TestServeEnforcesSignedRowLimit(t *testing.T) {
 	source := newSourceName()
 	h.serve(hub, servePrincipal(), source, &fakeQuerier{rows: 1000})
 
-	stream, err := hub.ExecuteQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 15})
+	stream, err := hub.ExecuteQuery(h.ctx, source, "", "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 15})
 	require.NoError(t, err)
 	assert.Equal(t, 15, collect(t, stream), "the serving process stops at the row limit Marmot signed, whatever the plugin returns")
 }
@@ -268,11 +277,11 @@ func TestServeForwardsBetweenReplicas(t *testing.T) {
 	source := newSourceName()
 	h.serve(connected, servePrincipal(), source, &fakeQuerier{rows: 3})
 
-	plan, err := other.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
+	plan, err := other.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
 	require.NoError(t, err)
 	assert.NotEmpty(t, plan.ReferencedMRNs)
 
-	stream, err := other.ExecuteQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
+	stream, err := other.ExecuteQuery(h.ctx, source, "", "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
 	require.NoError(t, err)
 	assert.Equal(t, 3, collect(t, stream))
 }
@@ -287,7 +296,7 @@ func TestServeQueryWithNoConnection(t *testing.T) {
 	_, err := h.enroller(hub).Enrol(h.ctx, principal, sessionCredential, enrolInput(t, nil, source))
 	require.NoError(t, err)
 
-	_, err = hub.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
+	_, err = hub.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
 	assert.ErrorIs(t, err, ErrNotConnected)
 }
 
@@ -301,7 +310,7 @@ func TestServeRoutesOnlyEnrolledSources(t *testing.T) {
 	_, err := h.enroller(hub).Enrol(h.ctx, principal, sessionCredential, enrolInput(t, nil, other))
 	require.NoError(t, err)
 
-	_, err = hub.PlanQuery(h.ctx, other, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
+	_, err = hub.PlanQuery(h.ctx, other, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
 	assert.ErrorIs(t, err, ErrNotConnected)
 }
 
@@ -315,7 +324,7 @@ func TestServeStopsWhenSourceDeleted(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, h.schedules.DeleteSchedule(h.ctx, stored.ID))
 
-	_, err = hub.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
+	_, err = hub.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
 	assert.Error(t, err)
 }
 
@@ -331,7 +340,7 @@ func TestSweepClosesSessionsOfPrincipalsThatMayNoLongerServe(t *testing.T) {
 
 	owner := Owner{Type: string(principal.Type()), ID: principal.ID()}
 	assert.Nil(t, hub.localSession(source, owner))
-	_, err := hub.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
+	_, err := hub.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
 	assert.Error(t, err)
 }
 
@@ -394,7 +403,7 @@ func enrolInput(t *testing.T, key *ecdsa.PrivateKey, sources ...string) EnrolInp
 	return in
 }
 
-// dialHub opens a TLS connection to hub with cfg and reports whether the hub kept it: TLS 1.3 completes the client's side of the handshake before the server has checked the client certificate, so refusal shows up as the connection being closed.
+// dialHub opens a TLS connection to hub with cfg and reports whether the hub kept it: TLS 1.3 completes the client's side of the handshake before the server has checked the client certificate, so refusal shows up as the connection being closed. A kept connection either stays quiet or carries the hub's first stream, the trigger stream it opens on every session.
 func dialHub(t *testing.T, hub *Hub, cfg *tls.Config) bool {
 	t.Helper()
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 2 * time.Second}, "tcp", hub.Addr().String(), cfg)
@@ -403,7 +412,10 @@ func dialHub(t *testing.T, hub *Hub, cfg *tls.Config) bool {
 	}
 	defer conn.Close()
 	_ = conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
-	_, err = conn.Read(make([]byte, 1))
+	n, err := conn.Read(make([]byte, 1))
+	if n > 0 {
+		return true
+	}
 	var netErr net.Error
 	return errors.As(err, &netErr) && netErr.Timeout()
 }
@@ -495,8 +507,12 @@ func TestHubRefusesUnauthenticatedConnections(t *testing.T) {
 
 	t.Run("serving process certificate used to impersonate a replica", func(t *testing.T) {
 		replica := replicaClientWith(t, hub, valid)
-		_, err := replica.PlanQuery(h.ctx, forwarded(1, "anything", "", pluginsdk.QueryRequest{}))
-		assert.Error(t, err)
+		fq, err := forwarded(pb.Operation_OPERATION_PLAN, "anything", "", "", pluginsdk.QueryRequest{})
+		require.NoError(t, err)
+		signed, err := h.keyring.signForward(fq, h.keyring.replicaID(hub.replicaID), time.Now())
+		require.NoError(t, err)
+		_, err = replica.PlanQuery(h.ctx, signed)
+		assert.Error(t, err, "even a validly signed forward is refused from a caller that is not a replica")
 	})
 }
 
@@ -540,7 +556,7 @@ func TestServeRenewsCertificateBeforeExpiry(t *testing.T) {
 		return s != nil && s.enrolment.ID != first
 	}, 10*time.Second, 100*time.Millisecond, "a new enrolment takes over at half-life")
 
-	stream, err := hub.ExecuteQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
+	stream, err := hub.ExecuteQuery(h.ctx, source, "", "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 10})
 	require.NoError(t, err)
 	assert.Equal(t, 1, collect(t, stream))
 }
@@ -550,7 +566,7 @@ func (h *harness) sessionFor(hub *Hub, principal auth.Principal, source string) 
 }
 
 func (h *harness) planWorks(hub *Hub, source string) error {
-	_, err := hub.PlanQuery(h.ctx, source, pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
+	_, err := hub.PlanQuery(h.ctx, source, "", pluginsdk.QueryRequest{Statement: "SELECT 1", MaxRows: 1})
 	return err
 }
 
@@ -599,7 +615,8 @@ func TestGracefulRotationKeepsServing(t *testing.T) {
 	_, err = h.pool.Exec(h.ctx, `UPDATE plugin_serve_keys SET retires_at = NOW() WHERE id = $1`, oldGen)
 	require.NoError(t, err)
 	hub.sweep()
-	assert.Equal(t, []GenerationStatus{{ID: newGen, Storage: "database", Active: true, ActivatesAt: h.keyring.Generations()[0].ActivatesAt}}, h.keyring.Generations())
+	current := h.keyring.Generations()[0]
+	assert.Equal(t, []GenerationStatus{{ID: newGen, Storage: "database", CAFingerprint: current.CAFingerprint, ApprovalKeyFingerprint: current.ApprovalKeyFingerprint, Active: true, ActivatesAt: current.ActivatesAt}}, h.keyring.Generations())
 
 	require.Eventually(t, func() bool { return h.planWorks(hub, source) == nil }, 10*time.Second, 100*time.Millisecond,
 		"the process reconnects under the new CA without being restarted")

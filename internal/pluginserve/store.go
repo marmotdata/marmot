@@ -2,6 +2,7 @@ package pluginserve
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -35,6 +36,8 @@ type Enrolment struct {
 	Credential      auth.Credential
 	CreatedAt       time.Time
 	ExpiresAt       time.Time
+	// ServedActions is the process's report for each source that has actions or triggers, as it enrolled with it.
+	ServedActions map[string]*ServedActions
 }
 
 // active reports whether the enrolment may still carry queries at now.
@@ -65,13 +68,18 @@ type generationRecord struct {
 	SigningPublicKey string
 	SigningKey       *string
 	SigningKeyURI    *string
-	ActivatesAt      time.Time
-	RetiresAt        *time.Time
+	// The approval key's three are all nil for a generation made before approval keys existed.
+	ApprovalPublicKey *string
+	ApprovalKey       *string
+	ApprovalKeyURI    *string
+	ActivatesAt       time.Time
+	RetiresAt         *time.Time
 }
 
 func (s *Store) trustedGenerations(ctx context.Context) ([]*generationRecord, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT id, ca_cert, ca_key, ca_key_uri, signing_public_key, signing_key, signing_key_uri, activates_at, retires_at
+		`SELECT id, ca_cert, ca_key, ca_key_uri, signing_public_key, signing_key, signing_key_uri,
+		        approval_public_key, approval_key, approval_key_uri, activates_at, retires_at
 		 FROM plugin_serve_keys
 		 WHERE retires_at IS NULL OR retires_at > NOW()
 		 ORDER BY activates_at`)
@@ -80,7 +88,8 @@ func (s *Store) trustedGenerations(ctx context.Context) ([]*generationRecord, er
 	}
 	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (*generationRecord, error) {
 		var r generationRecord
-		err := row.Scan(&r.ID, &r.CACert, &r.CAKey, &r.CAKeyURI, &r.SigningPublicKey, &r.SigningKey, &r.SigningKeyURI, &r.ActivatesAt, &r.RetiresAt)
+		err := row.Scan(&r.ID, &r.CACert, &r.CAKey, &r.CAKeyURI, &r.SigningPublicKey, &r.SigningKey, &r.SigningKeyURI,
+			&r.ApprovalPublicKey, &r.ApprovalKey, &r.ApprovalKeyURI, &r.ActivatesAt, &r.RetiresAt)
 		return &r, err
 	})
 }
@@ -111,11 +120,47 @@ func (t keyTx) anyGeneration(ctx context.Context) (bool, error) {
 
 func (t keyTx) insertGeneration(ctx context.Context, r *generationRecord) error {
 	_, err := t.tx.Exec(ctx,
-		`INSERT INTO plugin_serve_keys (ca_cert, ca_key, ca_key_uri, signing_public_key, signing_key, signing_key_uri, activates_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		r.CACert, r.CAKey, r.CAKeyURI, r.SigningPublicKey, r.SigningKey, r.SigningKeyURI, r.ActivatesAt)
+		`INSERT INTO plugin_serve_keys (ca_cert, ca_key, ca_key_uri, signing_public_key, signing_key, signing_key_uri,
+		                                approval_public_key, approval_key, approval_key_uri, activates_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		r.CACert, r.CAKey, r.CAKeyURI, r.SigningPublicKey, r.SigningKey, r.SigningKeyURI,
+		r.ApprovalPublicKey, r.ApprovalKey, r.ApprovalKeyURI, r.ActivatesAt)
 	if err != nil {
 		return fmt.Errorf("storing key generation: %w", err)
+	}
+	return nil
+}
+
+// generationsWithoutApprovalKey lists the trusted generations made before approval keys existed.
+func (t keyTx) generationsWithoutApprovalKey(ctx context.Context) ([]string, []bool, error) {
+	rows, err := t.tx.Query(ctx,
+		`SELECT id, ca_key_uri IS NOT NULL FROM plugin_serve_keys
+		 WHERE approval_public_key IS NULL AND (retires_at IS NULL OR retires_at > NOW())
+		 ORDER BY activates_at`)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading key generations: %w", err)
+	}
+	defer rows.Close()
+	var ids []string
+	var kms []bool
+	for rows.Next() {
+		var id string
+		var k bool
+		if err := rows.Scan(&id, &k); err != nil {
+			return nil, nil, err
+		}
+		ids, kms = append(ids, id), append(kms, k)
+	}
+	return ids, kms, rows.Err()
+}
+
+// setApprovalKey gives a generation made before approval keys its approval key, once.
+func (t keyTx) setApprovalKey(ctx context.Context, id string, publicKey string, sealed, uri *string) error {
+	_, err := t.tx.Exec(ctx,
+		`UPDATE plugin_serve_keys SET approval_public_key = $2, approval_key = $3, approval_key_uri = $4
+		 WHERE id = $1 AND approval_public_key IS NULL`, id, publicKey, sealed, uri)
+	if err != nil {
+		return fmt.Errorf("adding an approval key: %w", err)
 	}
 	return nil
 }
@@ -133,10 +178,10 @@ func (t keyTx) retireGenerations(ctx context.Context, retires time.Time) error {
 
 func (s *Store) createEnrolment(ctx context.Context, e *Enrolment) error {
 	err := s.db.QueryRow(ctx,
-		`INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, credential_lookup, expires_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`INSERT INTO plugin_serve_enrolments (principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, credential_lookup, expires_at, served_actions)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		 RETURNING id, created_at`,
-		e.PrincipalType, e.PrincipalID, e.AuditSubject, e.Sources, e.PublicKeySHA256, e.Credential.Type, nilIfEmpty(e.Credential.Lookup), e.ExpiresAt,
+		e.PrincipalType, e.PrincipalID, e.AuditSubject, e.Sources, e.PublicKeySHA256, e.Credential.Type, nilIfEmpty(e.Credential.Lookup), e.ExpiresAt, servedJSON(e.ServedActions),
 	).Scan(&e.ID, &e.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("creating enrolment: %w", err)
@@ -146,15 +191,21 @@ func (s *Store) createEnrolment(ctx context.Context, e *Enrolment) error {
 
 func (s *Store) enrolment(ctx context.Context, id string) (*Enrolment, error) {
 	var e Enrolment
+	var served []byte
 	err := s.db.QueryRow(ctx,
-		`SELECT id, principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, COALESCE(credential_lookup, ''), created_at, expires_at
+		`SELECT id, principal_type, principal_id, audit_subject, sources, public_key_sha256, credential_type, COALESCE(credential_lookup, ''), created_at, expires_at, served_actions
 		 FROM plugin_serve_enrolments WHERE id = $1`, id,
-	).Scan(&e.ID, &e.PrincipalType, &e.PrincipalID, &e.AuditSubject, &e.Sources, &e.PublicKeySHA256, &e.Credential.Type, &e.Credential.Lookup, &e.CreatedAt, &e.ExpiresAt)
+	).Scan(&e.ID, &e.PrincipalType, &e.PrincipalID, &e.AuditSubject, &e.Sources, &e.PublicKeySHA256, &e.Credential.Type, &e.Credential.Lookup, &e.CreatedAt, &e.ExpiresAt, &served)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, errNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("reading enrolment: %w", err)
+	}
+	if len(served) > 0 {
+		if err := json.Unmarshal(served, &e.ServedActions); err != nil {
+			return nil, fmt.Errorf("reading enrolment: its served actions do not decode: %w", err)
+		}
 	}
 	return &e, nil
 }
@@ -198,10 +249,16 @@ func (s *Store) deleteSession(ctx context.Context, enrolmentID, replicaID string
 	return nil
 }
 
-// remoteReplicas returns the addresses of other replicas with a fresh connection from a live enrolment that serves source for its owner.
-func (s *Store) remoteReplicas(ctx context.Context, source, ownerType, ownerID, selfReplicaID string, freshness time.Duration) ([]string, error) {
+// remoteReplica is another replica holding a serving connection: its id, which forwards to it are signed for, and the address it is reached on.
+type remoteReplica struct {
+	id      string
+	address string
+}
+
+// remoteReplicas returns the other replicas with a fresh connection from a live enrolment that serves source for its owner.
+func (s *Store) remoteReplicas(ctx context.Context, source, ownerType, ownerID, selfReplicaID string, freshness time.Duration) ([]remoteReplica, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT DISTINCT s.replica_address
+		`SELECT DISTINCT s.replica_id::text, s.replica_address
 		 FROM plugin_serve_sessions s
 		 JOIN plugin_serve_enrolments e ON e.id = s.enrolment_id
 		 WHERE $1 = ANY(e.sources)
@@ -213,7 +270,11 @@ func (s *Store) remoteReplicas(ctx context.Context, source, ownerType, ownerID, 
 	if err != nil {
 		return nil, fmt.Errorf("finding replicas for %s: %w", source, err)
 	}
-	return pgx.CollectRows(rows, pgx.RowTo[string])
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (remoteReplica, error) {
+		var r remoteReplica
+		err := row.Scan(&r.id, &r.address)
+		return r, err
+	})
 }
 
 // revokedCredentials returns which of the enrolments' API keys no longer authenticate: deleted, expired, or belonging to a deleted or inactive service account. One query covers every live connection on a replica.
@@ -264,6 +325,18 @@ func (s *Store) apiKeyExists(ctx context.Context, c auth.Credential) (bool, erro
 		return false, fmt.Errorf("checking API key: %w", err)
 	}
 	return exists, nil
+}
+
+// servedJSON encodes the served actions for the JSONB column, or NULL when there are none.
+func servedJSON(m map[string]*ServedActions) []byte {
+	if len(m) == 0 {
+		return nil
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		return nil
+	}
+	return data
 }
 
 func nilIfEmpty(s string) *string {

@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/pluginserve"
 )
@@ -22,7 +24,131 @@ const (
 	serveInstanceIdleTTL = 5 * time.Minute
 )
 
-var serve bool
+var (
+	serve               bool
+	serveCAFingerprints []string
+	servePolicyFile     string
+	serveAuditLogFile   string
+	serveAllowActions   bool
+)
+
+// serveFlagsHelp documents the serving flags and the policy file, in the help of the command that takes them.
+const serveFlagsHelp = `With --serve, the process stays running after ingesting and answers Marmot's queries for the run marked queryable: true.
+
+  --ca-fingerprint sha256:<hex>   Check Marmot's serving CA before first trusting it. Repeatable;
+                                  copy the values from 'marmot admin serve-keys'.
+  --policy <file.yaml>            This process's own limits on what Marmot may run here.
+  --audit-log <path>              Append a hash-chained JSON line per query served or refused;
+                                  check it with 'marmot ingest verify-audit-log <path>'.
+  --allow-actions                 Also serve plugin actions and run triggers, each only if the policy
+                                  names it. Needs --audit-log: an action's intent is written there
+                                  before it runs.
+
+A policy file names each source this process may serve. Once a policy is given, a source it does
+not name is refused, and unknown keys are an error:
+
+  sources:
+    warehouse:
+      query: true            # default true; false refuses every plan and execute
+      max_rows: 5000         # optional ceiling; a signed row limit above it is lowered to it
+      actors: ["user:alice", "task:*"]   # optional allow-list of the signed actor; * matches anything
+      origins: ["task_run:*"]            # optional allow-list of what caused the query or action
+
+Actions are refused unless --allow-actions is given and the policy names each one. Rules on an
+action only narrow what the plugin's manifest allows; a constrained parameter must be given:
+
+  sources:
+    prod-cluster:
+      query: false
+      manifest: sha256:<hex>   # optional; refuse actions if the plugin's manifest changes
+      actions:
+        rollout_restart:
+          origins: ["task_run:*"]
+        scale:
+          approvals: 1           # people who must approve each execute; default 1, at most 2
+          params:
+            namespace: {values: [payments, checkout]}
+            replicas: {min: 1, max: 10}
+        workload_status: {}    # a read: never needs approval
+      triggers:                # only these run, with these parameters; Marmot only receives events
+        workload_unhealthy:
+          params: {kinds: [deployment], namespaces: [payments], conditions: [crash_looping]}
+          cooldown: 30m
+
+A write runs only with an approval Marmot signed with its approval key, pinned
+from enrolment like the query signing keys, and checked here: the signature,
+the expiry and enough distinct approvers. Approvals are Marmot-signed, which
+this process logs at start and states on every receipt:
+
+  approvals:
+    trust: marmot          # the only mode today; oidc is planned
+    max_age: 15m
+    key_fingerprint: sha256:<from marmot admin serve-keys>   # optional`
+
+// serveSettings reads the serving flags before anything is ingested, so a bad fingerprint, policy or audit log path fails at once rather than after a long ingestion.
+type serveSettings struct {
+	fingerprints []string
+	policy       *pluginserve.Policy
+	auditLog     *pluginserve.AuditLog
+}
+
+func loadServeSettings() (*serveSettings, error) {
+	settings := &serveSettings{}
+	for _, raw := range serveCAFingerprints {
+		fp, err := pluginserve.ParseCAFingerprint(raw)
+		if err != nil {
+			return nil, err
+		}
+		settings.fingerprints = append(settings.fingerprints, fp)
+	}
+	if servePolicyFile != "" {
+		policy, err := pluginserve.LoadPolicy(servePolicyFile)
+		if err != nil {
+			return nil, err
+		}
+		settings.policy = policy
+	}
+	if serveAllowActions && serveAuditLogFile == "" {
+		return nil, errors.New("--allow-actions needs --audit-log: no action runs unless its intent is written down first")
+	}
+	if serveAuditLogFile != "" {
+		auditLog, err := pluginserve.OpenAuditLog(serveAuditLogFile)
+		if err != nil {
+			return nil, err
+		}
+		settings.auditLog = auditLog
+	}
+	return settings, nil
+}
+
+// serveOnlyFlagsSet reports a serving flag given without --serve, which would otherwise be silently ignored.
+func serveOnlyFlagsSet() bool {
+	return len(serveCAFingerprints) > 0 || servePolicyFile != "" || serveAuditLogFile != "" || serveAllowActions
+}
+
+var verifyAuditLogCmd = &cobra.Command{
+	Use:   "verify-audit-log <path>",
+	Short: "Check that a serving process's audit log has not been changed",
+	Long:  `Checks that every line of an audit log written with --audit-log follows from the one before it. A changed or removed line breaks the chain at the line after it, which is reported. Lines removed from the end leave no break; compare the log with the receipts Marmot records for each query to catch those.`,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		n, err := pluginserve.VerifyAuditLog(args[0])
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%d lines verified\n", n)
+		return nil
+	},
+}
+
+func init() {
+	ingestCmd.Flags().StringArrayVar(&serveCAFingerprints, "ca-fingerprint", nil, "With --serve, a SHA-256 fingerprint (sha256:<hex>) of a CA Marmot's first enrolment must include; repeatable")
+	ingestCmd.Flags().StringVar(&servePolicyFile, "policy", "", "With --serve, a YAML policy limiting what this process serves")
+	ingestCmd.Flags().StringVar(&serveAuditLogFile, "audit-log", "", "With --serve, append a hash-chained JSON line per query to this file")
+	ingestCmd.Flags().BoolVar(&serveAllowActions, "allow-actions", false, "With --serve, also serve the plugin actions the policy names; needs --audit-log")
+	ingestCmd.Long = serveFlagsHelp
+	ingestCmd.AddCommand(verifyAuditLogCmd)
+}
 
 // takeQueryableRuns removes the queryable flag from every run and returns the plugin IDs and configs of the runs that set it.
 func takeQueryableRuns(runs []plugin.SourceRun) (map[string]plugin.RawPluginConfig, error) {
@@ -61,7 +187,11 @@ func servedSources(pipeline string, queryable map[string]plugin.RawPluginConfig)
 		if err != nil {
 			return nil, fmt.Errorf("unknown source: %s", pluginID)
 		}
-		if !entry.Meta.SupportsQuery {
+		// A plugin with actions and no queries, such as Kubernetes, is worth serving only when this process may run actions
+		if !entry.Meta.SupportsQuery && !(serveAllowActions && entry.Meta.SupportsActions) {
+			if entry.Meta.SupportsActions {
+				return nil, fmt.Errorf("plugin %s does not support queries; it has actions, which it serves only with --allow-actions", pluginID)
+			}
 			return nil, fmt.Errorf("plugin %s does not support queries", pluginID)
 		}
 		if _, err := entry.Source.Validate(config); err != nil {
@@ -78,12 +208,23 @@ func servedSources(pipeline string, queryable map[string]plugin.RawPluginConfig)
 }
 
 // serveQueries keeps this process connected to Marmot, answering queries for sources from local plugin processes, until it is interrupted.
-func serveQueries(ctx context.Context, marmotURL *url.URL, sources []pluginserve.LocalSource) error {
+func serveQueries(ctx context.Context, marmotURL *url.URL, sources []pluginserve.LocalSource, settings *serveSettings) error {
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	if settings.auditLog != nil {
+		defer func() { _ = settings.auditLog.Close() }()
+	}
 
 	instances := plugin.NewInstanceManager(serveInstanceIdleTTL)
 	defer instances.Stop()
+
+	// The action host is built only when actions are switched on, and only here: this serving process is the one place a plugin's actions may run.
+	var actor pluginserve.Actor
+	var watcher pluginserve.TriggerWatcher
+	if serveAllowActions {
+		host := plugin.NewActionHost(instances)
+		actor, watcher = host, host
+	}
 
 	printStep(fmt.Sprintf("Serving queries for %s", sources[0].Name))
 	return pluginserve.Serve(ctx, pluginserve.ServeOptions{
@@ -91,6 +232,13 @@ func serveQueries(ctx context.Context, marmotURL *url.URL, sources []pluginserve
 		Sources: sources,
 		Enrol:   enrolFunc(marmotURL.String()),
 		Querier: instances,
+
+		CAFingerprints: settings.fingerprints,
+		Policy:         settings.policy,
+		AuditLog:       settings.auditLog,
+		AllowActions:   serveAllowActions,
+		Actor:          actor,
+		Watcher:        watcher,
 	})
 }
 

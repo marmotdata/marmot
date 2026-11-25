@@ -71,6 +71,7 @@ var commandAccess = map[string]Access{
 	"glossary search":                 AccessRead,
 	"glossary update":                 AccessWrite,
 	"ingest":                          AccessWrite,
+	"ingest verify-audit-log":         AccessRead,
 	"knowledge about":                 AccessRead,
 	"knowledge create":                AccessWrite,
 	"knowledge delete":                AccessWrite,

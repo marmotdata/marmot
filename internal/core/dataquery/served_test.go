@@ -2,6 +2,8 @@ package dataquery
 
 import (
 	"context"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -9,21 +11,57 @@ import (
 	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type fakeServed struct {
 	planSource, execSource, queryID string
+	planOrigin, execOrigin          string
 	runner                          *fakeRunner
+	// receipt, when set, is what the stream reports once read; withReceipt makes the stream a ReceiptStream at all.
+	withReceipt bool
+	receipt     *RunnerReceipt
+	drained     *bool
 }
 
-func (f *fakeServed) PlanQuery(ctx context.Context, source string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
-	f.planSource = source
+func (f *fakeServed) PlanQuery(ctx context.Context, source, origin string, req pluginsdk.QueryRequest) (*pluginsdk.QueryPlan, error) {
+	f.planSource, f.planOrigin = source, origin
 	return f.runner.PlanQuery(ctx, "", nil, req)
 }
 
-func (f *fakeServed) ExecuteQuery(ctx context.Context, source, queryID string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
-	f.execSource, f.queryID = source, queryID
-	return f.runner.ExecuteQuery(ctx, "", nil, req)
+func (f *fakeServed) ExecuteQuery(ctx context.Context, source, queryID, origin string, req pluginsdk.QueryRequest) (pluginsdk.QueryStream, error) {
+	f.execSource, f.queryID, f.execOrigin = source, queryID, origin
+	stream, err := f.runner.ExecuteQuery(ctx, "", nil, req)
+	if err != nil || !f.withReceipt {
+		return stream, err
+	}
+	f.drained = new(bool)
+	return &receiptStream{QueryStream: stream, receipt: f.receipt, drained: f.drained}, nil
+}
+
+// receiptStream hands out its receipt only once its rows have been read to the end, as the hub's stream does.
+type receiptStream struct {
+	pluginsdk.QueryStream
+	receipt *RunnerReceipt
+	ended   bool
+	drained *bool
+}
+
+func (s *receiptStream) Recv() (*pluginsdk.QueryResultChunk, error) {
+	chunk, err := s.QueryStream.Recv()
+	if err != nil {
+		s.ended = true
+		*s.drained = true
+	}
+	return chunk, err
+}
+
+func (s *receiptStream) Receipt() *RunnerReceipt {
+	if !s.ended {
+		return nil
+	}
+	return s.receipt
 }
 
 func servedFixture(t *testing.T, served ServedRunner) (Service, *fakeRunner, *memRepo) {
@@ -112,4 +150,101 @@ func TestCompletePlanAsksOnlyAboutItsTables(t *testing.T) {
 	_, err := svc.Query(context.Background(), fakePrincipal{}, QueryInput{Source: "warehouse", Statement: "SELECT lower(name) FROM orders"}, ClientAPI)
 	require.NoError(t, err)
 	assert.Equal(t, []string{ordersMRN}, *asked)
+}
+
+func TestServedQueryCarriesItsOriginToTheLogAndTheServingPlugin(t *testing.T) {
+	remote := &fakeRunner{
+		plan:   &pluginsdk.QueryPlan{ReferencedMRNs: []string{ordersMRN}},
+		chunks: []pluginsdk.QueryResultChunk{{Rows: [][]any{{1}}}},
+	}
+	served := &fakeServed{runner: remote}
+	svc, _, repo := servedFixture(t, served)
+
+	_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1", Origin: "task_run:42"}, ClientAPI)
+	require.NoError(t, err)
+	assert.Equal(t, "task_run:42", served.planOrigin)
+	assert.Equal(t, "task_run:42", served.execOrigin)
+	require.NotNil(t, repo.only(t).Origin)
+	assert.Equal(t, "task_run:42", *repo.only(t).Origin)
+}
+
+func TestQueryRefusesAnInvalidOrigin(t *testing.T) {
+	svc, _, repo := servedFixture(t, &fakeServed{runner: &fakeRunner{}})
+	for name, origin := range map[string]string{
+		"too long":          strings.Repeat("a", maxOriginLength+1),
+		"control character": "task_run:1\nforged: line",
+		"invalid UTF-8":     "task_run:\xff",
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1", Origin: origin}, ClientAPI)
+			assert.ErrorIs(t, err, ErrInvalidInput)
+		})
+	}
+	assert.Empty(t, repo.queries, "a refused origin is rejected before anything is recorded")
+}
+
+func TestServedQueryRecordsItsReceipt(t *testing.T) {
+	plan := &pluginsdk.QueryPlan{ReferencedMRNs: []string{ordersMRN}}
+	rows := []pluginsdk.QueryResultChunk{{Rows: [][]any{{1}}}}
+
+	t.Run("verified", func(t *testing.T) {
+		svc, _, repo := servedFixture(t, &fakeServed{runner: &fakeRunner{plan: plan, chunks: rows}, withReceipt: true, receipt: &RunnerReceipt{Status: ReceiptVerified, Rows: 1}})
+		_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1"}, ClientAPI)
+		require.NoError(t, err)
+		require.NotNil(t, repo.only(t).RunnerReceipt)
+		assert.Equal(t, ReceiptVerified, repo.only(t).RunnerReceipt.Status)
+	})
+
+	t.Run("invalid is recorded, and the query still succeeds", func(t *testing.T) {
+		svc, _, repo := servedFixture(t, &fakeServed{runner: &fakeRunner{plan: plan, chunks: rows}, withReceipt: true, receipt: &RunnerReceipt{Status: ReceiptInvalid, Problem: "bad signature"}})
+		_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1"}, ClientAPI)
+		require.NoError(t, err)
+		assert.Equal(t, ReceiptInvalid, repo.only(t).RunnerReceipt.Status)
+		assert.Equal(t, "bad signature", repo.only(t).RunnerReceipt.Problem)
+	})
+
+	t.Run("missing is recorded as missing", func(t *testing.T) {
+		svc, _, repo := servedFixture(t, &fakeServed{runner: &fakeRunner{plan: plan, chunks: rows}, withReceipt: true})
+		_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1"}, ClientAPI)
+		require.NoError(t, err)
+		assert.Equal(t, ReceiptMissing, repo.only(t).RunnerReceipt.Status)
+	})
+
+	t.Run("a query that never reaches the plugin is recorded as missing", func(t *testing.T) {
+		remote := &fakeRunner{plan: plan, chunks: rows}
+		served := &fakeServed{runner: remote, withReceipt: true, receipt: &RunnerReceipt{Status: ReceiptVerified, Error: "boom"}}
+		svc, _, repo := servedFixture(t, served)
+		remote.execErr = status.Error(codes.Internal, "boom")
+		_, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1"}, ClientAPI)
+		require.ErrorIs(t, err, ErrQueryFailed)
+		assert.Equal(t, ReceiptMissing, repo.only(t).RunnerReceipt.Status)
+	})
+
+	t.Run("a truncated result is read on to its receipt", func(t *testing.T) {
+		many := []pluginsdk.QueryResultChunk{{Rows: [][]any{{1}, {2}, {3}}}, {Rows: [][]any{{4}}}}
+		served := &fakeServed{runner: &fakeRunner{plan: plan, chunks: many}, withReceipt: true, receipt: &RunnerReceipt{Status: ReceiptVerified}}
+		svc, _, repo := servedFixture(t, served)
+		res, err := svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "remote", Statement: "SELECT 1", MaxRows: 2}, ClientAPI)
+		require.NoError(t, err)
+		assert.True(t, res.Truncated)
+		assert.True(t, *served.drained)
+		assert.Equal(t, ReceiptVerified, repo.only(t).RunnerReceipt.Status)
+	})
+}
+
+func TestLocalQueryHasNoReceipt(t *testing.T) {
+	f := newFixture(t)
+	f.runner.chunks = []pluginsdk.QueryResultChunk{{Rows: [][]any{{1}}}}
+	_, err := f.svc.Query(context.Background(), fakePrincipal{admin: true}, QueryInput{Source: "warehouse", Statement: "SELECT 1"}, ClientAPI)
+	require.NoError(t, err)
+	assert.Nil(t, f.repo.only(t).RunnerReceipt)
+}
+
+// The data query service reaches plugins only through QueryRunner, for in-server plugins, and ServedRunner, for served ones. Neither may grow a way to act: actions run only in a serving process, and only through pluginserve's ActionRunner, which the query service does not hold.
+func TestQueryRunnersCannotAct(t *testing.T) {
+	for _, typ := range []reflect.Type{reflect.TypeFor[QueryRunner](), reflect.TypeFor[ServedRunner]()} {
+		for i := range typ.NumMethod() {
+			assert.NotContains(t, typ.Method(i).Name, "Action", "%s must not reach plugin actions", typ.Name())
+		}
+	}
 }
