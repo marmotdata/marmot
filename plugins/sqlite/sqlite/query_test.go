@@ -371,3 +371,48 @@ func mustParseConfig(t *testing.T, raw pluginsdk.RawConfig) *Config {
 func queryMRN(assetType, table string) string {
 	return assetMRN(&Config{Path: "query.db"}, assetType, table)
 }
+
+// newShopTestDB is a database with no index on the columns queries join on, the shape the tutorial's coffee shop has, so SQLite builds automatic indexes and sorters while it reads.
+func newShopTestDB(t *testing.T) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "shop.db")
+	db, err := sql.Open("sqlite", path)
+	require.NoError(t, err)
+	defer db.Close()
+	for _, stmt := range []string{
+		`CREATE TABLE products (product_id INTEGER, name TEXT)`,
+		`CREATE TABLE order_items (order_id INTEGER, product_id INTEGER, quantity INTEGER)`,
+		`INSERT INTO products VALUES (1, 'Yirgacheffe'), (2, 'Huila')`,
+		`INSERT INTO order_items VALUES (1, 1, 2), (2, 2, 3), (3, 1, 8)`,
+	} {
+		_, err := db.Exec(stmt)
+		require.NoError(t, err)
+	}
+	return path
+}
+
+// A join on an unindexed column makes SQLite fill an automatic index, which compiles to IdxInsert; that is the engine's scratch space, not a write, and must not be refused.
+func TestPlanQuery_AllowsReadsThatBuildScratchStorage(t *testing.T) {
+	path := newShopTestDB(t)
+	s := &Source{}
+	for _, statement := range []string{
+		"SELECT p.name, SUM(oi.quantity) AS total FROM order_items oi JOIN products p ON oi.product_id = p.product_id GROUP BY p.name ORDER BY total DESC LIMIT 1",
+		"SELECT DISTINCT product_id FROM order_items ORDER BY product_id",
+		"SELECT name FROM products WHERE product_id IN (SELECT product_id FROM order_items WHERE quantity > 2)",
+		"WITH t AS (SELECT product_id, SUM(quantity) AS q FROM order_items GROUP BY product_id) SELECT * FROM t ORDER BY q DESC",
+	} {
+		plan, err := s.PlanQuery(t.Context(), pluginsdk.RawConfig{"path": path}, pluginsdk.QueryRequest{Statement: statement})
+		require.NoError(t, err, statement)
+		assert.NotEmpty(t, plan.ReferencedMRNs, statement)
+	}
+}
+
+func TestWritesDatabase_JudgesAWriteByItsCursor(t *testing.T) {
+	op := func(opcode string, p1, p2 int64) explainRow { return explainRow{Opcode: opcode, P1: p1, P2: p2} }
+	assert.False(t, writesDatabase([]explainRow{op("OpenAutoindex", 4, 3), op("IdxInsert", 4, 9)}), "filling an automatic index")
+	assert.False(t, writesDatabase([]explainRow{op("OpenEphemeral", 2, 4), op("OpenDup", 5, 2), op("Insert", 5, 9)}), "writing through a duplicate of a scratch cursor")
+	assert.True(t, writesDatabase([]explainRow{op("OpenRead", 4, 3), op("IdxInsert", 4, 9)}), "an insert through a cursor on a real b-tree")
+	assert.True(t, writesDatabase([]explainRow{op("OpenEphemeral", 4, 1), op("OpenRead", 4, 3), op("Delete", 4, 0)}), "a reused cursor number stops being scratch")
+	assert.True(t, writesDatabase([]explainRow{op("OpenWrite", 0, 2)}), "opening a table for writing")
+	assert.True(t, writesDatabase([]explainRow{op("IdxInsert", 7, 0)}), "an insert through a cursor nothing opened as scratch")
+}

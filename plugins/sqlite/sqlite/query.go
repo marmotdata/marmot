@@ -281,6 +281,43 @@ var writeOpcodes = map[string]bool{
 	"DropTrigger": true, "Destroy": true, "VUpdate": true,
 }
 
+// scratchCursorOpcodes open a cursor on storage SQLite builds for one statement and throws away: an automatic index for a join on an unindexed column, a sorter for GROUP BY or ORDER BY, an ephemeral table for DISTINCT, IN or a subquery. Filling one compiles to the same Insert and IdxInsert opcodes as writing to the database, so writes are judged by the cursor they go to, not by the opcode alone.
+var scratchCursorOpcodes = map[string]bool{
+	"OpenEphemeral": true, "OpenAutoindex": true, "SorterOpen": true, "OpenPseudo": true,
+}
+
+// cursorWriteOpcodes write through the cursor named by P1, so they only change the database when that cursor is not scratch. The other write opcodes act on b-trees by root page, never on scratch storage, and always count.
+var cursorWriteOpcodes = map[string]bool{
+	"Insert": true, "IdxInsert": true, "Delete": true, "IdxDelete": true,
+}
+
+// writesDatabase reports whether a compiled program changes the database rather than only the scratch storage the engine builds while it reads.
+func writesDatabase(program []explainRow) bool {
+	scratch := map[int64]bool{}
+	for _, instr := range program {
+		switch {
+		case scratchCursorOpcodes[instr.Opcode]:
+			scratch[instr.P1] = true
+		case instr.Opcode == "OpenDup":
+			// A duplicate of an ephemeral cursor reads and writes the same scratch table
+			scratch[instr.P1] = scratch[instr.P2]
+		case instr.Opcode == "OpenRead" || instr.Opcode == "OpenWrite":
+			// A cursor number can be reused; once it opens a real b-tree it is no longer scratch
+			scratch[instr.P1] = false
+		}
+		if cursorWriteOpcodes[instr.Opcode] {
+			if !scratch[instr.P1] {
+				return true
+			}
+			continue
+		}
+		if writeOpcodes[instr.Opcode] {
+			return true
+		}
+	}
+	return false
+}
+
 // explainRow is one instruction of EXPLAIN <statement>'s bytecode listing.
 type explainRow struct {
 	Addr       int64
@@ -352,12 +389,12 @@ func (s *Source) PlanQuery(ctx context.Context, raw pluginsdk.RawConfig, req plu
 		return nil, err
 	}
 
+	if writesDatabase(program) {
+		return nil, errReadOnly
+	}
 	rootPages := map[int64]bool{}
 	var incomplete bool
 	for _, instr := range program {
-		if writeOpcodes[instr.Opcode] {
-			return nil, errReadOnly
-		}
 		if instr.Opcode == "VOpen" {
 			// A table-valued function such as pragma_table_info or json_each can be pointed at any table through an argument the bytecode never names, so the plan cannot promise it lists everything the statement reads.
 			incomplete = true
