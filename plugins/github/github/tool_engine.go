@@ -525,12 +525,14 @@ func shortSHA(sha string) string {
 	return sha
 }
 
-// unifiedDiff renders a change that keeps the line count, as every edit
-// open_pull_request makes does, since no parameter can hold a line break.
+// unifiedDiff renders a change as a unified diff. An edit that keeps the
+// line count is shown line by line; one that adds or removes lines is shown
+// as the block between the lines both sides share at the start and end, so
+// every line an approver is asked about is in the diff.
 func unifiedDiff(path, before, after string) string {
 	a, b := strings.Split(before, "\n"), strings.Split(after, "\n")
 	if len(a) != len(b) {
-		return fmt.Sprintf("--- a/%s\n+++ b/%s\n(line count changed from %d to %d)\n", path, path, len(a), len(b))
+		return blockDiff(path, a, b)
 	}
 	var changed []int
 	for i := range a {
@@ -560,6 +562,39 @@ func unifiedDiff(path, before, after string) string {
 			fmt.Fprintf(&out, "-%s\n+%s\n", a[k], b[k])
 		}
 		i = j
+	}
+	return out.String()
+}
+
+// blockDiff renders the lines between a and b's common first and last lines
+// as one hunk, with diffContext lines of context on each side.
+func blockDiff(path string, a, b []string) string {
+	prefix := 0
+	for prefix < len(a) && prefix < len(b) && a[prefix] == b[prefix] {
+		prefix++
+	}
+	suffix := 0
+	for suffix < len(a)-prefix && suffix < len(b)-prefix && a[len(a)-1-suffix] == b[len(b)-1-suffix] {
+		suffix++
+	}
+	start := max(prefix-diffContext, 0)
+	endA := min(len(a)-suffix+diffContext, len(a))
+	endB := min(len(b)-suffix+diffContext, len(b))
+
+	var out strings.Builder
+	fmt.Fprintf(&out, "--- a/%s\n+++ b/%s\n", path, path)
+	fmt.Fprintf(&out, "@@ -%d,%d +%d,%d @@\n", start+1, endA-start, start+1, endB-start)
+	for k := start; k < prefix; k++ {
+		fmt.Fprintf(&out, " %s\n", a[k])
+	}
+	for k := prefix; k < len(a)-suffix; k++ {
+		fmt.Fprintf(&out, "-%s\n", a[k])
+	}
+	for k := prefix; k < len(b)-suffix; k++ {
+		fmt.Fprintf(&out, "+%s\n", b[k])
+	}
+	for k := len(a) - suffix; k < endA; k++ {
+		fmt.Fprintf(&out, " %s\n", a[k])
 	}
 	return out.String()
 }

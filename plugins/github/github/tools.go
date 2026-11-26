@@ -139,12 +139,12 @@ func editParams() []pluginsdk.ToolParam {
 				Type: pluginsdk.ParamString, Required: i == 1, MaxLength: 512, Pattern: pathChars,
 			},
 			pluginsdk.ToolParam{
-				Name: fmt.Sprintf("old_%d", i), Description: fmt.Sprintf("Text edit %d replaces, which must occur exactly once in the file. Parameters cannot carry a line break, so an edit stays within one line", i),
-				Type: pluginsdk.ParamString, Required: i == 1, MaxLength: pluginsdk.MaxStringParamLength,
+				Name: fmt.Sprintf("old_%d", i), Description: fmt.Sprintf("Text edit %d replaces, which must occur exactly once in the file. It may span lines: to insert lines, give the line they follow and that line with the new ones after it", i),
+				Type: pluginsdk.ParamString, Required: i == 1, MaxLength: pluginsdk.MaxStringParamLength, Multiline: true,
 			},
 			pluginsdk.ToolParam{
-				Name: fmt.Sprintf("new_%d", i), Description: fmt.Sprintf("Text that replaces old_%d. Empty removes it", i),
-				Type: pluginsdk.ParamString, Required: i == 1, MaxLength: pluginsdk.MaxStringParamLength,
+				Name: fmt.Sprintf("new_%d", i), Description: fmt.Sprintf("Text that replaces old_%d, which may span lines. Empty removes it", i),
+				Type: pluginsdk.ParamString, Required: i == 1, MaxLength: pluginsdk.MaxStringParamLength, Multiline: true,
 			},
 		)
 	}
@@ -157,7 +157,7 @@ func writeSpecs() []pluginsdk.ToolSpec {
 			Name:    toolOpenPullRequest,
 			Version: 1,
 			Title:   "Open a pull request",
-			Description: "Creates a branch under the runner's branch prefix from the base branch, commits up to three single-line text edits to existing files in one commit, and opens a pull request. Nothing is merged. " +
+			Description: "Creates a branch under the runner's branch prefix from the base branch, commits up to three text edits to existing files in one commit, and opens a pull request. Nothing is merged. " +
 				"Changes to .github/workflows and .github/actions are refused unless the runner allows CI changes. Undone by closing the pull request.",
 			Targets: []pluginsdk.TargetKind{kindPullRequest},
 			Params: append([]pluginsdk.ToolParam{

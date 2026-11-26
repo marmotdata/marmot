@@ -66,7 +66,7 @@ Besides discovery, the plugin can propose changes, which a runner allowed to tak
 | `comment_on_pull_request` | Adds a comment to an open pull request. Refused if the pull request has new commits since the plan | `delete_comment` |
 | `delete_comment` | Deletes a comment the plugin posted | `comment_on_pull_request`, as a new comment |
 
-Each edit replaces text that occurs exactly once in an existing file with new text, and the plan shows the change as a unified diff. Tool parameters cannot hold a line break, so an edit stays within one line: bumping a version, changing a setting or fixing a typo. The plugin cannot create, delete or rename files, and refuses binary files, symbolic links and submodules.
+Each edit replaces text that occurs exactly once in an existing file with new text, and the plan shows the change as a unified diff. An edit may span lines, so a task can insert a block, such as a missing column in a dbt `schema.yml`, by replacing the line it follows with that line and the new ones. Each side of an edit is at most 1 KiB, and may hold line breaks and tabs but no other control character. The plugin cannot create, delete or rename files, and refuses binary files, symbolic links and submodules.
 
 A pull request is the plugin's own when its branch starts with `tools.branch_prefix` in the same repository; a fork's branch never counts. Commits carry `Marmot-Origin` and `Marmot-Actor` trailers, and pull requests and comments end with a line naming who asked and from where. A comment also carries a hidden marker, and `delete_comment` refuses any comment without it or written by another account.
 

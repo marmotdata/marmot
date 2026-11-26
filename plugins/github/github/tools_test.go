@@ -213,8 +213,8 @@ func TestOpenPullRequestCaps(t *testing.T) {
 	require.ErrorContains(t, plan(nil, openRequest("config/settings.yaml", "retries: 3", "retries: 3")), "changes nothing")
 	require.ErrorContains(t, plan(nil, openRequest("config/settings.yaml", "", "x")), "is empty")
 
-	// The SDK's own bounds: no line breaks, at most 1 KiB a parameter.
-	require.ErrorContains(t, plan(nil, openRequest("config/settings.yaml", "retries: 3", "retries: 5\nrm: -rf")), "control characters")
+	// The SDK's own bounds: no control characters but line breaks and tabs, at most 1 KiB a parameter.
+	require.ErrorContains(t, plan(nil, openRequest("config/settings.yaml", "retries: 3", "retries: 5\r\nrm: -rf")), "control characters")
 	require.ErrorContains(t, plan(nil, openRequest("config/settings.yaml", "retries: 3", strings.Repeat("x", 1025))), "at most 1024 bytes")
 
 	partial := openRequest("config/settings.yaml", "retries: 3", "retries: 5")
@@ -222,6 +222,43 @@ func TestOpenPullRequestCaps(t *testing.T) {
 	require.ErrorContains(t, plan(nil, partial), "together")
 
 	assert.Zero(t, f.writes())
+}
+
+func TestOpenPullRequestInsertsLines(t *testing.T) {
+	f := toolFixture(t)
+	e := writeEngine(t, f, nil)
+	req := openRequest("config/settings.yaml", "timeout: 30\n", "timeout: 30\nbackoff: 10\njitter: true\n")
+
+	plan, _ := planAndExecute(t, f, e, req)
+	assert.Equal(t, "--- a/config/settings.yaml\n+++ b/config/settings.yaml\n@@ -1,5 +1,7 @@\n retries: 3\n timeout: 30\n+backoff: 10\n+jitter: true\n schedule: \"@daily\"\n owner: data\n \n", plan.Diff,
+		"every inserted line is in the diff an approver sees")
+
+	branch := strings.TrimPrefix(plan.Target, "acme/pipelines:")
+	got, _, ok := f.fileAt("pipelines", branch, "config/settings.yaml")
+	require.True(t, ok)
+	assert.Equal(t, "retries: 3\ntimeout: 30\nbackoff: 10\njitter: true\nschedule: \"@daily\"\nowner: data\n", got)
+}
+
+func TestDiffShowsEveryLineOfTwoEditsInOneFile(t *testing.T) {
+	before := "a\nb\nc\nd\ne\nf\ng\nh\ni\nj"
+
+	// Both edits add lines: everything between them is shown, removed and added again.
+	after := strings.Replace(strings.Replace(before, "b\n", "b\nb2\n", 1), "i\n", "i\ni2\n", 1)
+	diff := unifiedDiff("f", before, after)
+	for _, line := range []string{"+b2", "+i2"} {
+		assert.Contains(t, diff, "\n"+line+"\n")
+	}
+
+	// One edit adds a line and another removes one, so the count is unchanged but lines shift.
+	after = strings.Replace(strings.Replace(before, "b\n", "b\nb2\n", 1), "h\n", "", 1)
+	diff = unifiedDiff("f", before, after)
+	assert.Contains(t, diff, "+b2\n")
+	assert.Contains(t, diff, "-h\n")
+}
+
+func TestBlockDiffRemovesLines(t *testing.T) {
+	assert.Equal(t, "--- a/f\n+++ b/f\n@@ -1,4 +1,3 @@\n a\n-b\n c\n d\n",
+		unifiedDiff("f", "a\nb\nc\nd", "a\nc\nd"))
 }
 
 func TestWritesStayInScope(t *testing.T) {
