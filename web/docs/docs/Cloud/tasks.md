@@ -97,7 +97,7 @@ Your plan also limits runs per day and tokens per month. **Plan** appears on the
 ## Limitations
 
 - A task reads your catalog, data and runners. It can't browse the web or reach systems no runner serves.
-- Changes go through runners only. Kubernetes is the only plugin with tools.
+- Changes go through runners only. The Kubernetes and GitHub plugins have tools.
 - Every change needs at least 1 approval. Nothing runs unattended.
 - Objects managed by Flux or Argo CD can't be changed, because the next reconcile would revert them.
 
